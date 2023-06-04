@@ -58,7 +58,11 @@ setup(
     include_package_data=True,
     install_requires=[
         "eth-ape>=0.6.0,<1.0",
+        "taskiq[metrics]>=0.6.0,<0.7.0",
     ],
+    entry_points={
+        "console_scripts": ["silverback=silverback._cli:cli"],
+    },
     python_requires=">=3.8,<4",
     extras_require=extras_require,
     py_modules=["silverback"],
