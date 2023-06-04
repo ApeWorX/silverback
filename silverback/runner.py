@@ -183,3 +183,33 @@ class PollingRunner(BaseRunner):
             event_task = await event_handler.kiq(event)
             result = await event_task.wait_result()
             self._handle_result(result)
+
+
+class BacktestRunner(BaseRunner):
+    def __init__(self, app: SilverbackApp, block_number: int, *args, **kwargs):
+        super().__init__(app, *args, **kwargs)
+        self.block_number = block_number
+
+        logger.info(
+            f"Using {self.__class__.__name__}:"
+            f" block_number={self.block_number}"
+            f" max_exceptions={self.max_exceptions}"
+        )
+
+    async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
+        block = chain.blocks[self.block_number]
+        block_task = await block_handler.kiq(block)
+        result = await block_task.wait_result()
+        self._handle_result(result)
+
+    async def _event_task(
+        self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
+    ):
+        for event in contract_event.range(self.block_number, self.block_number + 1):
+            event_task = await event_handler.kiq(event)
+            result = await event_task.wait_result()
+            self._handle_result(result)
+
+    async def run(self):
+        await super().run()
+        self.block_number += 1

@@ -1,7 +1,9 @@
 import asyncio
 import os
+import sys
 
 import click
+import pytest
 from ape.cli import AccountAliasPromptChoice, ape_cli_context, network_option, verbosity_option
 
 from silverback._importer import import_from_string
@@ -57,3 +59,23 @@ def run(cli_ctx, network, account, runner, max_exceptions, path):
         app = import_from_string(path)
         runner = runner(app, max_exceptions=max_exceptions)
         asyncio.run(runner.run())
+
+
+@cli.command(
+    add_help_option=False,  # NOTE: This allows pass-through to pytest's help
+    short_help="Launches pytest and runs the tests for an app",
+    context_settings=dict(ignore_unknown_options=True),
+)
+@ape_cli_context()
+@verbosity_option()
+@network_option(default=None, callback=_network_callback)
+@click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
+def test(cli_ctx, network, pytest_args):
+    if not network:
+        os.environ["SILVERBACK_NETWORK_CHOICE"] = ":mainnet-fork"
+
+    return_code = pytest.main([*pytest_args], ["silverback_test"])
+
+    if return_code:
+        # only exit with non-zero status to make testing easier
+        sys.exit(return_code)
