@@ -28,7 +28,13 @@ python3 setup.py install
 
 ## Quick Usage
 
-TODO: Describe library overview in code
+Checkout [the example](./example.py) to see how to use the library.
+
+To run your bot against a live network, this SDK includes a simple runner you can use via:
+
+```sh
+$ silverback run "example:app" --network :mainnet:alchemy
+```
 
 ## Development
 
