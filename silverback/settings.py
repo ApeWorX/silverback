@@ -63,6 +63,10 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     def get_signer(self) -> Optional[AccountAPI]:
         if self.SIGNER_ALIAS:
+            if self.SIGNER_ALIAS.startswith("TEST::"):
+                acct_idx = int(self.SIGNER_ALIAS.replace("TEST::", ""))
+                return self.account_manager.test_accounts[acct_idx]
+
             # NOTE: Will only have a signer if assigned one here (or in app)
             return self.account_manager.load(self.SIGNER_ALIAS)
 
