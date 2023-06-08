@@ -20,23 +20,23 @@ class SilverBackApp(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
-        logger.info(f"Loading Silverback App with settings: {settings}")
+        settings_str = "\n  ".join(f'{key}="{val}"' for key, val in settings.dict().items() if val)
+        logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()
         self.contract_events: Dict[AddressType, Dict[str, ContractEvent]] = {}
 
         self.network = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
-        self.network.__enter__()
+        provider = self.network.__enter__()
 
         atexit.register(self.network.__exit__)
 
         self.signer = settings.get_signer()
 
-        network_name = (
-            f"{self.network.provider.network.name}:{self.network.provider.network.ecosystem.name}"
-        )
-        logger.info(f"Loaded Silverback App: network={network_name} signer={self.signer}")
+        network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
+        signer_str = f"\n  SIGNER={repr(self.signer)}"
+        logger.info(f"Loaded Silverback App:{network_str}{signer_str}")
 
     def on_startup(self) -> Callable:
         """
