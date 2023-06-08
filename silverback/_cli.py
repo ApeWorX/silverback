@@ -14,7 +14,7 @@ def cli():
 
 
 @cli.command(cls=NetworkBoundCommand)
-@ape_cli_context
+@ape_cli_context()
 @network_option()
 @click.option("--account", type=AccountAliasPromptChoice(), default=None)
 @click.option("-x", "--max-exceptions", type=int, default=3)
