@@ -34,6 +34,18 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
         return message
 
+    def _create_label(self, message: TaskiqMessage) -> str:
+        if message.task_name == "block":
+            args = f"[block={message.args[0].hash}]"
+
+        elif "event" in message.task_name:
+            args = f"[txn={message.args[0].transaction_hash},log_index={message.args[0].log_index}]"
+
+        else:
+            args = ""
+
+        return f"{message.task_name}{args}"
+
     def pre_execute(self, message: TaskiqMessage) -> TaskiqMessage:
         def fix_dict(data: dict) -> dict:
             fixed_data = {}
@@ -55,19 +67,15 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             # NOTE: Just in case the user doesn't specify type as `ContractLog`
             message.args[0] = ContractLog.parse_obj(message.args[0])
 
+        logger.info(f"{self._create_label(message)} - Started")
         return message
 
     def post_execute(self, message: TaskiqMessage, result: TaskiqResult):
-        args = ""
-        if message.task_name == "block":
-            args = f"number={message.args[0].number}"
-
-        elif "event" in message.task_name:
-            args = f"index={message.args[0].log_index}"
-
-        label = f"{message.task_name}[{args}]"
         percentage_time = 100 * (result.execution_time / self.block_time)
-        logger.info(f"{label} - {result.execution_time:.3f}s ({percentage_time:.1f}%)")
+        logger.info(
+            f"{self._create_label(message)} "
+            f"- {result.execution_time:.3f}s ({percentage_time:.1f}%)"
+        )
 
     async def on_error(
         self,
