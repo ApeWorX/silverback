@@ -2,7 +2,7 @@ import asyncio
 import os
 
 import click
-from ape.cli import NetworkBoundCommand, network_option
+from ape.cli import NetworkBoundCommand, ape_cli_context, network_option
 
 from silverback._importer import import_from_string
 from silverback.runner import LiveRunner
@@ -14,6 +14,7 @@ def cli():
 
 
 @cli.command(cls=NetworkBoundCommand)
+@ape_cli_context
 @network_option()
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
