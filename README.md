@@ -40,9 +40,7 @@ $ silverback run "example:app" --network :mainnet:alchemy
 
 ```sh
 $ docker build -t silverback .
-$ docker run --volume $PWD:/home/harambe/project \
-silverback run "example:app" \
---network :mainnet:alchemy
+$ docker run --volume $PWD:/home/harambe/project silverback run "example:app" --network :mainnet:alchemy
 ```
 
 ## Development
