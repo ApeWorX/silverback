@@ -2,7 +2,7 @@ import asyncio
 import os
 
 import click
-from ape.cli import AccountAliasPromptChoice, NetworkBoundCommand, ape_cli_context, network_option
+from ape.cli import AccountAliasPromptChoice, NetworkBoundCommand, network_option, verbosity_option
 
 from silverback._importer import import_from_string
 from silverback.runner import LiveRunner
@@ -14,7 +14,7 @@ def cli():
 
 
 @cli.command(cls=NetworkBoundCommand)
-@ape_cli_context()
+@verbosity_option()
 @network_option()
 @click.option("--account", type=AccountAliasPromptChoice(), default=None)
 @click.option("-x", "--max-exceptions", type=int, default=3)
