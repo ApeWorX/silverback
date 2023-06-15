@@ -57,7 +57,7 @@ setup(
     url="https://github.com/SilverBackLtd/sdk",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.6.0,<1.0",
+        "eth-ape>=0.6.11,<1.0",
         "taskiq[metrics]>=0.6.0,<0.7.0",
     ],
     entry_points={
