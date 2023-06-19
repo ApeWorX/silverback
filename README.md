@@ -36,6 +36,13 @@ To run your bot against a live network, this SDK includes a simple runner you ca
 $ silverback run "example:app" --network :mainnet:alchemy
 ```
 
+## Docker Usage
+
+```sh
+$ docker build -t silverback .
+$ docker run --volume $PWD:/home/harambe/project silverback run "example:app" --network :mainnet:alchemy
+```
+
 ## Development
 
 This project is in development and should be considered a beta.
