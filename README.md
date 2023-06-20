@@ -39,8 +39,7 @@ $ silverback run "example:app" --network :mainnet:alchemy
 ## Docker Usage
 
 ```sh
-$ docker build -t silverback .
-$ docker run --volume $PWD:/home/harambe/project silverback run "example:app" --network :mainnet:alchemy
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
 ```
 
 ## Development
