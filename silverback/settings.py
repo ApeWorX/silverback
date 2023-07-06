@@ -28,6 +28,8 @@ class Settings(BaseSettings, ManagerAccessMixin):
     NETWORK_CHOICE: str = ""
     SIGNER_ALIAS: str = ""
 
+    NEW_BLOCK_TIMEOUT: Optional[int] = None
+
     class Config:
         env_prefix = "SILVERBACK_"
         case_sensitive = True

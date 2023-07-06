@@ -33,6 +33,7 @@ class SilverBackApp(ManagerAccessMixin):
         atexit.register(self.network.__exit__)
 
         self.signer = settings.get_signer()
+        self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
 
         network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
         signer_str = f"\n  SIGNER={repr(self.signer)}"
