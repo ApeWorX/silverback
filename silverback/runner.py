@@ -2,7 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 
 from ape import chain
-from ape.contracts import ContractEvent
+from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
@@ -77,7 +77,9 @@ class LiveRunner(BaseRunner):
         logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
 
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
-        async for block in async_wrap_iter(chain.blocks.poll_blocks(new_block_timeout=self.app.new_block_timeout)):
+        async for block in async_wrap_iter(
+            chain.blocks.poll_blocks(new_block_timeout=self.app.new_block_timeout)
+        ):
             block_task = await block_handler.kiq(block)
             result = await block_task.wait_result()
             self._handle_result(result)
@@ -85,7 +87,19 @@ class LiveRunner(BaseRunner):
     async def _event_task(
         self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
     ):
-        async for event in async_wrap_iter(contract_event.poll_logs()):
+        new_block_timeout = None
+        if isinstance(contract_event.contract, ContractInstance):
+            address = contract_event.contract.address
+            if (
+                address in self.app.poll_settings
+                and "new_block_timeout" in self.app.poll_settings[address]
+            ):
+                new_block_timeout = self.app.poll_settings[address]["new_block_timeout"]
+
+        new_block_timeout = new_block_timeout or self.app.new_block_timeout
+        async for event in async_wrap_iter(
+            contract_event.poll_logs(new_block_timeout=new_block_timeout)
+        ):
             event_task = await event_handler.kiq(event)
             result = await event_task.wait_result()
             self._handle_result(result)
