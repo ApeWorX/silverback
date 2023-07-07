@@ -26,7 +26,8 @@ def exec_block(block: BlockAPI):
 
 
 # This is how we trigger off of events
-@app.on_(USDC.Transfer)
+# Set new_block_timeout to adjust the expected block time.
+@app.on_(USDC.Transfer, new_block_timeout=25)
 # NOTE: Typing isn't required
 def exec_event1(log):
     if log.log_index % 7 == 3:
