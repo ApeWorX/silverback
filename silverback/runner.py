@@ -96,7 +96,7 @@ class LiveRunner(BaseRunner):
             ):
                 new_block_timeout = self.app.poll_settings[address]["new_block_timeout"]
 
-        new_block_timeout = new_block_timeout or self.app.new_block_timeout
+        new_block_timeout = new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
         async for event in async_wrap_iter(
             contract_event.poll_logs(new_block_timeout=new_block_timeout)
         ):
