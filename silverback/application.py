@@ -69,6 +69,12 @@ class SilverBackApp(ManagerAccessMixin):
             if self.get_block_handler():
                 raise DuplicateHandler("block")
 
+            if new_block_timeout is not None:
+                if "_blocks_" in self.poll_settings:
+                    self.poll_settings["_blocks_"]["new_block_timeout"] = new_block_timeout
+                else:
+                    self.poll_settings["_blocks_"] = {"new_block_timeout": new_block_timeout}
+
             return self.broker.task(task_name="block")
 
         elif isinstance(container, ContractEvent) and isinstance(

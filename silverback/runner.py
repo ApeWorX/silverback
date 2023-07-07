@@ -77,8 +77,16 @@ class LiveRunner(BaseRunner):
         logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
 
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
+        new_block_timeout = None
+        if (
+            "_blocks_" in self.app.poll_settings
+            and "new_block_timeout" in self.app.poll_settings["_blocks_"]
+        ):
+            new_block_timeout = self.app.poll_settings["_blocks_"]["new_block_timeout"]
+
+        new_block_timeout = new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
         async for block in async_wrap_iter(
-            chain.blocks.poll_blocks(new_block_timeout=self.app.new_block_timeout)
+            chain.blocks.poll_blocks(new_block_timeout=new_block_timeout)
         ):
             block_task = await block_handler.kiq(block)
             result = await block_task.wait_result()
