@@ -59,6 +59,8 @@ setup(
     install_requires=[
         "eth-ape>=0.6.11,<1.0",
         "taskiq[metrics]>=0.6.0,<0.7.0",
+        # Can loosen constraint once https://github.com/pallets/click/issues/2558 resolved
+        "click==8.1.3",
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],
