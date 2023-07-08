@@ -1,7 +1,7 @@
 import atexit
 from typing import Callable, Dict, Optional, Union
 
-from ape.contracts import ContractEvent
+from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
 from ape.types import AddressType
@@ -25,6 +25,7 @@ class SilverBackApp(ManagerAccessMixin):
 
         self.broker = settings.get_broker()
         self.contract_events: Dict[AddressType, Dict[str, ContractEvent]] = {}
+        self.poll_settings: Dict[str, Dict] = {}
 
         self.network = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
@@ -33,6 +34,7 @@ class SilverBackApp(ManagerAccessMixin):
         atexit.register(self.network.__exit__)
 
         self.signer = settings.get_signer()
+        self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
 
         network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
         signer_str = f"\n  SIGNER={repr(self.signer)}"
@@ -58,21 +60,41 @@ class SilverBackApp(ManagerAccessMixin):
     ) -> Optional[AsyncTaskiqDecoratedTask]:
         return self.broker.available_tasks.get(f"{event_target}/event/{event_name}")
 
-    def on_(self, container: Union[BlockContainer, ContractEvent]):
+    def on_(
+        self,
+        container: Union[BlockContainer, ContractEvent],
+        new_block_timeout: Optional[int] = None,
+    ):
         if isinstance(container, BlockContainer):
             if self.get_block_handler():
                 raise DuplicateHandler("block")
 
+            if new_block_timeout is not None:
+                if "_blocks_" in self.poll_settings:
+                    self.poll_settings["_blocks_"]["new_block_timeout"] = new_block_timeout
+                else:
+                    self.poll_settings["_blocks_"] = {"new_block_timeout": new_block_timeout}
+
             return self.broker.task(task_name="block")
 
-        elif isinstance(container, ContractEvent):
+        elif isinstance(container, ContractEvent) and isinstance(
+            container.contract, ContractInstance
+        ):
             if self.get_event_handler(container.contract.address, container.abi.name):
                 raise DuplicateHandler(f"event {container.contract.address}:{container.abi.name}")
 
+            key = container.contract.address
             if container.contract.address in self.contract_events:
-                self.contract_events[container.contract.address][container.abi.name] = container
+                self.contract_events[key][container.abi.name] = container
             else:
-                self.contract_events[container.contract.address] = {container.abi.name: container}
+                self.contract_events[key] = {container.abi.name: container}
+
+            if new_block_timeout is not None:
+                if key in self.poll_settings:
+                    self.poll_settings[key]["new_block_timeout"] = new_block_timeout
+                else:
+                    self.poll_settings[key] = {"new_block_timeout": new_block_timeout}
+
             return self.broker.task(
                 task_name=f"{container.contract.address}/event/{container.abi.name}"
             )
