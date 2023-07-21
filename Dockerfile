@@ -10,7 +10,7 @@ COPY . .
 # upgrade pip and install wheel
 RUN pip install --upgrade pip && pip install wheel
 # install silverback
-RUN pip wheel silverback --wheel-dir=/wheels
+RUN pip wheel . --wheel-dir=/wheels
 
 # Install from wheels
 FROM apeworx/ape:latest
