@@ -3,20 +3,21 @@
 #---------------------------------------------------------------------------------------------
 
 # Build with builder image to reduce image size
-FROM apeworx/ape:latest as builder
+FROM python:3.10 as builder
 USER root
 WORKDIR /wheels
 COPY . .
-RUN pip install --upgrade pip \
-    && pip install wheel \
-    && pip wheel silverback --wheel-dir=/wheels
+# upgrade pip and install wheel
+RUN pip install --upgrade pip && pip install wheel
+# install silverback
+RUN pip wheel silverback --wheel-dir=/wheels
 
 # Install from wheels
 FROM apeworx/ape:latest
 USER root
 COPY --from=builder /wheels /wheels
 RUN pip install --upgrade pip \
-    pip install . --no-cache-dir --find-links=/wheels
+    && pip install silverback --no-cache-dir --find-links=/wheels 
 USER harambe
 
 ENTRYPOINT ["silverback"]
