@@ -83,4 +83,4 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         result: TaskiqResult,
         exception: BaseException,
     ):
-        logger.error(f"{message.task_name} - Exception: {exception}")
+        logger.error(f"{message.task_name} - {type(exception).__name__}: {exception}")

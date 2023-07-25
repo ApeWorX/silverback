@@ -61,7 +61,7 @@ class BaseRunner(ABC):
         try:
             await asyncio.gather(*tasks)
         except Exception as e:
-            logger.error(f"Critical exception: {e}")
+            logger.error(f"Critical exception, {type(e).__name__}: {e}")
 
         finally:
             await self.app.broker.shutdown()
