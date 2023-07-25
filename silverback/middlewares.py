@@ -36,7 +36,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
     def _create_label(self, message: TaskiqMessage) -> str:
         if message.task_name == "block":
-            args = f"[block={message.args[0].hash}]"
+            args = f"[block={message.args[0].hash.hex()}]"
 
         elif "event" in message.task_name:
             args = f"[txn={message.args[0].transaction_hash},log_index={message.args[0].log_index}]"
