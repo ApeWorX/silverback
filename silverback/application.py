@@ -35,6 +35,7 @@ class SilverBackApp(ManagerAccessMixin):
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
+        self.start_block = settings.START_BLOCK
 
         network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
         signer_str = f"\n  SIGNER={repr(self.signer)}"
@@ -64,6 +65,7 @@ class SilverBackApp(ManagerAccessMixin):
         self,
         container: Union[BlockContainer, ContractEvent],
         new_block_timeout: Optional[int] = None,
+        start_block: Optional[int] = None,
     ):
         if isinstance(container, BlockContainer):
             if self.get_block_handler():
@@ -74,6 +76,12 @@ class SilverBackApp(ManagerAccessMixin):
                     self.poll_settings["_blocks_"]["new_block_timeout"] = new_block_timeout
                 else:
                     self.poll_settings["_blocks_"] = {"new_block_timeout": new_block_timeout}
+
+            if start_block is not None:
+                if "_blocks_" in self.poll_settings:
+                    self.poll_settings["_blocks_"]["start_block"] = start_block
+                else:
+                    self.poll_settings["_blocks_"] = {"start_block": start_block}
 
             return self.broker.task(task_name="block")
 
@@ -94,6 +102,12 @@ class SilverBackApp(ManagerAccessMixin):
                     self.poll_settings[key]["new_block_timeout"] = new_block_timeout
                 else:
                     self.poll_settings[key] = {"new_block_timeout": new_block_timeout}
+
+            if start_block is not None:
+                if key in self.poll_settings:
+                    self.poll_settings[key]["start_block"] = start_block
+                else:
+                    self.poll_settings[key] = {"start_block": start_block}
 
             return self.broker.task(
                 task_name=f"{container.contract.address}/event/{container.abi.name}"

@@ -29,6 +29,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
     SIGNER_ALIAS: str = ""
 
     NEW_BLOCK_TIMEOUT: Optional[int] = None
+    START_BLOCK: Optional[int] = None
 
     class Config:
         env_prefix = "SILVERBACK_"
