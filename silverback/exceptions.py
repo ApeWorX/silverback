@@ -25,16 +25,16 @@ class NoWebsocketAvailable(Exception):
         )
 
 
-class SilverBackException(ApeException):
+class SilverbackException(ApeException):
     pass
 
 
-class Halt(SilverBackException):
+class Halt(SilverbackException):
     def __init__(self):
         super().__init__("App halted, must restart manually")
 
 
-class CircuitBreaker(SilverBackException):
+class CircuitBreaker(SilverbackException):
     """Custom exception (created by user) that should trigger a shutdown."""
 
     def __init__(self, message: str):

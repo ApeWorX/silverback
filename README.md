@@ -21,7 +21,7 @@ pip install silverback
 You can clone the repository and use [`setuptools`](https://github.com/pypa/setuptools) for the most up-to-date version:
 
 ```bash
-git clone https://github.com/SilverBackLtd/sdk.git silverback
+git clone https://github.com/ApeWorX/silverback.git silverback
 cd silverback
 python3 setup.py install
 ```

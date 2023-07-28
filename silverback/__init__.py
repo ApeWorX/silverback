@@ -1,8 +1,8 @@
-from .application import SilverBackApp
-from .exceptions import CircuitBreaker, SilverBackException
+from .application import SilverbackApp
+from .exceptions import CircuitBreaker, SilverbackException
 
 __all__ = [
     "CircuitBreaker",
-    "SilverBackApp",
-    "SilverBackException",
+    "SilverbackApp",
+    "SilverbackException",
 ]
