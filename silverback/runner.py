@@ -1,7 +1,9 @@
 import asyncio
 from abc import ABC, abstractmethod
+from datetime import timedelta
 
 from ape import chain
+from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
@@ -87,6 +89,14 @@ class LiveRunner(BaseRunner):
         new_block_timeout = (
             new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
         )
+
+        if (
+            new_block_timeout is None and
+            (chain.provider.network.name.endwith("-fork") or chain.provider.network.name == LOCAL_NETWORK_NAME)
+        ):
+            # Avoid timing out when using local networks.
+            new_block_timeout = timedelta(days=1).total_seconds()
+
         start_block = start_block if start_block is not None else self.app.start_block
         async for block in async_wrap_iter(
             chain.blocks.poll_blocks(start_block=start_block, new_block_timeout=new_block_timeout)
