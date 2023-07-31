@@ -1,6 +1,8 @@
 import atexit
+from datetime import timedelta
 from typing import Callable, Dict, Optional, Union
 
+from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
@@ -19,6 +21,13 @@ class SilverBackApp(ManagerAccessMixin):
         """
         if not settings:
             settings = Settings()
+
+        # Adjust defaults from connection
+        if settings.NEW_BLOCK_TIMEOUT is None and (
+            self.chain_manager.provider.network.name.endswith("-fork")
+            or self.chain_manager.provider.network.name == LOCAL_NETWORK_NAME
+        ):
+            settings.NEW_BLOCK_TIMEOUT = int(timedelta(days=1).total_seconds())
 
         settings_str = "\n  ".join(f'{key}="{val}"' for key, val in settings.dict().items() if val)
         logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
