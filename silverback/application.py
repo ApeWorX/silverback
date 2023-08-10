@@ -48,7 +48,14 @@ class SilverBackApp(ManagerAccessMixin):
 
         network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
         signer_str = f"\n  SIGNER={repr(self.signer)}"
-        logger.info(f"Loaded Silverback App:{network_str}{signer_str}")
+        start_block_str = f"\n  START_BLOCK={self.start_block}" if self.start_block else ""
+        new_bock_timeout_str = (
+            f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
+        )
+        logger.info(
+            f"Loaded Silverback App:{network_str}"
+            f"{signer_str}{start_block_str}{new_bock_timeout_str}"
+        )
 
     def on_startup(self) -> Callable:
         """
