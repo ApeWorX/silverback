@@ -57,10 +57,9 @@ setup(
     url="https://github.com/SilverBackLtd/sdk",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.6.11,<1.0",
+        "eth-ape>=0.6.15,<1.0",
         "taskiq[metrics]>=0.6.0,<0.7.0",
-        # Can loosen constraint once https://github.com/pallets/click/issues/2558 resolved
-        "click==8.1.3",
+        "click",  # Use same version as eth-ape
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],
