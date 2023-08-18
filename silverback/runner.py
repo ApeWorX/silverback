@@ -61,7 +61,7 @@ class BaseRunner(ABC):
         try:
             await asyncio.gather(*tasks)
         except Exception as e:
-            logger.error(f"Critical exception: {e}")
+            logger.error(f"Critical exception, {type(e).__name__}: {e}")
 
         finally:
             await self.app.broker.shutdown()
@@ -78,17 +78,18 @@ class LiveRunner(BaseRunner):
 
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
         new_block_timeout = None
-        if (
-            "_blocks_" in self.app.poll_settings
-            and "new_block_timeout" in self.app.poll_settings["_blocks_"]
-        ):
-            new_block_timeout = self.app.poll_settings["_blocks_"]["new_block_timeout"]
+        start_block = None
+        if "_blocks_" in self.app.poll_settings:
+            block_settings = self.app.poll_settings["_blocks_"]
+            new_block_timeout = block_settings.get("new_block_timeout")
+            start_block = block_settings.get("start_block")
 
         new_block_timeout = (
             new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
         )
+        start_block = start_block if start_block is not None else self.app.start_block
         async for block in async_wrap_iter(
-            chain.blocks.poll_blocks(new_block_timeout=new_block_timeout)
+            chain.blocks.poll_blocks(start_block=start_block, new_block_timeout=new_block_timeout)
         ):
             block_task = await block_handler.kiq(block)
             result = await block_task.wait_result()
@@ -98,19 +99,20 @@ class LiveRunner(BaseRunner):
         self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
     ):
         new_block_timeout = None
+        start_block = None
         if isinstance(contract_event.contract, ContractInstance):
             address = contract_event.contract.address
-            if (
-                address in self.app.poll_settings
-                and "new_block_timeout" in self.app.poll_settings[address]
-            ):
-                new_block_timeout = self.app.poll_settings[address]["new_block_timeout"]
+            if address in self.app.poll_settings:
+                address_settings = self.app.poll_settings[address]
+                new_block_timeout = address_settings.get("new_block_timeout")
+                start_block = address_settings.get("start_block")
 
         new_block_timeout = (
             new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
         )
+        start_block = start_block if start_block is not None else self.app.start_block
         async for event in async_wrap_iter(
-            contract_event.poll_logs(new_block_timeout=new_block_timeout)
+            contract_event.poll_logs(start_block=start_block, new_block_timeout=new_block_timeout)
         ):
             event_task = await event_handler.kiq(event)
             result = await event_task.wait_result()
