@@ -3,6 +3,7 @@ import os
 
 import click
 from ape.cli import AccountAliasPromptChoice, ape_cli_context, network_option, verbosity_option
+from ape.logging import logger
 
 from silverback._importer import import_from_string
 from silverback.runner import LiveRunner
@@ -18,6 +19,7 @@ def _load_runner(ctx, param, val):
         return LiveRunner
 
     elif runner := import_from_string(val):
+        logger.info(f"Using custom runner '{runner.__name__}'.")
         return runner
 
     raise ValueError(f"Failed to import runner '{val}'.")
