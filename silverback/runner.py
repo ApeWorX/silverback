@@ -1,6 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Coroutine, Iterable
+from typing import Coroutine
 
 from ape import chain
 from ape.contracts import ContractEvent, ContractInstance
