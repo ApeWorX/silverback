@@ -33,7 +33,6 @@ def _load_runner(ctx, param, val):
 @click.option(
     "--runner",
     help="An import str in format '<module>:<CustomRunner>'",
-    default=LiveRunner,
     callback=_load_runner,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
