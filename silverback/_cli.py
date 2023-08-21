@@ -13,12 +13,27 @@ def cli():
     """Work with SilverBack applications in local context (using Ape)."""
 
 
+def _load_runner(ctx, param, val):
+    if not val:
+        return LiveRunner
+
+    elif runner := import_from_string(val):
+        return runner
+
+    raise ValueError(f"Failed to import runner '{val}'.")
+
+
 @cli.command()
 @ape_cli_context()
 @verbosity_option()
 @network_option(default=None)
-@click.option("--account", type=AccountAliasPromptChoice(), default=None)
-@click.option("--runner", default=None)
+@click.option("--account", type=AccountAliasPromptChoice())
+@click.option(
+    "--runner",
+    help="An import str in format '<module>:<CustomRunner>'",
+    default=LiveRunner,
+    callback=_load_runner,
+)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
 def run(cli_ctx, network, account, runner, max_exceptions, path):
@@ -29,9 +44,6 @@ def run(cli_ctx, network, account, runner, max_exceptions, path):
 
     if account:
         os.environ["SILVERBACK_SIGNER_ALIAS"] = account.alias.replace("dev_", "TEST::")
-
-    if not (runner := runner and import_from_string(runner)):
-        runner = LiveRunner
 
     with cli_ctx.network_manager.parse_network_choice(network):
         app = import_from_string(path)
