@@ -18,9 +18,10 @@ def cli():
 @verbosity_option()
 @network_option(default=None)
 @click.option("--account", type=AccountAliasPromptChoice(), default=None)
+@click.option("--runner", default=None)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
-def run(cli_ctx, network, account, max_exceptions, path):
+def run(cli_ctx, network, account, runner, max_exceptions, path):
     if network:
         os.environ["SILVERBACK_NETWORK_CHOICE"] = network
     else:
@@ -29,7 +30,10 @@ def run(cli_ctx, network, account, max_exceptions, path):
     if account:
         os.environ["SILVERBACK_SIGNER_ALIAS"] = account.alias.replace("dev_", "TEST::")
 
+    if not (runner := runner and import_from_string(runner)):
+        runner = LiveRunner
+
     with cli_ctx.network_manager.parse_network_choice(network):
         app = import_from_string(path)
-        runner = LiveRunner(app, max_exceptions=max_exceptions)
+        runner = runner(app, max_exceptions=max_exceptions)
         asyncio.run(runner.run())
