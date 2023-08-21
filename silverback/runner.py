@@ -1,5 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Coroutine, Iterable
 
 from ape import chain
 from ape.contracts import ContractEvent, ContractInstance
@@ -42,7 +43,7 @@ class BaseRunner(ABC):
         handle an event handler task for the given contract event
         """
 
-    async def run(self):
+    async def run(self, *other_tasks: Coroutine):
         await self.app.broker.startup()
 
         if block_handler := self.app.get_block_handler():
@@ -55,16 +56,14 @@ class BaseRunner(ABC):
                 if event_handler := self.app.get_event_handler(contract_address, event_name):
                     tasks.append(self._event_task(contract_event, event_handler))
 
+        tasks.extend(other_tasks)
+
         if len(tasks) == 0:
             raise SilverBackException("No tasks to execute")
 
-        try:
-            await asyncio.gather(*tasks)
-        except Exception as e:
-            logger.error(f"Critical exception, {type(e).__name__}: {e}")
+        await asyncio.gather(*tasks)
 
-        finally:
-            await self.app.broker.shutdown()
+        await self.app.broker.shutdown()
 
 
 class LiveRunner(BaseRunner):
