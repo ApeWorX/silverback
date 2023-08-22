@@ -58,13 +58,9 @@ class BaseRunner(ABC):
         if len(tasks) == 0:
             raise SilverBackException("No tasks to execute")
 
-        try:
-            await asyncio.gather(*tasks)
-        except Exception as e:
-            logger.error(f"Critical exception, {type(e).__name__}: {e}")
+        await asyncio.gather(*tasks)
 
-        finally:
-            await self.app.broker.shutdown()
+        await self.app.broker.shutdown()
 
 
 class LiveRunner(BaseRunner):
