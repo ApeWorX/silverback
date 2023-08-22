@@ -43,7 +43,7 @@ class BaseRunner(ABC):
         handle an event handler task for the given contract event
         """
 
-    async def run(self, *other_tasks: Coroutine):
+    async def run(self):
         await self.app.broker.startup()
 
         if block_handler := self.app.get_block_handler():
@@ -55,8 +55,6 @@ class BaseRunner(ABC):
             for event_name, contract_event in self.app.contract_events[contract_address].items():
                 if event_handler := self.app.get_event_handler(contract_address, event_name):
                     tasks.append(self._event_task(contract_event, event_handler))
-
-        tasks.extend(other_tasks)
 
         if len(tasks) == 0:
             raise SilverBackException("No tasks to execute")

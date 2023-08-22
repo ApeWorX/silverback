@@ -52,7 +52,6 @@ class SilverBackApp(ManagerAccessMixin):
         new_bock_timeout_str = (
             f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
         )
-
         logger.info(
             f"Loaded Silverback App:{network_str}"
             f"{signer_str}{start_block_str}{new_bock_timeout_str}"
