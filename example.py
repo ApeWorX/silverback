@@ -9,7 +9,23 @@ from silverback import CircuitBreaker, SilverBackApp
 app = SilverBackApp()
 
 # NOTE: Don't do any networking until after initializing app
-USDC = tokens["USDC"]
+try:
+    USDC = tokens["USDC"]
+except KeyError:
+    # NOTE: For some reason, USDC is missing from many multi-chain tokenlists.
+    if chain.provider.network.name == "mainnet":
+        if chain.provider.network.ecosystem.name == "optimism":
+            USDC = "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
+        elif chain.provider.network.ecosystem.name == "arbitrum":
+            USDC = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+
+        else:
+            raise  # The key error
+
+    else:
+        raise  # The key error
+
+
 YFI = tokens["YFI"]
 
 
