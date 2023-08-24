@@ -83,7 +83,8 @@ class Web3SubscriptionsManager:
                 if self._rpc_msg_buffer and self._rpc_msg_buffer[-1].get("id") == request_id:
                     return self._rpc_msg_buffer.pop()
 
-                await anext(self)  # Keep pulling until we get a response
+                # NOTE: Python <3.10 does not support `anext` function
+                await self.__anext__()  # Keep pulling until we get a response
 
         raise RuntimeError("Timeout waiting for response.")
 
@@ -112,8 +113,9 @@ class Web3SubscriptionsManager:
         while True:
             if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
                 async with self._ws_lock:
-                    # NOTE: Keep pulling until a message comes to process
-                    await anext(self)
+                    # Keep pulling until a message comes to process
+                    # NOTE: Python <3.10 does not support `anext` function
+                    await self.__anext__()
             else:
                 yield await queue.get()
 
