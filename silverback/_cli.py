@@ -5,7 +5,7 @@ import click
 from ape.cli import AccountAliasPromptChoice, ape_cli_context, network_option, verbosity_option
 
 from silverback._importer import import_from_string
-from silverback.runner import LiveRunner
+from silverback.runner import PollingRunner
 
 
 @click.group()
@@ -15,7 +15,7 @@ def cli():
 
 def _runner_callback(ctx, param, val):
     if not val:
-        return LiveRunner
+        return PollingRunner
 
     elif runner := import_from_string(val):
         return runner

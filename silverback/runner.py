@@ -63,7 +63,7 @@ class BaseRunner(ABC):
         await self.app.broker.shutdown()
 
 
-class LiveRunner(BaseRunner):
+class PollingRunner(BaseRunner):
     """
     Run a single app against a live network using a basic in-memory queue.
     """
