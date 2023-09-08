@@ -2,7 +2,6 @@ import asyncio
 from abc import ABC, abstractmethod
 
 from ape import chain
-from ape.api import UpstreamProvider
 from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
@@ -10,7 +9,7 @@ from ape_ethereum.ecosystem import keccak
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverBackApp
-from .exceptions import Halt, SilverBackException
+from .exceptions import Halt, NoWebsocketAvailable, SilverBackException
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .utils import async_wrap_iter
 
@@ -77,16 +76,10 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
 
         # Check for websocket support
-        provider = app.chain_manager.provider
-        if isinstance(provider, UpstreamProvider):
-            uri = provider.connection_str
-        elif hasattr(provider, "uri"):
-            # Most Web3Providers
-            uri = provider.uri
-        else:
-            raise
+        if not (ws_uri := app.chain_manager.provider.ws_uri):
+            raise NoWebsocketAvailable()
 
-        self.ws_uri = uri.replace("http", "ws")
+        self.ws_uri = ws_uri
 
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
         sub_id = await self.subscriptions.subscribe(SubscriptionType.BLOCKS)
