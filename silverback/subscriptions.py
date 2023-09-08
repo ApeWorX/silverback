@@ -19,7 +19,7 @@ class Web3SubscriptionsManager:
 
     def __init__(self, ws_provider_uri: str):
         # TODO: Temporary until a more permanent solution is added to ProviderAPI
-        if "infura" in ws_provider_uri:
+        if "infura" in ws_provider_uri and "ws/v3" not in ws_provider_uri:
             ws_provider_uri = ws_provider_uri.replace("v3", "ws/v3")
 
         self._ws_provider_uri = ws_provider_uri
