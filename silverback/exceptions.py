@@ -18,6 +18,13 @@ class InvalidContainerType(Exception):
         super().__init__(f"Invalid container type: {container.__class__}")
 
 
+class NoWebsocketAvailable(Exception):
+    def __init__(self):
+        super().__init__(
+            "Attempted to a use WebsocketRunner without a websocket-compatible provider."
+        )
+
+
 class SilverBackException(ApeException):
     pass
 

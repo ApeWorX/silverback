@@ -4,10 +4,13 @@ from abc import ABC, abstractmethod
 from ape import chain
 from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
+from ape.utils import ManagerAccessMixin
+from ape_ethereum.ecosystem import keccak
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverBackApp
-from .exceptions import Halt, SilverBackException
+from .exceptions import Halt, NoWebsocketAvailable, SilverBackException
+from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .utils import async_wrap_iter
 
 
@@ -63,14 +66,72 @@ class BaseRunner(ABC):
         await self.app.broker.shutdown()
 
 
-class LiveRunner(BaseRunner):
+class WebsocketRunner(BaseRunner, ManagerAccessMixin):
+    """
+    Run a single app against a live network using a basic in-memory queue and websockets.
+    """
+
+    def __init__(self, app: SilverBackApp, *args, **kwargs):
+        super().__init__(app, *args, **kwargs)
+        logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
+
+        # Check for websocket support
+        if not (ws_uri := app.chain_manager.provider.ws_uri):
+            raise NoWebsocketAvailable()
+
+        self.ws_uri = ws_uri
+
+    async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
+        sub_id = await self.subscriptions.subscribe(SubscriptionType.BLOCKS)
+        logger.debug(f"Handling blocks via {sub_id}")
+
+        async for raw_block in self.subscriptions.get_subscription_data(sub_id):
+            block_task = await block_handler.kiq(raw_block)
+            result = await block_task.wait_result()
+            self._handle_result(result)
+
+    async def _event_task(
+        self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
+    ):
+        if not isinstance(contract_event.contract, ContractInstance):
+            # For type-checking.
+            raise ValueError("Contract instance required.")
+
+        sub_id = await self.subscriptions.subscribe(
+            SubscriptionType.EVENTS,
+            address=contract_event.contract.address,
+            topics=["0x" + keccak(text=contract_event.abi.selector).hex()],
+        )
+        logger.debug(f"Handling '{contract_event.name}' events via {sub_id}")
+
+        async for raw_event in self.subscriptions.get_subscription_data(sub_id):
+            event = next(  # NOTE: `next` is okay since it only has one item
+                self.provider.network.ecosystem.decode_logs(
+                    [raw_event],
+                    contract_event.abi,
+                )
+            )
+            event_task = await event_handler.kiq(event)
+            result = await event_task.wait_result()
+            self._handle_result(result)
+
+    async def run(self):
+        async with Web3SubscriptionsManager(self.ws_uri) as subscriptions:
+            self.subscriptions = subscriptions
+            await super().run()
+
+
+class PollingRunner(BaseRunner):
     """
     Run a single app against a live network using a basic in-memory queue.
     """
 
     def __init__(self, app: SilverBackApp, *args, **kwargs):
         super().__init__(app, *args, **kwargs)
-        logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
+        logger.warning(
+            "The polling runner makes a significant amount of requests. "
+            "Do not use in production over long time periods unless you know what you're doing."
+        )
 
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
         new_block_timeout = None
