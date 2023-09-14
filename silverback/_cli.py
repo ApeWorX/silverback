@@ -10,7 +10,7 @@ from silverback.runner import PollingRunner
 
 @click.group()
 def cli():
-    """Work with SilverBack applications in local context (using Ape)."""
+    """Work with Silverback applications in local context (using Ape)."""
 
 
 def _runner_callback(ctx, param, val):

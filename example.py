@@ -3,10 +3,10 @@ from ape.api import BlockAPI
 from ape.types import ContractLog
 from ape_tokens import tokens  # type: ignore[import]
 
-from silverback import CircuitBreaker, SilverBackApp
+from silverback import CircuitBreaker, SilverbackApp
 
 # Do this to initialize your app
-app = SilverBackApp()
+app = SilverbackApp()
 
 # NOTE: Don't do any networking until after initializing app
 USDC = tokens["USDC"]

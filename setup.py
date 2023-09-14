@@ -54,7 +54,7 @@ setup(
     long_description_content_type="text/markdown",
     author="ApeWorX Ltd.",
     author_email="admin@apeworx.io",
-    url="https://github.com/SilverBackLtd/sdk",
+    url="https://github.com/ApeWorX/silverback",
     include_package_data=True,
     install_requires=[
         "eth-ape>=0.6.19,<1.0",

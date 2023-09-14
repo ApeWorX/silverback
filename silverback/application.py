@@ -14,7 +14,7 @@ from .exceptions import DuplicateHandler, InvalidContainerType
 from .settings import Settings
 
 
-class SilverBackApp(ManagerAccessMixin):
+class SilverbackApp(ManagerAccessMixin):
     def __init__(self, settings: Optional[Settings] = None):
         """
         Create app
