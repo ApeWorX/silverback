@@ -2,7 +2,7 @@
 requires = ["setuptools>=51.1.1", "wheel", "setuptools_scm[toml]>=5.0"]
 
 [tool.mypy]
-exclude = "build/"
+exclude = ["build/", "dist/", "docs/"]
 plugins = ["pydantic.mypy"]
 
 [tool.setuptools_scm]
@@ -37,3 +37,6 @@ force_grid_wrap = 0
 include_trailing_comma = true
 multi_line_output = 3
 use_parentheses = true
+
+[tool.mdformat]
+number = true
