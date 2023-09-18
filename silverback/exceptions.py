@@ -26,7 +26,7 @@ class NoWebsocketAvailable(Exception):
 
 
 class SilverbackException(ApeException):
-    pass
+    """Base Exception for any Silverback runtime faults."""
 
 
 class Halt(SilverbackException):
