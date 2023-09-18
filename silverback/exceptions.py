@@ -35,7 +35,7 @@ class Halt(SilverbackException):
 
 
 class CircuitBreaker(SilverbackException):
-    """Custom exception (created by user) that should trigger a shutdown."""
+    """Custom exception (created by user) that will trigger an application shutdown."""
 
     def __init__(self, message: str):
         logger.error(message)
