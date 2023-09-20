@@ -47,13 +47,13 @@ class BaseRunner(ABC):
 
     async def run(self):
         """
-        Run the task broker client for the assembled `SilverbackApp` application.
+        Run the task broker client for the assembled ``SilverbackApp`` application.
 
         Will listen for events against the connected provider (using `ManagerAccessMixin` context),
         and process them by kicking events over to the configured broker.
 
         Raises:
-            SilverbackException: If there are no configured tasks to execute.
+            :class:`~silverback.exceptions.SilverbackException`: If there are no configured tasks to execute.
         """
         await self.app.broker.startup()
 

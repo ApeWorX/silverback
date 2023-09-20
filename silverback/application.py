@@ -18,7 +18,7 @@ class SilverbackApp(ManagerAccessMixin):
     """
     The application singleton. Must be initialized prior to use.
 
-    Usages example::
+    Usage example::
 
         from silverback import SilverbackApp
 
@@ -32,7 +32,7 @@ class SilverbackApp(ManagerAccessMixin):
         Create app
 
         Args:
-            settings (Optional[silverback.settings:Settings]): Settings override.
+            settings (Optional[~:class:`silverback.settings.Settings`]): Settings override.
                 Defaults to environment settings.
         """
         if not settings:
@@ -77,7 +77,7 @@ class SilverbackApp(ManagerAccessMixin):
         """
         Code to execute on worker startup / restart after an error.
 
-        Usages example::
+        Usage example::
 
             @app.on_startup()
             def do_something_on_startup(state):
@@ -89,7 +89,7 @@ class SilverbackApp(ManagerAccessMixin):
         """
         Code to execute on normal worker shutdown.
 
-        Usages example::
+        Usage example::
 
             @app.on_shutdown()
             def do_something_on_shutdown(state):
@@ -114,7 +114,7 @@ class SilverbackApp(ManagerAccessMixin):
 
         Args:
             event_target (AddressType): The contract address of the target.
-            event_name: (str): The name of the event emitted by `event_target`.
+            event_name: (str): The name of the event emitted by ``event_target``.
 
         Returns:
             Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
@@ -138,7 +138,7 @@ class SilverbackApp(ManagerAccessMixin):
                 Defaults to whatever the latest block is.
 
         Raises:
-            InvalidContainerType: If the type of `container` is not configurable for the app.
+            :class:`~silverback.exceptions.InvalidContainerType`: If the type of `container` is not configurable for the app.
         """
         if isinstance(container, BlockContainer):
             if self.get_block_handler():
