@@ -72,9 +72,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="application.html">silverback.application</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.runner</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#silverback.runner.BaseRunner"><code class="docutils literal notranslate"><span class="pre">BaseRunner</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#silverback.runner.BaseRunner"><code class="docutils literal notranslate"><span class="pre">BaseRunner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.runner.BaseRunner.run"><code class="docutils literal notranslate"><span class="pre">BaseRunner.run()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.runner.PollingRunner"><code class="docutils literal notranslate"><span class="pre">PollingRunner</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#silverback.runner.WebsocketRunner"><code class="docutils literal notranslate"><span class="pre">WebsocketRunner</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#silverback.runner.WebsocketRunner"><code class="docutils literal notranslate"><span class="pre">WebsocketRunner</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.runner.WebsocketRunner.run"><code class="docutils literal notranslate"><span class="pre">WebsocketRunner.run()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="middlewares.html">silverback.middlewares</a></li>
@@ -113,22 +119,48 @@
 of different scenarios and trigger methods.</p>
 <span class="target" id="module-silverback.runner"></span><dl class="py class">
 <dt class="sig sig-object py" id="silverback.runner.BaseRunner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">BaseRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SilverbackApp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_exceptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">BaseRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="application.html#silverback.application.SilverbackApp" title="silverback.application.SilverbackApp"><span class="pre">SilverbackApp</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_exceptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.runner.BaseRunner.run">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the task broker client for the assembled <code class="docutils literal notranslate"><span class="pre">SilverbackApp</span></code> application.</p>
+<p>Will listen for events against the connected provider (using <cite>ManagerAccessMixin</cite> context),
+and process them by kicking events over to the configured broker.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.Halt" title="silverback.exceptions.Halt"><strong>Halt</strong></a> – If there are no configured tasks to execute.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="silverback.runner.PollingRunner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">PollingRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SilverbackApp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.PollingRunner" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">PollingRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="application.html#silverback.application.SilverbackApp" title="silverback.application.SilverbackApp"><span class="pre">SilverbackApp</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.PollingRunner" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#silverback.runner.BaseRunner" title="silverback.runner.BaseRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRunner</span></code></a></p>
 <p>Run a single app against a live network using a basic in-memory queue.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="silverback.runner.WebsocketRunner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">WebsocketRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SilverbackApp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.WebsocketRunner" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">WebsocketRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="application.html#silverback.application.SilverbackApp" title="silverback.application.SilverbackApp"><span class="pre">SilverbackApp</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.WebsocketRunner" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#silverback.runner.BaseRunner" title="silverback.runner.BaseRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRunner</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
 <p>Run a single app against a live network using a basic in-memory queue and websockets.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.runner.WebsocketRunner.run">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.WebsocketRunner.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the task broker client for the assembled <code class="docutils literal notranslate"><span class="pre">SilverbackApp</span></code> application.</p>
+<p>Will listen for events against the connected provider (using <cite>ManagerAccessMixin</cite> context),
+and process them by kicking events over to the configured broker.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.Halt" title="silverback.exceptions.Halt"><strong>Halt</strong></a> – If there are no configured tasks to execute.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>

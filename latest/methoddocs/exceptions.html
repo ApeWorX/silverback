@@ -76,11 +76,11 @@
 <li class="toctree-l1"><a class="reference internal" href="subscriptions.html">silverback.subscriptions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.exceptions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.CircuitBreaker"><code class="docutils literal notranslate"><span class="pre">CircuitBreaker</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.DuplicateHandler"><code class="docutils literal notranslate"><span class="pre">DuplicateHandler</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.DuplicateHandlerError"><code class="docutils literal notranslate"><span class="pre">DuplicateHandlerError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.Halt"><code class="docutils literal notranslate"><span class="pre">Halt</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.ImportFromStringError"><code class="docutils literal notranslate"><span class="pre">ImportFromStringError</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.InvalidContainerType"><code class="docutils literal notranslate"><span class="pre">InvalidContainerType</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.NoWebsocketAvailable"><code class="docutils literal notranslate"><span class="pre">NoWebsocketAvailable</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.InvalidContainerTypeError"><code class="docutils literal notranslate"><span class="pre">InvalidContainerTypeError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.NoWebsocketAvailableError"><code class="docutils literal notranslate"><span class="pre">NoWebsocketAvailableError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.exceptions.SilverbackException"><code class="docutils literal notranslate"><span class="pre">SilverbackException</span></code></a></li>
 </ul>
 </li>
@@ -117,12 +117,12 @@
 <dt class="sig sig-object py" id="silverback.exceptions.CircuitBreaker">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">CircuitBreaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.CircuitBreaker" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.SilverbackException" title="silverback.exceptions.SilverbackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">SilverbackException</span></code></a></p>
-<p>Custom exception (created by user) that should trigger a shutdown.</p>
+<p>Custom exception (created by user) that will trigger an application shutdown.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="silverback.exceptions.DuplicateHandler">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">DuplicateHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handler_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.DuplicateHandler" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="silverback.exceptions.DuplicateHandlerError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">DuplicateHandlerError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">handler_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.DuplicateHandlerError" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
@@ -139,14 +139,14 @@
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="silverback.exceptions.InvalidContainerType">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidContainerType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.InvalidContainerType" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="silverback.exceptions.InvalidContainerTypeError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidContainerTypeError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.InvalidContainerTypeError" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="silverback.exceptions.NoWebsocketAvailable">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">NoWebsocketAvailable</span></span><a class="headerlink" href="#silverback.exceptions.NoWebsocketAvailable" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="silverback.exceptions.NoWebsocketAvailableError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">NoWebsocketAvailableError</span></span><a class="headerlink" href="#silverback.exceptions.NoWebsocketAvailableError" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 </dd></dl>
 
@@ -154,6 +154,7 @@
 <dt class="sig sig-object py" id="silverback.exceptions.SilverbackException">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">SilverbackException</span></span><a class="headerlink" href="#silverback.exceptions.SilverbackException" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ApeException</span></code></p>
+<p>Base Exception for any Silverback runtime faults.</p>
 </dd></dl>
 
 </section>

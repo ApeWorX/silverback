@@ -70,7 +70,17 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Python Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.application</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.application</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#silverback.application.SilverbackApp"><code class="docutils literal notranslate"><span class="pre">SilverbackApp</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.get_block_handler"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.get_block_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.get_event_handler"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.get_event_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_shutdown"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_shutdown()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_startup"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_startup()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="runner.html">silverback.runner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="middlewares.html">silverback.middlewares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="subscriptions.html">silverback.subscriptions</a></li>
@@ -106,7 +116,100 @@
 <h1>silverback.application<a class="headerlink" href="#silverback-application" title="Permalink to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback.application</span></code> module contains the high-level implementation of the the user’s
 Silverback application, meant to be used to expose method handlers and other functionality.</p>
-<span class="target" id="module-silverback.application"></span></section>
+<span class="target" id="module-silverback.application"></span><dl class="py class">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.application.</span></span><span class="sig-name descname"><span class="pre">SilverbackApp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Settings</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.application.SilverbackApp" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
+<p>The application singleton. Must be initialized prior to use.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackApp</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">SilverbackApp</span><span class="p">()</span>
+
+<span class="o">...</span>  <span class="c1"># Connection has been initialized, can call broker methods e.g. `app.on_(...)`</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.get_block_handler">
+<span class="sig-name descname"><span class="pre">get_block_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncTaskiqDecoratedTask</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.get_block_handler" title="Permalink to this definition"></a></dt>
+<dd><p>Get access to the handler for <cite>block</cite> events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns decorated task, if one has been created.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[AsyncTaskiqDecoratedTask]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.get_event_handler">
+<span class="sig-name descname"><span class="pre">get_event_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ChecksumAddress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncTaskiqDecoratedTask</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.get_event_handler" title="Permalink to this definition"></a></dt>
+<dd><p>Get access to the handler for <cite>&lt;event_target&gt;:&lt;event_name&gt;</cite> events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_target</strong> (<em>AddressType</em>) – The contract address of the target.</p></li>
+<li><p><strong>event_name</strong> – (str): The name of the event emitted by <code class="docutils literal notranslate"><span class="pre">event_target</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns decorated task, if one has been created.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[AsyncTaskiqDecoratedTask]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_">
+<span class="sig-name descname"><span class="pre">on_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BlockContainer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ContractEvent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_block_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.application.SilverbackApp.on_" title="Permalink to this definition"></a></dt>
+<dd><p>Create task to handle events created by <cite>container</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>container</strong> – (Union[BlockContainer, ContractEvent]): The event source to watch.</p></li>
+<li><p><strong>new_block_timeout</strong> – (Optional[int]): Override for block timeoui that is acceptable.
+Defaults to whatever the app’s settings are for default polling timeout are.</p></li>
+<li><p><strong>start_block</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – block number to start processing events from.
+Defaults to whatever the latest block is.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.InvalidContainerTypeError" title="silverback.exceptions.InvalidContainerTypeError"><strong>InvalidContainerTypeError</strong></a> – If the type of <cite>container</cite> is not configurable for the app.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_shutdown">
+<span class="sig-name descname"><span class="pre">on_shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.on_shutdown" title="Permalink to this definition"></a></dt>
+<dd><p>Code to execute on normal worker shutdown.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">do_something_on_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+    <span class="o">...</span>  <span class="c1"># Update some external service, perhaps using information from `state`.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_startup">
+<span class="sig-name descname"><span class="pre">on_startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.on_startup" title="Permalink to this definition"></a></dt>
+<dd><p>Code to execute on worker startup / restart after an error.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+    <span class="o">...</span>  <span class="c1"># Can provision resources, or add things to `state`.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 
 
            </div>
