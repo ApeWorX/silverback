@@ -24,6 +24,7 @@ Initializing the app creates a network connection using the Ape configuration of
 
 However, by default an app has no configured event handlers, so it won't be very useful.
 This is where adding event handlers is useful via the `app.on_` method.
+This method lets us specify which event will trigger the execution of our handler as well as which handler to execute.
 
 ## New Block Events
 
