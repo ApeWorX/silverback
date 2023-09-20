@@ -9,7 +9,7 @@ from ape_ethereum.ecosystem import keccak
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverbackApp
-from .exceptions import Halt, NoWebsocketAvailable
+from .exceptions import Halt, NoWebsocketAvailableError
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .utils import async_wrap_iter
 
@@ -86,7 +86,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         # Check for websocket support
         if not (ws_uri := app.chain_manager.provider.ws_uri):
-            raise NoWebsocketAvailable()
+            raise NoWebsocketAvailableError()
 
         self.ws_uri = ws_uri
 

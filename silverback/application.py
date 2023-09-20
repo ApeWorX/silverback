@@ -10,7 +10,7 @@ from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import DuplicateHandler, InvalidContainerType
+from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
 from .settings import Settings
 
 
@@ -138,11 +138,12 @@ class SilverbackApp(ManagerAccessMixin):
                 Defaults to whatever the latest block is.
 
         Raises:
-            :class:`~silverback.exceptions.InvalidContainerType`: If the type of `container` is not configurable for the app.
+            :class:`~silverback.exceptions.InvalidContainerTypeError`:
+                If the type of `container` is not configurable for the app.
         """
         if isinstance(container, BlockContainer):
             if self.get_block_handler():
-                raise DuplicateHandler("block")
+                raise DuplicateHandlerError("block")
 
             if new_block_timeout is not None:
                 if "_blocks_" in self.poll_settings:
@@ -162,7 +163,9 @@ class SilverbackApp(ManagerAccessMixin):
             container.contract, ContractInstance
         ):
             if self.get_event_handler(container.contract.address, container.abi.name):
-                raise DuplicateHandler(f"event {container.contract.address}:{container.abi.name}")
+                raise DuplicateHandlerError(
+                    f"event {container.contract.address}:{container.abi.name}"
+                )
 
             key = container.contract.address
             if container.contract.address in self.contract_events:
@@ -188,4 +191,4 @@ class SilverbackApp(ManagerAccessMixin):
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling
-        raise InvalidContainerType(container)
+        raise InvalidContainerTypeError(container)
