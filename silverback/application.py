@@ -10,14 +10,30 @@ from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import DuplicateHandler, InvalidContainerType
+from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
 from .settings import Settings
 
 
 class SilverbackApp(ManagerAccessMixin):
+    """
+    The application singleton. Must be initialized prior to use.
+
+    Usage example::
+
+        from silverback import SilverbackApp
+
+        app = SilverbackApp()
+
+        ...  # Connection has been initialized, can call broker methods e.g. `app.on_(...)`
+    """
+
     def __init__(self, settings: Optional[Settings] = None):
         """
         Create app
+
+        Args:
+            settings (Optional[~:class:`silverback.settings.Settings`]): Settings override.
+                Defaults to environment settings.
         """
         if not settings:
             settings = Settings()
@@ -59,22 +75,50 @@ class SilverbackApp(ManagerAccessMixin):
 
     def on_startup(self) -> Callable:
         """
-        Code to execute on startup / restart after an error.
+        Code to execute on worker startup / restart after an error.
+
+        Usage example::
+
+            @app.on_startup()
+            def do_something_on_startup(state):
+                ...  # Can provision resources, or add things to `state`.
         """
         return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
 
     def on_shutdown(self) -> Callable:
         """
-        Code to execute on normal shutdown.
+        Code to execute on normal worker shutdown.
+
+        Usage example::
+
+            @app.on_shutdown()
+            def do_something_on_shutdown(state):
+                ...  # Update some external service, perhaps using information from `state`.
         """
         return self.broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)
 
     def get_block_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to the handler for `block` events.
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
         return self.broker.available_tasks.get("block")
 
     def get_event_handler(
         self, event_target: AddressType, event_name: str
     ) -> Optional[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to the handler for `<event_target>:<event_name>` events.
+
+        Args:
+            event_target (AddressType): The contract address of the target.
+            event_name: (str): The name of the event emitted by ``event_target``.
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
         return self.broker.available_tasks.get(f"{event_target}/event/{event_name}")
 
     def on_(
@@ -83,9 +127,23 @@ class SilverbackApp(ManagerAccessMixin):
         new_block_timeout: Optional[int] = None,
         start_block: Optional[int] = None,
     ):
+        """
+        Create task to handle events created by `container`.
+
+        Args:
+            container: (Union[BlockContainer, ContractEvent]): The event source to watch.
+            new_block_timeout: (Optional[int]): Override for block timeoui that is acceptable.
+                Defaults to whatever the app's settings are for default polling timeout are.
+            start_block (Optional[int]): block number to start processing events from.
+                Defaults to whatever the latest block is.
+
+        Raises:
+            :class:`~silverback.exceptions.InvalidContainerTypeError`:
+                If the type of `container` is not configurable for the app.
+        """
         if isinstance(container, BlockContainer):
             if self.get_block_handler():
-                raise DuplicateHandler("block")
+                raise DuplicateHandlerError("block")
 
             if new_block_timeout is not None:
                 if "_blocks_" in self.poll_settings:
@@ -105,7 +163,9 @@ class SilverbackApp(ManagerAccessMixin):
             container.contract, ContractInstance
         ):
             if self.get_event_handler(container.contract.address, container.abi.name):
-                raise DuplicateHandler(f"event {container.contract.address}:{container.abi.name}")
+                raise DuplicateHandlerError(
+                    f"event {container.contract.address}:{container.abi.name}"
+                )
 
             key = container.contract.address
             if container.contract.address in self.contract_events:
@@ -131,4 +191,4 @@ class SilverbackApp(ManagerAccessMixin):
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling
-        raise InvalidContainerType(container)
+        raise InvalidContainerTypeError(container)

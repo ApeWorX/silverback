@@ -9,7 +9,7 @@ from ape_ethereum.ecosystem import keccak
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverbackApp
-from .exceptions import Halt, NoWebsocketAvailable, SilverbackException
+from .exceptions import Halt, NoWebsocketAvailableError
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .utils import async_wrap_iter
 
@@ -46,6 +46,15 @@ class BaseRunner(ABC):
         """
 
     async def run(self):
+        """
+        Run the task broker client for the assembled ``SilverbackApp`` application.
+
+        Will listen for events against the connected provider (using `ManagerAccessMixin` context),
+        and process them by kicking events over to the configured broker.
+
+        Raises:
+            :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
+        """
         await self.app.broker.startup()
 
         if block_handler := self.app.get_block_handler():
@@ -59,7 +68,7 @@ class BaseRunner(ABC):
                     tasks.append(self._event_task(contract_event, event_handler))
 
         if len(tasks) == 0:
-            raise SilverbackException("No tasks to execute")
+            raise Halt("No tasks to execute")
 
         await asyncio.gather(*tasks)
 
@@ -77,7 +86,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         # Check for websocket support
         if not (ws_uri := app.chain_manager.provider.ws_uri):
-            raise NoWebsocketAvailable()
+            raise NoWebsocketAvailableError()
 
         self.ws_uri = ws_uri
 

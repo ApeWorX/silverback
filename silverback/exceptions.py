@@ -8,17 +8,17 @@ class ImportFromStringError(Exception):
     pass
 
 
-class DuplicateHandler(Exception):
+class DuplicateHandlerError(Exception):
     def __init__(self, handler_type: str):
         super().__init__(f"Only one handler allowed for: {handler_type}")
 
 
-class InvalidContainerType(Exception):
+class InvalidContainerTypeError(Exception):
     def __init__(self, container: Any):
         super().__init__(f"Invalid container type: {container.__class__}")
 
 
-class NoWebsocketAvailable(Exception):
+class NoWebsocketAvailableError(Exception):
     def __init__(self):
         super().__init__(
             "Attempted to a use WebsocketRunner without a websocket-compatible provider."
@@ -26,7 +26,7 @@ class NoWebsocketAvailable(Exception):
 
 
 class SilverbackException(ApeException):
-    pass
+    """Base Exception for any Silverback runtime faults."""
 
 
 class Halt(SilverbackException):
@@ -35,7 +35,7 @@ class Halt(SilverbackException):
 
 
 class CircuitBreaker(SilverbackException):
-    """Custom exception (created by user) that should trigger a shutdown."""
+    """Custom exception (created by user) that will trigger an application shutdown."""
 
     def __init__(self, message: str):
         logger.error(message)
