@@ -8,6 +8,11 @@ Some examples of these types of applications:
 - Measuring trading activity of popular pools
 - Listening for large swaps to update a telegram group
 
+## Prerequisites
+
+You should have a python project with Silverback installed.
+You can install Silverback via `pip install silverback`
+
 ## Creating an Application
 
 Creating a Silverback Application is easy, to do so initialize the `silverback.SilverbackApp` class:
