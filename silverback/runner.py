@@ -9,7 +9,7 @@ from ape_ethereum.ecosystem import keccak
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverbackApp
-from .exceptions import Halt, NoWebsocketAvailable, SilverbackException
+from .exceptions import Halt, NoWebsocketAvailable
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .utils import async_wrap_iter
 
@@ -53,7 +53,7 @@ class BaseRunner(ABC):
         and process them by kicking events over to the configured broker.
 
         Raises:
-            :class:`~silverback.exceptions.SilverbackException`: If there are no configured tasks to execute.
+            :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
         """
         await self.app.broker.startup()
 
@@ -68,7 +68,7 @@ class BaseRunner(ABC):
                     tasks.append(self._event_task(contract_event, event_handler))
 
         if len(tasks) == 0:
-            raise SilverbackException("No tasks to execute")
+            raise Halt("No tasks to execute")
 
         await asyncio.gather(*tasks)
 
