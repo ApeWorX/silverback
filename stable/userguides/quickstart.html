@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Start &mdash; silverback  documentation</title>
+      <link rel="stylesheet" href="/silverback/latest/_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="/silverback/latest/_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="/silverback/latest/_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="canonical" href="/silverback/userguides/quickstart.html" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <script src="../_static/custom.js"></script>
+  <script>
+      var PROJECT = "silverback";
+  </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developing a Silverback Application" href="development.html" />
+    <link rel="prev" title="Silverback Docs" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            silverback
+              <img src="../_static/logo.gif" class="logo" alt="Logo"/>
+          </a>
+
+          <div class="version">
+            <label for="version-picker" id="version-picker-label">Version:</label>
+            <select id="version-picker">
+              <option value="">Select version...</option>
+              <option value="latest">latest</option>
+              <option value="stable">stable</option>
+            </select>
+          </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#via-pip">via <code class="docutils literal notranslate"><span class="pre">pip</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#via-setuptools">via <code class="docutils literal notranslate"><span class="pre">setuptools</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-usage">Quick Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-usage">Docker Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing a Silverback Application</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">run</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/application.html">silverback.application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">silverback</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quick Start</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguides/quickstart.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quick-start">
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h1>
+<p>Silverback lets you create and deploy your own Python bots that respond to on-chain events.
+The Silverback library leverages the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart">Ape</a> development framework as well as it’s ecosystem of plugins and packages to enable you to develop simple-yet-sophisticated automated applications that can listen and respond to live chain data.</p>
+<p>Silverback applications are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.</p>
+<p>Some examples of these types of applications:</p>
+<ul class="simple">
+<li><p>Monitoring new pool creations, and depositing liquidity</p></li>
+<li><p>Measuring trading activity of popular pools</p></li>
+<li><p>Listening for large swaps to update a telegram group</p></li>
+</ul>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h2>
+<p>Read the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/development">development userguide</a> to learn more how to develop an application.</p>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.python.org/downloads">python3</a> version 3.8 or greater, python3-dev</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>Silverback relies heavily on the Ape development framework, so it’s worth it to familarize yourself with how to install Ape and it’s plugins using the <a class="reference external" href="https://docs.apeworx.io/ape/latest/userguides/quickstart#installation">Ape installation userguide</a>.</p>
+<section id="via-pip">
+<h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Permalink to this heading"></a></h3>
+<p>You can install the latest release via <a class="reference external" href="https://pypi.org/project/pip/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>silverback
+</pre></div>
+</div>
+</section>
+<section id="via-setuptools">
+<h3>via <code class="docutils literal notranslate"><span class="pre">setuptools</span></code><a class="headerlink" href="#via-setuptools" title="Permalink to this heading"></a></h3>
+<p>You can clone the repository and use <a class="reference external" href="https://github.com/pypa/setuptools"><code class="docutils literal notranslate"><span class="pre">setuptools</span></code></a> for the most up-to-date version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ApeWorX/silverback.git<span class="w"> </span>silverback
+<span class="nb">cd</span><span class="w"> </span>silverback
+python3<span class="w"> </span>setup.py<span class="w"> </span>install
+</pre></div>
+</div>
+</section>
+</section>
+<section id="quick-usage">
+<h2>Quick Usage<a class="headerlink" href="#quick-usage" title="Permalink to this heading"></a></h2>
+<p>Checkout <a class="reference external" href="./example.py">the example</a> to see how to use the library.</p>
+<p>To run your bot against a live network, this SDK includes a simple runner you can use via:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+</pre></div>
+</div>
+</section>
+<section id="docker-usage">
+<h2>Docker Usage<a class="headerlink" href="#docker-usage" title="Permalink to this heading"></a></h2>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+</pre></div>
+</div>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Permalink to this heading"></a></h2>
+<p>This project is in development and should be considered a beta.
+Things might not be in their final state and breaking changes may occur.
+Comments, questions, criticisms and pull requests are welcomed.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Silverback Docs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="development.html" class="btn btn-neutral float-right" title="Developing a Silverback Application" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, ApeWorX LTD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

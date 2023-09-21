@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developing a Silverback Application &mdash; silverback  documentation</title>
+      <link rel="stylesheet" href="/silverback/latest/_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="/silverback/latest/_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="/silverback/latest/_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="canonical" href="/silverback/userguides/development.html" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <script src="../_static/custom.js"></script>
+  <script>
+      var PROJECT = "silverback";
+  </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="run" href="../commands/run.html" />
+    <link rel="prev" title="Quick Start" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            silverback
+              <img src="../_static/logo.gif" class="logo" alt="Logo"/>
+          </a>
+
+          <div class="version">
+            <label for="version-picker" id="version-picker-label">Version:</label>
+            <select id="version-picker">
+              <option value="">Select version...</option>
+              <option value="latest">latest</option>
+              <option value="stable">stable</option>
+            </select>
+          </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developing a Silverback Application</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-an-application">Creating an Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#new-block-events">New Block Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#new-event-logs">New Event Logs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#startup-and-shutdown">Startup and Shutdown</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-your-application">Running your Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-your-application">Testing your Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-to-the-silverback-platform">Deploying to the Silverback Platform</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">run</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/application.html">silverback.application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">silverback</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Developing a Silverback Application</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/userguides/development.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="developing-a-silverback-application">
+<h1>Developing a Silverback Application<a class="headerlink" href="#developing-a-silverback-application" title="Permalink to this heading"></a></h1>
+<p>In this guide, we are going to show you more details on how to build an application with Silverback.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<p>You should have a python project with Silverback installed.
+You can install Silverback via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">silverback</span></code></p>
+</section>
+<section id="creating-an-application">
+<h2>Creating an Application<a class="headerlink" href="#creating-an-application" title="Permalink to this heading"></a></h2>
+<p>Creating a Silverback Application is easy, to do so initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackApp</span></code> class:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackApp</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">SilverbackApp</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The SilverbackApp class handles state and configuration.
+Through this class, we can hook up event handlers to be executed each time we encounter a new block or each time a specific event is emitted.
+Initializing the app creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.</p>
+<p>However, by default an app has no configured event handlers, so it won’t be very useful.
+This is where adding event handlers is useful via the <code class="docutils literal notranslate"><span class="pre">app.on_</span></code> method.
+This method lets us specify which event will trigger the execution of our handler as well as which handler to execute.</p>
+</section>
+<section id="new-block-events">
+<h2>New Block Events<a class="headerlink" href="#new-block-events" title="Permalink to this heading"></a></h2>
+<p>To add a block handler, you will do the following:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ape</span> <span class="kn">import</span> <span class="n">chain</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">handle_new_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_new_block</span></code> you can define any logic that you want to handle each new <code class="docutils literal notranslate"><span class="pre">block</span></code> detected by the silverback client.
+You can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
+Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this <code class="docutils literal notranslate"><span class="pre">block</span></code>.</p>
+</section>
+<section id="new-event-logs">
+<h2>New Event Logs<a class="headerlink" href="#new-event-logs" title="Permalink to this heading"></a></h2>
+<p>Similarly to blocks, you can handle events emitted by a contract by adding an event handler:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ape</span> <span class="kn">import</span> <span class="n">Contract</span>
+
+<span class="n">TOKEN</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="o">&lt;</span><span class="n">your</span> <span class="n">token</span> <span class="n">address</span> <span class="n">here</span><span class="o">&gt;</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">TOKEN</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">handle_token_transfer_events</span><span class="p">(</span><span class="n">transfer</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_token_transfer_events</span></code> you can define any logic that you want to handle each new <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event that gets emitted by <code class="docutils literal notranslate"><span class="pre">TOKEN.Transfer</span></code> detected by the silverback client.
+Again, you can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
+Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event log.</p>
+</section>
+<section id="startup-and-shutdown">
+<h2>Startup and Shutdown<a class="headerlink" href="#startup-and-shutdown" title="Permalink to this heading"></a></h2>
+<p>If you have heavier resources you want to load during startup, or otherwise perform some data collection prior to starting the bot, you can add a startup function like so:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">handle_on_worker_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>This function comes a parameter <code class="docutils literal notranslate"><span class="pre">state</span></code> that you can use for storing the results of your startup computation or resources that you have provisioned.
+It’s import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.
+The <code class="docutils literal notranslate"><span class="pre">state</span></code> variable is also useful as this gets made available to each handler method so other stateful quantities can be maintained for other uses.</p>
+<p>TODO: Add more information about <code class="docutils literal notranslate"><span class="pre">state</span></code></p>
+</section>
+<section id="running-your-application">
+<h2>Running your Application<a class="headerlink" href="#running-your-application" title="Permalink to this heading"></a></h2>
+<p>Once you have programmed your bot, it’s really useful to be able to run it locally and validate that it does what you expect it to do.
+To run your bot locally, we have included a really useful cli command <a class="reference external" href="../commands/run"><code class="docutils literal notranslate"><span class="pre">run</span></code></a> that takes care of connecting to the proper network, configuring signers (using your local Ape accounts), and starting up the application client and in-memory task queue workers.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run your bot on the Ethereum Sepolia testnet, with your own signer:</span>
+$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span>my_bot:app<span class="w"> </span>--network<span class="w"> </span>:sepolia<span class="w"> </span>--account<span class="w"> </span>acct-name
+</pre></div>
+</div>
+<p>It’s important to note that signers are optional, if not configured in the application then <code class="docutils literal notranslate"><span class="pre">app.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+You can use this in your application to enable a “test execution” mode, something like this:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compute some metric that might lead to creating a transaction</span>
+<span class="k">if</span> <span class="n">app</span><span class="o">.</span><span class="n">signer</span><span class="p">:</span>
+    <span class="c1"># Execute a transaction via `sender=app.signer`</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># Log what the transaction *would* have done, had a signer been enabled</span>
+</pre></div>
+</div>
+<div class="highlight-note notranslate"><div class="highlight"><pre><span></span>If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
+Always test your applications throughly before deploying.
+</pre></div>
+</div>
+</section>
+<section id="testing-your-application">
+<h2>Testing your Application<a class="headerlink" href="#testing-your-application" title="Permalink to this heading"></a></h2>
+<p>TODO: Add backtesting mode w/ <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">test</span></code></p>
+</section>
+<section id="deploying-to-the-silverback-platform">
+<h2>Deploying to the Silverback Platform<a class="headerlink" href="#deploying-to-the-silverback-platform" title="Permalink to this heading"></a></h2>
+<p>TODO: Add packaging and deployment to the Silverback platform, once available.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../commands/run.html" class="btn btn-neutral float-right" title="run" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, ApeWorX LTD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
