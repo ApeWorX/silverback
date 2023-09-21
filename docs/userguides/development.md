@@ -1,12 +1,6 @@
 # Developing a Silverback Application
 
-Silverback applications are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.
-
-Some examples of these types of applications:
-
-- Monitoring new pool creations, and depositing liquidity
-- Measuring trading activity of popular pools
-- Listening for large swaps to update a telegram group
+In this guide, we are going to show you more details on how to build an application with Silverback.
 
 ## Prerequisites
 

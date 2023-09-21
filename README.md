@@ -1,12 +1,27 @@
 # Quick Start
 
-Ape SDK for the Silverback platform
+Silverback lets you create and deploy your own Python bots that respond to on-chain events.
+The Silverback library leverages the [Ape](https://docs.apeworx.io/ape/stable/userguides/quickstart) development framework as well as it's ecosystem of plugins and packages to enable you to develop simple-yet-sophisticated automated applications that can listen and respond to live chain data.
+
+Silverback applications are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.
+
+Some examples of these types of applications:
+
+- Monitoring new pool creations, and depositing liquidity
+- Measuring trading activity of popular pools
+- Listening for large swaps to update a telegram group
+
+## Documentation
+
+Read the [development userguide](https://docs.apeworx.io/silverback/stable/development) to learn more how to develop an application.
 
 ## Dependencies
 
 - [python3](https://www.python.org/downloads) version 3.8 or greater, python3-dev
 
 ## Installation
+
+Silverback relies heavily on the Ape development framework, so it's worth it to familarize yourself with how to install Ape and it's plugins using the [Ape installation userguide](https://docs.apeworx.io/ape/latest/userguides/quickstart#installation).
 
 ### via `pip`
 
