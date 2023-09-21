@@ -27,7 +27,7 @@
   </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="run" href="../commands/run.html" />
+    <link rel="next" title="Developing a Silverback Application" href="development.html" />
     <link rel="prev" title="Silverback Docs" href="../index.html" /> 
 </head>
 
@@ -63,6 +63,7 @@
               <p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#via-pip">via <code class="docutils literal notranslate"><span class="pre">pip</span></code></a></li>
@@ -74,6 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing a Silverback Application</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">CLI Reference</span></p>
 <ul>
@@ -115,7 +117,19 @@
              
   <section id="quick-start">
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading"></a></h1>
-<p>Ape SDK for the Silverback platform</p>
+<p>Silverback lets you create and deploy your own Python bots that respond to on-chain events.
+The Silverback library leverages the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart">Ape</a> development framework as well as it’s ecosystem of plugins and packages to enable you to develop simple-yet-sophisticated automated applications that can listen and respond to live chain data.</p>
+<p>Silverback applications are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.</p>
+<p>Some examples of these types of applications:</p>
+<ul class="simple">
+<li><p>Monitoring new pool creations, and depositing liquidity</p></li>
+<li><p>Measuring trading activity of popular pools</p></li>
+<li><p>Listening for large swaps to update a telegram group</p></li>
+</ul>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h2>
+<p>Read the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/development">development userguide</a> to learn more how to develop an application.</p>
+</section>
 <section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h2>
 <ul class="simple">
@@ -124,6 +138,7 @@
 </section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>Silverback relies heavily on the Ape development framework, so it’s worth it to familarize yourself with how to install Ape and it’s plugins using the <a class="reference external" href="https://docs.apeworx.io/ape/latest/userguides/quickstart#installation">Ape installation userguide</a>.</p>
 <section id="via-pip">
 <h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Permalink to this heading"></a></h3>
 <p>You can install the latest release via <a class="reference external" href="https://pypi.org/project/pip/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>:</p>
@@ -168,7 +183,7 @@ Comments, questions, criticisms and pull requests are welcomed.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../index.html" class="btn btn-neutral float-left" title="Silverback Docs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../commands/run.html" class="btn btn-neutral float-right" title="run" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="development.html" class="btn btn-neutral float-right" title="Developing a Silverback Application" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
