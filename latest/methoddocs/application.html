@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.1.0">v0.1.0</option>
             </select>
           </div>
 <div role="search">
@@ -172,7 +173,7 @@ Silverback application, meant to be used to expose method handlers and other fun
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>container</strong> – (Union[BlockContainer, ContractEvent]): The event source to watch.</p></li>
-<li><p><strong>new_block_timeout</strong> – (Optional[int]): Override for block timeoui that is acceptable.
+<li><p><strong>new_block_timeout</strong> – (Optional[int]): Override for block timeout that is acceptable.
 Defaults to whatever the app’s settings are for default polling timeout are.</p></li>
 <li><p><strong>start_block</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – block number to start processing events from.
 Defaults to whatever the latest block is.</p></li>
