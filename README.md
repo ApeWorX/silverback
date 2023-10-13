@@ -13,7 +13,7 @@ Some examples of these types of applications:
 
 ## Documentation
 
-Read the [development userguide](https://docs.apeworx.io/silverback/stable/development) to learn more how to develop an application.
+Read the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html) to learn more how to develop an application.
 
 ## Dependencies
 
