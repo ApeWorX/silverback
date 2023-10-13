@@ -65,12 +65,12 @@ class SilverbackApp(ManagerAccessMixin):
         network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
         signer_str = f"\n  SIGNER={repr(self.signer)}"
         start_block_str = f"\n  START_BLOCK={self.start_block}" if self.start_block else ""
-        new_bock_timeout_str = (
+        new_block_timeout_str = (
             f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
         )
         logger.info(
             f"Loaded Silverback App:{network_str}"
-            f"{signer_str}{start_block_str}{new_bock_timeout_str}"
+            f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
     def on_startup(self) -> Callable:
@@ -132,7 +132,7 @@ class SilverbackApp(ManagerAccessMixin):
 
         Args:
             container: (Union[BlockContainer, ContractEvent]): The event source to watch.
-            new_block_timeout: (Optional[int]): Override for block timeoui that is acceptable.
+            new_block_timeout: (Optional[int]): Override for block timeout that is acceptable.
                 Defaults to whatever the app's settings are for default polling timeout are.
             start_block (Optional[int]): block number to start processing events from.
                 Defaults to whatever the latest block is.
