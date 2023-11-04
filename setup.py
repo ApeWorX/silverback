@@ -68,7 +68,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "eth-ape>=0.6.19,<1.0",
-        "taskiq[metrics]>=0.6.0,<0.7.0",
+        "taskiq[metrics]>=0.10.2,<0.11.0",
         "click",  # Use same version as eth-ape
     ],
     entry_points={
