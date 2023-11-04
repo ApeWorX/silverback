@@ -104,7 +104,7 @@ class SilverbackApp(ManagerAccessMixin):
         Returns:
             Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
         """
-        return self.broker.available_tasks.get("block")
+        return self.broker.find_task("block")
 
     def get_event_handler(
         self, event_target: AddressType, event_name: str
@@ -119,7 +119,7 @@ class SilverbackApp(ManagerAccessMixin):
         Returns:
             Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
         """
-        return self.broker.available_tasks.get(f"{event_target}/event/{event_name}")
+        return self.broker.find_task(f"{event_target}/event/{event_name}")
 
     def on_(
         self,
