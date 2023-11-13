@@ -3,8 +3,6 @@ from typing import List, Optional
 from ape.api import AccountAPI, ProviderContextManager
 from ape.utils import ManagerAccessMixin
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-# from ape._pydantic_compat import BaseSettings
 from taskiq import AsyncBroker, InMemoryBroker, PrometheusMiddleware, TaskiqMiddleware
 
 from ._importer import import_from_string

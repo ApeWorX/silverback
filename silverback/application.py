@@ -2,7 +2,6 @@ import asyncio
 import atexit
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Union
-from typing_extensions import ParamSpec, TypeVar
 
 from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
@@ -11,6 +10,7 @@ from ape.managers.chain import BlockContainer
 from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
+from typing_extensions import ParamSpec, TypeVar
 
 from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
 from .settings import Settings
