@@ -73,6 +73,9 @@ class SilverbackApp(ManagerAccessMixin):
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
+    async def startup(self):
+        await self.broker.startup()
+
     def on_startup(self) -> Callable:
         """
         Code to execute on worker startup / restart after an error.
@@ -84,6 +87,9 @@ class SilverbackApp(ManagerAccessMixin):
                 ...  # Can provision resources, or add things to `state`.
         """
         return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
+
+    async def shutdown(self):
+        await self.broker.shutdown()
 
     def on_shutdown(self) -> Callable:
         """
@@ -126,7 +132,7 @@ class SilverbackApp(ManagerAccessMixin):
         container: Union[BlockContainer, ContractEvent],
         new_block_timeout: Optional[int] = None,
         start_block: Optional[int] = None,
-    ):
+    ) -> AsyncTaskiqDecoratedTask:
         """
         Create task to handle events created by `container`.
 

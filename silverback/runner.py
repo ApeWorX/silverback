@@ -55,7 +55,7 @@ class BaseRunner(ABC):
         Raises:
             :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
         """
-        await self.app.broker.startup()
+        await self.app.startup()
 
         if block_handler := self.app.get_block_handler():
             tasks = [self._block_task(block_handler)]
@@ -72,7 +72,7 @@ class BaseRunner(ABC):
 
         await asyncio.gather(*tasks)
 
-        await self.app.broker.shutdown()
+        await self.app.shutdown()
 
 
 class WebsocketRunner(BaseRunner, ManagerAccessMixin):
