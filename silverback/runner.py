@@ -99,6 +99,8 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             result = await block_task.wait_result()
             self._handle_result(result)
 
+        await self.subscriptions.unsubscribe(sub_id)
+
     async def _event_task(
         self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
     ):
@@ -123,6 +125,8 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             event_task = await event_handler.kiq(event)
             result = await event_task.wait_result()
             self._handle_result(result)
+
+        await self.subscriptions.unsubscribe(sub_id)
 
     async def run(self):
         async with Web3SubscriptionsManager(self.ws_uri) as subscriptions:
