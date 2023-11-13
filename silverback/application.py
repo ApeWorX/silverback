@@ -1,3 +1,4 @@
+import asyncio
 import atexit
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Union
@@ -9,9 +10,13 @@ from ape.managers.chain import BlockContainer
 from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
+from typing_extensions import ParamSpec, TypeVar
 
 from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
 from .settings import Settings
+
+_FuncParams = ParamSpec("_FuncParams")
+_ReturnType = TypeVar("_ReturnType")
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -56,6 +61,10 @@ class SilverbackApp(ManagerAccessMixin):
         # NOTE: This allows using connected ape methods e.g. `Contract`
         provider = self.network.__enter__()
 
+        def shutdown():
+            asyncio.run(self.shutdown())
+
+        atexit.register(shutdown)
         atexit.register(self.network.__exit__)
 
         self.signer = settings.get_signer()
@@ -73,6 +82,9 @@ class SilverbackApp(ManagerAccessMixin):
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
+    async def startup(self):
+        await self.broker.startup()
+
     def on_startup(self) -> Callable:
         """
         Code to execute on worker startup / restart after an error.
@@ -84,6 +96,9 @@ class SilverbackApp(ManagerAccessMixin):
                 ...  # Can provision resources, or add things to `state`.
         """
         return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
+
+    async def shutdown(self):
+        await self.broker.shutdown()
 
     def on_shutdown(self) -> Callable:
         """
@@ -104,7 +119,7 @@ class SilverbackApp(ManagerAccessMixin):
         Returns:
             Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
         """
-        return self.broker.available_tasks.get("block")
+        return self.broker.find_task("block")
 
     def get_event_handler(
         self, event_target: AddressType, event_name: str
@@ -119,14 +134,17 @@ class SilverbackApp(ManagerAccessMixin):
         Returns:
             Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
         """
-        return self.broker.available_tasks.get(f"{event_target}/event/{event_name}")
+        return self.broker.find_task(f"{event_target}/event/{event_name}")
 
     def on_(
         self,
         container: Union[BlockContainer, ContractEvent],
         new_block_timeout: Optional[int] = None,
         start_block: Optional[int] = None,
-    ):
+    ) -> Callable[
+        [Callable[_FuncParams, _ReturnType]],
+        AsyncTaskiqDecoratedTask[_FuncParams, _ReturnType],
+    ]:
         """
         Create task to handle events created by `container`.
 

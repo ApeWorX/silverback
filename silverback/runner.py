@@ -55,7 +55,7 @@ class BaseRunner(ABC):
         Raises:
             :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
         """
-        await self.app.broker.startup()
+        await self.app.startup()
 
         if block_handler := self.app.get_block_handler():
             tasks = [self._block_task(block_handler)]
@@ -72,7 +72,7 @@ class BaseRunner(ABC):
 
         await asyncio.gather(*tasks)
 
-        await self.app.broker.shutdown()
+        await self.app.shutdown()
 
 
 class WebsocketRunner(BaseRunner, ManagerAccessMixin):
@@ -99,6 +99,8 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             result = await block_task.wait_result()
             self._handle_result(result)
 
+        await self.subscriptions.unsubscribe(sub_id)
+
     async def _event_task(
         self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
     ):
@@ -123,6 +125,8 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             event_task = await event_handler.kiq(event)
             result = await event_task.wait_result()
             self._handle_result(result)
+
+        await self.subscriptions.unsubscribe(sub_id)
 
     async def run(self):
         async with Web3SubscriptionsManager(self.ws_uri) as subscriptions:
