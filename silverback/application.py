@@ -1,3 +1,4 @@
+import asyncio
 import atexit
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Union
@@ -56,6 +57,10 @@ class SilverbackApp(ManagerAccessMixin):
         # NOTE: This allows using connected ape methods e.g. `Contract`
         provider = self.network.__enter__()
 
+        def shutdown():
+            asyncio.run(self.shutdown())
+
+        atexit.register(shutdown)
         atexit.register(self.network.__exit__)
 
         self.signer = settings.get_signer()
