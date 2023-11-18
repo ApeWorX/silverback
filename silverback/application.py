@@ -73,9 +73,13 @@ class SilverbackApp(ManagerAccessMixin):
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
+    def checkpoint(self, last_block_seen: int, last_block_processed: int):
+        self.broker.state.last_block_seen = last_block_seen
+        self.broker.state.last_block_processed = last_block_processed
+
     def on_startup(self) -> Callable:
         """
-        Code to execute on worker startup / restart after an error.
+        Code to execute on client startup / restart after an error.
 
         Usage example::
 
@@ -83,11 +87,11 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_startup(state):
                 ...  # Can provision resources, or add things to `state`.
         """
-        return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
+        return self.broker.on_event(TaskiqEvents.CLIENT_STARTUP)
 
     def on_shutdown(self) -> Callable:
         """
-        Code to execute on normal worker shutdown.
+        Code to execute on client shutdown.
 
         Usage example::
 
@@ -95,7 +99,7 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_shutdown(state):
                 ...  # Update some external service, perhaps using information from `state`.
         """
-        return self.broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)
+        return self.broker.on_event(TaskiqEvents.CLIENT_SHUTDOWN)
 
     def get_block_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
         """

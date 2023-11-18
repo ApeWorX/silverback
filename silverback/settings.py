@@ -17,6 +17,9 @@ class Settings(BaseSettings, ManagerAccessMixin):
     testing or deployment purposes. Defaults to a working in-memory broker.
     """
 
+    # A unique identifier for this silverback instance
+    INSTANCE: str = "default"
+
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
     BROKER_URI: str = ""
 
@@ -30,6 +33,8 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     NEW_BLOCK_TIMEOUT: Optional[int] = None
     START_BLOCK: Optional[int] = None
+
+    MONGODB_URI: Optional[str] = None
 
     class Config:
         env_prefix = "SILVERBACK_"
@@ -59,10 +64,12 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
         return broker
 
+    def get_network_choice(self) -> str:
+        # return self.NETWORK_CHOICE or self.network_manager.default_ecosystem.name
+        return self.NETWORK_CHOICE or self.network_manager.network.choice
+
     def get_provider_context(self) -> ProviderContextManager:
-        return self.network_manager.parse_network_choice(
-            self.NETWORK_CHOICE or self.network_manager.default_ecosystem.name
-        )
+        return self.network_manager.parse_network_choice(self.get_network_choice())
 
     def get_signer(self) -> Optional[AccountAPI]:
         if self.SIGNER_ALIAS:

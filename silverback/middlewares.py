@@ -3,6 +3,8 @@ from ape.types import ContractLog, HexBytes
 from ape.utils import ManagerAccessMixin
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
+from silverback.utils import hexbytes_dict
+
 
 class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
     def __init__(self, *args, **kwargs):
@@ -47,20 +49,10 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         return f"{message.task_name}{args}"
 
     def pre_execute(self, message: TaskiqMessage) -> TaskiqMessage:
-        def fix_dict(data: dict) -> dict:
-            fixed_data = {}
-            for name, value in data.items():
-                if isinstance(value, str) and value.startswith("0x"):
-                    fixed_data[name] = HexBytes(value)
-                else:
-                    fixed_data[name] = value
-
-            return fixed_data
-
         if message.task_name == "block":
             # NOTE: Necessary because we don't know the exact block class
             message.args[0] = self.provider.network.ecosystem.decode_block(
-                fix_dict(message.args[0])
+                hexbytes_dict(message.args[0])
             )
 
         elif "event" in message.task_name:

@@ -2,6 +2,10 @@ import asyncio
 import threading
 from typing import AsyncIterator, Iterator
 
+from ape.contracts import ContractEvent, ContractInstance
+from ape.managers.chain import BlockContainer
+from ape.types import HexBytes
+
 
 def async_wrap_iter(it: Iterator) -> AsyncIterator:
     """Wrap blocking iterator into an asynchronous one"""
@@ -34,3 +38,15 @@ def async_wrap_iter(it: Iterator) -> AsyncIterator:
 
     threading.Thread(target=iter_to_queue).start()
     return yield_queue_items()
+
+
+def hexbytes_dict(data: dict) -> dict:
+    fixed_data = {}
+
+    for name, value in data.items():
+        if isinstance(value, str) and value.startswith("0x"):
+            fixed_data[name] = HexBytes(value)
+        else:
+            fixed_data[name] = value
+
+    return fixed_data
