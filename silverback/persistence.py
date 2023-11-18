@@ -186,9 +186,9 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
                 await state.set(
                     # Unreported type error?  Confiremd working
                     {
-                        SilverbackStateDoc.last_block_seen: last_block_seen,  # type: ignore
-                        SilverbackStateDoc.last_block_processed: last_block_processed,  # type: ignore
-                        SilverbackStateDoc.updated: now_utc,  # type: ignore
+                        SilverbackStateDoc.last_block_seen: last_block_seen,  # type: ignore # noqa: E501
+                        SilverbackStateDoc.last_block_processed: last_block_processed,  # type: ignore # noqa: E501
+                        SilverbackStateDoc.updated: now_utc,  # type: ignore # noqa: E501
                     }
                 )
             else:

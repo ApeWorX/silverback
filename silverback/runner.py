@@ -59,7 +59,10 @@ class BaseRunner(ABC):
             or last_block_processed > self.last_block_processed
         ):
             logger.debug(
-                f"Checkpoint block [seen={self.last_block_seen}, procssed={self.last_block_processed}]"
+                (
+                    f"Checkpoint block [seen={self.last_block_seen}, "
+                    f"procssed={self.last_block_processed}]"
+                )
             )
             self.last_block_seen = max(last_block_seen, self.last_block_seen)
             self.last_block_processed = max(last_block_processed, self.last_block_processed)
