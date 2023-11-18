@@ -150,6 +150,17 @@ class BaseRunner(ABC):
 
         await asyncio.gather(*tasks)
 
+        # Execute Silverback shutdown task before shutting down the broker
+        if shutdown_handler := self.app.get_shutdown_handler():
+            task = await shutdown_handler.kiq()
+            result = await task.wait_result()
+            await self._handle_result(
+                "silverback_shutdown",
+                self.last_block_seen,
+                -1,
+                result,
+            )
+
         await self.app.broker.shutdown()
 
 
