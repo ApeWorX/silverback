@@ -73,10 +73,6 @@ class SilverbackApp(ManagerAccessMixin):
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
-    def checkpoint(self, last_block_seen: int, last_block_processed: int):
-        self.broker.state.last_block_seen = last_block_seen
-        self.broker.state.last_block_processed = last_block_processed
-
     def on_startup(self) -> Callable:
         """
         Code to execute on one worker upon startup / restart after an error.

@@ -67,8 +67,6 @@ class BaseRunner(ABC):
             self.last_block_seen = max(last_block_seen, self.last_block_seen)
             self.last_block_processed = max(last_block_processed, self.last_block_processed)
 
-            self.app.checkpoint(self.last_block_seen, self.last_block_processed)
-
             if self.persistence:
                 await self.persistence.set_instance_state(
                     self.ident, self.last_block_seen, self.last_block_processed
@@ -108,14 +106,6 @@ class BaseRunner(ABC):
             if boot_state:
                 self.last_block_seen = boot_state.last_block_seen
                 self.last_block_processed = boot_state.last_block_processed
-
-            # NOTE: This will update TaskIQ state before app startup.
-            # TODO: I have no idea if this will work with a distributed runner/worker
-            # setup.  That may require our own injected startup task, but it's unclear if
-            # we can do that before Taskiq's startup handlers.  We might be able to force
-            # SilverbackApplication to decorate an internal func to handle it.  Need to
-            # figure that out.
-            self.app.checkpoint(self.last_block_seen, self.last_block_processed)
 
         await self.app.broker.startup()
 
