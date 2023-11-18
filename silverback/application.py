@@ -79,6 +79,30 @@ class SilverbackApp(ManagerAccessMixin):
 
     def on_startup(self) -> Callable:
         """
+        Code to execute on one worker upon startup / restart after an error.
+
+        Usage example::
+
+            @app.on_startup()
+            def do_something_on_startup(state):
+                ...  # Can provision resources, or add things to `state`.
+        """
+        return self.broker.task(task_name="silverback_startup")
+
+    def on_shutdown(self) -> Callable:
+        """
+        Code to execute on one worker at shutdown.
+
+        Usage example::
+
+            @app.on_shutdown()
+            def do_something_on_shutdown(state):
+                ...  # Update some external service, perhaps using information from `state`.
+        """
+        return self.broker.task(task_name="silverback_shutdown")
+
+    def on_client_startup(self) -> Callable:
+        """
         Code to execute on client startup / restart after an error.
 
         Usage example::
@@ -89,7 +113,7 @@ class SilverbackApp(ManagerAccessMixin):
         """
         return self.broker.on_event(TaskiqEvents.CLIENT_STARTUP)
 
-    def on_shutdown(self) -> Callable:
+    def on_client_shutdown(self) -> Callable:
         """
         Code to execute on client shutdown.
 
@@ -100,6 +124,48 @@ class SilverbackApp(ManagerAccessMixin):
                 ...  # Update some external service, perhaps using information from `state`.
         """
         return self.broker.on_event(TaskiqEvents.CLIENT_SHUTDOWN)
+
+    def on_worker_startup(self) -> Callable:
+        """
+        Code to execute on every worker at startup / restart after an error.
+
+        Usage example::
+
+            @app.on_startup()
+            def do_something_on_startup(state):
+                ...  # Can provision resources, or add things to `state`.
+        """
+        return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
+
+    def on_worker_shutdown(self) -> Callable:
+        """
+        Code to execute on every worker at shutdown.
+
+        Usage example::
+
+            @app.on_shutdown()
+            def do_something_on_shutdown(state):
+                ...  # Update some external service, perhaps using information from `state`.
+        """
+        return self.broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)
+
+    def get_startup_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to the handler for `silverback_startup` events.
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
+        return self.broker.available_tasks.get("silverback_startup")
+
+    def get_shutdown_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to the handler for `silverback_shutdown` events.
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
+        return self.broker.available_tasks.get("silverback_shutdown")
 
     def get_block_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
         """

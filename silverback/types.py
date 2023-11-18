@@ -16,6 +16,11 @@ class SilverbackIdent(BaseModel):
         return cls(identifier=settings_.INSTANCE, network_choice=settings_.get_network_choice())
 
 
+class SilverbackStartupState(BaseModel):
+    last_block_seen: int
+    last_block_processed: int
+
+
 def handler_id_block(block_number: Optional[int]) -> str:
     """Return a unique handler ID string for a block"""
     if block_number is None:

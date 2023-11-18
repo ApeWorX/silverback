@@ -14,7 +14,7 @@ from .exceptions import Halt, NoWebsocketAvailableError
 from .persistence import BasePersistentStorage, HandlerResult, init_mongo
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import SilverbackIdent, handler_id_block, handler_id_event
+from .types import SilverbackIdent, SilverbackStartupState, handler_id_block, handler_id_event
 from .utils import async_wrap_iter, hexbytes_dict
 
 settings = Settings()
@@ -118,6 +118,22 @@ class BaseRunner(ABC):
             self.app.checkpoint(self.last_block_seen, self.last_block_processed)
 
         await self.app.broker.startup()
+
+        # Execute Silverback startup task before we init the rest
+        if startup_handler := self.app.get_startup_handler():
+            task = await startup_handler.kiq(
+                SilverbackStartupState(
+                    last_block_seen=self.last_block_seen,
+                    last_block_processed=self.last_block_processed,
+                )
+            )
+            result = await task.wait_result()
+            await self._handle_result(
+                "silverback_startup",
+                self.last_block_seen,
+                -1,
+                result,
+            )
 
         if block_handler := self.app.get_block_handler():
             tasks = [self._block_task(block_handler)]
