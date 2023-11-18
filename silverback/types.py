@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import Annotated, Any, Dict, Optional
-from typing_extensions import Self  # Introduced 3.11
 
 from pydantic import BaseModel
+from typing_extensions import Self  # Introduced 3.11
 
 from .settings import Settings
 

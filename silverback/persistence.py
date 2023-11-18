@@ -2,11 +2,11 @@ import pickle
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Annotated, Any, Dict, Optional
-from typing_extensions import Self  # Introduced 3.11
 
 from ape.logging import logger
 from pydantic import BaseModel
 from taskiq import TaskiqResult
+from typing_extensions import Self  # Introduced 3.11
 
 from .types import SilverbackIdent
 

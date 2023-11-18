@@ -1,5 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Optional, Tuple
 
 from ape import chain
 from ape.contracts import ContractEvent, ContractInstance
@@ -7,13 +8,12 @@ from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
-from typing import Optional, Tuple
 
 from .application import SilverbackApp
 from .exceptions import Halt, NoWebsocketAvailableError
 from .persistence import BasePersistentStorage, HandlerResult, init_mongo
-from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .settings import Settings
+from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import SilverbackIdent, handler_id_block, handler_id_event
 from .utils import async_wrap_iter, hexbytes_dict
 
