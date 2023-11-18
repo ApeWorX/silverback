@@ -1,7 +1,7 @@
 import pickle
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Annotated, Any, Dict, Optional, Type
+from typing import Annotated, Optional
 
 from ape.logging import logger
 from pydantic import BaseModel
@@ -82,9 +82,10 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
     try:
         import pymongo
         from beanie import Document, Indexed, init_beanie
-        from beanie.odm.operators.update.general import Set
         from motor.core import AgnosticClient
         from motor.motor_asyncio import AsyncIOMotorClient
+
+        # from beanie.odm.operators.update.general import Set
     except ImportError as err:
         print(err)
         logger.warning("MongoDB was initialized by dependencies are not installed")

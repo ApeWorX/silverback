@@ -1,5 +1,5 @@
 from ape.logging import logger
-from ape.types import ContractLog, HexBytes
+from ape.types import ContractLog
 from ape.utils import ManagerAccessMixin
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 

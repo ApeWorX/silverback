@@ -2,8 +2,6 @@ import asyncio
 import threading
 from typing import AsyncIterator, Iterator
 
-from ape.contracts import ContractEvent, ContractInstance
-from ape.managers.chain import BlockContainer
 from ape.types import HexBytes
 
 
