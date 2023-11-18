@@ -1,7 +1,7 @@
 import pickle
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Annotated, Any, Dict, Optional
+from typing import TYPE_CHECKING, Annotated, Any, Dict, Optional, Type
 
 from ape.logging import logger
 from pydantic import BaseModel
@@ -12,22 +12,25 @@ from .types import SilverbackIdent
 
 
 class SilverbackState(BaseModel):
-    ident: SilverbackIdent
+    instance: str
+    network: str
     # Last block number seen by runner
     last_block_seen: int
     # Last block number processed by a worker
     last_block_processed: int
+    updated: datetime
 
 
 class HandlerResult(BaseModel):
     instance: str
     network: str
     handler_id: str
-    block_number: int
+    block_number: Optional[int]
     log_index: Optional[int]
     execution_time: float
     # TODO: upcoming feature in taskiq
     # labels: Dict[str]
+    # TODO: Use computed field with pydantic v2
     return_value_blob: Optional[bytes]  # pickled data
     created: datetime
 
@@ -36,7 +39,7 @@ class HandlerResult(BaseModel):
         cls,
         ident: SilverbackIdent,
         handler_id: str,
-        block_number: int,
+        block_number: int | None,
         log_index: int | None,
         result: TaskiqResult,
     ) -> Self:
@@ -51,16 +54,6 @@ class HandlerResult(BaseModel):
             return_value_blob=pickle.dumps(result.return_value),
             created=datetime.now(timezone.utc),
         )
-
-    @property
-    def return_value(self):
-        if self.return_value_blob is None:
-            return None
-        return pickle.loads(self.return_value_blob)
-
-    @return_value.setter
-    def set_return_value(self, v: Any):
-        self.return_value_blob = pickle.dumps(v)
 
 
 class BasePersistentStorage(ABC):
@@ -77,7 +70,7 @@ class BasePersistentStorage(ABC):
     @abstractmethod
     async def get_latest_result(
         self, instance: SilverbackIdent, handler: Optional[str] = None
-    ) -> HandlerResult:
+    ) -> Optional[HandlerResult]:
         ...
 
     @abstractmethod
@@ -90,13 +83,15 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
         import pymongo
         from beanie import Document, Indexed, init_beanie
         from beanie.odm.operators.update.general import Set
+        from motor.core import AgnosticClient
         from motor.motor_asyncio import AsyncIOMotorClient
     except ImportError as err:
         print(err)
         logger.warning("MongoDB was initialized by dependencies are not installed")
         return None
 
-    class SilverbackStateDoc(Document):
+    # NOTE: Ignoring an inheritence issue with pydantic's Config class.  Goes away with v2
+    class SilverbackStateDoc(SilverbackState, Document):  # type: ignore
         instance: Annotated[str, Indexed(str)]
         network: Annotated[str, Indexed(str)]
         last_block_seen: int
@@ -114,15 +109,15 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
 
         def to_silberback_state(self) -> SilverbackState:
             return SilverbackState(
-                ident=SilverbackIdent(
-                    identifier=self.instance,
-                    network_choice=self.network,
-                ),
+                instance=self.instance,
+                network=self.network,
                 last_block_seen=self.last_block_seen,
                 last_block_processed=self.last_block_processed,
+                updated=self.updated,
             )
 
-    class HandlerResultDoc(HandlerResult, Document):
+    # NOTE: Ignoring an inheritence issue with pydantic's Config class.  Goes away with v2
+    class HandlerResultDoc(HandlerResult, Document):  # type: ignore
         # NOTE: Redefining these to annotate with indexed type
         instance: Annotated[str, Indexed(str)]
         network: Annotated[str, Indexed(str)]
@@ -164,7 +159,7 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
             )
 
     class MongoStorage(BasePersistentStorage):
-        client: AsyncIOMotorClient
+        client: AgnosticClient
 
         async def get_instance_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
             res = await SilverbackStateDoc.find_one(
@@ -191,10 +186,10 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
                 await state.set(
                     # Unreported type error?  Confiremd working
                     {
-                        SilverbackStateDoc.last_block_seen: last_block_seen,
-                        SilverbackStateDoc.last_block_processed: last_block_processed,
-                        SilverbackStateDoc.updated: now_utc,
-                    }  # type: ignore
+                        SilverbackStateDoc.last_block_seen: last_block_seen,  # type: ignore
+                        SilverbackStateDoc.last_block_processed: last_block_processed,  # type: ignore
+                        SilverbackStateDoc.updated: now_utc,  # type: ignore
+                    }
                 )
             else:
                 state = SilverbackStateDoc(
@@ -227,6 +222,8 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
             #     ),
             # )
 
+            return state
+
         async def get_latest_result(
             self, ident: SilverbackIdent, handler_id: Optional[str] = None
         ) -> Optional[HandlerResult]:
@@ -241,7 +238,7 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
             res = await query.sort("-created").first_or_none()
 
             if res is None:
-                return res
+                return None
 
             return res.to_handler_result()
 
@@ -251,7 +248,7 @@ async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
             await doc.insert()  # type: ignore
 
     storage = MongoStorage()
-    client = AsyncIOMotorClient(mongo_uri)
+    client: AgnosticClient = AsyncIOMotorClient(mongo_uri)
 
     await init_beanie(
         database=client.db_name,

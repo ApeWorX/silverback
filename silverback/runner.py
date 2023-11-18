@@ -32,7 +32,7 @@ class BaseRunner(ABC):
         self.ident = SilverbackIdent.from_settings(settings)
 
     async def _handle_result(
-        self, handler_id: str, block_number: int, log_index: int | None, result: TaskiqResult
+        self, handler_id: str, block_number: int | None, log_index: int | None, result: TaskiqResult
     ):
         if result.is_err:
             self.exceptions += 1
@@ -162,7 +162,9 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             block_task = await block_handler.kiq(raw_block)
             result = await block_task.wait_result()
 
-            await self._handle_result(handler_id_block(block.number), block.number, None, result)
+            await self._handle_result(
+                handler_id_block(block.number), block.number or 0, None, result
+            )
 
             if block.number is not None:
                 await self._checkpoint(last_block_processed=block.number)
