@@ -3,7 +3,9 @@ from typing import Optional, Protocol, Union
 from pydantic import BaseModel
 from typing_extensions import Self  # Introduced 3.11
 
-StrOrNone = Union[str, None]  # For Python < 3.10
+# NOTE: 'type | None' introduced in 3.10
+StrOrNone = Union[str, None]
+IntOrNone = Union[int, None]
 
 
 class SilverbackSettings(Protocol):
