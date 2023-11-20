@@ -7,6 +7,7 @@ from taskiq import AsyncBroker, InMemoryBroker, PrometheusMiddleware, TaskiqMidd
 
 from ._importer import import_from_string
 from .middlewares import SilverbackMiddleware
+from .persistence import BasePersistentStorage
 
 
 class Settings(BaseSettings, ManagerAccessMixin):
@@ -34,7 +35,9 @@ class Settings(BaseSettings, ManagerAccessMixin):
     NEW_BLOCK_TIMEOUT: Optional[int] = None
     START_BLOCK: Optional[int] = None
 
-    MONGODB_URI: Optional[str] = None
+    # Used for persistent storage
+    PERSISTENCE_CLASS: Optional[str] = None
+    PERSISTENCE_URI: Optional[str] = None
 
     class Config:
         env_prefix = "SILVERBACK_"
@@ -67,6 +70,13 @@ class Settings(BaseSettings, ManagerAccessMixin):
     def get_network_choice(self) -> str:
         # return self.NETWORK_CHOICE or self.network_manager.default_ecosystem.name
         return self.NETWORK_CHOICE or self.network_manager.network.choice
+
+    def get_persistent_storage(self) -> Optional[BasePersistentStorage]:
+        if not self.PERSISTENCE_CLASS:
+            return None
+
+        persistence_class = import_from_string(self.PERSISTENCE_CLASS)
+        return persistence_class(settings=self)
 
     def get_provider_context(self) -> ProviderContextManager:
         return self.network_manager.parse_network_choice(self.get_network_choice())

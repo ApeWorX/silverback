@@ -11,7 +11,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverbackApp
 from .exceptions import Halt, NoWebsocketAvailableError
-from .persistence import BasePersistentStorage, HandlerResult, init_mongo
+from .persistence import BasePersistentStorage, HandlerResult
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import SilverbackIdent, SilverbackStartupState, handler_id_block, handler_id_event
@@ -98,10 +98,11 @@ class BaseRunner(ABC):
         Raises:
             :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
         """
-        if settings.MONGODB_URI:
-            self.persistence = await init_mongo(settings.MONGODB_URI)
+        self.persistence = settings.get_persistent_storage()
 
         if self.persistence:
+            await self.persistence.init()
+
             boot_state = await self.persistence.get_instance_state(self.ident)
             if boot_state:
                 self.last_block_seen = boot_state.last_block_seen

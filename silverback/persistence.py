@@ -1,14 +1,14 @@
 import pickle
+import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Optional
 
-from ape.logging import logger
 from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import SilverbackIdent
+from .types import SilverbackIdent, SilverbackSettings
 
 
 class SilverbackState(BaseModel):
@@ -57,207 +57,231 @@ class HandlerResult(BaseModel):
 
 
 class BasePersistentStorage(ABC):
+    def __init__(self, settings: SilverbackSettings):
+        self.settings = settings
+
+    @abstractmethod
+    async def init(self):
+        """Handle any async initialization from Silverback settings (e.g. migrations)."""
+        ...
+
     @abstractmethod
     async def get_instance_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
+        """Return the stored state for a Silverback instance"""
         ...
 
     @abstractmethod
     async def set_instance_state(
         self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
     ) -> Optional[SilverbackState]:
+        """Set the stored state for a Silverback instance"""
         ...
 
     @abstractmethod
     async def get_latest_result(
-        self, instance: SilverbackIdent, handler: Optional[str] = None
+        self, ident: SilverbackIdent, handler: Optional[str] = None
     ) -> Optional[HandlerResult]:
+        """Return the latest result for a Silverback instance's handler"""
         ...
 
     @abstractmethod
     async def add_result(self, v: HandlerResult):
+        """Store a result for a Silverback instance's handler"""
         ...
 
 
-async def init_mongo(mongo_uri: str) -> Optional[BasePersistentStorage]:
-    try:
-        import pymongo
-        from beanie import Document, Indexed, init_beanie
-        from motor.core import AgnosticClient
-        from motor.motor_asyncio import AsyncIOMotorClient
+class SQLitePersistentStorage(BasePersistentStorage):
+    SQL_GET_STATE = """
+        SELECT last_block_seen, last_block_processed, updated
+        FROM silverback_state
+        WHERE instance = ? AND network = ?;
+    """
+    SQL_INSERT_STATE = """
+        INSERT INTO silverback_state (
+            instance, network, last_block_seen, last_block_processed, updated
+        )
+        VALUES (?, ?, ?, ?, ?);
+    """
+    SQL_UPDATE_STATE = """
+        UPDATE silverback_state
+        SET last_block_seen = ?, last_block_processed = ?, updated = ?
+        WHERE instance = ? AND network = ?;
+    """
+    SQL_GET_RESULT_LATEST = """
+        SELECT handler_id, block_number, log_index, execution_time, return_value_blob, created
+        FROM silverback_result
+        WHERE instance = ? AND network = ?
+        ORDER BY created DESC
+        LIMIT 1;
+    """
+    SQL_GET_HANDLER_LATEST = """
+        SELECT handler_id, block_number, log_index, execution_time, return_value_blob, created
+        FROM silverback_result
+        WHERE instance = ? AND network = ? AND handler_id = ?
+        ORDER BY created DESC
+        LIMIT 1;
+    """
+    SQL_INSERT_RESULT = """
+        INSERT INTO silverback_result (
+            instance, network, handler_id, block_number, log_index, execution_time,
+            return_value_blob, created
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    """
 
-        # from beanie.odm.operators.update.general import Set
-    except ImportError as err:
-        print(err)
-        logger.warning("MongoDB was initialized by dependencies are not installed")
-        return None
+    async def init(self):
+        self.con = sqlite3.connect(self.settings.PERSISTENCE_URI or ":memory:")
 
-    # NOTE: Ignoring an inheritence issue with pydantic's Config class.  Goes away with v2
-    class SilverbackStateDoc(SilverbackState, Document):  # type: ignore
-        instance: Annotated[str, Indexed(str)]
-        network: Annotated[str, Indexed(str)]
-        last_block_seen: int
-        last_block_processed: int
-        updated: datetime
+        cur = self.con.cursor()
+        cur.executescript(
+            """
+            BEGIN;
+            CREATE TABLE IF NOT EXISTS silverback_state (
+                instance text,
+                network text,
+                last_block_seen int,
+                last_block_processed int,
+                updated int
+            );
+            CREATE TABLE IF NOT EXISTS silverback_result (
+                instance text,
+                network text,
+                handler_id text,
+                block_number int,
+                log_index int,
+                execution_time real,
+                return_value_blob blob,
+                created int
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS silverback_state__instance
+                ON silverback_state(instance, network);
+            CREATE INDEX IF NOT EXISTS silverback_result__instance
+                ON silverback_result (instance, network);
+            CREATE INDEX IF NOT EXISTS silverback_result__handler
+                ON silverback_result (instance, network, handler_id);
+            COMMIT;
+        """
+        )
+        cur.close()
 
-        class Settings:
-            name = "state"
-            indexes = [
-                [
-                    ("instance", pymongo.TEXT),
-                    ("network", pymongo.TEXT),
-                ],
-            ]
+    async def get_instance_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
+        cur = self.con.cursor()
+        res = cur.execute(
+            self.SQL_GET_STATE,
+            (ident.identifier, ident.network_choice),
+        )
+        row = res.fetchone()
 
-        def to_silberback_state(self) -> SilverbackState:
-            return SilverbackState(
-                instance=self.instance,
-                network=self.network,
-                last_block_seen=self.last_block_seen,
-                last_block_processed=self.last_block_processed,
-                updated=self.updated,
+        cur.close()
+
+        if row is None:
+            return None
+
+        return SilverbackState(
+            instance=ident.identifier,
+            network=ident.network_choice,
+            last_block_seen=row[0],
+            last_block_processed=row[1],
+            updated=datetime.fromtimestamp(row[2], timezone.utc),
+        )
+
+    async def set_instance_state(
+        self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
+    ) -> Optional[SilverbackState]:
+        cur = self.con.cursor()
+        res = cur.execute(
+            self.SQL_GET_STATE,
+            (ident.identifier, ident.network_choice),
+        )
+        row = res.fetchone()
+
+        now = datetime.now(timezone.utc)
+        now_stamp = int(now.timestamp())
+
+        if row is None:
+            cur.execute(
+                self.SQL_INSERT_STATE,
+                (
+                    ident.identifier,
+                    ident.network_choice,
+                    last_block_seen,
+                    last_block_processed,
+                    now_stamp,
+                ),
+            )
+        else:
+            cur.execute(
+                self.SQL_UPDATE_STATE,
+                (
+                    last_block_seen,
+                    last_block_processed,
+                    now_stamp,
+                    ident.identifier,
+                    ident.network_choice,
+                ),
             )
 
-    # NOTE: Ignoring an inheritence issue with pydantic's Config class.  Goes away with v2
-    class HandlerResultDoc(HandlerResult, Document):  # type: ignore
-        # NOTE: Redefining these to annotate with indexed type
-        instance: Annotated[str, Indexed(str)]
-        network: Annotated[str, Indexed(str)]
-        handler_id: Annotated[str, Indexed(str)]
+        cur.close()
+        self.con.commit()
 
-        class Settings:
-            name = "result"
-            indexes = [
-                [
-                    ("instance", pymongo.TEXT),
-                    ("network", pymongo.TEXT),
-                    ("handler", pymongo.TEXT),
-                ],
-            ]
+        return SilverbackState(
+            instance=ident.identifier,
+            network=ident.network_choice,
+            last_block_seen=last_block_seen,
+            last_block_processed=last_block_processed,
+            updated=now,
+        )
 
-        @classmethod
-        def from_handler_result(cls, result: HandlerResult) -> Self:
-            return cls(
-                instance=result.instance,
-                network=result.network,
-                handler_id=result.handler_id,
-                block_number=result.block_number,
-                log_index=result.log_index,
-                execution_time=result.execution_time,
-                return_value_blob=result.return_value_blob,
-                created=result.created,
+    async def get_latest_result(
+        self, ident: SilverbackIdent, handler: Optional[str] = None
+    ) -> Optional[HandlerResult]:
+        cur = self.con.cursor()
+
+        if handler is not None:
+            res = cur.execute(
+                self.SQL_GET_HANDLER_LATEST,
+                (ident.identifier, ident.network_choice, handler),
+            )
+        else:
+            res = cur.execute(
+                self.SQL_GET_RESULT_LATEST,
+                (ident.identifier, ident.network_choice),
             )
 
-        def to_handler_result(self) -> HandlerResult:
-            return HandlerResult(
-                instance=self.instance,
-                network=self.network,
-                handler_id=self.handler,
-                block_number=self.block_number,
-                log_index=self.log_index,
-                execution_time=self.execution_time,
-                return_value_blob=self.return_value_blob,
-                created=self.created,
-            )
+        row = res.fetchone()
 
-    class MongoStorage(BasePersistentStorage):
-        client: AgnosticClient
+        cur.close()
 
-        async def get_instance_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
-            res = await SilverbackStateDoc.find_one(
-                SilverbackStateDoc.instance == ident.identifier,
-                SilverbackStateDoc.network == ident.network_choice,
-            )
+        if row is None:
+            return None
 
-            if res is None:
-                return None
+        return HandlerResult(
+            instance=ident.identifier,
+            network=ident.network_choice,
+            handler_id=row[0],
+            block_number=row[1],
+            log_index=row[2],
+            execution_time=row[3],
+            return_value_blob=row[4],
+            created=datetime.fromtimestamp(row[5], timezone.utc),
+        )
 
-            return res.to_silberback_state()
+    async def add_result(self, v: HandlerResult):
+        cur = self.con.cursor()
 
-        async def set_instance_state(
-            self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
-        ) -> Optional[SilverbackState]:
-            now_utc = datetime.now(timezone.utc)
+        cur.execute(
+            self.SQL_INSERT_RESULT,
+            (
+                v.instance,
+                v.network,
+                v.handler_id,
+                v.block_number,
+                v.log_index,
+                v.execution_time,
+                v.return_value_blob,
+                v.created,
+            ),
+        )
 
-            state = await SilverbackStateDoc.find_one(
-                SilverbackStateDoc.instance == ident.identifier,
-                SilverbackStateDoc.network == ident.network_choice,
-            )
-
-            if state is not None:
-                await state.set(
-                    # Unreported type error?  Confiremd working
-                    {
-                        SilverbackStateDoc.last_block_seen: last_block_seen,  # type: ignore # noqa: E501
-                        SilverbackStateDoc.last_block_processed: last_block_processed,  # type: ignore # noqa: E501
-                        SilverbackStateDoc.updated: now_utc,  # type: ignore # noqa: E501
-                    }
-                )
-            else:
-                state = SilverbackStateDoc(
-                    instance=ident.identifier,
-                    network=ident.network_choice,
-                    last_block_seen=last_block_seen,
-                    last_block_processed=last_block_processed,
-                    updated=now_utc,
-                )
-                await state.create()
-
-            # TODO: Why no work?
-            # await SilverbackStateDoc.find_one(
-            #     SilverbackStateDoc.instance == ident.identifier,
-            #     SilverbackStateDoc.network == ident.network_choice,
-            # ).upsert(
-            #     Set(
-            #         {
-            #             SilverbackStateDoc.last_block_seen: last_block_seen,
-            #             SilverbackStateDoc.last_block_processed: last_block_processed,
-            #             SilverbackStateDoc.updated: now_utc,
-            #         }
-            #     ),
-            #     on_insert=SilverbackStateDoc(
-            #         instance=ident.identifier,
-            #         network=ident.network_choice,
-            #         last_block_seen=last_block_seen,
-            #         last_block_processed=last_block_processed,
-            #         updated=now_utc,
-            #     ),
-            # )
-
-            return state
-
-        async def get_latest_result(
-            self, ident: SilverbackIdent, handler_id: Optional[str] = None
-        ) -> Optional[HandlerResult]:
-            query = HandlerResultDoc.find(
-                HandlerResultDoc.instance == ident.identifier,
-                HandlerResultDoc.network == ident.network_choice,
-            )
-
-            if handler_id:
-                query.find(HandlerResultDoc.handler_id == handler_id)
-
-            res = await query.sort("-created").first_or_none()
-
-            if res is None:
-                return None
-
-            return res.to_handler_result()
-
-        async def add_result(self, result: HandlerResult):
-            doc = HandlerResultDoc.from_handler_result(result)
-            # Type annotation error: https://github.com/roman-right/beanie/issues/679
-            await doc.insert()  # type: ignore
-
-    storage = MongoStorage()
-    client: AgnosticClient = AsyncIOMotorClient(mongo_uri)
-
-    await init_beanie(
-        database=client.db_name,
-        # Type annotation error: https://github.com/roman-right/beanie/issues/670
-        document_models=[
-            HandlerResultDoc,
-            SilverbackStateDoc,
-        ],  # type: ignore
-    )
-
-    return storage
+        cur.close()
+        self.con.commit()

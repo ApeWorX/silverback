@@ -40,9 +40,6 @@ extras_require = {
         "IPython",  # Console for interacting
         "ipdb",  # Debugger (Must use `export PYTHONBREAKPOINT=ipdb.set_trace`)
     ],
-    "mongo": [
-        "beanie~=1.23.6",
-    ],
 }
 
 # NOTE: `pip install -e .[dev]` to install package
@@ -52,7 +49,6 @@ extras_require["dev"] = (
     + extras_require["doc"]
     + extras_require["release"]
     + extras_require["dev"]
-    + extras_require["mongo"]
 )
 
 with open("./README.md") as readme:

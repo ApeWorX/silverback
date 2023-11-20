@@ -1,9 +1,16 @@
-from typing import Optional
+from typing import Optional, Protocol
 
 from pydantic import BaseModel
 from typing_extensions import Self  # Introduced 3.11
 
-from .settings import Settings
+
+class SilverbackSettings(Protocol):
+    INSTANCE: str
+    PERSISTENCE_CLASS: Optional[str]
+    PERSISTENCE_URI: Optional[str]
+
+    def get_network_choice(self) -> str:
+        ...
 
 
 class SilverbackIdent(BaseModel):
@@ -11,7 +18,7 @@ class SilverbackIdent(BaseModel):
     network_choice: str
 
     @classmethod
-    def from_settings(cls, settings_: Settings) -> Self:
+    def from_settings(cls, settings_: SilverbackSettings) -> Self:
         return cls(identifier=settings_.INSTANCE, network_choice=settings_.get_network_choice())
 
 
