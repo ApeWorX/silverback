@@ -14,7 +14,13 @@ from .exceptions import Halt, NoWebsocketAvailableError
 from .persistence import BasePersistentStorage, HandlerResult
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import SilverbackIdent, SilverbackStartupState, handler_id_block, handler_id_event
+from .types import (
+    IntOrNone,
+    SilverbackIdent,
+    SilverbackStartupState,
+    handler_id_block,
+    handler_id_event,
+)
 from .utils import async_wrap_iter, hexbytes_dict
 
 settings = Settings()
@@ -32,7 +38,7 @@ class BaseRunner(ABC):
         self.ident = SilverbackIdent.from_settings(settings)
 
     async def _handle_result(
-        self, handler_id: str, block_number: int | None, log_index: int | None, result: TaskiqResult
+        self, handler_id: str, block_number: IntOrNone, log_index: IntOrNone, result: TaskiqResult
     ):
         if result.is_err:
             self.exceptions += 1

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import SilverbackIdent, SilverbackSettings
+from .types import IntOrNone, SilverbackIdent, SilverbackSettings
 
 
 class SilverbackState(BaseModel):
@@ -39,8 +39,8 @@ class HandlerResult(BaseModel):
         cls,
         ident: SilverbackIdent,
         handler_id: str,
-        block_number: int | None,
-        log_index: int | None,
+        block_number: IntOrNone,
+        log_index: IntOrNone,
         result: TaskiqResult,
     ) -> Self:
         return cls(
