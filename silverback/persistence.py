@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import IntOrNone, SilverbackIdent, ISilverbackSettings
+from .types import IntOrNone, ISilverbackSettings, SilverbackIdent
 
 
 class SilverbackState(BaseModel):
