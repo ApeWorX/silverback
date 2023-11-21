@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import IntOrNone, SilverbackIdent, SilverbackSettings
+from .types import IntOrNone, SilverbackIdent, ISilverbackSettings
 
 
 class SilverbackState(BaseModel):
@@ -57,7 +57,7 @@ class HandlerResult(BaseModel):
 
 
 class BasePersistentStorage(ABC):
-    def __init__(self, settings: SilverbackSettings):
+    def __init__(self, settings: ISilverbackSettings):
         self.settings = settings
 
     @abstractmethod

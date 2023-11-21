@@ -80,8 +80,8 @@ class SilverbackApp(ManagerAccessMixin):
         Usage example::
 
             @app.on_startup()
-            def do_something_on_startup(state):
-                ...  # Can provision resources, or add things to `state`.
+            def do_something_on_startup(startup_state):
+                ...  # Reprocess missed events or blocks
         """
         return self.broker.task(task_name="silverback_startup")
 
@@ -92,8 +92,8 @@ class SilverbackApp(ManagerAccessMixin):
         Usage example::
 
             @app.on_shutdown()
-            def do_something_on_shutdown(state):
-                ...  # Update some external service, perhaps using information from `state`.
+            def do_something_on_shutdown():
+                ...  # Record final state of app
         """
         return self.broker.task(task_name="silverback_shutdown")
 

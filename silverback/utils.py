@@ -39,6 +39,7 @@ def async_wrap_iter(it: Iterator) -> AsyncIterator:
 
 
 def hexbytes_dict(data: dict) -> dict:
+    """Converts any hex string values in a flat dictionary to HexBytes."""
     fixed_data = {}
 
     for name, value in data.items():

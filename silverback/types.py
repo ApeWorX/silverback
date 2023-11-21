@@ -8,7 +8,10 @@ StrOrNone = Union[str, None]
 IntOrNone = Union[int, None]
 
 
-class SilverbackSettings(Protocol):
+class ISilverbackSettings(Protocol):
+    """Loose approximation of silverback.settings.Settings.  If you can, use the class as
+    a type reference."""
+
     INSTANCE: str
     PERSISTENCE_CLASS: Optional[str]
     PERSISTENCE_URI: Optional[str]
@@ -22,7 +25,7 @@ class SilverbackIdent(BaseModel):
     network_choice: str
 
     @classmethod
-    def from_settings(cls, settings_: SilverbackSettings) -> Self:
+    def from_settings(cls, settings_: ISilverbackSettings) -> Self:
         return cls(identifier=settings_.INSTANCE, network_choice=settings_.get_network_choice())
 
 

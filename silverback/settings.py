@@ -68,7 +68,6 @@ class Settings(BaseSettings, ManagerAccessMixin):
         return broker
 
     def get_network_choice(self) -> str:
-        # return self.NETWORK_CHOICE or self.network_manager.default_ecosystem.name
         return self.NETWORK_CHOICE or self.network_manager.network.choice
 
     def get_persistent_storage(self) -> Optional[BasePersistentStorage]:
