@@ -8,7 +8,6 @@ from taskiq.cli.worker.run import run_worker
 
 from silverback._importer import import_from_string
 from silverback.runner import PollingRunner
-from silverback.settings import Settings
 
 
 @click.group()
