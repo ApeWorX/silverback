@@ -3,9 +3,12 @@ import os
 
 import click
 from ape.cli import AccountAliasPromptChoice, ape_cli_context, network_option, verbosity_option
+from taskiq.cli.worker.args import WorkerArgs
+from taskiq.cli.worker.run import run_worker
 
 from silverback._importer import import_from_string
 from silverback.runner import PollingRunner
+from silverback.settings import Settings
 
 
 @click.group()
@@ -57,3 +60,14 @@ def run(cli_ctx, network, account, runner, max_exceptions, path):
         app = import_from_string(path)
         runner = runner(app, max_exceptions=max_exceptions)
         asyncio.run(runner.run())
+
+
+@cli.command()
+@ape_cli_context()
+@verbosity_option()
+@network_option(default=None, callback=_network_callback)
+@click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
+@click.option("-w", "--workers", type=int, default=2)
+@click.argument("broker")
+def worker(cli_ctx, network, account, workers, broker):
+    run_worker(WorkerArgs(broker=broker, modules=[], workers=workers))
