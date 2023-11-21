@@ -1,11 +1,12 @@
+from typing import Annotated
+
 from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
 from ape_tokens import tokens  # type: ignore[import]
-from typing import Annotated
+from taskiq import Context, TaskiqDepends, TaskiqState
 
 from silverback import CircuitBreaker, SilverbackApp, SilverbackStartupState
-from taskiq import Context, TaskiqDepends, TaskiqState
 
 # Do this to initialize your app
 app = SilverbackApp()

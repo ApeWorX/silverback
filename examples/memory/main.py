@@ -1,11 +1,12 @@
+from typing import Annotated
+
 from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
 from ape_tokens import tokens  # type: ignore[import]
-from typing import Annotated
+from taskiq import Context, TaskiqDepends, TaskiqState
 
 from silverback import CircuitBreaker, SilverbackApp, SilverbackStartupState
-from taskiq import Context, TaskiqDepends, TaskiqState
 
 # Do this to initialize your app
 app = SilverbackApp()
@@ -27,7 +28,7 @@ def client_startup(state):
 
 # Can handle some initialization on startup, like models or network connections
 @app.on_worker_startup()
-def worker_startup(state):
+def worker_startup(state: TaskiqState):
     state.block_count = 0
     # state.db = MyDB()
     return {"message": "Worker started."}
