@@ -2,8 +2,10 @@ from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
 from ape_tokens import tokens  # type: ignore[import]
+from typing import Annotated
 
 from silverback import CircuitBreaker, SilverbackApp, SilverbackStartupState
+from taskiq import Context, TaskiqDepends, TaskiqState
 
 # Do this to initialize your app
 app = SilverbackApp()
@@ -27,7 +29,7 @@ def client_startup(state):
 
 
 @app.on_worker_startup()
-def worker_startup(state):
+def worker_startup(state: TaskiqState):
     state.block_count = 0
     # state.db = MyDB()
     return {"message": "Worker started."}
@@ -35,7 +37,8 @@ def worker_startup(state):
 
 # This is how we trigger off of new blocks
 @app.on_(chain.blocks)
-def exec_block(block: BlockAPI, context):
+# context must be a type annotated kwarg to be provided to the task
+def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
     context.state.block_count += 1
     return len(block.transactions)
 
