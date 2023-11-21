@@ -7,12 +7,15 @@ from silverback import CircuitBreaker, SilverbackApp, SilverbackStartupState
 
 # Do this to initialize your app
 app = SilverbackApp()
+# TODO: broker must be exposed as a module-level var for taskiq to resolve it...
+broker = app.broker
 
 # NOTE: Don't do any networking until after initializing app
 USDC = tokens["USDC"]
 YFI = tokens["YFI"]
 
 
+# Can handle some stuff on startup, like loading a heavy model or something
 @app.on_startup()
 def app_startup(startup_state: SilverbackStartupState):
     return {"message": "Starting...", "block_number": startup_state.last_block_seen}
@@ -23,7 +26,6 @@ def client_startup(state):
     return {"message": "Client started."}
 
 
-# Can handle some initialization on startup, like models or network connections
 @app.on_worker_startup()
 def worker_startup(state):
     state.block_count = 0
