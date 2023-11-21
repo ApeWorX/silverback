@@ -38,10 +38,13 @@ class SilverbackApp(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
+        self.network = settings.get_provider_context()
+        # NOTE: This allows using connected ape methods e.g. `Contract`
+        provider = self.network.__enter__()
+
         # Adjust defaults from connection
         if settings.NEW_BLOCK_TIMEOUT is None and (
-            self.chain_manager.provider.network.name.endswith("-fork")
-            or self.chain_manager.provider.network.name == LOCAL_NETWORK_NAME
+            provider.network.name.endswith("-fork") or provider.network.name == LOCAL_NETWORK_NAME
         ):
             settings.NEW_BLOCK_TIMEOUT = int(timedelta(days=1).total_seconds())
 
@@ -51,10 +54,6 @@ class SilverbackApp(ManagerAccessMixin):
         self.broker = settings.get_broker()
         self.contract_events: Dict[AddressType, Dict[str, ContractEvent]] = {}
         self.poll_settings: Dict[str, Dict] = {}
-
-        self.network = settings.get_provider_context()
-        # NOTE: This allows using connected ape methods e.g. `Contract`
-        provider = self.network.__enter__()
 
         atexit.register(self.network.__exit__)
 
