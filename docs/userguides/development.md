@@ -61,19 +61,57 @@ Any errors you raise during this function will get captured by the client, and r
 
 ## Startup and Shutdown
 
-If you have heavier resources you want to load during startup, or otherwise perform some data collection prior to starting the bot, you can add a startup function like so:
+### Worker Events
+
+If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:
 
 ```py
-@app.on_startup()
+@app.on_worker_startup()
 def handle_on_worker_startup(state):
+    # Connect to DB, set initial state, etc
+    ...
+
+@app.on_worker_shutdown()
+def handle_on_worker_shutdown(state):
+    # cleanup resources, close connections cleanly, etc
     ...
 ```
 
 This function comes a parameter `state` that you can use for storing the results of your startup computation or resources that you have provisioned.
-It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.
-The `state` variable is also useful as this gets made available to each handler method so other stateful quantities can be maintained for other uses.
 
-TODO: Add more information about `state`
+It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.  In a distributed environment, **this function will run on every worker**.
+
+#### Worker State
+
+The `state` variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses.  Each distributed worker has its own instance of state.
+
+To access the state from a handler, you must annotate `context` as a dependency like so:
+
+```py
+from typing import Annotated
+from taskiq import Context, TaskiqDepends
+
+@app.on_(chain.blocks)
+def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
+    # Access state via context.state
+    ...
+```
+
+### Application Events
+
+You can also add an application startup and shutdown handler that will be **executed by one worker upon every application startup**.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.
+
+```py
+@app.on_startup()
+def handle_on_startup(state):
+    # Process missed events, etc
+    ...
+
+@app.on_shutdown()
+def handle_on_startup(state):
+    # Record final state, etc
+    ...
+```
 
 ## Running your Application
 
