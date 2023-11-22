@@ -1,14 +1,16 @@
-import pickle
+import json
 import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Generic, Optional, TypeVar
 
 from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
 from .types import IntOrNone, ISilverbackSettings, SilverbackIdent
+
+_HandlerReturnType = TypeVar("_HandlerReturnType")
 
 
 class SilverbackState(BaseModel):
@@ -21,7 +23,7 @@ class SilverbackState(BaseModel):
     updated: datetime
 
 
-class HandlerResult(BaseModel):
+class HandlerResult(BaseModel, Generic[_HandlerReturnType]):
     instance: str
     network: str
     handler_id: str
@@ -30,8 +32,7 @@ class HandlerResult(BaseModel):
     execution_time: float
     # TODO: upcoming feature in taskiq
     # labels: Dict[str]
-    # TODO: Use computed field with pydantic v2
-    return_value_blob: Optional[bytes]  # pickled data
+    return_value: _HandlerReturnType
     created: datetime
 
     @classmethod
@@ -51,7 +52,7 @@ class HandlerResult(BaseModel):
             log_index=log_index,
             execution_time=result.execution_time,
             # labels=result.labels,
-            return_value_blob=pickle.dumps(result.return_value),
+            return_value=result.return_value,
             created=datetime.now(timezone.utc),
         )
 
@@ -262,7 +263,7 @@ class SQLitePersistentStorage(BasePersistentStorage):
             block_number=row[1],
             log_index=row[2],
             execution_time=row[3],
-            return_value_blob=row[4],
+            return_value=json.loads(row[4]),
             created=datetime.fromtimestamp(row[5], timezone.utc),
         )
 
@@ -278,7 +279,7 @@ class SQLitePersistentStorage(BasePersistentStorage):
                 v.block_number,
                 v.log_index,
                 v.execution_time,
-                v.return_value_blob,
+                json.dumps(v.return_value),
                 v.created,
             ),
         )
