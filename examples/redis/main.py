@@ -10,8 +10,6 @@ from silverback import CircuitBreaker, SilverbackApp, SilverbackStartupState
 
 # Do this to initialize your app
 app = SilverbackApp()
-# TODO: broker must be exposed as a module-level var for taskiq to resolve it...
-broker = app.broker
 
 # NOTE: Don't do any networking until after initializing app
 USDC = tokens["USDC"]
