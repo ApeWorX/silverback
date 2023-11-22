@@ -48,13 +48,13 @@ Checkout [the example](./examples/memory/main.py) to see how to use the library.
 To run your bot against a live network, this SDK includes a simple runner you can use via:
 
 ```sh
-$ silverback run "examples.memory.main:app" --network :mainnet:alchemy
+$ silverback run "examples.memory:app" --network :mainnet:alchemy
 ```
 
 ## Docker Usage
 
 ```sh
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "examples.memory.main:app" --network :mainnet:alchemy
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "examples.memory:app" --network :mainnet:alchemy
 ```
 
 ## Development
