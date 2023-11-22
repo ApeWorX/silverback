@@ -2,7 +2,7 @@ import json
 import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Generic, Optional, TypeVar
+from typing import Optional, TypeVar
 
 from pydantic import BaseModel
 from taskiq import TaskiqResult
@@ -23,16 +23,12 @@ class SilverbackState(BaseModel):
     updated: datetime
 
 
-class HandlerResult(BaseModel, Generic[_HandlerReturnType]):
+class HandlerResult(TaskiqResult):
     instance: str
     network: str
     handler_id: str
     block_number: Optional[int]
     log_index: Optional[int]
-    execution_time: float
-    # TODO: upcoming feature in taskiq
-    # labels: Dict[str]
-    return_value: _HandlerReturnType
     created: datetime
 
     @classmethod
@@ -50,10 +46,8 @@ class HandlerResult(BaseModel, Generic[_HandlerReturnType]):
             handler_id=handler_id,
             block_number=block_number,
             log_index=log_index,
-            execution_time=result.execution_time,
-            # labels=result.labels,
-            return_value=result.return_value,
             created=datetime.now(timezone.utc),
+            **result.dict(),
         )
 
 
@@ -109,14 +103,16 @@ class SQLitePersistentStorage(BasePersistentStorage):
         WHERE instance = ? AND network = ?;
     """
     SQL_GET_RESULT_LATEST = """
-        SELECT handler_id, block_number, log_index, execution_time, return_value_blob, created
+        SELECT handler_id, block_number, log_index, execution_time, is_err, created,
+            return_value_blob
         FROM silverback_result
         WHERE instance = ? AND network = ?
         ORDER BY created DESC
         LIMIT 1;
     """
     SQL_GET_HANDLER_LATEST = """
-        SELECT handler_id, block_number, log_index, execution_time, return_value_blob, created
+        SELECT handler_id, block_number, log_index, execution_time, is_err, created,
+            return_value_blob
         FROM silverback_result
         WHERE instance = ? AND network = ? AND handler_id = ?
         ORDER BY created DESC
@@ -125,9 +121,9 @@ class SQLitePersistentStorage(BasePersistentStorage):
     SQL_INSERT_RESULT = """
         INSERT INTO silverback_result (
             instance, network, handler_id, block_number, log_index, execution_time,
-            return_value_blob, created
+            is_err, created, return_value_blob
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
 
     async def init(self):
@@ -151,8 +147,9 @@ class SQLitePersistentStorage(BasePersistentStorage):
                 block_number int,
                 log_index int,
                 execution_time real,
-                return_value_blob blob,
-                created int
+                is_err bool,
+                created int,
+                return_value_blob blob
             );
             CREATE UNIQUE INDEX IF NOT EXISTS silverback_state__instance
                 ON silverback_state(instance, network);
@@ -160,6 +157,8 @@ class SQLitePersistentStorage(BasePersistentStorage):
                 ON silverback_result (instance, network);
             CREATE INDEX IF NOT EXISTS silverback_result__handler
                 ON silverback_result (instance, network, handler_id);
+            CREATE INDEX IF NOT EXISTS silverback_result__is_err
+                ON silverback_result (is_err);
             COMMIT;
         """
         )
@@ -263,8 +262,9 @@ class SQLitePersistentStorage(BasePersistentStorage):
             block_number=row[1],
             log_index=row[2],
             execution_time=row[3],
-            return_value=json.loads(row[4]),
+            is_err=row[4],
             created=datetime.fromtimestamp(row[5], timezone.utc),
+            return_value=json.loads(row[6]),
         )
 
     async def add_result(self, v: HandlerResult):
@@ -279,8 +279,9 @@ class SQLitePersistentStorage(BasePersistentStorage):
                 v.block_number,
                 v.log_index,
                 v.execution_time,
-                json.dumps(v.return_value),
+                v.is_err,
                 v.created,
+                json.dumps(v.return_value),
             ),
         )
 
