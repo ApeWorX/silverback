@@ -10,15 +10,15 @@ extras_require = {
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
     ],
     "lint": [
-        "black>=23.7.0",  # auto-formatter and linter
-        "mypy>=1.4.1,<2",  # Static type analyzer
+        "black>=23.11.0,<24",  # Auto-formatter and linter
+        "mypy>=1.7.0,<2",  # Static type analyzer
         "types-setuptools",  # Needed for mypy type shed
-        "flake8>=5.0.4",  # Style linter
-        "isort>=5.10.1",  # Import sorting linter
-        "mdformat>=0.7.16",  # Auto-formatter for markdown
+        "flake8>=6.1.0,<7",  # Style linter
+        "isort>=5.10.1,<6",  # Import sorting linter
+        "mdformat>=0.7.17",  # Auto-formatter for markdown
         "mdformat-gfm>=0.3.5",  # Needed for formatting GitHub-flavored markdown
         "mdformat-frontmatter>=0.4.1",  # Needed for frontmatters-style headers in issue templates
-        "mdformat-pyproject>=0.0.1",  # So we can keep config for mdformat in `pyproject.toml`
+        "mdformat-pyproject>=0.0.1",  # Allows configuring in pyproject.toml
     ],
     "doc": [
         "myst-parser>=1.0.0,<2",  # Parse markdown docs
@@ -67,9 +67,11 @@ setup(
     url="https://github.com/ApeWorX/silverback",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.6.19,<1.0",
-        "taskiq[metrics]>=0.6.0,<0.7.0",
         "click",  # Use same version as eth-ape
+        "eth-ape",  # >=0.7.0,<1.0",
+        "ethpm_types>=2.1.0,<3",
+        "pydantic_settings",  # Use same version as eth-ape
+        "taskiq[metrics]>=0.6.0,<0.7.0",
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],

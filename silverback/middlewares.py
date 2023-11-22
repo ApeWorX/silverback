@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from ape.logging import logger
 from ape.types import ContractLog
 from ape.utils import ManagerAccessMixin
+from ethpm_types import HexBytes
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
 from silverback.persistence import HandlerResult
