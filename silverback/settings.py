@@ -75,7 +75,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
             return None
 
         persistence_class = import_from_string(self.PERSISTENCE_CLASS)
-        return persistence_class(settings=self)
+        return persistence_class(self)
 
     def get_provider_context(self) -> ProviderContextManager:
         return self.network_manager.parse_network_choice(self.get_network_choice())
