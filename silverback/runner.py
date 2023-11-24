@@ -11,16 +11,10 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverbackApp
 from .exceptions import Halt, NoWebsocketAvailableError
-from .persistence import BasePersistentStorage, HandlerResult
+from .persistence import BasePersistentStorage
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import (
-    IntOrNone,
-    SilverbackIdent,
-    SilverbackStartupState,
-    handler_id_block,
-    handler_id_event,
-)
+from .types import SilverbackIdent, SilverbackStartupState
 from .utils import async_wrap_iter, hexbytes_dict
 
 settings = Settings()
@@ -37,9 +31,7 @@ class BaseRunner(ABC):
         self.persistence: Optional[BasePersistentStorage] = None
         self.ident = SilverbackIdent.from_settings(settings)
 
-    async def _handle_result(
-        self, handler_id: str, block_number: IntOrNone, log_index: IntOrNone, result: TaskiqResult
-    ):
+    def _handle_result(self, result: TaskiqResult):
         if result.is_err:
             self.exceptions += 1
 
@@ -48,16 +40,6 @@ class BaseRunner(ABC):
 
         if self.exceptions > self.max_exceptions:
             raise Halt()
-
-        if self.persistence:
-            handler_result = HandlerResult.from_taskiq(
-                self.ident, handler_id, block_number, log_index, result
-            )
-
-            try:
-                await self.persistence.add_result(handler_result)
-            except Exception as err:
-                logger.error(f"Error storing result: {err}")
 
     async def _checkpoint(
         self, last_block_seen: int = 0, last_block_processed: int = 0
@@ -131,12 +113,7 @@ class BaseRunner(ABC):
                 )
             )
             result = await task.wait_result()
-            await self._handle_result(
-                "silverback_startup",
-                self.last_block_seen,
-                -1,
-                result,
-            )
+            self._handle_result(result)
 
         if block_handler := self.app.get_block_handler():
             tasks = [self._block_task(block_handler)]
@@ -157,12 +134,7 @@ class BaseRunner(ABC):
         if shutdown_handler := self.app.get_shutdown_handler():
             task = await shutdown_handler.kiq()
             result = await task.wait_result()
-            await self._handle_result(
-                "silverback_shutdown",
-                self.last_block_seen,
-                -1,
-                result,
-            )
+            self._handle_result(result)
 
         await self.app.broker.shutdown()
 
@@ -195,9 +167,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             block_task = await block_handler.kiq(raw_block)
             result = await block_task.wait_result()
 
-            await self._handle_result(
-                handler_id_block(block.number), block.number or 0, None, result
-            )
+            self._handle_result(result)
 
             if block.number is not None:
                 await self._checkpoint(last_block_processed=block.number)
@@ -229,12 +199,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
             event_task = await event_handler.kiq(event)
             result = await event_task.wait_result()
-            await self._handle_result(
-                handler_id_event(contract_event.contract.address, contract_event.abi.selector),
-                event.block_number,
-                event.log_index,
-                result,
-            )
+            self._handle_result(result)
 
             if event.block_number is not None:
                 await self._checkpoint(last_block_processed=event.block_number)
@@ -277,7 +242,7 @@ class PollingRunner(BaseRunner):
 
             block_task = await block_handler.kiq(block)
             result = await block_task.wait_result()
-            await self._handle_result(handler_id_block(block.number), block.number, None, result)
+            self._handle_result(result)
 
             if block.number is not None:
                 await self._checkpoint(last_block_processed=block.number)
@@ -307,13 +272,7 @@ class PollingRunner(BaseRunner):
 
             event_task = await event_handler.kiq(event)
             result = await event_task.wait_result()
-            await self._handle_result(
-                # TODO: Under what circumstance can address be None?
-                handler_id_event(address, contract_event.abi.selector),
-                event.block_number,
-                event.log_index,
-                result,
-            )
+            self._handle_result(result)
 
             if event.block_number is not None:
                 await self._checkpoint(last_block_processed=event.block_number)

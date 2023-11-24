@@ -51,7 +51,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
         else:
             broker = broker_class(self.BROKER_URI)
 
-        middlewares: List[TaskiqMiddleware] = [SilverbackMiddleware()]
+        middlewares: List[TaskiqMiddleware] = [SilverbackMiddleware(silverback_settings=self)]
 
         if self.ENABLE_METRICS:
             middlewares.append(
