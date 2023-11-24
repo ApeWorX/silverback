@@ -55,7 +55,7 @@ class SilverbackApp(ManagerAccessMixin):
         self.contract_events: Dict[AddressType, Dict[str, ContractEvent]] = {}
         self.poll_settings: Dict[str, Dict] = {}
 
-        atexit.register(self.network.__exit__)
+        atexit.register(self.network.__exit__, None, None, None)
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
