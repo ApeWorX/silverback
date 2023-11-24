@@ -54,7 +54,10 @@ class BaseRunner(ABC):
                 self.ident, handler_id, block_number, log_index, result
             )
 
-            await self.persistence.add_result(handler_result)
+            try:
+                await self.persistence.add_result(handler_result)
+            except Exception as err:
+                logger.error(f"Error storing result: {err}")
 
     async def _checkpoint(
         self, last_block_seen: int = 0, last_block_processed: int = 0
@@ -74,9 +77,12 @@ class BaseRunner(ABC):
             self.last_block_processed = max(last_block_processed, self.last_block_processed)
 
             if self.persistence:
-                await self.persistence.set_instance_state(
-                    self.ident, self.last_block_seen, self.last_block_processed
-                )
+                try:
+                    await self.persistence.set_instance_state(
+                        self.ident, self.last_block_seen, self.last_block_processed
+                    )
+                except Exception as err:
+                    logger.error(f"Error settings state: {err}")
 
         return self.last_block_seen, self.last_block_processed
 
