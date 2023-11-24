@@ -56,7 +56,7 @@ class SilverbackApp(ManagerAccessMixin):
         # NOTE: This allows using connected ape methods e.g. `Contract`
         provider = self.network.__enter__()
 
-        atexit.register(self.network.__exit__)
+        atexit.register(self.network.__exit__, None, None, None)
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
