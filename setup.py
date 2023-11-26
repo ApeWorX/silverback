@@ -68,7 +68,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "click",  # Use same version as eth-ape
-        "eth-ape",  # >=0.7.0,<1.0",
+        "eth-ape>=0.7.0,<1.0",
         "ethpm_types",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
         "taskiq[metrics]>=0.6.0,<0.7.0",
