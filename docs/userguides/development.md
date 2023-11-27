@@ -79,7 +79,7 @@ def handle_on_worker_shutdown(state):
 
 This function comes a parameter `state` that you can use for storing the results of your startup computation or resources that you have provisioned.
 
-It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.  In a distributed environment, **this function will run on every worker**.
+It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.  **This function will run on every worker process**.
 
 #### Worker State
 
@@ -99,7 +99,7 @@ def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
 
 ### Application Events
 
-You can also add an application startup and shutdown handler that will be **executed by one worker upon every application startup**.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.
+You can also add an application startup and shutdown handler that will be **executed once upon every application startup**.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.
 
 ```py
 @app.on_startup()
@@ -138,6 +138,34 @@ else:
 If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
 Always test your applications throughly before deploying.
 ```
+
+### Distributed Execution
+
+Using only the `silverback run ...` command in a defualt configuration executes everything in one process and the job queue is completely in-memory with a shared state.  In some high volume environments, you may want to deploy your Silverback application in a distributed configuration.
+
+The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.
+
+For this to work, you must configure a [TaskIQ broker](https://taskiq-python.github.io/guide/architecture-overview.html#broker) capable of distributed processing.  For instance, with [`taskiq_redis`](https://github.com/taskiq-python/taskiq-redis) you could do something like this for the client:
+
+```bash
+export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
+export SILVERBACK_BROKER_URI="redis://127.0.0.1:6379"
+
+silverback run "examples.redis.main:app" \
+    --network :mainnet:alchemy \
+    --runner "silverback.runner:WebsocketRunner"
+```
+
+And then the worker process with 2 worker subprocesses:
+
+```bash
+export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
+export SILVERBACK_BROKER_URI="redis://127.0.0.1:6379"
+
+silverback worker -w2 "examples.redis.main:app"
+```
+
+This will run one client and 2 workers and all queue data will be go through Redis.
 
 ## Testing your Application
 
