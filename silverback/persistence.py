@@ -1,5 +1,4 @@
 import json
-from os import initgroups
 import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
