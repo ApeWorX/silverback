@@ -14,7 +14,6 @@ class ISilverbackSettings(Protocol):
 
     INSTANCE: str
     PERSISTENCE_CLASS: Optional[str]
-    PERSISTENCE_URI: Optional[str]
 
     def get_network_choice(self) -> str:
         ...
