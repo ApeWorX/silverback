@@ -37,7 +37,6 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     # Used for persistent storage
     PERSISTENCE_CLASS: Optional[str] = None
-    PERSISTENCE_URI: Optional[str] = None
 
     class Config:
         env_prefix = "SILVERBACK_"

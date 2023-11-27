@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
@@ -86,6 +87,18 @@ class BasePersistentStorage(ABC):
 
 
 class SQLitePersistentStorage(BasePersistentStorage):
+    """
+    SQLite implementation of BasePersistentStorage used to store application state and handler
+    result data.
+
+    Usage:
+
+    To use SQLite persistent storage, you must configure the following env vars:
+
+    - `PERSISTENCE_CLASS`: `silverback.persistence.SQLitePersistentStorage`
+    - `SQLITE_PATH` (optional): A system file path or if blank it will be stored in-memory.
+    """
+
     SQL_GET_STATE = """
         SELECT last_block_seen, last_block_processed, updated
         FROM silverback_state
@@ -130,7 +143,7 @@ class SQLitePersistentStorage(BasePersistentStorage):
     initialized: bool = False
 
     async def init(self):
-        self.con = sqlite3.connect(self.settings.PERSISTENCE_URI or ":memory:")
+        self.con = sqlite3.connect(os.environ.get("SQLITE_PATH", ":memory:"))
 
         cur = self.con.cursor()
         cur.executescript(
