@@ -79,7 +79,7 @@ def run(cli_ctx, network, account, runner, max_exceptions, path):
         asyncio.run(runner.run())
 
 
-@cli.command(help="Run distributed worker only")
+@cli.command(help="Run Silverback application task workers")
 @ape_cli_context()
 @verbosity_option()
 @network_option(default=None, callback=_network_callback)
