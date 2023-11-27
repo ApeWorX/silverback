@@ -62,9 +62,10 @@ async def exec_event2(log: ContractLog):
 # Just in case you need to release some resources or something
 @app.on_worker_shutdown()
 def worker_shutdown(state):
+    block_count = state.block_count if hasattr(state, "block_count") else 0
     return {
-        "message": f"Worker stopped after handling {state.block_count} blocks.",
-        "block_count": state.block_count,
+        "message": f"Worker stopped after handling {block_count} blocks.",
+        "block_count": block_count,
     }
 
 

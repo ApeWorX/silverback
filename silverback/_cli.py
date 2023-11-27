@@ -46,16 +46,20 @@ def _network_callback(ctx, param, val):
 
 async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
     try:
+        tasks = []
         with ThreadPoolExecutor(max_workers=worker_count) as pool:
-            receiver = Receiver(
-                broker=broker,
-                executor=pool,
-                validate_params=True,
-                max_async_tasks=1,
-                max_prefetch=0,
-            )
-            broker.is_worker_process = True
-            await receiver.listen()
+            for _ in range(worker_count):
+                receiver = Receiver(
+                    broker=broker,
+                    executor=pool,
+                    validate_params=True,
+                    max_async_tasks=1,
+                    max_prefetch=0,
+                )
+                broker.is_worker_process = True
+                tasks.append(receiver.listen())
+
+            await asyncio.gather(*tasks)
     finally:
         await shutdown_broker(broker, shutdown_timeout)
 
