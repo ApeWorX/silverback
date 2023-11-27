@@ -1,4 +1,5 @@
 import json
+from os import initgroups
 import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
@@ -126,6 +127,9 @@ class SQLitePersistentStorage(BasePersistentStorage):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
 
+    con: Optional[sqlite3.Connection]
+    initialized: bool = False
+
     async def init(self):
         self.con = sqlite3.connect(self.settings.PERSISTENCE_URI or ":memory:")
 
@@ -164,7 +168,17 @@ class SQLitePersistentStorage(BasePersistentStorage):
         )
         cur.close()
 
+        if not self.con:
+            raise Exception("Failed to setup SQLite connection")
+
+        self.initialized = True
+
     async def get_instance_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
+        if not self.initialized:
+            await self.init()
+
+        assert self.con is not None
+
         cur = self.con.cursor()
         res = cur.execute(
             self.SQL_GET_STATE,
@@ -188,6 +202,11 @@ class SQLitePersistentStorage(BasePersistentStorage):
     async def set_instance_state(
         self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
     ) -> Optional[SilverbackState]:
+        if not self.initialized:
+            await self.init()
+
+        assert self.con is not None
+
         cur = self.con.cursor()
         res = cur.execute(
             self.SQL_GET_STATE,
@@ -235,6 +254,11 @@ class SQLitePersistentStorage(BasePersistentStorage):
     async def get_latest_result(
         self, ident: SilverbackIdent, handler: Optional[str] = None
     ) -> Optional[HandlerResult]:
+        if not self.initialized:
+            await self.init()
+
+        assert self.con is not None
+
         cur = self.con.cursor()
 
         if handler is not None:
@@ -268,6 +292,11 @@ class SQLitePersistentStorage(BasePersistentStorage):
         )
 
     async def add_result(self, v: HandlerResult):
+        if not self.initialized:
+            await self.init()
+
+        assert self.con is not None
+
         cur = self.con.cursor()
 
         cur.execute(

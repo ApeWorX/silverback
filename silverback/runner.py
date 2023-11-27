@@ -95,8 +95,6 @@ class BaseRunner(ABC):
         self.persistence = settings.get_persistent_storage()
 
         if self.persistence:
-            await self.persistence.init()
-
             boot_state = await self.persistence.get_instance_state(self.ident)
             if boot_state:
                 self.last_block_seen = boot_state.last_block_seen
