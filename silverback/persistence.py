@@ -59,12 +59,12 @@ class BasePersistentStore(ABC):
         ...
 
     @abstractmethod
-    async def get_instance_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
+    async def get_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
         """Return the stored state for a Silverback instance"""
         ...
 
     @abstractmethod
-    async def set_instance_state(
+    async def set_state(
         self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
     ) -> Optional[SilverbackState]:
         """Set the stored state for a Silverback instance"""
@@ -182,7 +182,7 @@ class SQLitePersistentStore(BasePersistentStore):
 
         self.initialized = True
 
-    async def get_instance_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
+    async def get_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
         if not self.initialized:
             await self.init()
 
@@ -208,7 +208,7 @@ class SQLitePersistentStore(BasePersistentStore):
             updated=datetime.fromtimestamp(row[2], timezone.utc),
         )
 
-    async def set_instance_state(
+    async def set_state(
         self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
     ) -> Optional[SilverbackState]:
         if not self.initialized:

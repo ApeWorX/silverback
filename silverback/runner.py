@@ -60,7 +60,7 @@ class BaseRunner(ABC):
 
             if self.persistence:
                 try:
-                    await self.persistence.set_instance_state(
+                    await self.persistence.set_state(
                         self.ident, self.last_block_seen, self.last_block_processed
                     )
                 except Exception as err:
@@ -95,7 +95,7 @@ class BaseRunner(ABC):
         self.persistence = settings.get_persistent_store()
 
         if self.persistence:
-            boot_state = await self.persistence.get_instance_state(self.ident)
+            boot_state = await self.persistence.get_state(self.ident)
             if boot_state:
                 self.last_block_seen = boot_state.last_block_seen
                 self.last_block_processed = boot_state.last_block_processed
