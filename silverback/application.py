@@ -96,30 +96,6 @@ class SilverbackApp(ManagerAccessMixin):
         """
         return self.broker.task(task_name="silverback_shutdown")
 
-    def on_client_startup(self) -> Callable:
-        """
-        Code to execute on client startup / restart after an error.
-
-        Usage example::
-
-            @app.on_startup()
-            def do_something_on_startup(state):
-                ...  # Can provision resources, or add things to `state`.
-        """
-        return self.broker.on_event(TaskiqEvents.CLIENT_STARTUP)
-
-    def on_client_shutdown(self) -> Callable:
-        """
-        Code to execute on client shutdown.
-
-        Usage example::
-
-            @app.on_shutdown()
-            def do_something_on_shutdown(state):
-                ...  # Update some external service, perhaps using information from `state`.
-        """
-        return self.broker.on_event(TaskiqEvents.CLIENT_SHUTDOWN)
-
     def on_worker_startup(self) -> Callable:
         """
         Code to execute on every worker at startup / restart after an error.
