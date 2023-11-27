@@ -16,17 +16,12 @@ USDC = tokens["USDC"]
 YFI = tokens["YFI"]
 
 
-# Can handle some stuff on startup, like loading a heavy model or something
 @app.on_startup()
 def app_startup(startup_state: SilverbackStartupState):
     return {"message": "Starting...", "block_number": startup_state.last_block_seen}
 
 
-@app.on_client_startup()
-def client_startup(state):
-    return {"message": "Client started."}
-
-
+# Can handle some initialization on startup, like models or network connections
 @app.on_worker_startup()
 def worker_startup(state: TaskiqState):
     state.block_count = 0
@@ -62,10 +57,9 @@ async def exec_event2(log: ContractLog):
 # Just in case you need to release some resources or something
 @app.on_worker_shutdown()
 def worker_shutdown(state):
-    block_count = state.block_count if hasattr(state, "block_count") else 0
     return {
-        "message": f"Worker stopped after handling {block_count} blocks.",
-        "block_count": block_count,
+        "message": f"Worker stopped after handling {state.block_count} blocks.",
+        "block_count": state.block_count,
     }
 
 
