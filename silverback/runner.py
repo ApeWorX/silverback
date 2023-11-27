@@ -11,7 +11,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverbackApp
 from .exceptions import Halt, NoWebsocketAvailableError
-from .persistence import BasePersistentStorage
+from .persistence import BasePersistentStore
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import SilverbackIdent, SilverbackStartupState
@@ -28,7 +28,7 @@ class BaseRunner(ABC):
         self.exceptions = 0
         self.last_block_seen = 0
         self.last_block_processed = 0
-        self.persistence: Optional[BasePersistentStorage] = None
+        self.persistence: Optional[BasePersistentStore] = None
         self.ident = SilverbackIdent.from_settings(settings)
 
     def _handle_result(self, result: TaskiqResult):
@@ -92,7 +92,7 @@ class BaseRunner(ABC):
         Raises:
             :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
         """
-        self.persistence = settings.get_persistent_storage()
+        self.persistence = settings.get_persistent_store()
 
         if self.persistence:
             boot_state = await self.persistence.get_instance_state(self.ident)

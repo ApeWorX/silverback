@@ -41,7 +41,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
         self.block_time = self.chain_manager.provider.network.block_time or compute_block_time()
         self.ident = SilverbackIdent.from_settings(settings)
-        self.persistence = settings.get_persistent_storage()
+        self.persistence = settings.get_persistent_store()
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
         # TODO: Necessary until https://github.com/ApeWorX/ape/issues/1465 is resolved

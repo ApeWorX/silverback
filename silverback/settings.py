@@ -7,7 +7,7 @@ from taskiq import AsyncBroker, InMemoryBroker, PrometheusMiddleware, TaskiqMidd
 
 from ._importer import import_from_string
 from .middlewares import SilverbackMiddleware
-from .persistence import BasePersistentStorage
+from .persistence import BasePersistentStore
 
 
 class Settings(BaseSettings, ManagerAccessMixin):
@@ -35,7 +35,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
     NEW_BLOCK_TIMEOUT: Optional[int] = None
     START_BLOCK: Optional[int] = None
 
-    # Used for persistent storage
+    # Used for persistent store
     PERSISTENCE_CLASS: Optional[str] = None
 
     class Config:
@@ -69,7 +69,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
     def get_network_choice(self) -> str:
         return self.NETWORK_CHOICE or self.network_manager.network.choice
 
-    def get_persistent_storage(self) -> Optional[BasePersistentStorage]:
+    def get_persistent_store(self) -> Optional[BasePersistentStore]:
         if not self.PERSISTENCE_CLASS:
             return None
 
