@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import IntOrNone, ISilverbackSettings, SilverbackIdent
+from .types import IntOrNone, SilverbackIdent
 
 _HandlerReturnType = TypeVar("_HandlerReturnType")
 
@@ -53,9 +53,6 @@ class HandlerResult(TaskiqResult):
 
 
 class BasePersistentStorage(ABC):
-    def __init__(self, settings: ISilverbackSettings):
-        self.settings = settings
-
     @abstractmethod
     async def init(self):
         """Handle any async initialization from Silverback settings (e.g. migrations)."""
