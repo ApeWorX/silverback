@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import IntOrNone, SilverbackIdent
+from .types import SilverbackIdent
 
 _HandlerReturnType = TypeVar("_HandlerReturnType")
 
@@ -37,8 +37,8 @@ class HandlerResult(TaskiqResult):
         cls,
         ident: SilverbackIdent,
         handler_id: str,
-        block_number: IntOrNone,
-        log_index: IntOrNone,
+        block_number: Optional[int],
+        log_index: Optional[int],
         result: TaskiqResult,
     ) -> Self:
         return cls(
