@@ -148,7 +148,7 @@ Always test your applications throughly before deploying.
 
 ### Distributed Execution
 
-Using only the `silverback run ...` command in a defualt configuration executes everything in one process and the job queue is completely in-memory with a shared state.  In some high volume environments, you may want to deploy your Silverback application in a distributed configuration.
+Using only the `silverback run ...` command in a defualt configuration executes everything in one process and the job queue is completely in-memory with a shared state.  In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.
 
 The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.
 
