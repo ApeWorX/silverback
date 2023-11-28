@@ -81,6 +81,8 @@ This function comes a parameter `state` that you can use for storing the results
 
 It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.  **This function will run on every worker process**.
 
+*New in 0.2.0*: These events moved from `on_startup()` and `on_shutdown()` for clarity.
+
 #### Worker State
 
 The `state` variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses.  Each distributed worker has its own instance of state.
@@ -103,15 +105,20 @@ You can also add an application startup and shutdown handler that will be **exec
 
 ```py
 @app.on_startup()
-def handle_on_startup(state):
+def handle_on_startup(startup_state):
     # Process missed events, etc
+    # process_history(start_block=startup_state.last_block_seen)
+    # ...or startup_state.last_block_processed
     ...
 
+
 @app.on_shutdown()
-def handle_on_startup(state):
+def handle_on_shutdown():
     # Record final state, etc
     ...
 ```
+
+*Changed in 0.2.0*: The behavior of the `@app.on_startup()` decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on `@app.on_worker_startup()`.
 
 ## Running your Application
 
