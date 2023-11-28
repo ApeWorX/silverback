@@ -169,7 +169,7 @@ And then the worker process with 2 worker subprocesses:
 export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
 export SILVERBACK_BROKER_URI="redis://127.0.0.1:6379"
 
-silverback worker -w2 "example:app"
+silverback worker -w 2 "example:app"
 ```
 
 This will run one client and 2 workers and all queue data will be go through Redis.
