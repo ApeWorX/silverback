@@ -49,6 +49,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.1.1">v0.1.1</option>
                 <option value="v0.1.0">v0.1.0</option>
             </select>
           </div>
@@ -78,6 +79,7 @@
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">silverback.exceptions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.utils</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.utils.async_wrap_iter"><code class="docutils literal notranslate"><span class="pre">async_wrap_iter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#silverback.utils.hexbytes_dict"><code class="docutils literal notranslate"><span class="pre">hexbytes_dict()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -112,6 +114,12 @@
 <dt class="sig sig-object py" id="silverback.utils.async_wrap_iter">
 <span class="sig-prename descclassname"><span class="pre">silverback.utils.</span></span><span class="sig-name descname"><span class="pre">async_wrap_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncIterator</span></span></span><a class="headerlink" href="#silverback.utils.async_wrap_iter" title="Permalink to this definition"></a></dt>
 <dd><p>Wrap blocking iterator into an asynchronous one</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="silverback.utils.hexbytes_dict">
+<span class="sig-prename descclassname"><span class="pre">silverback.utils.</span></span><span class="sig-name descname"><span class="pre">hexbytes_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#silverback.utils.hexbytes_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Converts any hex string values in a flat dictionary to HexBytes.</p>
 </dd></dl>
 
 </section>

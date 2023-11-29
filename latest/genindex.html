@@ -47,6 +47,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.1.1">v0.1.1</option>
                 <option value="v0.1.0">v0.1.0</option>
             </select>
           </div>
@@ -215,9 +216,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.get_block_handler">get_block_handler() (silverback.application.SilverbackApp method)</a>
 </li>
+      <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.get_event_handler">get_event_handler() (silverback.application.SilverbackApp method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.get_event_handler">get_event_handler() (silverback.application.SilverbackApp method)</a>
+      <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.get_shutdown_handler">get_shutdown_handler() (silverback.application.SilverbackApp method)</a>
+</li>
+      <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.get_startup_handler">get_startup_handler() (silverback.application.SilverbackApp method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -226,6 +231,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/exceptions.html#silverback.exceptions.Halt">Halt</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="methoddocs/utils.html#silverback.utils.hexbytes_dict">hexbytes_dict() (in module silverback.utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -280,11 +289,15 @@
 </li>
       <li><a href="methoddocs/middlewares.html#silverback.middlewares.SilverbackMiddleware.on_error">on_error() (silverback.middlewares.SilverbackMiddleware method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.on_shutdown">on_shutdown() (silverback.application.SilverbackApp method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.on_startup">on_startup() (silverback.application.SilverbackApp method)</a>
+</li>
+      <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.on_worker_shutdown">on_worker_shutdown() (silverback.application.SilverbackApp method)</a>
+</li>
+      <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.on_worker_startup">on_worker_startup() (silverback.application.SilverbackApp method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -304,6 +317,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/middlewares.html#silverback.middlewares.SilverbackMiddleware.post_execute">post_execute() (silverback.middlewares.SilverbackMiddleware method)</a>
+</li>
+      <li><a href="methoddocs/middlewares.html#silverback.middlewares.SilverbackMiddleware.post_save">post_save() (silverback.middlewares.SilverbackMiddleware method)</a>
 </li>
       <li><a href="methoddocs/middlewares.html#silverback.middlewares.SilverbackMiddleware.pre_execute">pre_execute() (silverback.middlewares.SilverbackMiddleware method)</a>
 </li>

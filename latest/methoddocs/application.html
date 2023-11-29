@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.1.1">v0.1.1</option>
                 <option value="v0.1.0">v0.1.0</option>
             </select>
           </div>
@@ -76,9 +77,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#silverback.application.SilverbackApp"><code class="docutils literal notranslate"><span class="pre">SilverbackApp</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.get_block_handler"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.get_block_handler()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.get_event_handler"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.get_event_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.get_shutdown_handler"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.get_shutdown_handler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.get_startup_handler"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.get_startup_handler()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_shutdown"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_shutdown()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_startup"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_startup()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_worker_shutdown"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_worker_shutdown()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#silverback.application.SilverbackApp.on_worker_startup"><code class="docutils literal notranslate"><span class="pre">SilverbackApp.on_worker_startup()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -166,6 +171,34 @@ Silverback application, meant to be used to expose method handlers and other fun
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.get_shutdown_handler">
+<span class="sig-name descname"><span class="pre">get_shutdown_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncTaskiqDecoratedTask</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.get_shutdown_handler" title="Permalink to this definition"></a></dt>
+<dd><p>Get access to the handler for <cite>silverback_shutdown</cite> events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns decorated task, if one has been created.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[AsyncTaskiqDecoratedTask]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.get_startup_handler">
+<span class="sig-name descname"><span class="pre">get_startup_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncTaskiqDecoratedTask</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.get_startup_handler" title="Permalink to this definition"></a></dt>
+<dd><p>Get access to the handler for <cite>silverback_startup</cite> events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns decorated task, if one has been created.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[AsyncTaskiqDecoratedTask]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_">
 <span class="sig-name descname"><span class="pre">on_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BlockContainer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ContractEvent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_block_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.application.SilverbackApp.on_" title="Permalink to this definition"></a></dt>
 <dd><p>Create task to handle events created by <cite>container</cite>.</p>
@@ -188,7 +221,31 @@ Defaults to whatever the latest block is.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_shutdown">
 <span class="sig-name descname"><span class="pre">on_shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.on_shutdown" title="Permalink to this definition"></a></dt>
-<dd><p>Code to execute on normal worker shutdown.</p>
+<dd><p>Code to execute on one worker at shutdown.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">do_something_on_shutdown</span><span class="p">():</span>
+    <span class="o">...</span>  <span class="c1"># Record final state of app</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_startup">
+<span class="sig-name descname"><span class="pre">on_startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.on_startup" title="Permalink to this definition"></a></dt>
+<dd><p>Code to execute on one worker upon startup / restart after an error.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
+    <span class="o">...</span>  <span class="c1"># Reprocess missed events or blocks</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_worker_shutdown">
+<span class="sig-name descname"><span class="pre">on_worker_shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.on_worker_shutdown" title="Permalink to this definition"></a></dt>
+<dd><p>Code to execute on every worker at shutdown.</p>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">do_something_on_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
@@ -198,9 +255,9 @@ Defaults to whatever the latest block is.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_startup">
-<span class="sig-name descname"><span class="pre">on_startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.on_startup" title="Permalink to this definition"></a></dt>
-<dd><p>Code to execute on worker startup / restart after an error.</p>
+<dt class="sig sig-object py" id="silverback.application.SilverbackApp.on_worker_startup">
+<span class="sig-name descname"><span class="pre">on_worker_startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.application.SilverbackApp.on_worker_startup" title="Permalink to this definition"></a></dt>
+<dd><p>Code to execute on every worker at startup / restart after an error.</p>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
