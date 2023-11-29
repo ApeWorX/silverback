@@ -38,10 +38,13 @@ class SilverbackApp(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
+        self.network = settings.get_provider_context()
+        # NOTE: This allows using connected ape methods e.g. `Contract`
+        provider = self.network.__enter__()
+
         # Adjust defaults from connection
         if settings.NEW_BLOCK_TIMEOUT is None and (
-            self.chain_manager.provider.network.name.endswith("-fork")
-            or self.chain_manager.provider.network.name == LOCAL_NETWORK_NAME
+            provider.network.name.endswith("-fork") or provider.network.name == LOCAL_NETWORK_NAME
         ):
             settings.NEW_BLOCK_TIMEOUT = int(timedelta(days=1).total_seconds())
 
@@ -51,10 +54,6 @@ class SilverbackApp(ManagerAccessMixin):
         self.broker = settings.get_broker()
         self.contract_events: Dict[AddressType, Dict[str, ContractEvent]] = {}
         self.poll_settings: Dict[str, Dict] = {}
-
-        self.network = settings.get_provider_context()
-        # NOTE: This allows using connected ape methods e.g. `Contract`
-        provider = self.network.__enter__()
 
         atexit.register(self.network.__exit__, None, None, None)
 
@@ -75,7 +74,31 @@ class SilverbackApp(ManagerAccessMixin):
 
     def on_startup(self) -> Callable:
         """
-        Code to execute on worker startup / restart after an error.
+        Code to execute on one worker upon startup / restart after an error.
+
+        Usage example::
+
+            @app.on_startup()
+            def do_something_on_startup(startup_state):
+                ...  # Reprocess missed events or blocks
+        """
+        return self.broker.task(task_name="silverback_startup")
+
+    def on_shutdown(self) -> Callable:
+        """
+        Code to execute on one worker at shutdown.
+
+        Usage example::
+
+            @app.on_shutdown()
+            def do_something_on_shutdown():
+                ...  # Record final state of app
+        """
+        return self.broker.task(task_name="silverback_shutdown")
+
+    def on_worker_startup(self) -> Callable:
+        """
+        Code to execute on every worker at startup / restart after an error.
 
         Usage example::
 
@@ -85,9 +108,9 @@ class SilverbackApp(ManagerAccessMixin):
         """
         return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
 
-    def on_shutdown(self) -> Callable:
+    def on_worker_shutdown(self) -> Callable:
         """
-        Code to execute on normal worker shutdown.
+        Code to execute on every worker at shutdown.
 
         Usage example::
 
@@ -96,6 +119,24 @@ class SilverbackApp(ManagerAccessMixin):
                 ...  # Update some external service, perhaps using information from `state`.
         """
         return self.broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)
+
+    def get_startup_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to the handler for `silverback_startup` events.
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
+        return self.broker.available_tasks.get("silverback_startup")
+
+    def get_shutdown_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to the handler for `silverback_shutdown` events.
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
+        return self.broker.available_tasks.get("silverback_shutdown")
 
     def get_block_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
         """

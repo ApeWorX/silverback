@@ -7,6 +7,7 @@ from taskiq import AsyncBroker, InMemoryBroker, PrometheusMiddleware, TaskiqMidd
 
 from ._importer import import_from_string
 from .middlewares import SilverbackMiddleware
+from .persistence import BasePersistentStore
 
 
 class Settings(BaseSettings, ManagerAccessMixin):
@@ -16,6 +17,9 @@ class Settings(BaseSettings, ManagerAccessMixin):
     Can override these settings from a default state, typically for advanced
     testing or deployment purposes. Defaults to a working in-memory broker.
     """
+
+    # A unique identifier for this silverback instance
+    INSTANCE: str = "default"
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
     BROKER_URI: str = ""
@@ -31,6 +35,9 @@ class Settings(BaseSettings, ManagerAccessMixin):
     NEW_BLOCK_TIMEOUT: Optional[int] = None
     START_BLOCK: Optional[int] = None
 
+    # Used for persistent store
+    PERSISTENCE_CLASS: Optional[str] = None
+
     class Config:
         env_prefix = "SILVERBACK_"
         case_sensitive = True
@@ -43,7 +50,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
         else:
             broker = broker_class(self.BROKER_URI)
 
-        middlewares: List[TaskiqMiddleware] = [SilverbackMiddleware()]
+        middlewares: List[TaskiqMiddleware] = [SilverbackMiddleware(silverback_settings=self)]
 
         if self.ENABLE_METRICS:
             middlewares.append(
@@ -59,10 +66,18 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
         return broker
 
+    def get_network_choice(self) -> str:
+        return self.NETWORK_CHOICE or self.network_manager.network.choice
+
+    def get_persistent_store(self) -> Optional[BasePersistentStore]:
+        if not self.PERSISTENCE_CLASS:
+            return None
+
+        persistence_class = import_from_string(self.PERSISTENCE_CLASS)
+        return persistence_class()
+
     def get_provider_context(self) -> ProviderContextManager:
-        return self.network_manager.parse_network_choice(
-            self.NETWORK_CHOICE or self.network_manager.default_ecosystem.name
-        )
+        return self.network_manager.parse_network_choice(self.get_network_choice())
 
     def get_signer(self) -> Optional[AccountAPI]:
         if self.SIGNER_ALIAS:

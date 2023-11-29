@@ -61,19 +61,64 @@ Any errors you raise during this function will get captured by the client, and r
 
 ## Startup and Shutdown
 
-If you have heavier resources you want to load during startup, or otherwise perform some data collection prior to starting the bot, you can add a startup function like so:
+### Worker Events
+
+If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:
 
 ```py
-@app.on_startup()
+@app.on_worker_startup()
 def handle_on_worker_startup(state):
+    # Connect to DB, set initial state, etc
+    ...
+
+@app.on_worker_shutdown()
+def handle_on_worker_shutdown(state):
+    # cleanup resources, close connections cleanly, etc
     ...
 ```
 
 This function comes a parameter `state` that you can use for storing the results of your startup computation or resources that you have provisioned.
-It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.
-The `state` variable is also useful as this gets made available to each handler method so other stateful quantities can be maintained for other uses.
 
-TODO: Add more information about `state`
+It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.  **This function will run on every worker process**.
+
+*New in 0.2.0*: These events moved from `on_startup()` and `on_shutdown()` for clarity.
+
+#### Worker State
+
+The `state` variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses.  Each distributed worker has its own instance of state.
+
+To access the state from a handler, you must annotate `context` as a dependency like so:
+
+```py
+from typing import Annotated
+from taskiq import Context, TaskiqDepends
+
+@app.on_(chain.blocks)
+def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
+    # Access state via context.state
+    ...
+```
+
+### Application Events
+
+You can also add an application startup and shutdown handler that will be **executed once upon every application startup**.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.
+
+```py
+@app.on_startup()
+def handle_on_startup(startup_state):
+    # Process missed events, etc
+    # process_history(start_block=startup_state.last_block_seen)
+    # ...or startup_state.last_block_processed
+    ...
+
+
+@app.on_shutdown()
+def handle_on_shutdown():
+    # Record final state, etc
+    ...
+```
+
+*Changed in 0.2.0*: The behavior of the `@app.on_startup()` decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on `@app.on_worker_startup()`.
 
 ## Running your Application
 
@@ -100,6 +145,34 @@ else:
 If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
 Always test your applications throughly before deploying.
 ```
+
+### Distributed Execution
+
+Using only the `silverback run ...` command in a defualt configuration executes everything in one process and the job queue is completely in-memory with a shared state.  In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.
+
+The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.
+
+For this to work, you must configure a [TaskIQ broker](https://taskiq-python.github.io/guide/architecture-overview.html#broker) capable of distributed processing.  For instance, with [`taskiq_redis`](https://github.com/taskiq-python/taskiq-redis) you could do something like this for the client:
+
+```bash
+export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
+export SILVERBACK_BROKER_URI="redis://127.0.0.1:6379"
+
+silverback run "example:app" \
+    --network :mainnet:alchemy \
+    --runner "silverback.runner:WebsocketRunner"
+```
+
+And then the worker process with 2 worker subprocesses:
+
+```bash
+export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
+export SILVERBACK_BROKER_URI="redis://127.0.0.1:6379"
+
+silverback worker -w 2 "example:app"
+```
+
+This will run one client and 2 workers and all queue data will be go through Redis.
 
 ## Testing your Application
 
