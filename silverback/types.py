@@ -15,7 +15,7 @@ class ISilverbackSettings(Protocol):
         ...
 
 
-class SilverbackIdent(BaseModel):
+class SilverbackID(BaseModel):
     identifier: str
     network_choice: str
 

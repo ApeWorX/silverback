@@ -14,7 +14,7 @@ from .exceptions import Halt, NoWebsocketAvailableError
 from .persistence import BasePersistentStore
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import SilverbackIdent, SilverbackStartupState
+from .types import SilverbackID, SilverbackStartupState
 from .utils import async_wrap_iter, hexbytes_dict
 
 settings = Settings()
@@ -29,7 +29,7 @@ class BaseRunner(ABC):
         self.last_block_seen = 0
         self.last_block_processed = 0
         self.persistence: Optional[BasePersistentStore] = None
-        self.ident = SilverbackIdent.from_settings(settings)
+        self.ident = SilverbackID.from_settings(settings)
 
     def _handle_result(self, result: TaskiqResult):
         if result.is_err:

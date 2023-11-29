@@ -6,7 +6,7 @@ from ape.utils import ManagerAccessMixin
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
 from silverback.persistence import HandlerResult
-from silverback.types import SilverbackIdent, handler_id_block, handler_id_event
+from silverback.types import SilverbackID, handler_id_block, handler_id_event
 from silverback.utils import hexbytes_dict
 
 
@@ -40,7 +40,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         settings = kwargs.pop("silverback_settings")
 
         self.block_time = self.chain_manager.provider.network.block_time or compute_block_time()
-        self.ident = SilverbackIdent.from_settings(settings)
+        self.ident = SilverbackID.from_settings(settings)
         self.persistence = settings.get_persistent_store()
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:

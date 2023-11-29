@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import SilverbackIdent
+from .types import SilverbackID
 
 _HandlerReturnType = TypeVar("_HandlerReturnType")
 
@@ -35,7 +35,7 @@ class HandlerResult(TaskiqResult):
     @classmethod
     def from_taskiq(
         cls,
-        ident: SilverbackIdent,
+        ident: SilverbackID,
         handler_id: str,
         block_number: Optional[int],
         log_index: Optional[int],
@@ -59,20 +59,20 @@ class BasePersistentStore(ABC):
         ...
 
     @abstractmethod
-    async def get_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
+    async def get_state(self, ident: SilverbackID) -> Optional[SilverbackState]:
         """Return the stored state for a Silverback instance"""
         ...
 
     @abstractmethod
     async def set_state(
-        self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
+        self, ident: SilverbackID, last_block_seen: int, last_block_processed: int
     ) -> Optional[SilverbackState]:
         """Set the stored state for a Silverback instance"""
         ...
 
     @abstractmethod
     async def get_latest_result(
-        self, ident: SilverbackIdent, handler: Optional[str] = None
+        self, ident: SilverbackID, handler: Optional[str] = None
     ) -> Optional[HandlerResult]:
         """Return the latest result for a Silverback instance's handler"""
         ...
@@ -182,7 +182,7 @@ class SQLitePersistentStore(BasePersistentStore):
 
         self.initialized = True
 
-    async def get_state(self, ident: SilverbackIdent) -> Optional[SilverbackState]:
+    async def get_state(self, ident: SilverbackID) -> Optional[SilverbackState]:
         if not self.initialized:
             await self.init()
 
@@ -209,7 +209,7 @@ class SQLitePersistentStore(BasePersistentStore):
         )
 
     async def set_state(
-        self, ident: SilverbackIdent, last_block_seen: int, last_block_processed: int
+        self, ident: SilverbackID, last_block_seen: int, last_block_processed: int
     ) -> Optional[SilverbackState]:
         if not self.initialized:
             await self.init()
@@ -261,7 +261,7 @@ class SQLitePersistentStore(BasePersistentStore):
         )
 
     async def get_latest_result(
-        self, ident: SilverbackIdent, handler: Optional[str] = None
+        self, ident: SilverbackID, handler: Optional[str] = None
     ) -> Optional[HandlerResult]:
         if not self.initialized:
             await self.init()
