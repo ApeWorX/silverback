@@ -157,7 +157,12 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         logger.debug(f"Handling blocks via {sub_id}")
 
         async for raw_block in self.subscriptions.get_subscription_data(sub_id):
+            logger.debug("Processing raw block:")
+            print(raw_block)
+
             block = self.provider.network.ecosystem.decode_block(hexbytes_dict(raw_block))
+
+            logger.debug(f"Received block: {block.number or 'pending'}")
 
             if block.number is not None:
                 await self._checkpoint(last_block_seen=block.number)
