@@ -155,6 +155,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
         sub_id = await self.subscriptions.subscribe(SubscriptionType.BLOCKS)
         logger.debug(f"Handling blocks via {sub_id}")
+        print("HELLO WORLD")
 
         async for raw_block in self.subscriptions.get_subscription_data(sub_id):
             logger.debug("Processing raw block:")
@@ -226,6 +227,8 @@ class PollingRunner(BaseRunner):
         )
 
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
+        logger.debug(f"Handling blocks via polling")
+        print("GOODBYE WORLD")
         new_block_timeout = None
         start_block = None
         if "_blocks_" in self.app.poll_settings:
