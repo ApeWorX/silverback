@@ -154,7 +154,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
         sub_id = await self.subscriptions.subscribe(SubscriptionType.BLOCKS)
-        logger.debug(f"Handling blocks via {sub_id}")
+        logger.debug(f"Handling blocks via {sub_id}.")
         print("HELLO WORLD")
 
         async for raw_block in self.subscriptions.get_subscription_data(sub_id):
