@@ -39,4 +39,4 @@ def handler_id_block(block_number: Optional[int]) -> str:
 def handler_id_event(contract_address: Optional[str], event_signature: str) -> str:
     """Return a unique handler ID string for an event"""
     # TODO: Under what circumstance can address be None?
-    return f"event/{contract_address or 'unknown'}/{event_signature}"
+    return f"{contract_address or 'unknown'}/event/{event_signature}"
