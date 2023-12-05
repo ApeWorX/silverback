@@ -21,7 +21,7 @@ def resolve_task(message: TaskiqMessage) -> Tuple[str, Optional[int], Optional[i
     elif "event" in task_id:
         block_number = message.args[0].block_number
         log_index = message.args[0].log_index
-        task_id = handler_id_event(message.args[0].address, message.args[0].abi.name)
+        task_id = handler_id_event(message.args[0].contract_address, message.args[0].abi.name)
 
     return task_id, block_number, log_index
 
