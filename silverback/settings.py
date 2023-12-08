@@ -77,6 +77,10 @@ class Settings(BaseSettings, ManagerAccessMixin):
         return persistence_class()
 
     def get_provider_context(self) -> ProviderContextManager:
+        # NOTE: Bit of a workaround for adhoc connections:
+        #       https://github.com/ApeWorX/ape/issues/1762
+        if "adhoc" in self.get_network_choice():
+            return ProviderContextManager(provider=self.provider)
         return self.network_manager.parse_network_choice(self.get_network_choice())
 
     def get_signer(self) -> Optional[AccountAPI]:
