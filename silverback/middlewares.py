@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from ape.logging import logger
 from ape.types import ContractLog
 from ape.utils import ManagerAccessMixin
-from ethpm_types import HexBytes
+from eth_pydantic_types import HexBytes
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
 from silverback.persistence import HandlerResult
@@ -83,7 +83,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
         elif "event" in message.task_name:
             # NOTE: Just in case the user doesn't specify type as `ContractLog`
-            message.args[0] = ContractLog.parse_obj(message.args[0])
+            message.args[0] = ContractLog.model_validate(message.args[0])
 
         logger.info(f"{self._create_label(message)} - Started")
         return message

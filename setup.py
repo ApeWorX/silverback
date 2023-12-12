@@ -5,13 +5,13 @@ from setuptools import find_packages, setup
 extras_require = {
     "test": [  # `test` GitHub Action jobs uses this
         "pytest>=6.0",  # Core testing package
-        "pytest-xdist",  # multi-process runner
+        "pytest-xdist",  # Multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
         "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
     ],
     "lint": [
-        "black>=23.11.0,<24",  # Auto-formatter and linter
-        "mypy>=1.7.0,<2",  # Static type analyzer
+        "black>=23.12.0,<24",  # Auto-formatter and linter
+        "mypy>=1.7.1,<2",  # Static type analyzer
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=6.1.0,<7",  # Style linter
         "isort>=5.10.1,<6",  # Import sorting linter
@@ -69,7 +69,7 @@ setup(
     install_requires=[
         "click",  # Use same version as eth-ape
         "eth-ape>=0.7.0,<1.0",
-        "ethpm_types",  # Use same version as eth-ape
+        "eth-pydantic-types",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
         "taskiq[metrics]>=0.6.0,<0.7.0",
     ],
