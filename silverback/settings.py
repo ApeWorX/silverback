@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from ape.api import AccountAPI, ProviderContextManager
 from ape.utils import ManagerAccessMixin
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from taskiq import AsyncBroker, InMemoryBroker, PrometheusMiddleware, TaskiqMiddleware
 
 from ._importer import import_from_string
@@ -38,9 +38,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
     # Used for persistent store
     PERSISTENCE_CLASS: Optional[str] = None
 
-    class Config:
-        env_prefix = "SILVERBACK_"
-        case_sensitive = True
+    model_config = SettingsConfigDict(env_prefix="SILVERBACK_", case_sensitive=True)
 
     def get_broker(self) -> AsyncBroker:
         broker_class = import_from_string(self.BROKER_CLASS)

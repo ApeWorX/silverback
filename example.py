@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated  # NOTE: Only Python 3.9+
 
 from ape import chain
 from ape.api import BlockAPI
