@@ -69,7 +69,7 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
 @cli.command(cls=ConnectedProviderCommand, help="Run Silverback application client")
 @ape_cli_context()
 @verbosity_option()
-@network_option(default=None, callback=_network_callback)
+@network_option(callback=_network_callback)
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option(
     "--runner",
@@ -87,7 +87,7 @@ def run(cli_ctx, account, runner, max_exceptions, path):
 @cli.command(cls=ConnectedProviderCommand, help="Run Silverback application task workers")
 @ape_cli_context()
 @verbosity_option()
-@network_option(default=None, callback=_network_callback)
+@network_option(callback=_network_callback)
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option("-w", "--workers", type=int, default=2)
 @click.option("-x", "--max-exceptions", type=int, default=3)
