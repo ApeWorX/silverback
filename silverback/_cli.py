@@ -10,6 +10,7 @@ from ape.cli import (
     network_option,
     verbosity_option,
 )
+from ape.exceptions import Abort
 from taskiq import AsyncBroker
 from taskiq.cli.worker.run import shutdown_broker
 from taskiq.receiver import Receiver
@@ -42,7 +43,19 @@ def _account_callback(ctx, param, val):
 
 
 def _network_callback(ctx, param, val):
-    os.environ["SILVERBACK_NETWORK_CHOICE"] = val.network_choice
+    # NOTE: Make sure both of these have the same setting
+    if env_network_choice := os.environ.get("SILVERBACK_NETWORK_CHOICE"):
+        if val.network_choice != env_network_choice:
+            raise Abort(
+                f"Network choice '{val.network_choice}' does not "
+                f"match environment variable '{env_network_choice}'."
+            )
+
+        # else it matches, no issue
+
+    else:
+        os.environ["SILVERBACK_NETWORK_CHOICE"] = val.network_choice
+
     return val
 
 
@@ -69,7 +82,10 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
 @cli.command(cls=ConnectedProviderCommand, help="Run Silverback application client")
 @ape_cli_context()
 @verbosity_option()
-@network_option(callback=_network_callback)
+@network_option(
+    default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
+    callback=_network_callback,
+)
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option(
     "--runner",
@@ -87,7 +103,10 @@ def run(cli_ctx, account, runner, max_exceptions, path):
 @cli.command(cls=ConnectedProviderCommand, help="Run Silverback application task workers")
 @ape_cli_context()
 @verbosity_option()
-@network_option(callback=_network_callback)
+@network_option(
+    default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
+    callback=_network_callback,
+)
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option("-w", "--workers", type=int, default=2)
 @click.option("-x", "--max-exceptions", type=int, default=3)
