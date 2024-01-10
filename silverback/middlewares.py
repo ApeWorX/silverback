@@ -1,8 +1,9 @@
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from ape.logging import logger
 from ape.types import ContractLog
 from ape.utils import ManagerAccessMixin
+from eth_utils.conversions import to_hex
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
 from silverback.persistence import HandlerResult
@@ -45,13 +46,16 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         self.persistence = settings.get_persistent_store()
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
-        # TODO: Necessary until https://github.com/ApeWorX/ape/issues/1465 is resolved
-
-        def fix_dict(data: dict) -> dict:
-            fixed_data = {}
+        # TODO: Necessary because bytes/HexBytes doesn't encode/deocde well for some reason
+        def fix_dict(data: dict, recurse_count: int = 0) -> dict:
+            fixed_data: dict[str, Any] = {}
             for name, value in data.items():
                 if isinstance(value, bytes):
-                    fixed_data[name] = value.hex()
+                    fixed_data[name] = to_hex(value)
+                elif isinstance(value, dict):
+                    if recurse_count > 3:
+                        raise RecursionError("Event object is too deep")
+                    fixed_data[name] = fix_dict(value, recurse_count + 1)
                 else:
                     fixed_data[name] = value
 
