@@ -38,13 +38,17 @@ def async_wrap_iter(it: Iterator) -> AsyncIterator:
     return yield_queue_items()
 
 
-def hexbytes_dict(data: dict) -> dict:
+def hexbytes_dict(data: dict, recurse_count: int = 0) -> dict:
     """Converts any hex string values in a flat dictionary to HexBytes."""
     fixed_data = {}
 
     for name, value in data.items():
         if isinstance(value, str) and value.startswith("0x"):
             fixed_data[name] = HexBytes(value)
+        elif isinstance(value, dict):
+            if recurse_count > 3:
+                raise RecursionError("Event object is too deep")
+            hexbytes_dict(value, recurse_count + 1)
         else:
             fixed_data[name] = value
 
