@@ -73,7 +73,7 @@ If you follow these suggestions, your Silverback deployments will be easy to use
 
 Creating a Silverback Bot is easy, to do so initialize the `silverback.SilverbackBot` class:
 
-```py
+```python
 from silverback import SilverbackBot
 
 bot = SilverbackBot()
@@ -91,7 +91,7 @@ This method lets us specify which event will trigger the execution of our handle
 
 To add a block handler, you will do the following:
 
-```py
+```python
 from ape import chain
 
 @bot.on_(chain.blocks)
@@ -107,7 +107,7 @@ Any errors you raise during this function will get captured by the client, and r
 
 Similarly to blocks, you can handle events emitted by a contract by adding an event handler:
 
-```
+```python
 from ape import Contract
 
 TOKEN = Contract(<your token address here>)
@@ -121,13 +121,32 @@ Inside of `handle_token_transfer_events` you can define any logic that you want 
 Again, you can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
 Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this `transfer` event log.
 
+### Event Log Filters
+
+You can also filter event logs by event parameters.
+For example, if you want to handle only `Transfer` events that represent a burn (a transfer to the zero address):
+
+```python
+@bot.on_(USDC.Transfer, to="0x0000000000000000000000000000000000000000")
+def handle_burn(log):
+    return {"burned": log.value}
+```
+
+In case an event parameter has a name that is an illegal keyword, we can also support a dictionary syntax:
+
+```python
+@bot.on_(USDC.Transfer, filter_args={"from":"0x0000000000000000000000000000000000000000"})
+def handle_burn(log):
+    return {"burned": log.value}
+```
+
 ## Cron Tasks
 
 You may also want to run some tasks according to a schedule, either for efficiency reasons or just that the task is not related to any chain-driven events.
 You can do that with the `@cron` task decorator.
 
 ```python
-@app.cron("* */1 * * *")
+@bot.cron("* */1 * * *")
 def every_hour():
     ...
 ```
@@ -140,7 +159,7 @@ For more information see [the linux handbook section on the crontab syntax](http
 
 If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:
 
-```py
+```python
 @bot.on_worker_startup()
 def handle_on_worker_startup(state):
     # Connect to DB, set initial state, etc
@@ -164,7 +183,7 @@ The `state` variable is also useful as this can be made available to each handle
 
 To access the state from a handler, you must annotate `context` as a dependency like so:
 
-```py
+```python
 from typing import Annotated
 from taskiq import Context, TaskiqDepends
 
@@ -178,7 +197,7 @@ def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
 
 You can also add an bot startup and shutdown handler that will be **executed once upon every bot startup**. This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.
 
-```py
+```python
 @bot.on_startup()
 def handle_on_startup(startup_state):
     # Process missed events, etc
@@ -205,7 +224,7 @@ For example, you might want to pre-populate a large dataframe into state on star
 and then use that data to determine a signal under which you want trigger transactions to commit back to the chain.
 Such an bot might look like this:
 
-```py
+```python
 @bot.on_startup()
 def create_table(startup_state):
     df = contract.MyEvent.query(..., start_block=startup_state.last_block_processed)
@@ -279,7 +298,7 @@ $ silverback run my_bot --network :sepolia --account acct-name
 It's important to note that signers are optional, if not configured in the bot then `bot.signer` will be `None`.
 You can use this in your bot to enable a "test execution" mode, something like this:
 
-```py
+```python
 # Compute some metric that might lead to creating a transaction
 if bot.signer:
     # Execute a transaction via `sender=bot.signer`
