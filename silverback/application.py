@@ -1,6 +1,6 @@
 import atexit
 from datetime import timedelta
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
@@ -10,8 +10,24 @@ from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
-from .settings import Settings
+from silverback.exceptions import DuplicateHandlerError, InvalidContainerTypeError
+from silverback.settings import Settings
+from silverback.types import EMPTY_HASH, EventInputFilter
+
+
+def event_handler_path_base(
+    contract_address: AddressType, event_name: str, input_filter: Optional[EventInputFilter] = None
+) -> str:
+    """Return a handler ID string for an event"""
+    return f"{contract_address}/event/{event_name}"
+
+
+def event_handler_path(
+    contract_address: AddressType, event_name: str, input_filter: Optional[EventInputFilter] = None
+) -> str:
+    """Return a unique handler ID string for an event with specific inputs to match"""
+    filter_suffix = f"{input_filter.filter_id}" if input_filter else EMPTY_HASH
+    return f"{event_handler_path_base(contract_address, event_name)}/{filter_suffix}"
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -26,6 +42,8 @@ class SilverbackApp(ManagerAccessMixin):
 
         ...  # Connection has been initialized, can call broker methods e.g. `app.on_(...)`
     """
+
+    _inputer_filters: Dict[str, EventInputFilter] = {}
 
     def __init__(self, settings: Optional[Settings] = None):
         """
@@ -148,10 +166,29 @@ class SilverbackApp(ManagerAccessMixin):
         return self.broker.find_task("block")
 
     def get_event_handler(
-        self, event_target: AddressType, event_name: str
+        self,
+        event_target: AddressType,
+        event_name: str,
+        input_filter: Optional[EventInputFilter] = None,
     ) -> Optional[AsyncTaskiqDecoratedTask]:
         """
-        Get access to the handler for `<event_target>:<event_name>` events.
+        Get access to the handler for `<event_target>:<event_name>:<input_params>` events.
+
+        Args:
+            event_target (AddressType): The contract address of the target.
+            event_name (str): The name of the event emitted by ``event_target``.
+            input_filter (Optional[EventInputFilter]): An input filter to match against
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
+        return self.broker.find_task(event_handler_path(event_target, event_name, input_filter))
+
+    def get_event_handlers(
+        self, event_target: AddressType, event_name: str
+    ) -> List[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to all handlers for `<event_target>:<event_name>` events.
 
         Args:
             event_target (AddressType): The contract address of the target.
@@ -160,13 +197,30 @@ class SilverbackApp(ManagerAccessMixin):
         Returns:
             Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
         """
-        return self.broker.find_task(f"{event_target}/event/{event_name}")
+        handler_path = event_handler_path_base(event_target, event_name)
+        all_tasks = self.broker.get_all_tasks()
+        return [
+            all_tasks[k] for k in filter(lambda x: x.startswith(handler_path), all_tasks.keys())
+        ]
+
+    def get_input_filter(self, event_handler_path: str) -> Optional[EventInputFilter]:
+        """
+        Get the input filter for an event handler if it exists.
+
+        Args:
+            event_handler_path (str): The path-like task name for the handler
+
+        Returns:
+            Optional[EventInputFilter]: Returns event filter if it exists
+        """
+        return self._inputer_filters.get(event_handler_path)
 
     def on_(
         self,
         container: Union[BlockContainer, ContractEvent],
         new_block_timeout: Optional[int] = None,
         start_block: Optional[int] = None,
+        **kwargs,
     ):
         """
         Create task to handle events created by `container`.
@@ -203,9 +257,11 @@ class SilverbackApp(ManagerAccessMixin):
         elif isinstance(container, ContractEvent) and isinstance(
             container.contract, ContractInstance
         ):
-            if self.get_event_handler(container.contract.address, container.abi.name):
+            input_filter = EventInputFilter.from_on_args(container, kwargs)
+
+            if self.get_event_handler(container.contract.address, container.abi.name, input_filter):
                 raise DuplicateHandlerError(
-                    f"event {container.contract.address}:{container.abi.name}"
+                    f"event {container.contract.address}:{container.abi.name}:{input_filter}"
                 )
 
             key = container.contract.address
@@ -226,9 +282,15 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings[key] = {"start_block": start_block}
 
-            return self.broker.task(
-                task_name=f"{container.contract.address}/event/{container.abi.name}"
+            handler_name = event_handler_path(
+                container.contract.address, container.abi.name, input_filter
             )
+
+            if input_filter:
+                self._inputer_filters[handler_name] = input_filter
+
+            logger.debug(f"Creating event handler {handler_name}")
+            return self.broker.task(task_name=handler_name)
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling

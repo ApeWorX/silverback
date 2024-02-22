@@ -45,7 +45,13 @@ def exec_event1(log):
     if log.log_index % 7 == 3:
         # If you ever want the app to shutdown under some scenario, call this exception
         raise CircuitBreaker("Oopsie!")
-    return {"amount": log.amount}
+    return {"value": log.value}
+
+
+# Looking for burn events
+@app.on_(USDC.Transfer, start_block=18588777, to="0x0000000000000000000000000000000000000000")
+def handle_burn(log):
+    return {"burned": log.value}
 
 
 @app.on_(YFI.Approval)
