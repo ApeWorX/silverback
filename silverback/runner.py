@@ -6,6 +6,7 @@ from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
 from ethpm_types import EventABI
+from hexbytes import HexBytes
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from taskiq import AsyncTaskiqTask
@@ -309,10 +310,23 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         event_log_task_kicker = self._create_task_kicker(task_data)
 
+        if task_data.filters is not None:
+            topics = [
+                topic.hex() if isinstance(topic, HexBytes) else topic
+                for topic in task_data.filters.root
+            ]
+        else:
+            topics = ["0x" + keccak(text=event_abi.selector).hex()]
+
+        logger.debug(
+            f"Using filter for {task_data.name}: "
+            f"{event_abi.name}({contract_address}) - {topics}"
+        )
+
         sub_id = await self.subscriptions.subscribe(
             SubscriptionType.EVENTS,
             address=contract_address,
-            topics=["0x" + keccak(text=event_abi.selector).hex()],
+            topics=topics,
         )
         logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
 

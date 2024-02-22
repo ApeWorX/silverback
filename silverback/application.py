@@ -13,7 +13,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
-from .types import SilverbackID, TaskType
+from .types import EventFilterArgs, SilverbackID, TaskType
 
 
 class SystemConfig(BaseModel):
@@ -30,6 +30,7 @@ class TaskData(BaseModel):
     name: str  # Name of user function
     labels: dict[str, Any]
 
+    filters: EventFilterArgs | None = None
     # NOTE: Any other items here must have a default value
 
 
@@ -146,6 +147,7 @@ class SilverbackApp(ManagerAccessMixin):
         self,
         task_type: TaskType,
         container: BlockContainer | ContractEvent | None = None,
+        filter_args: dict[str, Any] | None = None,
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
@@ -177,6 +179,9 @@ class SilverbackApp(ManagerAccessMixin):
         ):
             raise ContainerTypeMismatchError(task_type, container)
 
+        elif filter_args and task_type != TaskType.EVENT_LOG:
+            raise ValueError("Only `on_(ContractEvent)` supports filtering")
+
         # Register user function as task handler with our broker
         def add_taskiq_task(handler: Callable) -> AsyncTaskiqDecoratedTask:
             labels = {"task_type": str(task_type)}
@@ -194,7 +199,18 @@ class SilverbackApp(ManagerAccessMixin):
                 labels["contract_address"] = contract_address
                 labels["event_signature"] = container.abi.signature
 
-            self.tasks[task_type].append(TaskData(name=handler.__name__, labels=labels))
+                filters = (
+                    EventFilterArgs.from_event_and_filter_args(container, filter_args)
+                    if filter_args
+                    else None
+                )
+
+            else:
+                filters = None
+
+            self.tasks[task_type].append(
+                TaskData(name=handler.__name__, labels=labels, filters=filters)
+            )
 
             return self.broker.register_task(
                 handler,
@@ -257,6 +273,8 @@ class SilverbackApp(ManagerAccessMixin):
         container: BlockContainer | ContractEvent,
         new_block_timeout: int | None = None,
         start_block: int | None = None,
+        filter_args: dict[str, Any] | None = None,
+        **filter_kwargs,
     ):
         """
         Create task to handle events created by `container`.
@@ -290,6 +308,9 @@ class SilverbackApp(ManagerAccessMixin):
         elif isinstance(container, ContractEvent) and isinstance(
             container.contract, ContractInstance
         ):
+            if filter_args:
+                filter_kwargs.update(filter_args)
+
             key = container.contract.address
 
             if new_block_timeout is not None:
@@ -304,7 +325,9 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings[key] = {"start_block": start_block}
 
-            return self.broker_task_decorator(TaskType.EVENT_LOG, container=container)
+            return self.broker_task_decorator(
+                TaskType.EVENT_LOG, container=container, filter_args=filter_kwargs
+            )
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling

@@ -60,6 +60,19 @@ def exec_event1(log):
     return {"amount": log.amount}
 
 
+# You can apply filters to your event handlers using a kwargs syntax...
+@app.on_(USDC.Transfer, receiver="0x0000000000000000000000000000000000000000")
+def handle_burn(log):
+    return {"burned": log.value}
+
+
+# ...or via `filter_args` dictionary for arg names that are protected keywords (like `from`)
+# NOTE: You can have multiple handlers for the same event if you want
+@app.on_(USDC.Transfer, filter_args={"sender": "0x0000000000000000000000000000000000000000"})
+def handle_mint(log):
+    return {"minted": log.value}
+
+
 @app.on_(YFI.Approval)
 # Any handler function can be async too
 async def exec_event2(log: ContractLog):
