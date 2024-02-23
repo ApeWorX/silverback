@@ -3,6 +3,7 @@ from typing import Annotated  # NOTE: Only Python 3.9+
 from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
+from ape.utils import ZERO_ADDRESS
 from ape_tokens import tokens  # type: ignore[import]
 from taskiq import Context, TaskiqDepends, TaskiqState
 
@@ -49,7 +50,7 @@ def exec_event1(log):
 
 
 # Looking for burn events
-@app.on_(USDC.Transfer, start_block=18588777, to="0x0000000000000000000000000000000000000000")
+@app.on_(USDC.Transfer, start_block=18588777, to=ZERO_ADDRESS)
 def handle_burn(log):
     return {"burned": log.value}
 
