@@ -3,6 +3,7 @@ from typing import Annotated  # NOTE: Only Python 3.9+
 from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
+from ape.utils import ZERO_ADDRESS
 from ape_tokens import tokens  # type: ignore[import]
 from taskiq import Context, TaskiqDepends, TaskiqState
 
@@ -45,7 +46,13 @@ def exec_event1(log):
     if log.log_index % 7 == 3:
         # If you ever want the app to shutdown under some scenario, call this exception
         raise CircuitBreaker("Oopsie!")
-    return {"amount": log.amount}
+    return {"value": log.value}
+
+
+# Looking for burn events
+@app.on_(USDC.Transfer, start_block=18588777, to=ZERO_ADDRESS)
+def handle_burn(log):
+    return {"burned": log.value}
 
 
 @app.on_(YFI.Approval)

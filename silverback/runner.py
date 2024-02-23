@@ -1,6 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from ape import chain
 from ape.contracts import ContractEvent, ContractInstance
@@ -14,7 +14,7 @@ from .exceptions import Halt, NoWebsocketAvailableError
 from .persistence import BasePersistentStore
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import SilverbackID, SilverbackStartupState
+from .types import EventInputFilter, SilverbackID, SilverbackStartupState
 from .utils import async_wrap_iter, hexbytes_dict
 
 settings = Settings()
@@ -76,7 +76,9 @@ class BaseRunner(ABC):
 
     @abstractmethod
     async def _event_task(
-        self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
+        self,
+        contract_event: ContractEvent,
+        event_handlers: List[Tuple[AsyncTaskiqDecoratedTask, Optional[EventInputFilter]]],
     ):
         """
         handle an event handler task for the given contract event
@@ -114,14 +116,19 @@ class BaseRunner(ABC):
             self._handle_result(result)
 
         if block_handler := self.app.get_block_handler():
+            logger.debug("Adding block handler")
             tasks = [self._block_task(block_handler)]
         else:
             tasks = []
 
         for contract_address in self.app.contract_events:
             for event_name, contract_event in self.app.contract_events[contract_address].items():
-                if event_handler := self.app.get_event_handler(contract_address, event_name):
-                    tasks.append(self._event_task(contract_event, event_handler))
+                if event_handlers := self.app.get_event_handlers(contract_address, event_name):
+                    handler_filter_pairs = [
+                        (h, self.app.get_input_filter(h.task_name)) for h in event_handlers
+                    ]
+                    logger.debug(f"Adding {len(event_handlers)} event handlers for {event_name}")
+                    tasks.append(self._event_task(contract_event, handler_filter_pairs))
 
         if len(tasks) == 0:
             raise Halt("No tasks to execute")
@@ -171,7 +178,9 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
                 await self._checkpoint(last_block_processed=block.number)
 
     async def _event_task(
-        self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
+        self,
+        contract_event: ContractEvent,
+        event_handlers: List[Tuple[AsyncTaskiqDecoratedTask, Optional[EventInputFilter]]],
     ):
         if not isinstance(contract_event.contract, ContractInstance):
             # For type-checking.
@@ -195,12 +204,16 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             if event.block_number is not None:
                 await self._checkpoint(last_block_seen=event.block_number)
 
-            event_task = await event_handler.kiq(event)
-            result = await event_task.wait_result()
-            self._handle_result(result)
+            for event_handler, event_filter in event_handlers:
+                if event_filter is not None and not event_filter.matches(event):
+                    continue
 
-            if event.block_number is not None:
-                await self._checkpoint(last_block_processed=event.block_number)
+                event_task = await event_handler.kiq(event)
+                result = await event_task.wait_result()
+                self._handle_result(result)
+
+                if event.block_number is not None:
+                    await self._checkpoint(last_block_processed=event.block_number)
 
     async def run(self):
         async with Web3SubscriptionsManager(self.ws_uri) as subscriptions:
@@ -246,7 +259,9 @@ class PollingRunner(BaseRunner):
                 await self._checkpoint(last_block_processed=block.number)
 
     async def _event_task(
-        self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
+        self,
+        contract_event: ContractEvent,
+        event_handlers: List[Tuple[AsyncTaskiqDecoratedTask, Optional[EventInputFilter]]],
     ):
         new_block_timeout = None
         start_block = None
@@ -268,9 +283,14 @@ class PollingRunner(BaseRunner):
             if event.block_number is not None:
                 await self._checkpoint(last_block_seen=event.block_number)
 
-            event_task = await event_handler.kiq(event)
-            result = await event_task.wait_result()
-            self._handle_result(result)
+            for event_handler, event_filter in event_handlers:
+                if event_filter is not None and not event_filter.matches(event):
+                    logger.debug("Event does not match hander filter")
+                    continue
 
-            if event.block_number is not None:
-                await self._checkpoint(last_block_processed=event.block_number)
+                event_task = await event_handler.kiq(event)
+                result = await event_task.wait_result()
+                self._handle_result(result)
+
+                if event.block_number is not None:
+                    await self._checkpoint(last_block_processed=event.block_number)
