@@ -1,7 +1,12 @@
+from datetime import datetime, timedelta
 from typing import Optional, Protocol
 
+import pycron  # type: ignore[import]
+from eth_utils import keccak
 from pydantic import BaseModel
 from typing_extensions import Self  # Introduced 3.11
+
+ONE_MINUTE = timedelta(minutes=1)
 
 
 class ISilverbackSettings(Protocol):
@@ -27,6 +32,31 @@ class SilverbackID(BaseModel):
 class SilverbackStartupState(BaseModel):
     last_block_seen: int
     last_block_processed: int
+
+
+class CronJob(BaseModel):
+    last_run: datetime = datetime.utcnow()
+    schedule: str
+
+    @property
+    def schedule_id(self) -> str:
+        return string_4byte(self.schedule)
+
+    @property
+    def task_name(self) -> str:
+        return f"cron/{self.schedule_id}"
+
+    def mark_ran(self):
+        self.last_run = datetime.utcnow()
+
+    def should_run(self) -> bool:
+        # NOTE: Checking against ONE_MINUTE since that is the resolution of cron schedules
+        return pycron.is_now(self.schedule) and datetime.utcnow() - self.last_run >= ONE_MINUTE
+
+
+def string_4byte(s: str):
+    """Return a 4-byte hex string hash of the given string"""
+    return keccak(text=s).hex()[:8]
 
 
 def handler_id_block(block_number: Optional[int]) -> str:

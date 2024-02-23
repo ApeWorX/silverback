@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated  # NOTE: Only Python 3.9+
 
 from ape import chain
@@ -27,6 +28,11 @@ def worker_startup(state: TaskiqState):
     state.block_count = 0
     # state.db = MyDB()
     return {"message": "Worker started."}
+
+
+@app.cron("*/5 * * * *")
+def every_five_minutes():
+    return {"crontime": datetime.utcnow()}
 
 
 # This is how we trigger off of new blocks

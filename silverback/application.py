@@ -1,6 +1,6 @@
 import atexit
-from datetime import timedelta
-from typing import Callable, Dict, Optional, Union
+from datetime import datetime, timedelta
+from typing import Callable, Dict, List, Optional, Union
 
 from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
@@ -10,8 +10,9 @@ from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
-from .settings import Settings
+from silverback.exceptions import DuplicateHandlerError, InvalidContainerTypeError
+from silverback.settings import Settings
+from silverback.types import CronJob
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -26,6 +27,9 @@ class SilverbackApp(ManagerAccessMixin):
 
         ...  # Connection has been initialized, can call broker methods e.g. `app.on_(...)`
     """
+
+    # Cron job tasks
+    _cron_tasks: List[CronJob] = []
 
     def __init__(self, settings: Optional[Settings] = None):
         """
@@ -162,6 +166,18 @@ class SilverbackApp(ManagerAccessMixin):
         """
         return self.broker.find_task(f"{event_target}/event/{event_name}")
 
+    def get_cron_handler(self, cron_job: CronJob) -> Optional[AsyncTaskiqDecoratedTask]:
+        """
+        Get access to the handler for a given CronJob.
+
+        Args:
+            cron_job (CronJob): Instance of a CronJob representing a schedule
+
+        Returns:
+            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
+        """
+        return self.broker.find_task(cron_job.task_name)
+
     def on_(
         self,
         container: Union[BlockContainer, ContractEvent],
@@ -233,3 +249,14 @@ class SilverbackApp(ManagerAccessMixin):
         # TODO: Support account transaction polling
         # TODO: Support mempool polling
         raise InvalidContainerTypeError(container)
+
+    def cron(self, schedule: str):
+        """
+        Create task to run on a schedule.
+
+        Args:
+            schedule (str): A cron-like schedule string.
+        """
+        cron_job = CronJob(reference=datetime.utcnow(), schedule=schedule)
+        self._cron_tasks.append(cron_job)
+        return self.broker.task(task_name=cron_job.task_name)
