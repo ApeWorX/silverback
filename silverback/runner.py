@@ -18,6 +18,7 @@ from .types import SilverbackID, SilverbackStartupState
 from .utils import async_wrap_iter, hexbytes_dict
 
 settings = Settings()
+CRON_TICK = 15  # seconds
 
 
 class BaseRunner(ABC):
@@ -82,6 +83,21 @@ class BaseRunner(ABC):
         handle an event handler task for the given contract event
         """
 
+    async def _cron_loop(self):
+        """
+        Execute scheduled cron tasks when their sequence comes up.
+        """
+        while True:
+            await asyncio.sleep(CRON_TICK)
+            for job in self.app._cron_tasks:
+                if job.should_run():
+                    job.mark_ran()
+                    cron_handler = self.app.get_cron_handler(job)
+                    if cron_handler:
+                        task = await cron_handler.kiq()
+                        result = await task.wait_result()
+                        self._handle_result(result)
+
     async def run(self):
         """
         Run the task broker client for the assembled ``SilverbackApp`` application.
@@ -122,6 +138,9 @@ class BaseRunner(ABC):
             for event_name, contract_event in self.app.contract_events[contract_address].items():
                 if event_handler := self.app.get_event_handler(contract_address, event_name):
                     tasks.append(self._event_task(contract_event, event_handler))
+
+        if len(self.app._cron_tasks):
+            tasks.append(self._cron_loop())
 
         if len(tasks) == 0:
             raise Halt("No tasks to execute")
