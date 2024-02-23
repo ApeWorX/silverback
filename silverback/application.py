@@ -261,7 +261,8 @@ class SilverbackApp(ManagerAccessMixin):
 
             if self.get_event_handler(container.contract.address, container.abi.name, input_filter):
                 raise DuplicateHandlerError(
-                    f"event {container.contract.address}:{container.abi.name}:{input_filter}"
+                    f"event {container.contract.address}:{container.abi.name}"
+                    f"({input_filter.filter_inputs if input_filter else ''})"
                 )
 
             key = container.contract.address
