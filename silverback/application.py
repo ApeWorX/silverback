@@ -13,7 +13,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
-from .types import SilverbackID, TaskType
+from .types import CronSchedule, SilverbackID, TaskType
 
 
 class SystemConfig(BaseModel):
@@ -146,6 +146,7 @@ class SilverbackApp(ManagerAccessMixin):
         self,
         task_type: TaskType,
         container: BlockContainer | ContractEvent | None = None,
+        cron_schedule: CronSchedule | None = None,
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
@@ -193,6 +194,9 @@ class SilverbackApp(ManagerAccessMixin):
 
                 labels["contract_address"] = contract_address
                 labels["event_signature"] = container.abi.signature
+
+            if task_type is TaskType.CRON_JOB:
+                labels["cron"] = str(cron_schedule)
 
             self.tasks[task_type].append(TaskData(name=handler.__name__, labels=labels))
 
@@ -309,3 +313,13 @@ class SilverbackApp(ManagerAccessMixin):
         # TODO: Support account transaction polling
         # TODO: Support mempool polling
         raise InvalidContainerTypeError(container)
+
+    def cron(self, cron_schedule: str) -> Callable:
+        """
+        Create task to run on a schedule.
+        Args:
+            schedule (str): A cron-like schedule string.
+        """
+        return self.broker_task_decorator(
+            TaskType.CRON_JOB, cron_schedule=CronSchedule(cron=cron_schedule)
+        )

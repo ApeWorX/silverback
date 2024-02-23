@@ -4,7 +4,7 @@ from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
 from typing import Literal
 
 from ape.logging import get_logger
-from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
+from pydantic import BaseModel, Field, RootModel, ValidationError, model_serializer, model_validator
 from pydantic.functional_serializers import PlainSerializer
 from typing_extensions import Annotated
 
@@ -21,6 +21,7 @@ class TaskType(str, Enum):
     STARTUP = "user:startup"
     NEW_BLOCK = "user:new-block"
     EVENT_LOG = "user:event-log"
+    CRON_JOB = "user:cron-job"
     SHUTDOWN = "user:shutdown"
 
     def __str__(self) -> str:
@@ -46,6 +47,66 @@ UTCTimestamp = Annotated[
     # TODO: Bug in TaskIQ can't serialize `datetime`
     PlainSerializer(iso_format, return_type=str),
 ]
+
+
+class CronSchedule(BaseModel):
+    minute: str
+    hour: str
+    day_month: str
+    month: str
+    day_week: str
+
+    def __init__(self, cron: str = "", **field_values):
+        if cron:
+            field_values = dict(
+                zip(
+                    iter(self.__fields__),  # type: ignore[call-overload]
+                    cron.split(" "),
+                )
+            )
+
+        super().__init__(**field_values)
+
+    @model_serializer
+    def create_cron_string(self) -> str:
+        return " ".join(map(lambda f: getattr(self, f), self.__fields__))
+
+    def __str__(self) -> str:
+        return self.create_cron_string()
+
+    def _check_value(self, val: str, current: int) -> bool:
+        if "/" in val:
+            val, step_str = val.split("/")
+            step = int(step_str)
+
+        else:
+            step = 1
+
+        if "-" in val:
+            start, stop = map(int, val.split("-"))
+            matches = list(range(start, stop + 1, step))
+
+        elif "," in val:
+            matches = list(map(int, val.split(",")))
+
+        elif val == "*":
+            return current % step == 0
+
+        else:
+            matches = [int(val)]
+
+        return current in matches
+
+    def is_ready(self, current_time: datetime) -> bool:
+        return all(
+            [
+                self._check_value(self.minute, current_time.minute),
+                self._check_value(self.hour, current_time.hour),
+                self._check_value(self.day_month, current_time.day),
+                self._check_value(self.month, current_time.month),
+                self._check_value(self.day_week, current_time.weekday()),
+            ]
+        )
 
 
 class _BaseDatapoint(BaseModel):

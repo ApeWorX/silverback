@@ -16,13 +16,15 @@ from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, 
 from .recorder import BaseRecorder, TaskResult
 from .state import AppDatastore, AppState
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import TaskType
+from .types import CronSchedule, TaskType, utc_now
 from .utils import (
     async_wrap_iter,
     hexbytes_dict,
     run_taskiq_task_group_wait_results,
     run_taskiq_task_wait_result,
 )
+
+CRON_CHECK_SECONDS = 5
 
 
 class BaseRunner(ABC):
@@ -109,6 +111,37 @@ class BaseRunner(ABC):
         handle an event handler task for the given contract event
         """
 
+    async def _cron_task(self, task_data: list[TaskData]):
+        cron_jobs = {}
+        for td in task_data:
+            if cron_schedule := td.labels.get("cron"):
+                cron_jobs[td] = CronSchedule(cron=cron_schedule)
+
+            else:
+                # NOTE: Shouldn't happen but just in case
+                logger.warning(f"TaskData missing `cron` label: {td}")
+
+        if cron_jobs_str := "\n- ".join(map(str, cron_jobs.values())):
+            logger.info(f"Cron Jobs:\n- {cron_jobs_str}")
+
+        while True:
+            current_time = utc_now()
+            if current_time.second < CRON_CHECK_SECONDS:
+                # Print out current time every minute
+                logger.info(f"Current Time: {current_time}")
+                # NOTE: In the absence of any cron jobs, we still print out the current time
+
+            if task_data_to_kiq := [
+                td for td, cron in cron_jobs.items() if cron.is_ready(current_time)
+            ]:
+                tasks = await asyncio.gather(
+                    *((self._create_task_kicker(td).kiq() for td in task_data_to_kiq))
+                )
+                await asyncio.gather(*(self._handle_task(task) for task in tasks))
+
+            # Check crons multiple times a minute
+            await asyncio.sleep(CRON_CHECK_SECONDS)
+
     async def run(self):
         """
         Run the task broker client for the assembled ``SilverbackApp`` application.
@@ -138,7 +171,7 @@ class BaseRunner(ABC):
             raise StartupFailure("Worker SDK version too old, please rebuild")
 
         if not (
-            system_tasks := set(TaskType(task_name) for task_name in result.return_value.task_types)
+            system_tasks := set(TaskType(task_type) for task_type in result.return_value.task_types)
         ):
             raise StartupFailure("No system tasks detected, startup failure")
         # NOTE: Guaranteed to be at least one because of `TaskType.SYSTEM_CONFIG`
@@ -152,6 +185,10 @@ class BaseRunner(ABC):
         #       `if TaskType.<SYSTEM_TASK_NAME> not in system_tasks: raise StartupFailure(...)`
         #       or handle accordingly by having default logic if it is not available
 
+        # NOTE: In case we want to add new task types, we can detect feature support
+        supported_user_tasks = set(
+            [TaskType(task_type) for task_type in result.return_value.task_types]
+        )
         # Initialize recorder (if available) and fetch state if app has been run previously
         if self.recorder:
             await self.recorder.init(app_id=self.app.identifier)
@@ -204,10 +241,24 @@ class BaseRunner(ABC):
         if event_log_taskdata_results.is_err:
             raise StartupFailure(event_log_taskdata_results.error)
 
+        if TaskType.CRON_JOB in supported_user_tasks:
+            cron_job_taskdata_results = await run_taskiq_task_wait_result(
+                self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.CRON_JOB
+            )
+            if cron_job_taskdata_results.is_err:
+                raise StartupFailure(cron_job_taskdata_results.error)
+
+        else:  # Not supported for `TaskType.SYSTEM_USER_TASKDATA`
+            # NOTE: This is just so that `.return_value` is a proper attribute for next line
+            cron_job_taskdata_results = type(
+                "MockAsyncTaskiqResult", (object,), dict(return_value=[])
+            )()
+
         if (
             len(new_block_taskdata_results.return_value)
             == len(event_log_taskdata_results.return_value)
-            == 0  # Both are empty
+            == len(cron_job_taskdata_results.return_value)
+            == 0  # All are empty
         ):
             raise NoTasksAvailableError()
 
@@ -222,6 +273,7 @@ class BaseRunner(ABC):
                 asyncio.create_task(self._event_task(task_def))
                 for task_def in event_log_taskdata_results.return_value
             ),
+            asyncio.create_task(self._cron_task(cron_job_taskdata_results.return_value)),
         )
 
         # NOTE: Safe to do this because no tasks were actually scheduled to run

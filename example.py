@@ -1,4 +1,5 @@
-from typing import Annotated
+from datetime import datetime
+from typing import Annotated  # NOTE: Only Python 3.9+
 
 from ape import chain
 from ape.api import BlockAPI
@@ -36,6 +37,12 @@ def worker_startup(state: TaskiqState):  # NOTE: You need the type hint here
     state.db = MyDB()
     state.block_count = 0
     # raise Exception  # NOTE: Any exception raised on worker startup aborts immediately
+
+
+# You can run cron jobs in your apps (functions that execute at a regular time period)
+@app.cron("*/5 * * * *")
+def every_five_minutes():
+    return {"crontime": datetime.utcnow()}
 
 
 # This is how we trigger off of new blocks
