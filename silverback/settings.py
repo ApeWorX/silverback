@@ -46,7 +46,8 @@ class Settings(BaseSettings, ManagerAccessMixin):
             broker = broker_class()
 
         else:
-            broker = broker_class(self.BROKER_URI)
+            # TODO: Not all brokers share a common arg signature.
+            broker = broker_class(self.BROKER_URI or None)
 
         middlewares: List[TaskiqMiddleware] = [SilverbackMiddleware(silverback_settings=self)]
 
