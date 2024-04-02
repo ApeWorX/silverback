@@ -11,7 +11,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
 
 from .application import SilverbackApp
 from .exceptions import Halt, NoWebsocketAvailableError
-from .persistence import BasePersistentStore
+from .recorder import BaseRecorder
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import SilverbackID, SilverbackStartupState, TaskType
@@ -28,7 +28,7 @@ class BaseRunner(ABC):
         self.exceptions = 0
         self.last_block_seen = 0
         self.last_block_processed = 0
-        self.persistence: Optional[BasePersistentStore] = None
+        self.recorder: Optional[BaseRecorder] = None
         self.ident = SilverbackID.from_settings(settings)
 
     def _handle_result(self, result: TaskiqResult):
@@ -58,9 +58,9 @@ class BaseRunner(ABC):
             self.last_block_seen = max(last_block_seen, self.last_block_seen)
             self.last_block_processed = max(last_block_processed, self.last_block_processed)
 
-            if self.persistence:
+            if self.recorder:
                 try:
-                    await self.persistence.set_state(
+                    await self.recorder.set_state(
                         self.ident, self.last_block_seen, self.last_block_processed
                     )
                 except Exception as err:
@@ -92,10 +92,10 @@ class BaseRunner(ABC):
         Raises:
             :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
         """
-        self.persistence = settings.get_persistent_store()
+        self.recorder = settings.get_recorder()
 
-        if self.persistence:
-            boot_state = await self.persistence.get_state(self.ident)
+        if self.recorder:
+            boot_state = await self.recorder.get_state(self.ident)
             if boot_state:
                 self.last_block_seen = boot_state.last_block_seen
                 self.last_block_processed = boot_state.last_block_processed

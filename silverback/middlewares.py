@@ -6,7 +6,7 @@ from ape.utils import ManagerAccessMixin
 from eth_utils.conversions import to_hex
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
-from silverback.persistence import HandlerResult
+from silverback.recorder import HandlerResult
 from silverback.types import SilverbackID, TaskType
 from silverback.utils import hexbytes_dict
 
@@ -26,7 +26,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
         self.block_time = self.chain_manager.provider.network.block_time or compute_block_time()
         self.ident = SilverbackID.from_settings(settings)
-        self.persistence = settings.get_persistent_store()
+        self.recorder = settings.get_recorder()
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
         # TODO: Necessary because bytes/HexBytes doesn't encode/deocde well for some reason
@@ -96,7 +96,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         )
 
     async def post_save(self, message: TaskiqMessage, result: TaskiqResult):
-        if not self.persistence:
+        if not self.recorder:
             return
 
         handler_result = HandlerResult.from_taskiq(
@@ -108,7 +108,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         )
 
         try:
-            await self.persistence.add_result(handler_result)
+            await self.recorder.add_result(handler_result)
         except Exception as err:
             logger.error(f"Error storing result: {err}")
 

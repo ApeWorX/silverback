@@ -7,7 +7,7 @@ from taskiq import AsyncBroker, InMemoryBroker, PrometheusMiddleware, TaskiqMidd
 
 from ._importer import import_from_string
 from .middlewares import SilverbackMiddleware
-from .persistence import BasePersistentStore
+from .recorder import BaseRecorder
 
 
 class Settings(BaseSettings, ManagerAccessMixin):
@@ -35,8 +35,8 @@ class Settings(BaseSettings, ManagerAccessMixin):
     NEW_BLOCK_TIMEOUT: Optional[int] = None
     START_BLOCK: Optional[int] = None
 
-    # Used for persistent store
-    PERSISTENCE_CLASS: Optional[str] = None
+    # Used for recorder
+    RECORDER_CLASS: Optional[str] = None
 
     model_config = SettingsConfigDict(env_prefix="SILVERBACK_", case_sensitive=True)
 
@@ -68,12 +68,12 @@ class Settings(BaseSettings, ManagerAccessMixin):
     def get_network_choice(self) -> str:
         return self.NETWORK_CHOICE or self.network_manager.network.choice
 
-    def get_persistent_store(self) -> Optional[BasePersistentStore]:
-        if not self.PERSISTENCE_CLASS:
+    def get_recorder(self) -> Optional[BaseRecorder]:
+        if not self.RECORDER_CLASS:
             return None
 
-        persistence_class = import_from_string(self.PERSISTENCE_CLASS)
-        return persistence_class()
+        recorder_class = import_from_string(self.RECORDER_CLASS)
+        return recorder_class()
 
     def get_provider_context(self) -> ProviderContextManager:
         # NOTE: Bit of a workaround for adhoc connections:

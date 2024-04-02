@@ -52,7 +52,7 @@ class HandlerResult(TaskiqResult):
         )
 
 
-class BasePersistentStore(ABC):
+class BaseRecorder(ABC):
     @abstractmethod
     async def init(self):
         """Handle any async initialization from Silverback settings (e.g. migrations)."""
@@ -83,16 +83,16 @@ class BasePersistentStore(ABC):
         ...
 
 
-class SQLitePersistentStore(BasePersistentStore):
+class SQLiteRecorder(BaseRecorder):
     """
-    SQLite implementation of BasePersistentStore used to store application state and handler
+    SQLite implementation of BaseRecorder used to store application state and handler
     result data.
 
     Usage:
 
-    To use SQLite persistent store, you must configure the following env vars:
+    To use SQLite recorder, you must configure the following env vars:
 
-    - `PERSISTENCE_CLASS`: `silverback.persistence.SQLitePersistentStore`
+    - `RECORDER_CLASS`: `silverback.recorder.SQLiteRecorder`
     - `SQLITE_PATH` (optional): A system file path or if blank it will be stored in-memory.
     """
 
