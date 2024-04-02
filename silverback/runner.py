@@ -36,10 +36,11 @@ class BaseRunner(ABC):
             self.exceptions += 1
 
         else:
+            # NOTE: Reset exception counter
             self.exceptions = 0
 
         if self.exceptions > self.max_exceptions:
-            raise Halt()
+            raise Halt() from result.error
 
     async def _checkpoint(
         self, last_block_seen: int = 0, last_block_processed: int = 0
