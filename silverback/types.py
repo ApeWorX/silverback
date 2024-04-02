@@ -20,7 +20,7 @@ class ISilverbackSettings(Protocol):
     a type reference."""
 
     INSTANCE: str
-    PERSISTENCE_CLASS: Optional[str]
+    RECORDER_CLASS: Optional[str]
 
     def get_network_choice(self) -> str:
         ...
