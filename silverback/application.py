@@ -1,4 +1,5 @@
 import atexit
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Union
 
@@ -10,8 +11,33 @@ from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
+from .exceptions import InvalidContainerTypeError
 from .settings import Settings
+from .types import TaskType
+
+
+@dataclass
+class Task:
+    container: BlockContainer | ContractEvent | None
+    handler: AsyncTaskiqDecoratedTask
+
+
+class TaskCollection(dict):
+    def insert(self, task_type: TaskType, task: Task):
+        if not isinstance(task_type, TaskType):
+            raise ValueError("Unexpected key type")
+
+        elif not isinstance(task, Task):
+            raise ValueError("Unexpected value type")
+
+        elif task_type is TaskType.NEW_BLOCKS and not isinstance(task.container, BlockContainer):
+            raise ValueError("Mismatch between key and value types")
+
+        elif task_type is TaskType.EVENT_LOG and not isinstance(task.container, ContractEvent):
+            raise ValueError("Mismatch between key and value types")
+
+        task_list = super().get(task_type) or []
+        super().__setitem__(task_type, task_list + [task])
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -52,7 +78,7 @@ class SilverbackApp(ManagerAccessMixin):
         logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()
-        self.contract_events: Dict[AddressType, Dict[str, ContractEvent]] = {}
+        self.tasks = TaskCollection()
         self.poll_settings: Dict[str, Dict] = {}
 
         atexit.register(self.network.__exit__, None, None, None)
@@ -72,6 +98,23 @@ class SilverbackApp(ManagerAccessMixin):
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
+    def broker_task_decorator(
+        self,
+        task_type: TaskType,
+        container: BlockContainer | ContractEvent | None = None,
+    ):
+        def add_taskiq_task(handler: Callable):
+            # TODO: Support generic registration
+            task = self.broker.register_task(
+                handler,
+                task_name=handler.__name__,
+                task_type=str(task_type),
+            )
+            self.tasks.insert(task_type, Task(container=container, handler=task))
+            return task
+
+        return add_taskiq_task
+
     def on_startup(self) -> Callable:
         """
         Code to execute on one worker upon startup / restart after an error.
@@ -82,7 +125,7 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_startup(startup_state):
                 ...  # Reprocess missed events or blocks
         """
-        return self.broker.task(task_name="silverback_startup")
+        return self.broker_task_decorator(TaskType.STARTUP)
 
     def on_shutdown(self) -> Callable:
         """
@@ -94,7 +137,7 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_shutdown():
                 ...  # Record final state of app
         """
-        return self.broker.task(task_name="silverback_shutdown")
+        return self.broker_task_decorator(TaskType.SHUTDOWN)
 
     def on_worker_startup(self) -> Callable:
         """
@@ -183,9 +226,6 @@ class SilverbackApp(ManagerAccessMixin):
                 If the type of `container` is not configurable for the app.
         """
         if isinstance(container, BlockContainer):
-            if self.get_block_handler():
-                raise DuplicateHandlerError("block")
-
             if new_block_timeout is not None:
                 if "_blocks_" in self.poll_settings:
                     self.poll_settings["_blocks_"]["new_block_timeout"] = new_block_timeout
@@ -198,21 +238,12 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings["_blocks_"] = {"start_block": start_block}
 
-            return self.broker.task(task_name="block")
+            return self.broker_task_decorator(TaskType.NEW_BLOCKS, container=container)
 
         elif isinstance(container, ContractEvent) and isinstance(
             container.contract, ContractInstance
         ):
-            if self.get_event_handler(container.contract.address, container.abi.name):
-                raise DuplicateHandlerError(
-                    f"event {container.contract.address}:{container.abi.name}"
-                )
-
             key = container.contract.address
-            if container.contract.address in self.contract_events:
-                self.contract_events[key][container.abi.name] = container
-            else:
-                self.contract_events[key] = {container.abi.name: container}
 
             if new_block_timeout is not None:
                 if key in self.poll_settings:
@@ -226,9 +257,7 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings[key] = {"start_block": start_block}
 
-            return self.broker.task(
-                task_name=f"{container.contract.address}/event/{container.abi.name}"
-            )
+            return self.broker_task_decorator(TaskType.EVENT_LOG, container=container)
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling
