@@ -7,7 +7,6 @@ from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
-from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
@@ -18,7 +17,7 @@ from .types import TaskType
 
 @dataclass
 class Task:
-    container: BlockContainer | ContractEvent | None
+    container: Union[BlockContainer, ContractEvent, None]
     handler: AsyncTaskiqDecoratedTask
 
 
@@ -101,7 +100,7 @@ class SilverbackApp(ManagerAccessMixin):
     def broker_task_decorator(
         self,
         task_type: TaskType,
-        container: BlockContainer | ContractEvent | None = None,
+        container: Union[BlockContainer, ContractEvent, None] = None,
     ):
         def add_taskiq_task(handler: Callable):
             # TODO: Support generic registration
