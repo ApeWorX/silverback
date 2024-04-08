@@ -126,7 +126,10 @@ class BaseRunner(ABC):
         if len(tasks) == 0:
             raise Halt("No tasks to execute")
 
-        await asyncio.gather(*tasks)
+        try:
+            await asyncio.gather(*tasks)
+        except Exception as e:
+            logger.error(f"Fatal error detected, shutting down: '{e}'")
 
         # Execute Silverback shutdown task before shutting down the broker
         if shutdown_handler := self.app.get_shutdown_handler():

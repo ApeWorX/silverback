@@ -4,6 +4,7 @@ from enum import Enum
 from typing import AsyncGenerator, Dict, List, Optional
 
 from ape.logging import logger
+from websockets import ConnectionClosedError
 from websockets import client as ws_client
 
 
@@ -145,6 +146,12 @@ class Web3SubscriptionsManager:
             # Try to gracefully unsubscribe to all events
             await asyncio.gather(*(self.unsubscribe(sub_id) for sub_id in self._subscriptions))
 
+        except ConnectionClosedError:
+            pass  # Websocket already closed (ctrl+C and patiently waiting)
+
         finally:
             # Disconnect and release websocket
-            await self.connection.close()
+            try:
+                await self.connection.close()
+            except RuntimeError:
+                pass  # No running event loop to disconnect from (multiple ctrl+C presses)
