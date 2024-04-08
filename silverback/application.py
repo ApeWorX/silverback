@@ -163,48 +163,6 @@ class SilverbackApp(ManagerAccessMixin):
         """
         return self.broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)
 
-    def get_startup_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `silverback_startup` events.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task("silverback_startup")
-
-    def get_shutdown_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `silverback_shutdown` events.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task("silverback_shutdown")
-
-    def get_block_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `block` events.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task("block")
-
-    def get_event_handler(
-        self, event_target: AddressType, event_name: str
-    ) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `<event_target>:<event_name>` events.
-
-        Args:
-            event_target (AddressType): The contract address of the target.
-            event_name: (str): The name of the event emitted by ``event_target``.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task(f"{event_target}/event/{event_name}")
-
     def on_(
         self,
         container: Union[BlockContainer, ContractEvent],
