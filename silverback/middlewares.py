@@ -49,16 +49,13 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         return message
 
     def _create_label(self, message: TaskiqMessage) -> str:
-        if labels_str := (
-            ",".join(f"{k}={v}" for k, v in message.labels.items() if k != "task_name")
-        ):
+        if labels_str := ",".join(f"{k}={v}" for k, v in message.labels.items()):
             return f"{message.task_name}[{labels_str}]"
 
         else:
             return message.task_name
 
     def pre_execute(self, message: TaskiqMessage) -> TaskiqMessage:
-        message.labels["task_name"] = message.task_name
         task_type = message.labels.pop("task_type", "<unknown>")
 
         # NOTE: Don't compare `str` to `TaskType` using `is`
