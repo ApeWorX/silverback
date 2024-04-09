@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple
+from typing import Any
 
 from ape.logging import logger
 from ape.types import ContractLog
@@ -7,23 +7,8 @@ from eth_utils.conversions import to_hex
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
 from silverback.persistence import HandlerResult
-from silverback.types import SilverbackID, TaskType, handler_id_block, handler_id_event
+from silverback.types import SilverbackID, TaskType
 from silverback.utils import hexbytes_dict
-
-
-def resolve_task(message: TaskiqMessage) -> Tuple[str, Optional[int], Optional[int]]:
-    block_number = message.labels.get("number") or message.labels.get("block")
-    log_index = message.labels.get("log_index")
-    task_id = message.task_name
-
-    if log_index:
-        # TODO: Should standardize on event signature here instead of name in case of overloading
-        task_id = handler_id_event(message.args[0].contract_address, message.args[0].event_name)
-
-    elif block_number:
-        task_id = handler_id_block(block_number)
-
-    return task_id, block_number, log_index
 
 
 class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
@@ -82,14 +67,14 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             message.args[0] = self.provider.network.ecosystem.decode_block(
                 hexbytes_dict(message.args[0])
             )
-            message.labels["number"] = str(message.args[0].number)
-            message.labels["hash"] = message.args[0].hash.hex()
+            message.labels["block_number"] = str(message.args[0].number)
+            message.labels["block_hash"] = message.args[0].hash.hex()
 
         elif task_type == TaskType.EVENT_LOG:
             # NOTE: Just in case the user doesn't specify type as `ContractLog`
             message.args[0] = ContractLog.model_validate(message.args[0])
-            message.labels["block"] = str(message.args[0].block_number)
-            message.labels["txn_id"] = message.args[0].transaction_hash
+            message.labels["block_number"] = str(message.args[0].block_number)
+            message.labels["transaction_hash"] = message.args[0].transaction_hash
             message.labels["log_index"] = str(message.args[0].log_index)
 
         logger.debug(f"{self._create_label(message)} - Started")
@@ -106,10 +91,12 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         if not self.persistence:
             return
 
-        handler_id, block_number, log_index = resolve_task(message)
-
         handler_result = HandlerResult.from_taskiq(
-            self.ident, handler_id, block_number, log_index, result
+            self.ident,
+            message.task_name,
+            message.labels.get("block_number"),
+            message.labels.get("log_index"),
+            result,
         )
 
         try:

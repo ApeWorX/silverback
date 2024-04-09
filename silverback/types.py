@@ -38,16 +38,3 @@ class SilverbackID(BaseModel):
 class SilverbackStartupState(BaseModel):
     last_block_seen: int
     last_block_processed: int
-
-
-def handler_id_block(block_number: Optional[int]) -> str:
-    """Return a unique handler ID string for a block"""
-    if block_number is None:
-        return "block/pending"
-    return f"block/{block_number}"
-
-
-def handler_id_event(contract_address: Optional[str], event_signature: str) -> str:
-    """Return a unique handler ID string for an event"""
-    # TODO: Under what circumstance can address be None?
-    return f"{contract_address or 'unknown'}/event/{event_signature}"
