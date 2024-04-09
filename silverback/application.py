@@ -1,4 +1,5 @@
 import atexit
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Union
@@ -10,33 +11,15 @@ from ape.managers.chain import BlockContainer
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import InvalidContainerTypeError
+from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
 from .types import TaskType
 
 
 @dataclass
-class Task:
+class TaskData:
     container: Union[BlockContainer, ContractEvent, None]
     handler: AsyncTaskiqDecoratedTask
-
-
-class TaskCollection(dict):
-    def insert(self, task_type: TaskType, task: Task):
-        if not isinstance(task_type, TaskType):
-            raise ValueError("Unexpected key type")
-
-        elif not isinstance(task, Task):
-            raise ValueError("Unexpected value type")
-
-        elif task_type is TaskType.NEW_BLOCKS and not isinstance(task.container, BlockContainer):
-            raise ValueError("Mismatch between key and value types")
-
-        elif task_type is TaskType.EVENT_LOG and not isinstance(task.container, ContractEvent):
-            raise ValueError("Mismatch between key and value types")
-
-        task_list = super().get(task_type) or []
-        super().__setitem__(task_type, task_list + [task])
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -77,7 +60,8 @@ class SilverbackApp(ManagerAccessMixin):
         logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()
-        self.tasks = TaskCollection()
+        # NOTE: If no tasks registered yet, defaults to empty list instead of raising KeyError
+        self.tasks: defaultdict[TaskType, list[TaskData]] = defaultdict(list)
         self.poll_settings: Dict[str, Dict] = {}
 
         atexit.register(self.network.__exit__, None, None, None)
@@ -102,15 +86,30 @@ class SilverbackApp(ManagerAccessMixin):
         task_type: TaskType,
         container: Union[BlockContainer, ContractEvent, None] = None,
     ):
+        if (
+            (task_type is TaskType.NEW_BLOCKS and not isinstance(container, BlockContainer))
+            or (task_type is TaskType.EVENT_LOG and not isinstance(container, ContractEvent))
+            or (
+                task_type
+                not in (
+                    TaskType.NEW_BLOCKS,
+                    TaskType.EVENT_LOG,
+                )
+                and container is not None
+            )
+        ):
+            raise ContainerTypeMismatchError(task_type, container)
+
+        # Register user function as task handler with our broker
         def add_taskiq_task(handler: Callable):
-            # TODO: Support generic registration
-            task = self.broker.register_task(
+            broker_task = self.broker.register_task(
                 handler,
                 task_name=handler.__name__,
                 task_type=str(task_type),
             )
-            self.tasks.insert(task_type, Task(container=container, handler=task))
-            return task
+
+            self.tasks[task_type].append(TaskData(container=container, handler=broker_task))
+            return broker_task
 
         return add_taskiq_task
 

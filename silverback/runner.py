@@ -103,7 +103,7 @@ class BaseRunner(ABC):
         await self.app.broker.startup()
 
         # Execute Silverback startup task before we init the rest
-        for startup_task in self.app.tasks.get(TaskType.STARTUP):
+        for startup_task in self.app.tasks[TaskType.STARTUP]:
             task = await startup_task.handler.kiq(
                 SilverbackStartupState(
                     last_block_seen=self.last_block_seen,
@@ -114,10 +114,10 @@ class BaseRunner(ABC):
             self._handle_result(result)
 
         tasks = []
-        for task in self.app.tasks.get(TaskType.NEW_BLOCKS):
+        for task in self.app.tasks[TaskType.NEW_BLOCKS]:
             tasks.append(self._block_task(task.handler))
 
-        for task in self.app.tasks.get(TaskType.EVENT_LOG):
+        for task in self.app.tasks[TaskType.EVENT_LOG]:
             tasks.append(self._event_task(task.container, task.handler))
 
         if len(tasks) == 0:
@@ -126,7 +126,7 @@ class BaseRunner(ABC):
         await asyncio.gather(*tasks)
 
         # Execute Silverback shutdown task before shutting down the broker
-        for shutdown_task in self.app.tasks.get(TaskType.SHUTDOWN):
+        for shutdown_task in self.app.tasks[TaskType.SHUTDOWN]:
             task = await shutdown_task.handler.kiq()
             result = self._handle_result(await task.wait_result())
 
