@@ -85,7 +85,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             message.labels["number"] = str(message.args[0].number)
             message.labels["hash"] = message.args[0].hash.hex()
 
-        elif "event" in message.task_name:
+        elif task_type == TaskType.EVENT_LOG:
             # NOTE: Just in case the user doesn't specify type as `ContractLog`
             message.args[0] = ContractLog.model_validate(message.args[0])
             message.labels["block"] = str(message.args[0].block_number)
