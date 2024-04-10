@@ -7,11 +7,7 @@ try:
     from enum import StrEnum  # Only Python 3.11+
 
 except ImportError:
-    from enum import Enum
-
-    class StrEnum(str, Enum):  # type: ignore[no-redef]
-        def __str__(self) -> str:
-            return self.value
+    from backports.strenum import StrEnum  # type: ignore[no-redef]
 
 
 class TaskType(StrEnum):

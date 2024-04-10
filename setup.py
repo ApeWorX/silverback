@@ -72,6 +72,7 @@ setup(
         "eth-pydantic-types",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
         "taskiq[metrics]>=0.10.4,<0.11.0",
+        "backports.strenum ; python_version<'3.11'",
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],
