@@ -67,18 +67,18 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         # Add extra labels for our task to see what their source was
         if task_type is TaskType.NEW_BLOCKS:
             # NOTE: Necessary because we don't know the exact block class
-            message.args[0] = self.provider.network.ecosystem.decode_block(
+            block = message.args[0] = self.provider.network.ecosystem.decode_block(
                 hexbytes_dict(message.args[0])
             )
-            message.labels["block_number"] = str(message.args[0].number)
-            message.labels["block_hash"] = message.args[0].hash.hex()
+            message.labels["block_number"] = str(block.number)
+            message.labels["block_hash"] = block.hash.hex()
 
         elif task_type is TaskType.EVENT_LOG:
             # NOTE: Just in case the user doesn't specify type as `ContractLog`
-            message.args[0] = ContractLog.model_validate(message.args[0])
-            message.labels["block_number"] = str(message.args[0].block_number)
-            message.labels["transaction_hash"] = message.args[0].transaction_hash
-            message.labels["log_index"] = str(message.args[0].log_index)
+            log = message.args[0] = ContractLog.model_validate(message.args[0])
+            message.labels["block_number"] = str(log.block_number)
+            message.labels["transaction_hash"] = log.transaction_hash
+            message.labels["log_index"] = str(log.log_index)
 
         logger.debug(f"{self._create_label(message)} - Started")
         return message
