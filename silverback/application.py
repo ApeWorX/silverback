@@ -85,7 +85,23 @@ class SilverbackApp(ManagerAccessMixin):
         self,
         task_type: TaskType,
         container: Union[BlockContainer, ContractEvent, None] = None,
-    ):
+    ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
+        """
+        Dynamically create a new broker task that handles tasks of ``task_type``.
+
+        Args:
+            task_type: :class:`~silverback.types.TaskType`: The type of task to create.
+            container: (Union[BlockContainer, ContractEvent]): The event source to watch.
+
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
+
+        Raises:
+            :class:`~silverback.exceptions.ContainerTypeMismatchError`:
+                If there is a mismatch between `task_type` and the `container`
+                type it should handle.
+        """
         if (
             (task_type is TaskType.NEW_BLOCKS and not isinstance(container, BlockContainer))
             or (task_type is TaskType.EVENT_LOG and not isinstance(container, ContractEvent))
@@ -101,7 +117,7 @@ class SilverbackApp(ManagerAccessMixin):
             raise ContainerTypeMismatchError(task_type, container)
 
         # Register user function as task handler with our broker
-        def add_taskiq_task(handler: Callable):
+        def add_taskiq_task(handler: Callable) -> AsyncTaskiqDecoratedTask:
             broker_task = self.broker.register_task(
                 handler,
                 task_name=handler.__name__,
