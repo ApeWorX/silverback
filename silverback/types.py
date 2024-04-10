@@ -15,10 +15,10 @@ except ImportError:
 
 
 class TaskType(StrEnum):
-    STARTUP = "silverback_startup"  # TODO: Shorten
+    STARTUP = "silverback_startup"  # TODO: Shorten in 0.4.0
     NEW_BLOCKS = "block"
     EVENT_LOG = "event"
-    SHUTDOWN = "silverback_shutdown"  # TODO: Shorten
+    SHUTDOWN = "silverback_shutdown"  # TODO: Shorten in 0.4.0
 
 
 class ISilverbackSettings(Protocol):
