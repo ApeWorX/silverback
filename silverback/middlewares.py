@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple
+from typing import Any
 
 from ape.logging import logger
 from ape.types import ContractLog
@@ -7,25 +7,8 @@ from eth_utils.conversions import to_hex
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
 from silverback.persistence import HandlerResult
-from silverback.types import SilverbackID, handler_id_block, handler_id_event
+from silverback.types import SilverbackID, TaskType
 from silverback.utils import hexbytes_dict
-
-
-def resolve_task(message: TaskiqMessage) -> Tuple[str, Optional[int], Optional[int]]:
-    block_number = None
-    log_index = None
-    task_id = message.task_name
-
-    if task_id == "block":
-        block_number = message.args[0].number
-        task_id = handler_id_block(block_number)
-    elif "event" in task_id:
-        block_number = message.args[0].block_number
-        log_index = message.args[0].log_index
-        # TODO: Should standardize on event signature here instead of name in case of overloading
-        task_id = handler_id_event(message.args[0].contract_address, message.args[0].event_name)
-
-    return task_id, block_number, log_index
 
 
 class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
@@ -66,46 +49,62 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         return message
 
     def _create_label(self, message: TaskiqMessage) -> str:
-        if message.task_name == "block":
-            args = f"[block={message.args[0].hash.hex()}]"
-
-        elif "event" in message.task_name:
-            args = f"[txn={message.args[0].transaction_hash},log_index={message.args[0].log_index}]"
+        if labels_str := ",".join(f"{k}={v}" for k, v in message.labels.items()):
+            return f"{message.task_name}[{labels_str}]"
 
         else:
-            args = ""
-
-        return f"{message.task_name}{args}"
+            return message.task_name
 
     def pre_execute(self, message: TaskiqMessage) -> TaskiqMessage:
-        if message.task_name == "block":
+        if not (task_type := message.labels.pop("task_type")):
+            return message  # Not a silverback task
+
+        try:
+            task_type = TaskType(task_type)
+        except ValueError:
+            return message  # Not a silverback task
+
+        # Add extra labels for our task to see what their source was
+        if task_type is TaskType.NEW_BLOCKS:
             # NOTE: Necessary because we don't know the exact block class
-            message.args[0] = self.provider.network.ecosystem.decode_block(
+            block = message.args[0] = self.provider.network.ecosystem.decode_block(
                 hexbytes_dict(message.args[0])
             )
+            message.labels["block_number"] = str(block.number)
+            message.labels["block_hash"] = block.hash.hex()
 
-        elif "event" in message.task_name:
+        elif task_type is TaskType.EVENT_LOG:
             # NOTE: Just in case the user doesn't specify type as `ContractLog`
-            message.args[0] = ContractLog.model_validate(message.args[0])
+            log = message.args[0] = ContractLog.model_validate(message.args[0])
+            message.labels["block_number"] = str(log.block_number)
+            message.labels["transaction_hash"] = log.transaction_hash
+            message.labels["log_index"] = str(log.log_index)
 
-        logger.info(f"{self._create_label(message)} - Started")
+        logger.debug(f"{self._create_label(message)} - Started")
         return message
 
     def post_execute(self, message: TaskiqMessage, result: TaskiqResult):
-        percentage_time = 100 * (result.execution_time / self.block_time)
-        logger.info(
-            f"{self._create_label(message)} "
-            f"- {result.execution_time:.3f}s ({percentage_time:.1f}%)"
+        if self.block_time:
+            percentage_time = 100 * (result.execution_time / self.block_time)
+            percent_display = f" ({percentage_time:.1f}%)"
+
+        else:
+            percent_display = ""
+
+        (logger.error if result.error else logger.success)(
+            f"{self._create_label(message)} " f"- {result.execution_time:.3f}s{percent_display}"
         )
 
     async def post_save(self, message: TaskiqMessage, result: TaskiqResult):
         if not self.persistence:
             return
 
-        handler_id, block_number, log_index = resolve_task(message)
-
         handler_result = HandlerResult.from_taskiq(
-            self.ident, handler_id, block_number, log_index, result
+            self.ident,
+            message.task_name,
+            message.labels.get("block_number"),
+            message.labels.get("log_index"),
+            result,
         )
 
         try:
@@ -113,10 +112,4 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         except Exception as err:
             logger.error(f"Error storing result: {err}")
 
-    async def on_error(
-        self,
-        message: TaskiqMessage,
-        result: TaskiqResult,
-        exception: BaseException,
-    ):
-        logger.error(f"{message.task_name} - {type(exception).__name__}: {exception}")
+    # NOTE: Unless stdout is ignored, error traceback appears in stdout, no need for `on_error`

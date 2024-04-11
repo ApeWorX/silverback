@@ -3,19 +3,21 @@ from typing import Any
 from ape.exceptions import ApeException
 from ape.logging import logger
 
+from .types import TaskType
+
 
 class ImportFromStringError(Exception):
     pass
 
 
-class DuplicateHandlerError(Exception):
-    def __init__(self, handler_type: str):
-        super().__init__(f"Only one handler allowed for: {handler_type}")
-
-
 class InvalidContainerTypeError(Exception):
     def __init__(self, container: Any):
         super().__init__(f"Invalid container type: {container.__class__}")
+
+
+class ContainerTypeMismatchError(Exception):
+    def __init__(self, task_type: TaskType, container: Any):
+        super().__init__(f"Invalid container type for '{task_type}': {container.__class__}")
 
 
 class NoWebsocketAvailableError(Exception):

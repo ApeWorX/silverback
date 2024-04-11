@@ -1,7 +1,18 @@
+from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
 from typing import Optional, Protocol
 
 from pydantic import BaseModel
 from typing_extensions import Self  # Introduced 3.11
+
+
+class TaskType(str, Enum):
+    STARTUP = "silverback_startup"  # TODO: Shorten in 0.4.0
+    NEW_BLOCKS = "block"
+    EVENT_LOG = "event"
+    SHUTDOWN = "silverback_shutdown"  # TODO: Shorten in 0.4.0
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class ISilverbackSettings(Protocol):
@@ -27,16 +38,3 @@ class SilverbackID(BaseModel):
 class SilverbackStartupState(BaseModel):
     last_block_seen: int
     last_block_processed: int
-
-
-def handler_id_block(block_number: Optional[int]) -> str:
-    """Return a unique handler ID string for a block"""
-    if block_number is None:
-        return "block/pending"
-    return f"block/{block_number}"
-
-
-def handler_id_event(contract_address: Optional[str], event_signature: str) -> str:
-    """Return a unique handler ID string for an event"""
-    # TODO: Under what circumstance can address be None?
-    return f"{contract_address or 'unknown'}/event/{event_signature}"

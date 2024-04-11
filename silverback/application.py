@@ -1,4 +1,6 @@
 import atexit
+from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Callable, Dict, Optional, Union
 
@@ -6,12 +8,18 @@ from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
-from ape.types import AddressType
 from ape.utils import ManagerAccessMixin
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import DuplicateHandlerError, InvalidContainerTypeError
+from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
+from .types import TaskType
+
+
+@dataclass
+class TaskData:
+    container: Union[BlockContainer, ContractEvent, None]
+    handler: AsyncTaskiqDecoratedTask
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -52,7 +60,8 @@ class SilverbackApp(ManagerAccessMixin):
         logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()
-        self.contract_events: Dict[AddressType, Dict[str, ContractEvent]] = {}
+        # NOTE: If no tasks registered yet, defaults to empty list instead of raising KeyError
+        self.tasks: defaultdict[TaskType, list[TaskData]] = defaultdict(list)
         self.poll_settings: Dict[str, Dict] = {}
 
         atexit.register(self.network.__exit__, None, None, None)
@@ -72,6 +81,54 @@ class SilverbackApp(ManagerAccessMixin):
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
+    def broker_task_decorator(
+        self,
+        task_type: TaskType,
+        container: Union[BlockContainer, ContractEvent, None] = None,
+    ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
+        """
+        Dynamically create a new broker task that handles tasks of ``task_type``.
+
+        Args:
+            task_type: :class:`~silverback.types.TaskType`: The type of task to create.
+            container: (Union[BlockContainer, ContractEvent]): The event source to watch.
+
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
+
+        Raises:
+            :class:`~silverback.exceptions.ContainerTypeMismatchError`:
+                If there is a mismatch between `task_type` and the `container`
+                type it should handle.
+        """
+        if (
+            (task_type is TaskType.NEW_BLOCKS and not isinstance(container, BlockContainer))
+            or (task_type is TaskType.EVENT_LOG and not isinstance(container, ContractEvent))
+            or (
+                task_type
+                not in (
+                    TaskType.NEW_BLOCKS,
+                    TaskType.EVENT_LOG,
+                )
+                and container is not None
+            )
+        ):
+            raise ContainerTypeMismatchError(task_type, container)
+
+        # Register user function as task handler with our broker
+        def add_taskiq_task(handler: Callable) -> AsyncTaskiqDecoratedTask:
+            broker_task = self.broker.register_task(
+                handler,
+                task_name=handler.__name__,
+                task_type=str(task_type),
+            )
+
+            self.tasks[task_type].append(TaskData(container=container, handler=broker_task))
+            return broker_task
+
+        return add_taskiq_task
+
     def on_startup(self) -> Callable:
         """
         Code to execute on one worker upon startup / restart after an error.
@@ -82,7 +139,7 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_startup(startup_state):
                 ...  # Reprocess missed events or blocks
         """
-        return self.broker.task(task_name="silverback_startup")
+        return self.broker_task_decorator(TaskType.STARTUP)
 
     def on_shutdown(self) -> Callable:
         """
@@ -94,7 +151,7 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_shutdown():
                 ...  # Record final state of app
         """
-        return self.broker.task(task_name="silverback_shutdown")
+        return self.broker_task_decorator(TaskType.SHUTDOWN)
 
     def on_worker_startup(self) -> Callable:
         """
@@ -120,48 +177,6 @@ class SilverbackApp(ManagerAccessMixin):
         """
         return self.broker.on_event(TaskiqEvents.WORKER_SHUTDOWN)
 
-    def get_startup_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `silverback_startup` events.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task("silverback_startup")
-
-    def get_shutdown_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `silverback_shutdown` events.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task("silverback_shutdown")
-
-    def get_block_handler(self) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `block` events.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task("block")
-
-    def get_event_handler(
-        self, event_target: AddressType, event_name: str
-    ) -> Optional[AsyncTaskiqDecoratedTask]:
-        """
-        Get access to the handler for `<event_target>:<event_name>` events.
-
-        Args:
-            event_target (AddressType): The contract address of the target.
-            event_name: (str): The name of the event emitted by ``event_target``.
-
-        Returns:
-            Optional[AsyncTaskiqDecoratedTask]: Returns decorated task, if one has been created.
-        """
-        return self.broker.find_task(f"{event_target}/event/{event_name}")
-
     def on_(
         self,
         container: Union[BlockContainer, ContractEvent],
@@ -183,9 +198,6 @@ class SilverbackApp(ManagerAccessMixin):
                 If the type of `container` is not configurable for the app.
         """
         if isinstance(container, BlockContainer):
-            if self.get_block_handler():
-                raise DuplicateHandlerError("block")
-
             if new_block_timeout is not None:
                 if "_blocks_" in self.poll_settings:
                     self.poll_settings["_blocks_"]["new_block_timeout"] = new_block_timeout
@@ -198,21 +210,12 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings["_blocks_"] = {"start_block": start_block}
 
-            return self.broker.task(task_name="block")
+            return self.broker_task_decorator(TaskType.NEW_BLOCKS, container=container)
 
         elif isinstance(container, ContractEvent) and isinstance(
             container.contract, ContractInstance
         ):
-            if self.get_event_handler(container.contract.address, container.abi.name):
-                raise DuplicateHandlerError(
-                    f"event {container.contract.address}:{container.abi.name}"
-                )
-
             key = container.contract.address
-            if container.contract.address in self.contract_events:
-                self.contract_events[key][container.abi.name] = container
-            else:
-                self.contract_events[key] = {container.abi.name: container}
 
             if new_block_timeout is not None:
                 if key in self.poll_settings:
@@ -226,9 +229,7 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings[key] = {"start_block": start_block}
 
-            return self.broker.task(
-                task_name=f"{container.contract.address}/event/{container.abi.name}"
-            )
+            return self.broker_task_decorator(TaskType.EVENT_LOG, container=container)
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling

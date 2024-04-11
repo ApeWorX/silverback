@@ -14,7 +14,7 @@ from .exceptions import Halt, NoWebsocketAvailableError
 from .persistence import BasePersistentStore
 from .settings import Settings
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import SilverbackID, SilverbackStartupState
+from .types import SilverbackID, SilverbackStartupState, TaskType
 from .utils import async_wrap_iter, hexbytes_dict
 
 settings = Settings()
@@ -103,8 +103,8 @@ class BaseRunner(ABC):
         await self.app.broker.startup()
 
         # Execute Silverback startup task before we init the rest
-        if startup_handler := self.app.get_startup_handler():
-            task = await startup_handler.kiq(
+        for startup_task in self.app.tasks[TaskType.STARTUP]:
+            task = await startup_task.handler.kiq(
                 SilverbackStartupState(
                     last_block_seen=self.last_block_seen,
                     last_block_processed=self.last_block_processed,
@@ -113,15 +113,12 @@ class BaseRunner(ABC):
             result = await task.wait_result()
             self._handle_result(result)
 
-        if block_handler := self.app.get_block_handler():
-            tasks = [self._block_task(block_handler)]
-        else:
-            tasks = []
+        tasks = []
+        for task in self.app.tasks[TaskType.NEW_BLOCKS]:
+            tasks.append(self._block_task(task.handler))
 
-        for contract_address in self.app.contract_events:
-            for event_name, contract_event in self.app.contract_events[contract_address].items():
-                if event_handler := self.app.get_event_handler(contract_address, event_name):
-                    tasks.append(self._event_task(contract_event, event_handler))
+        for task in self.app.tasks[TaskType.EVENT_LOG]:
+            tasks.append(self._event_task(task.container, task.handler))
 
         if len(tasks) == 0:
             raise Halt("No tasks to execute")
@@ -132,10 +129,9 @@ class BaseRunner(ABC):
             logger.error(f"Fatal error detected, shutting down: '{e}'")
 
         # Execute Silverback shutdown task before shutting down the broker
-        if shutdown_handler := self.app.get_shutdown_handler():
-            task = await shutdown_handler.kiq()
-            result = await task.wait_result()
-            self._handle_result(result)
+        for shutdown_task in self.app.tasks[TaskType.SHUTDOWN]:
+            task = await shutdown_task.handler.kiq()
+            result = self._handle_result(await task.wait_result())
 
         await self.app.broker.shutdown()
 
