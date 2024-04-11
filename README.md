@@ -115,14 +115,14 @@ Another requirement for the command from `Docker Usage` to run, is to have a `~/
 ... --volume ~/.tokenlists:/home/harambe/.tokenlists ...
 ```
 
-It is suggested to install the [ape-tokens](https://github.com/ApeWorX/ape-tokens) plugin 
+It is suggested to install the [ape-tokens](https://github.com/ApeWorX/ape-tokens) plugin
 
 ```bash
 ape plugins install ape-tokens
 ```
 
 Then use the CLI to install a token list. From the [ape-tokens](https://github.com/ApeWorX/ape-tokens?tab=readme-ov-file#quick-usage) README, it is suggested that you run the command:
-  
+
 ```bash
 ape tokens install tokens.1inch.eth
 ```
@@ -143,7 +143,7 @@ $ ls -la ~/ | grep .tokenlists
 drwxrwxr-x  2 usr grp         4096 Apr 11 09:26 .tokenlists
 ```
 
-You can comment out the two comments that manage the `ContractLog` if you do not have an established contract. 
+You can comment out the two comments that manage the `ContractLog` if you do not have an established contract.
 
 ```python
 ...
@@ -154,8 +154,8 @@ You can comment out the two comments that manage the `ContractLog` if you do not
 #         # If you ever want the app to shutdown under some scenario, call this exception
 #         raise CircuitBreaker("Oopsie!")
 #     return {"amount": log.amount}
-# 
-# 
+#
+#
 # @app.on_(YFI.Approval)
 # # Any handler function can be async too
 # async def exec_event2(log: ContractLog):
@@ -164,6 +164,7 @@ You can comment out the two comments that manage the `ContractLog` if you do not
 ```
 
 Then run the following command:
+
 ```bash
 $ docker run -e WEB3_ALCHEMY_API_KEY='your-alchemy-api-key-here' --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
 ```
