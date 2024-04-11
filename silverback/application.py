@@ -139,7 +139,7 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_startup(startup_state):
                 ...  # Reprocess missed events or blocks
         """
-        return self.broker_task_decorator(TaskType.STARTUP)
+        return self.broker_task_decorator(TaskType.STARTUP)  # type: ignore[arg-type]
 
     def on_shutdown(self) -> Callable:
         """
@@ -151,7 +151,7 @@ class SilverbackApp(ManagerAccessMixin):
             def do_something_on_shutdown():
                 ...  # Record final state of app
         """
-        return self.broker_task_decorator(TaskType.SHUTDOWN)
+        return self.broker_task_decorator(TaskType.SHUTDOWN)  # type: ignore[arg-type]
 
     def on_worker_startup(self) -> Callable:
         """
@@ -210,7 +210,10 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings["_blocks_"] = {"start_block": start_block}
 
-            return self.broker_task_decorator(TaskType.NEW_BLOCKS, container=container)
+            return self.broker_task_decorator(
+                TaskType.NEW_BLOCKS,  # type: ignore[arg-type]
+                container=container,
+            )
 
         elif isinstance(container, ContractEvent) and isinstance(
             container.contract, ContractInstance
@@ -229,7 +232,10 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings[key] = {"start_block": start_block}
 
-            return self.broker_task_decorator(TaskType.EVENT_LOG, container=container)
+            return self.broker_task_decorator(
+                TaskType.EVENT_LOG,  # type: ignore[arg-type]
+                container=container,
+            )
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling

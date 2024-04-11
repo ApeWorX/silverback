@@ -4,10 +4,11 @@ from pydantic import BaseModel
 from typing_extensions import Self  # Introduced 3.11
 
 try:
-    from enum import StrEnum  # Only Python 3.11+
+    # NOTE: Only Python 3.11+
+    from enum import StrEnum  # type: ignore[attr-defined]
 
 except ImportError:
-    from backports.strenum import StrEnum  # type: ignore[no-redef]
+    from backports.strenum import StrEnum  # type: ignore[no-redef,import-not-found]
 
 
 class TaskType(StrEnum):
