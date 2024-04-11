@@ -7,14 +7,14 @@ on:
       - "silverback/**"
       - "setup.py"
       - "pyproject.toml"
-      # - ".github/workflows/test.yaml"
+      - ".github/workflows/test.yaml"
   pull_request:
     paths:
       - "tests/**"
       - "silverback/**"
       - "setup.py"
       - "pyproject.toml"
-      # - ".github/workflows/test.yaml"
+      - ".github/workflows/test.yaml"
 
 concurrency:
   # Cancel older, in-progress jobs from the same PR, same workflow.
