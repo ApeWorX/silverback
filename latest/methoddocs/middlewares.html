@@ -81,7 +81,6 @@
 <li class="toctree-l1"><a class="reference internal" href="runner.html">silverback.runner</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.middlewares</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.on_error"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.on_error()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.post_execute"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.post_execute()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.post_save"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.post_save()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.pre_execute"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.pre_execute()</span></code></a></li>
@@ -127,21 +126,6 @@ silverback as a whole, and add integrations for the silverback platform as well.
 <dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.middlewares.</span></span><span class="sig-name descname"><span class="pre">SilverbackMiddleware</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TaskiqMiddleware</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware.on_error">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">on_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqResult</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exception</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseException</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.on_error" title="Permalink to this definition"></a></dt>
-<dd><p>This function is called when exception is found.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>message</strong> – incoming message.</p></li>
-<li><p><strong>result</strong> – returned value.</p></li>
-<li><p><strong>exception</strong> – found exception.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware.post_execute">
 <span class="sig-name descname"><span class="pre">post_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqResult</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.post_execute" title="Permalink to this definition"></a></dt>
