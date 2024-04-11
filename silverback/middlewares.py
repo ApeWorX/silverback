@@ -84,10 +84,15 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         return message
 
     def post_execute(self, message: TaskiqMessage, result: TaskiqResult):
-        percentage_time = 100 * (result.execution_time / self.block_time)
-        logger.success(
-            f"{self._create_label(message)} "
-            f"- {result.execution_time:.3f}s ({percentage_time:.1f}%)"
+        if self.block_time:
+            percentage_time = 100 * (result.execution_time / self.block_time)
+            percent_display = f" ({percentage_time:.1f}%)"
+
+        else:
+            percent_display = ""
+
+        (logger.error if result.error else logger.success)(
+            f"{self._create_label(message)} " f"- {result.execution_time:.3f}s{percent_display}"
         )
 
     async def post_save(self, message: TaskiqMessage, result: TaskiqResult):
@@ -107,15 +112,4 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         except Exception as err:
             logger.error(f"Error storing result: {err}")
 
-    async def on_error(
-        self,
-        message: TaskiqMessage,
-        result: TaskiqResult,
-        exception: BaseException,
-    ):
-        percentage_time = 100 * (result.execution_time / self.block_time)
-        logger.error(
-            f"{self._create_label(message)} "
-            f"- {result.execution_time:.3f}s ({percentage_time:.1f}%)"
-        )
-        # NOTE: Unless stdout is ignored, error traceback appears in stdout
+    # NOTE: Unless stdout is ignored, error traceback appears in stdout, no need for `on_error`
