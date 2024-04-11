@@ -1,21 +1,18 @@
+from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
 from typing import Optional, Protocol
 
 from pydantic import BaseModel
 from typing_extensions import Self  # Introduced 3.11
 
-try:
-    # NOTE: Only Python 3.11+
-    from enum import StrEnum  # type: ignore[attr-defined]
 
-except ImportError:
-    from backports.strenum import StrEnum  # type: ignore[no-redef,import-not-found]
-
-
-class TaskType(StrEnum):
+class TaskType(str, Enum):
     STARTUP = "silverback_startup"  # TODO: Shorten in 0.4.0
     NEW_BLOCKS = "block"
     EVENT_LOG = "event"
     SHUTDOWN = "silverback_shutdown"  # TODO: Shorten in 0.4.0
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class ISilverbackSettings(Protocol):
