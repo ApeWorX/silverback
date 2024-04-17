@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import Any, Dict, Iterator, Optional
 
 from ape.logging import get_logger
 from pydantic import BaseModel, Field
@@ -36,10 +36,10 @@ class TaskResult(BaseModel):
     block_number: Optional[int] = None
 
     # Custom user metrics here
-    metrics: dict[str, Datapoint] = {}
+    metrics: Dict[str, Datapoint] = {}
 
     @classmethod
-    def _extract_custom_metrics(cls, result: Any, task_name: str) -> dict[str, Datapoint]:
+    def _extract_custom_metrics(cls, result: Any, task_name: str) -> Dict[str, Datapoint]:
         if isinstance(result, Datapoint):  # type: ignore[arg-type,misc]
             return {"result": result}
 

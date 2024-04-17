@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 
 from ape.logging import logger
 from ape.types import ContractLog
@@ -26,7 +26,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
         # TODO: Necessary because bytes/HexBytes doesn't encode/deocde well for some reason
         def fix_dict(data: dict, recurse_count: int = 0) -> dict:
-            fixed_data: dict[str, Any] = {}
+            fixed_data: Dict[str, Any] = {}
             for name, value in data.items():
                 if isinstance(value, bytes):
                     fixed_data[name] = to_hex(value)
