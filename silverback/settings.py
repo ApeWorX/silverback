@@ -19,7 +19,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
     """
 
     # A unique identifier for this silverback instance
-    INSTANCE: str = "default"
+    APP_NAME: str = "bot"
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
     BROKER_URI: str = ""

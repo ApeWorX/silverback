@@ -46,9 +46,11 @@ class SilverbackApp(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
-        self.network = settings.get_provider_context()
+        self.name = settings.APP_NAME
+
+        network = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
-        provider = self.network.__enter__()
+        provider = network.__enter__()
 
         # Adjust defaults from connection
         if settings.NEW_BLOCK_TIMEOUT is None and (
@@ -64,22 +66,24 @@ class SilverbackApp(ManagerAccessMixin):
         self.tasks: defaultdict[TaskType, list[TaskData]] = defaultdict(list)
         self.poll_settings: Dict[str, Dict] = {}
 
-        atexit.register(self.network.__exit__, None, None, None)
+        atexit.register(network.__exit__, None, None, None)
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
         self.start_block = settings.START_BLOCK
 
-        network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
+        self.network_choice = f"{provider.network.ecosystem.name}:{provider.network.name}"
         signer_str = f"\n  SIGNER={repr(self.signer)}"
         start_block_str = f"\n  START_BLOCK={self.start_block}" if self.start_block else ""
         new_block_timeout_str = (
             f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
         )
         logger.info(
-            f"Loaded Silverback App:{network_str}"
+            f'Loaded Silverback App:\n  NETWORK="{self.network_choice}"'
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
+
+        self.state = None  # Runner manages this
 
     def broker_task_decorator(
         self,
