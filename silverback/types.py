@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic.functional_serializers import PlainSerializer
 from typing_extensions import Annotated
 
@@ -43,8 +43,10 @@ class _BaseDatapoint(BaseModel):
     type: str  # discriminator
 
 
+# NOTE: Maximum supported parquet integer type: https://parquet.apache.org/docs/file-format/types
+Int96 = Annotated[int, Field(ge=-(2**95), le=2**95 - 1)]
 # NOTE: only these types of data are implicitly converted e.g. `{"something": 1, "else": 0.001}`
-ScalarType = bool | int | float | Decimal
+ScalarType = bool | Int96 | float | Decimal
 
 
 class ScalarDatapoint(_BaseDatapoint):
