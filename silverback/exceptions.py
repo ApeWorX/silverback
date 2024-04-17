@@ -1,7 +1,6 @@
 from typing import Any
 
 from ape.exceptions import ApeException
-from ape.logging import logger
 
 from .types import TaskType
 
@@ -36,9 +35,8 @@ class Halt(SilverbackException):
         super().__init__("App halted, must restart manually")
 
 
-class CircuitBreaker(SilverbackException):
+class CircuitBreaker(Halt):
     """Custom exception (created by user) that will trigger an application shutdown."""
 
     def __init__(self, message: str):
-        logger.error(message)
-        super().__init__(message)
+        super(SilverbackException, self).__init__(message)
