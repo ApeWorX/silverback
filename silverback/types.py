@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Annotated, Literal, Union
+from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 from pydantic.functional_serializers import PlainSerializer
 from taskiq import Context, TaskiqDepends, TaskiqState
+from typing_extensions import Annotated  # Introduced 3.9
 
 
 class TaskType(str, Enum):
