@@ -1,9 +1,6 @@
-import json
-import os
-import sqlite3
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
-from typing import Any, Optional, TypeVar
+from pathlib import Path
+from typing import Any, Iterator, Optional
 
 from ape.logging import get_logger
 from pydantic import BaseModel, Field
@@ -11,6 +8,7 @@ from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
 from .types import (
+    AppState,
     Datapoint,
     ScalarDatapoint,
     ScalarType,
@@ -20,17 +18,7 @@ from .types import (
     utc_now,
 )
 
-_HandlerReturnType = TypeVar("_HandlerReturnType")
-
-
-class SilverbackState(BaseModel):
-    instance: str
-    network: str
-    # Last block number seen by runner
-    last_block_seen: int
-    # Last block number processed by a worker
-    last_block_processed: int
-    updated: datetime
+logger = get_logger(__name__)
 
 
 class TaskResult(BaseModel):
@@ -108,275 +96,104 @@ class TaskResult(BaseModel):
 
 
 class BaseRecorder(ABC):
-    @abstractmethod
-    async def init(self):
-        """Handle any async initialization from Silverback settings (e.g. migrations)."""
-        ...
-
-    @abstractmethod
-    async def get_state(self, ident: SilverbackID) -> Optional[SilverbackState]:
-        """Return the stored state for a Silverback instance"""
-        ...
-
-    @abstractmethod
-    async def set_state(
-        self, ident: SilverbackID, last_block_seen: int, last_block_processed: int
-    ) -> Optional[SilverbackState]:
-        """Set the stored state for a Silverback instance"""
-        ...
-
-    @abstractmethod
-    async def get_latest_result(
-        self, ident: SilverbackID, handler: Optional[str] = None
-    ) -> Optional[HandlerResult]:
-        """Return the latest result for a Silverback instance's handler"""
-        ...
-
-    @abstractmethod
-    async def add_result(self, v: HandlerResult):
-        """Store a result for a Silverback instance's handler"""
-        ...
-
-
-class SQLiteRecorder(BaseRecorder):
     """
-    SQLite implementation of BaseRecorder used to store application state and handler
-    result data.
+    Base class used for managing persistent application state, and serializing task results
+    to an external data recording process.
+
+    NOTE: Persistent state and task results can be managed using two different solutions
+
+    Recorders are configured using the following environment variable:
+
+    - `SILVERBACK_RECORDER_CLASS`: Any fully qualified subclass of `BaseRecorder` as a string
+    """
+
+    @abstractmethod
+    async def init(self, app_id: SilverbackID) -> Optional[AppState]:
+        """
+        Handle any async initialization from Silverback settings (e.g. migrations).
+
+        Returns startup state, if available.
+        """
+
+    @abstractmethod
+    async def set_state(self, app_state: AppState):
+        """Set the stored state for a Silverback instance"""
+
+    @abstractmethod
+    async def add_result(self, result: TaskResult):
+        """Store a result for a Silverback instance's handler"""
+
+
+class JSONLineRecorder(BaseRecorder):
+    """
+    Very basic implementation of BaseRecorder used to store application state and handler
+    result data by storing/retreiving state from a JSON-encoded file, and appending task
+    results to a file containing newline-separated JSON entries (https://jsonlines.org/).
+
+    The file structure that this Recorder uses leverages the value of `SILVERBACK_APP_NAME`
+    as well as the configured network to determine the location where files get saved:
+
+        ./.silverback-sessions/
+          <app-name>/
+            <network choice>/
+              state.json  # always write here
+              session-<timestamp>.json  # start time of each app session
+
+    Each app "session" (everytime the Runner is started up via `silverback run`) is recorded
+    in a separate file with the timestamp of the first handled task in its filename.
+
+    Note that this format can be read by basic means (even in a JS frontend), or read
+    efficiently via Apache Arrow for more efficient big data processing:
+
+        https://arrow.apache.org/docs/python/json.html
 
     Usage:
 
-    To use SQLite recorder, you must configure the following env vars:
+    To use this recorder, you must configure the following environment variable:
 
-    - `RECORDER_CLASS`: `silverback.recorder.SQLiteRecorder`
-    - `SQLITE_PATH` (optional): A system file path or if blank it will be stored in-memory.
+    - `SILVERBACK_RECORDER_CLASS`: `"silverback.recorder.JSONLineRecorder"`
+
+    You may also want to give your app a unique name so the data does not get overwritten,
+    if you are using multiple apps from the same directory:
+
+    - `SILVERBACK_APP_NAME`: Any alphabetical string valid as a folder name
     """
 
-    SQL_GET_STATE = """
-        SELECT last_block_seen, last_block_processed, updated
-        FROM silverback_state
-        WHERE instance = ? AND network = ?;
-    """
-    SQL_INSERT_STATE = """
-        INSERT INTO silverback_state (
-            instance, network, last_block_seen, last_block_processed, updated
+    async def init(self, app_id: SilverbackID) -> Optional[AppState]:
+        data_folder = (
+            Path.cwd() / ".silverback-sessions" / app_id.name / app_id.ecosystem / app_id.network
         )
-        VALUES (?, ?, ?, ?, ?);
-    """
-    SQL_UPDATE_STATE = """
-        UPDATE silverback_state
-        SET last_block_seen = ?, last_block_processed = ?, updated = ?
-        WHERE instance = ? AND network = ?;
-    """
-    SQL_GET_RESULT_LATEST = """
-        SELECT handler_id, block_number, log_index, execution_time, error, created,
-            metrics_blob
-        FROM silverback_result
-        WHERE instance = ? AND network = ?
-        ORDER BY created DESC
-        LIMIT 1;
-    """
-    SQL_GET_HANDLER_LATEST = """
-        SELECT handler_id, block_number, log_index, execution_time, error, created,
-            metrics_blob
-        FROM silverback_result
-        WHERE instance = ? AND network = ? AND handler_id = ?
-        ORDER BY created DESC
-        LIMIT 1;
-    """
-    SQL_INSERT_RESULT = """
-        INSERT INTO silverback_result (
-            instance, network, handler_id, block_number, log_index, execution_time,
-            error, created, metrics_blob
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """
+        data_folder.mkdir(parents=True, exist_ok=True)
 
-    con: Optional[sqlite3.Connection]
-    initialized: bool = False
+        self.state_backup_file = data_folder / "state.json"
+        self.session_results_file = data_folder / f"session-{iso_format(utc_now())}.jsonl"
 
-    async def init(self):
-        self.con = sqlite3.connect(os.environ.get("SQLITE_PATH", ":memory:"))
-
-        cur = self.con.cursor()
-        cur.executescript(
-            """
-            BEGIN;
-            CREATE TABLE IF NOT EXISTS silverback_state (
-                instance text,
-                network text,
-                last_block_seen int,
-                last_block_processed int,
-                updated int
-            );
-            CREATE TABLE IF NOT EXISTS silverback_result (
-                instance text,
-                network text,
-                handler_id text,
-                block_number int,
-                log_index int,
-                execution_time real,
-                error text,
-                created int,
-                metrics_blob blob
-            );
-            CREATE UNIQUE INDEX IF NOT EXISTS silverback_state__instance
-                ON silverback_state(instance, network);
-            CREATE INDEX IF NOT EXISTS silverback_result__instance
-                ON silverback_result (instance, network);
-            CREATE INDEX IF NOT EXISTS silverback_result__handler
-                ON silverback_result (instance, network, handler_id);
-            CREATE INDEX IF NOT EXISTS silverback_result__error
-                ON silverback_result (error);
-            COMMIT;
-        """
-        )
-        cur.close()
-
-        if not self.con:
-            raise Exception("Failed to setup SQLite connection")
-
-        self.initialized = True
-
-    async def get_state(self, ident: SilverbackID) -> Optional[SilverbackState]:
-        if not self.initialized:
-            await self.init()
-
-        assert self.con is not None
-
-        cur = self.con.cursor()
-        res = cur.execute(
-            self.SQL_GET_STATE,
-            (ident.identifier, ident.network_choice),
-        )
-        row = res.fetchone()
-
-        cur.close()
-
-        if row is None:
-            return None
-
-        return SilverbackState(
-            instance=ident.identifier,
-            network=ident.network_choice,
-            last_block_seen=row[0],
-            last_block_processed=row[1],
-            updated=datetime.fromtimestamp(row[2], timezone.utc),
+        return (
+            AppState.parse_file(self.state_backup_file) if self.state_backup_file.exists() else None
         )
 
-    async def set_state(
-        self, ident: SilverbackID, last_block_seen: int, last_block_processed: int
-    ) -> Optional[SilverbackState]:
-        if not self.initialized:
-            await self.init()
+    async def set_state(self, state: AppState):
+        self.state_backup_file.write_text(state.model_dump_json())
 
-        assert self.con is not None
+    async def add_result(self, result: TaskResult):
+        # NOTE: mode `a` means "append to file if exists"
+        # NOTE: JSONNL convention requires the use of `\n` as newline char
+        with self.session_results_file.open("a") as writer:
+            writer.write(result.model_dump_json())
+            writer.write("\n")
 
-        cur = self.con.cursor()
-        res = cur.execute(
-            self.SQL_GET_STATE,
-            (ident.identifier, ident.network_choice),
-        )
-        row = res.fetchone()
 
-        now = datetime.now(timezone.utc)
-        now_stamp = int(now.timestamp())
-
-        if row is None:
-            cur.execute(
-                self.SQL_INSERT_STATE,
-                (
-                    ident.identifier,
-                    ident.network_choice,
-                    last_block_seen,
-                    last_block_processed,
-                    now_stamp,
-                ),
-            )
-        else:
-            cur.execute(
-                self.SQL_UPDATE_STATE,
-                (
-                    last_block_seen,
-                    last_block_processed,
-                    now_stamp,
-                    ident.identifier,
-                    ident.network_choice,
-                ),
-            )
-
-        cur.close()
-        self.con.commit()
-
-        return SilverbackState(
-            instance=ident.identifier,
-            network=ident.network_choice,
-            last_block_seen=last_block_seen,
-            last_block_processed=last_block_processed,
-            updated=now,
-        )
-
-    async def get_latest_result(
-        self, ident: SilverbackID, handler: Optional[str] = None
-    ) -> Optional[HandlerResult]:
-        if not self.initialized:
-            await self.init()
-
-        assert self.con is not None
-
-        cur = self.con.cursor()
-
-        if handler is not None:
-            res = cur.execute(
-                self.SQL_GET_HANDLER_LATEST,
-                (ident.identifier, ident.network_choice, handler),
-            )
-        else:
-            res = cur.execute(
-                self.SQL_GET_RESULT_LATEST,
-                (ident.identifier, ident.network_choice),
-            )
-
-        row = res.fetchone()
-
-        cur.close()
-
-        if row is None:
-            return None
-
-        return HandlerResult(
-            instance=ident.identifier,
-            network=ident.network_choice,
-            handler_id=row[0],
-            block_number=row[1],
-            log_index=row[2],
-            execution_time=row[3],
-            error=row[4],
-            created=datetime.fromtimestamp(row[5], timezone.utc),
-            metrics=json.loads(row[6]),
-        )
-
-    async def add_result(self, v: HandlerResult):
-        if not self.initialized:
-            await self.init()
-
-        assert self.con is not None
-
-        cur = self.con.cursor()
-
-        cur.execute(
-            self.SQL_INSERT_RESULT,
-            (
-                v.instance,
-                v.network,
-                v.handler_id,
-                v.block_number,
-                v.log_index,
-                v.execution_time,
-                v.error,
-                v.created,
-                json.dumps({n: m.model_dump_json() for n, m in v.metrics.items()}),
-            ),
-        )
-
-        cur.close()
-        self.con.commit()
+def get_metrics(session: Path | str, task_name: str) -> Iterator[dict]:
+    with open(session, "r") as file:
+        for line in file:
+            if (
+                (result := TaskResult.model_validate_json(line))
+                and result.task_name == task_name
+                and not result.error
+            ):
+                yield {
+                    "block_number": result.block_number,
+                    "execution_time": result.execution_time,
+                    "completed": result.completed,
+                    **{name: datapoint.data for name, datapoint in result.metrics.items()},
+                }

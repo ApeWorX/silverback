@@ -119,6 +119,7 @@ version.py
 
 # Ape stuff
 .build/
+.silverback-sessions/
 
 **/.DS_Store
 *.swp
