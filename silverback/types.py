@@ -1,12 +1,27 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Annotated, Literal, Protocol
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 from pydantic.functional_serializers import PlainSerializer
 from taskiq import Context, TaskiqDepends, TaskiqState
-from typing_extensions import Self  # Introduced 3.11
+
+
+class TaskType(str, Enum):
+    STARTUP = "silverback_startup"  # TODO: Shorten in 0.4.0
+    NEW_BLOCKS = "block"
+    EVENT_LOG = "event"
+    SHUTDOWN = "silverback_shutdown"  # TODO: Shorten in 0.4.0
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class SilverbackID(BaseModel):
+    name: str
+    ecosystem: str
+    network: str
 
 
 def iso_format(dt: datetime) -> str:
@@ -24,43 +39,23 @@ UTCTimestamp = Annotated[
 ]
 
 
-class TaskType(str, Enum):
-    STARTUP = "silverback_startup"  # TODO: Shorten in 0.4.0
-    NEW_BLOCKS = "block"
-    EVENT_LOG = "event"
-    SHUTDOWN = "silverback_shutdown"  # TODO: Shorten in 0.4.0
-
-    def __str__(self) -> str:
-        return self.value
-
-
-class ISilverbackSettings(Protocol):
-    """Loose approximation of silverback.settings.Settings.  If you can, use the class as
-    a type reference."""
-
-    INSTANCE: str
-    RECORDER_CLASS: str | None
-
-    def get_network_choice(self) -> str:
-        ...
-
-
-class SilverbackID(BaseModel):
-    identifier: str
-    network_choice: str
-
-    @classmethod
-    def from_settings(cls, settings_: ISilverbackSettings) -> Self:
-        return cls(identifier=settings_.INSTANCE, network_choice=settings_.get_network_choice())
-
-
-class SilverbackStartupState(BaseModel):
+class AppState(BaseModel):
+    # Last block number seen by runner
     last_block_seen: int
+
+    # Last block number processed by a worker
     last_block_processed: int
 
+    # Last time the state was updated
+    # NOTE: intended to use default when creating a model with this type
+    last_updated: UTCTimestamp = Field(default_factory=utc_now)
 
 
+def get_worker_state(context: Annotated[Context, TaskiqDepends()]) -> TaskiqState:
+    return context.state
 
+
+WorkerState = Annotated[TaskiqState, TaskiqDepends(get_worker_state)]
 
 
 class _BaseDatapoint(BaseModel):
