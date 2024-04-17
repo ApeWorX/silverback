@@ -1,10 +1,27 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Literal, Protocol, get_args
+from typing import Annotated, Literal, Protocol
 
 from pydantic import BaseModel, Field
+from pydantic.functional_serializers import PlainSerializer
+from taskiq import Context, TaskiqDepends, TaskiqState
 from typing_extensions import Self  # Introduced 3.11
+
+
+def iso_format(dt: datetime) -> str:
+    return dt.isoformat()
+
+
+def utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+UTCTimestamp = Annotated[
+    datetime,
+    # TODO: Bug in TaskIQ can't serialize `datetime`
+    PlainSerializer(iso_format, return_type=str),
+]
 
 
 class TaskType(str, Enum):
@@ -42,24 +59,24 @@ class SilverbackStartupState(BaseModel):
     last_block_processed: int
 
 
-class BaseDatapoint(BaseModel):
+
+
+
+
+class _BaseDatapoint(BaseModel):
     type: str  # discriminator
 
-    # NOTE: default value ensures we don't have to set this manually
-    time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-
+# NOTE: only these types of data are implicitly converted e.g. `{"something": 1, "else": 0.001}`
 ScalarType = bool | int | float | Decimal
-scalar_types = get_args(ScalarType)
 
 
-class ScalarDatapoint(BaseDatapoint):
+class ScalarDatapoint(_BaseDatapoint):
     type: Literal["scalar"] = "scalar"
-
-    # NOTE: app-supported scalar value types:
     data: ScalarType
 
 
-# This is what a Silverback app task must return to integrate properly with our data acq system
-Metrics = dict[str, BaseDatapoint]
-# Otherwise, log a warning and ignore any unconverted return value(s)
+# NOTE: Other datapoint types must be explicitly used
+
+# TODO: Other datapoint types added to union here...
+Datapoint = ScalarDatapoint
