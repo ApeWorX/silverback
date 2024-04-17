@@ -10,7 +10,15 @@ from pydantic import BaseModel, Field
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import BaseDatapoint, Metrics, ScalarDatapoint, SilverbackID, scalar_types
+from .types import (
+    Datapoint,
+    ScalarDatapoint,
+    ScalarType,
+    SilverbackID,
+    UTCTimestamp,
+    iso_format,
+    utc_now,
+)
 
 _HandlerReturnType = TypeVar("_HandlerReturnType")
 
@@ -25,65 +33,77 @@ class SilverbackState(BaseModel):
     updated: datetime
 
 
-class HandlerResult(BaseModel):
-    instance: str
-    network: str
-    handler_id: str
-    block_number: Optional[int]
-    log_index: Optional[int]
-    created: datetime
-    labels: dict[str, Any] = Field(default_factory=dict)
+class TaskResult(BaseModel):
+    # NOTE: Model must eventually serialize using PyArrow/Parquet for long-term storage
+
+    # Task Info
+    task_name: str
     execution_time: float
-    metrics: Metrics
     error: Optional[str] = None
 
+    # NOTE: intended to use default when creating a model with this type
+    completed: UTCTimestamp = Field(default_factory=utc_now)
+
+    # System Metrics here (must default to None in case they are missing)
+    block_number: Optional[int] = None
+
+    # Custom user metrics here
+    metrics: dict[str, Datapoint] = {}
+
     @classmethod
-    def _extract_metrics(cls, result: Any, handler_id: str) -> Metrics:
-        if isinstance(result, BaseDatapoint):
-            return {f"{handler_id}_result": result}
+    def _extract_custom_metrics(cls, result: Any, task_name: str) -> dict[str, Datapoint]:
+        if isinstance(result, Datapoint):  # type: ignore[arg-type,misc]
+            return {"result": result}
 
-        elif isinstance(result, scalar_types):
-            return {f"{handler_id}_result": ScalarDatapoint(data=result)}
+        elif isinstance(result, ScalarType):  # type: ignore[arg-type,misc]
+            return {"result": ScalarDatapoint(data=result)}
 
-        elif isinstance(result, dict):
-            converted_result = {
-                k: ScalarDatapoint(data=v) if not isinstance(v, BaseDatapoint) else v
-                for k, v in result.items()
-                if isinstance(v, (BaseDatapoint, *scalar_types))
-            }
-            if len(converted_result) < len(result):
-                logger = get_logger(handler_id)
-                logger.warning(f"Unhandled results: {len(result)-len(converted_result)}")
+        elif result is None:
+            return {}
 
-            return converted_result
-
-        elif result is not None:
-            logger = get_logger(handler_id)
-            logger.warning(f"Cannot handle return type '{type(result.metrics)}'.")
+        elif not isinstance(result, dict):
+            logger.warning(f"Cannot handle return type of '{task_name}': '{type(result)}'.")
+            return {}
 
         # else:
-        return {}
+        converted_result = {}
+
+        for metric_name, metric_value in result.items():
+            if isinstance(metric_value, Datapoint):  # type: ignore[arg-type,misc]
+                converted_result[metric_name] = metric_value
+
+            elif isinstance(metric_value, ScalarType):  # type: ignore[arg-type,misc]
+                converted_result[metric_name] = ScalarDatapoint(data=metric_value)
+
+            else:
+                logger.warning(
+                    f"Cannot handle type of metric '{task_name}.{metric_name}':"
+                    f" '{type(metric_value)}'."
+                )
+
+        return converted_result
+
+    @classmethod
+    def _extract_system_metrics(cls, labels: dict) -> dict:
+        metrics = {}
+
+        if block_number := labels.get("number") or labels.get("block"):
+            metrics["block_number"] = int(block_number)
+
+        return metrics
 
     @classmethod
     def from_taskiq(
         cls,
-        ident: SilverbackID,
-        handler_id: str,
-        block_number: Optional[int],
-        log_index: Optional[int],
         result: TaskiqResult,
     ) -> Self:
+        task_name = result.labels.pop("task_name", "<unknown>")
         return cls(
-            instance=ident.identifier,
-            network=ident.network_choice,
-            handler_id=handler_id,
-            block_number=block_number,
-            log_index=log_index,
-            created=datetime.now(timezone.utc),
-            labels=result.labels,
+            task_name=task_name,
             execution_time=result.execution_time,
-            error=str(result.error),
-            metrics=cls._extract_metrics(result.return_value, handler_id),
+            error=str(result.error) if result.error else None,
+            metrics=cls._extract_custom_metrics(result.return_value, task_name),
+            **cls._extract_system_metrics(result.labels),
         )
 
 
