@@ -6,67 +6,82 @@ from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
-from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
+from taskiq import AsyncTaskiqDecoratedTask, AsyncTaskiqTask
 
 from .application import SilverbackApp
 from .exceptions import Halt, NoWebsocketAvailableError
-from .recorder import BaseRecorder
-from .settings import Settings
+from .recorder import BaseRecorder, TaskResult
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import SilverbackID, SilverbackStartupState, TaskType
+from .types import AppState, SilverbackID, TaskType
 from .utils import async_wrap_iter, hexbytes_dict
-
-settings = Settings()
 
 
 class BaseRunner(ABC):
-    def __init__(self, app: SilverbackApp, *args, max_exceptions: int = 3, **kwargs):
+    def __init__(
+        self,
+        app: SilverbackApp,
+        *args,
+        max_exceptions: int = 3,
+        recorder: Optional[BaseRecorder] = None,
+        **kwargs,
+    ):
         self.app = app
+        self.recorder = recorder
 
         self.max_exceptions = max_exceptions
         self.exceptions = 0
-        self.last_block_seen = 0
-        self.last_block_processed = 0
-        self.recorder: BaseRecorder | None = None
-        self.ident = SilverbackID.from_settings(settings)
 
-    def _handle_result(self, result: TaskiqResult):
-        if result.is_err:
-            self.exceptions += 1
+        ecosystem_name, network_name = app.network_choice.split(":")
+        self.identifier = SilverbackID(
+            name=app.name,
+            ecosystem=ecosystem_name,
+            network=network_name,
+        )
 
-        else:
+        logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
+
+    async def _handle_task(self, task: AsyncTaskiqTask):
+        result = await task.wait_result()
+
+        if self.recorder:
+            await self.recorder.add_result(TaskResult.from_taskiq(result))
+
+        if not result.is_err:
             # NOTE: Reset exception counter
             self.exceptions = 0
+            return
 
-        if self.exceptions > self.max_exceptions:
-            raise Halt() from result.error
+        self.exceptions += 1
+
+        if self.exceptions > self.max_exceptions or isinstance(result.error, Halt):
+            result.raise_for_error()
 
     async def _checkpoint(
-        self, last_block_seen: int = 0, last_block_processed: int = 0
-    ) -> tuple[int, int]:
+        self,
+        last_block_seen: int | None = None,
+        last_block_processed: int | None = None,
+    ):
         """Set latest checkpoint block number"""
-        if (
-            last_block_seen > self.last_block_seen
-            or last_block_processed > self.last_block_processed
-        ):
-            logger.debug(
-                (
-                    f"Checkpoint block [seen={self.last_block_seen}, "
-                    f"procssed={self.last_block_processed}]"
-                )
+        assert self.app.state, f"{self.__class__.__name__}.run() not triggered."
+
+        logger.debug(
+            (
+                f"Checkpoint block [seen={self.app.state.last_block_seen}, "
+                f"procssed={self.app.state.last_block_processed}]"
             )
-            self.last_block_seen = max(last_block_seen, self.last_block_seen)
-            self.last_block_processed = max(last_block_processed, self.last_block_processed)
+        )
 
-            if self.recorder:
-                try:
-                    await self.recorder.set_state(
-                        self.ident, self.last_block_seen, self.last_block_processed
-                    )
-                except Exception as err:
-                    logger.error(f"Error settings state: {err}")
+        if last_block_seen:
+            self.app.state.last_block_seen = last_block_seen
+        if last_block_processed:
+            self.app.state.last_block_processed = last_block_processed
 
-        return self.last_block_seen, self.last_block_processed
+        if self.recorder:
+            try:
+                await self.recorder.set_state(self.app.state)
+
+            except Exception as err:
+                logger.error(f"Error setting state: {err}")
 
     @abstractmethod
     async def _block_task(self, block_handler: AsyncTaskiqDecoratedTask):
@@ -92,14 +107,14 @@ class BaseRunner(ABC):
         Raises:
             :class:`~silverback.exceptions.Halt`: If there are no configured tasks to execute.
         """
-        self.recorder = settings.get_recorder()
+        # Initialize recorder (if available) and fetch state if app has been run previously
+        if self.recorder and (startup_state := (await self.recorder.init(app_id=self.identifier))):
+            self.app.state = startup_state
 
-        if self.recorder:
-            boot_state = await self.recorder.get_state(self.ident)
-            if boot_state:
-                self.last_block_seen = boot_state.last_block_seen
-                self.last_block_processed = boot_state.last_block_processed
+        else:  # use empty state
+            self.app.state = AppState(last_block_seen=-1, last_block_processed=-1)
 
+        # Initialize broker (run worker startup events)
         await self.app.broker.startup()
 
         # Execute Silverback startup task before we init the rest
@@ -143,7 +158,6 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
     def __init__(self, app: SilverbackApp, *args, **kwargs):
         super().__init__(app, *args, **kwargs)
-        logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
 
         # Check for websocket support
         if not (ws_uri := app.chain_manager.provider.ws_uri):
@@ -158,16 +172,9 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         async for raw_block in self.subscriptions.get_subscription_data(sub_id):
             block = self.provider.network.ecosystem.decode_block(hexbytes_dict(raw_block))
 
-            if block.number is not None:
-                await self._checkpoint(last_block_seen=block.number)
-
-            block_task = await block_handler.kiq(raw_block)
-            result = await block_task.wait_result()
-
-            self._handle_result(result)
-
-            if block.number is not None:
-                await self._checkpoint(last_block_processed=block.number)
+            await self._checkpoint(last_block_seen=block.number)
+            await self._handle_task(await block_handler.kiq(raw_block))
+            await self._checkpoint(last_block_processed=block.number)
 
     async def _event_task(
         self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
@@ -181,7 +188,9 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             address=contract_event.contract.address,
             topics=["0x" + keccak(text=contract_event.abi.selector).hex()],
         )
-        logger.debug(f"Handling '{contract_event.name}' events via {sub_id}")
+        logger.debug(
+            f"Handling '{contract_event.contract.address}:{contract_event.name}' logs via {sub_id}"
+        )
 
         async for raw_event in self.subscriptions.get_subscription_data(sub_id):
             event = next(  # NOTE: `next` is okay since it only has one item
@@ -191,15 +200,9 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
                 )
             )
 
-            if event.block_number is not None:
-                await self._checkpoint(last_block_seen=event.block_number)
-
-            event_task = await event_handler.kiq(event)
-            result = await event_task.wait_result()
-            self._handle_result(result)
-
-            if event.block_number is not None:
-                await self._checkpoint(last_block_processed=event.block_number)
+            await self._checkpoint(last_block_seen=event.block_number)
+            await self._handle_task(await event_handler.kiq(event))
+            await self._checkpoint(last_block_processed=event.block_number)
 
     async def run(self):
         async with Web3SubscriptionsManager(self.ws_uri) as subscriptions:
@@ -234,15 +237,9 @@ class PollingRunner(BaseRunner):
         async for block in async_wrap_iter(
             chain.blocks.poll_blocks(start_block=start_block, new_block_timeout=new_block_timeout)
         ):
-            if block.number is not None:
-                await self._checkpoint(last_block_seen=block.number)
-
-            block_task = await block_handler.kiq(block)
-            result = await block_task.wait_result()
-            self._handle_result(result)
-
-            if block.number is not None:
-                await self._checkpoint(last_block_processed=block.number)
+            await self._checkpoint(last_block_seen=block.number)
+            await self._handle_task(await block_handler.kiq(block))
+            await self._checkpoint(last_block_processed=block.number)
 
     async def _event_task(
         self, contract_event: ContractEvent, event_handler: AsyncTaskiqDecoratedTask
@@ -264,12 +261,6 @@ class PollingRunner(BaseRunner):
         async for event in async_wrap_iter(
             contract_event.poll_logs(start_block=start_block, new_block_timeout=new_block_timeout)
         ):
-            if event.block_number is not None:
-                await self._checkpoint(last_block_seen=event.block_number)
-
-            event_task = await event_handler.kiq(event)
-            result = await event_task.wait_result()
-            self._handle_result(result)
-
-            if event.block_number is not None:
-                await self._checkpoint(last_block_processed=event.block_number)
+            await self._checkpoint(last_block_seen=event.block_number)
+            await self._handle_task(await event_handler.kiq(event))
+            await self._checkpoint(last_block_processed=event.block_number)

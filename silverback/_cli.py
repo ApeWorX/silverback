@@ -34,6 +34,16 @@ def _runner_callback(ctx, param, val):
     raise ValueError(f"Failed to import runner '{val}'.")
 
 
+def _recorder_callback(ctx, param, val):
+    if not val:
+        return None
+
+    elif recorder := import_from_string(val):
+        return recorder()
+
+    raise ValueError(f"Failed to import recorder '{val}'.")
+
+
 def _account_callback(ctx, param, val):
     if val:
         val = val.alias.replace("dev_", "TEST::")
@@ -92,11 +102,16 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
     help="An import str in format '<module>:<CustomRunner>'",
     callback=_runner_callback,
 )
+@click.option(
+    "--recorder",
+    help="An import string in format '<module>:<CustomRecorder>'",
+    callback=_recorder_callback,
+)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
-def run(cli_ctx, account, runner, max_exceptions, path):
+def run(cli_ctx, account, runner, recorder, max_exceptions, path):
     app = import_from_string(path)
-    runner = runner(app, max_exceptions=max_exceptions)
+    runner = runner(app, recorder=recorder, max_exceptions=max_exceptions)
     asyncio.run(runner.run())
 
 
