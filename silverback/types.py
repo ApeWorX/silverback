@@ -63,8 +63,10 @@ class _BaseDatapoint(BaseModel):
     type: str  # discriminator
 
 
+# NOTE: Maximum supported parquet integer type: https://parquet.apache.org/docs/file-format/types
+Int96 = Annotated[int, Field(ge=-(2**95), le=2**95 - 1)]
 # NOTE: only these types of data are implicitly converted e.g. `{"something": 1, "else": 0.001}`
-ScalarType = Union[bool, int, float, Decimal]
+ScalarType = Union[bool, Int96, float, Decimal]
 
 
 class ScalarDatapoint(_BaseDatapoint):
