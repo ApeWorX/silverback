@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Sequence
 
 from ape.exceptions import ApeException
 
@@ -28,6 +28,20 @@ class NoWebsocketAvailableError(Exception):
 
 class SilverbackException(ApeException):
     """Base Exception for any Silverback runtime faults."""
+
+
+# TODO: `ExceptionGroup` added in Python 3.11
+class StartupFailure(SilverbackException):
+    def __init__(self, *exceptions: Sequence[Exception]):
+        if error_str := "\n".join(str(e) for e in exceptions):
+            super().__init__(f"Startup failure(s):\n{error_str}")
+        else:
+            super().__init__("Startup failure(s) detected. See logs for details.")
+
+
+class NoTasksAvailableError(SilverbackException):
+    def __init__(self):
+        super().__init__("No tasks to execute")
 
 
 class Halt(SilverbackException):
