@@ -183,7 +183,7 @@ class JSONLineRecorder(BaseRecorder):
             writer.write("\n")
 
 
-def get_metrics(session: Path | str, task_name: str) -> Iterator[dict]:
+def get_metrics(session: Path, task_name: str) -> Iterator[dict]:
     with open(session, "r") as file:
         for line in file:
             if (

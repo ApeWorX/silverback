@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, Field
 from pydantic.functional_serializers import PlainSerializer
@@ -63,7 +63,7 @@ class _BaseDatapoint(BaseModel):
 
 
 # NOTE: only these types of data are implicitly converted e.g. `{"something": 1, "else": 0.001}`
-ScalarType = bool | int | float | Decimal
+ScalarType = Union[bool, int, float, Decimal]
 
 
 class ScalarDatapoint(_BaseDatapoint):
