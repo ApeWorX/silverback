@@ -121,8 +121,10 @@ class SilverbackApp(ManagerAccessMixin):
             labels = {"task_type": str(task_type)}
 
             if container and isinstance(container, ContractEvent):
-                labels["contract_address"] = container.contract.address
-                labels["event_abi"] = container.abi
+                # Address is almost a certainty if the container is being used as a filter here.
+                if contract_address := getattr(container.contract, "address", None):
+                    labels["contract_address"] = contract_address
+                labels["event_abi"] = container.abi.model_dump_json()
 
             broker_task = self.broker.register_task(
                 handler,
