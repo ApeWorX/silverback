@@ -124,7 +124,7 @@ class SilverbackApp(ManagerAccessMixin):
                 # Address is almost a certainty if the container is being used as a filter here.
                 if contract_address := getattr(container.contract, "address", None):
                     labels["contract_address"] = contract_address
-                labels["event_abi"] = container.abi.model_dump_json()
+                labels["event_signature"] = container.abi.signature
 
             broker_task = self.broker.register_task(
                 handler,
