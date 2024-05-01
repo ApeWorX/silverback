@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------------------------
 
 # Build with builder image to reduce image size
-FROM python:3.10 as builder
+FROM python:3.11 as builder
 USER root
 WORKDIR /wheels
 COPY . .
