@@ -118,10 +118,18 @@ class SilverbackApp(ManagerAccessMixin):
 
         # Register user function as task handler with our broker
         def add_taskiq_task(handler: Callable) -> AsyncTaskiqDecoratedTask:
+            labels = {"task_type": str(task_type)}
+
+            if container and isinstance(container, ContractEvent):
+                # Address is almost a certainty if the container is being used as a filter here.
+                if contract_address := getattr(container.contract, "address", None):
+                    labels["contract_address"] = contract_address
+                labels["event_signature"] = container.abi.signature
+
             broker_task = self.broker.register_task(
                 handler,
                 task_name=handler.__name__,
-                task_type=str(task_type),
+                **labels,
             )
 
             self.tasks[task_type].append(TaskData(container=container, handler=broker_task))
