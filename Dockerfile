@@ -13,7 +13,7 @@ RUN pip install --upgrade pip && pip install wheel
 RUN pip wheel . --wheel-dir=/wheels
 
 # Install from wheels
-FROM apeworx/ape:stable
+FROM apeworx/ape:latest
 USER root
 COPY --from=builder /wheels /wheels
 RUN pip install --upgrade pip \
