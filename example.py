@@ -46,7 +46,7 @@ def exec_block(block: BlockAPI, state: WorkerState):
 
 # This is how we trigger off of events
 # Set new_block_timeout to adjust the expected block time.
-@app.on_(USDC.Transfer, start_block=18588777, new_block_timeout=25)
+@app.on_(USDC.Transfer, start_block=19784367, new_block_timeout=25)
 # NOTE: Typing isn't required, it will still be an Ape `ContractLog` type
 def exec_event1(log):
     if log.log_index % 7 == 3:
