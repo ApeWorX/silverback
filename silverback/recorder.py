@@ -8,7 +8,6 @@ from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
 from .types import (
-    AppState,
     Datapoint,
     ScalarDatapoint,
     ScalarType,
@@ -96,10 +95,7 @@ class TaskResult(BaseModel):
 
 class BaseRecorder(ABC):
     """
-    Base class used for managing persistent application state, and serializing task results
-    to an external data recording process.
-
-    NOTE: Persistent state and task results can be managed using two different solutions
+    Base class used for serializing task results to an external data recording process.
 
     Recorders are configured using the following environment variable:
 
@@ -107,16 +103,10 @@ class BaseRecorder(ABC):
     """
 
     @abstractmethod
-    async def init(self, app_id: SilverbackID) -> AppState | None:
+    async def init(self, app_id: SilverbackID):
         """
         Handle any async initialization from Silverback settings (e.g. migrations).
-
-        Returns startup state, if available.
         """
-
-    @abstractmethod
-    async def set_state(self, app_state: AppState):
-        """Set the stored state for a Silverback instance"""
 
     @abstractmethod
     async def add_result(self, result: TaskResult):
@@ -125,9 +115,8 @@ class BaseRecorder(ABC):
 
 class JSONLineRecorder(BaseRecorder):
     """
-    Very basic implementation of BaseRecorder used to store application state and handler
-    result data by storing/retreiving state from a JSON-encoded file, and appending task
-    results to a file containing newline-separated JSON entries (https://jsonlines.org/).
+    Very basic implementation of BaseRecorder used to handle results by appending to a file
+    containing newline-separated JSON entries (https://jsonlines.org/).
 
     The file structure that this Recorder uses leverages the value of `SILVERBACK_APP_NAME`
     as well as the configured network to determine the location where files get saved:
@@ -135,7 +124,6 @@ class JSONLineRecorder(BaseRecorder):
         ./.silverback-sessions/
           <app-name>/
             <network choice>/
-              state.json  # always write here
               session-<timestamp>.json  # start time of each app session
 
     Each app "session" (everytime the Runner is started up via `silverback run`) is recorded
@@ -158,21 +146,13 @@ class JSONLineRecorder(BaseRecorder):
     - `SILVERBACK_APP_NAME`: Any alphabetical string valid as a folder name
     """
 
-    async def init(self, app_id: SilverbackID) -> AppState | None:
+    async def init(self, app_id: SilverbackID):
         data_folder = (
             Path.cwd() / ".silverback-sessions" / app_id.name / app_id.ecosystem / app_id.network
         )
         data_folder.mkdir(parents=True, exist_ok=True)
 
-        self.state_backup_file = data_folder / "state.json"
         self.session_results_file = data_folder / f"session-{iso_format(utc_now())}.jsonl"
-
-        return (
-            AppState.parse_file(self.state_backup_file) if self.state_backup_file.exists() else None
-        )
-
-    async def set_state(self, state: AppState):
-        self.state_backup_file.write_text(state.model_dump_json())
 
     async def add_result(self, result: TaskResult):
         # NOTE: mode `a` means "append to file if exists"
@@ -183,6 +163,9 @@ class JSONLineRecorder(BaseRecorder):
 
 
 def get_metrics(session: Path, task_name: str) -> Iterator[dict]:
+    """
+    Useful function for fetching results and loading them for display.
+    """
     with open(session, "r") as file:
         for line in file:
             if (

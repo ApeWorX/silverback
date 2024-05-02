@@ -11,8 +11,9 @@ from taskiq import AsyncTaskiqDecoratedTask, AsyncTaskiqTask
 from .application import SilverbackApp
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
 from .recorder import BaseRecorder, TaskResult
+from .state import AppDatastore, AppState
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import AppState, SilverbackID, TaskType
+from .types import SilverbackID, TaskType
 from .utils import async_wrap_iter, hexbytes_dict
 
 
@@ -27,6 +28,8 @@ class BaseRunner(ABC):
     ):
         self.app = app
         self.recorder = recorder
+        self.state = None
+        self.datastore = AppDatastore()
 
         self.max_exceptions = max_exceptions
         self.exceptions = 0
@@ -55,23 +58,23 @@ class BaseRunner(ABC):
         last_block_processed: int | None = None,
     ):
         """Set latest checkpoint block number"""
-        assert self.app.state, f"{self.__class__.__name__}.run() not triggered."
+        assert self.state, f"{self.__class__.__name__}.run() not triggered."
 
         logger.debug(
             (
-                f"Checkpoint block [seen={self.app.state.last_block_seen}, "
-                f"procssed={self.app.state.last_block_processed}]"
+                f"Checkpoint block [seen={self.state.last_block_seen}, "
+                f"procssed={self.state.last_block_processed}]"
             )
         )
 
         if last_block_seen:
-            self.app.state.last_block_seen = last_block_seen
+            self.state.last_block_seen = last_block_seen
         if last_block_processed:
-            self.app.state.last_block_processed = last_block_processed
+            self.state.last_block_processed = last_block_processed
 
         if self.recorder:
             try:
-                await self.recorder.set_state(self.app.state)
+                await self.datastore.set_state(self.state)
 
             except Exception as err:
                 logger.error(f"Error setting state: {err}")
@@ -104,18 +107,21 @@ class BaseRunner(ABC):
                 If there are no configured tasks to execute.
         """
         # Initialize recorder (if available) and fetch state if app has been run previously
-        if self.recorder and (startup_state := (await self.recorder.init(app_id=self.app.identifier))):
-            self.app.state = startup_state
+        if self.recorder:
+            await self.recorder.init(app_id=self.app.identifier)
+
+        if startup_state := (await self.datastore.init(app_id=self.app.identifier)):
+            self.state = startup_state
 
         else:  # use empty state
-            self.app.state = AppState(last_block_seen=-1, last_block_processed=-1)
+            self.state = AppState(last_block_seen=-1, last_block_processed=-1)
 
         # Initialize broker (run worker startup events)
         await self.app.broker.startup()
 
         # Execute Silverback startup task before we init the rest
         if startup_tasks := await asyncio.gather(
-            *(task_def.handler.kiq() for task_def in self.app.tasks[TaskType.STARTUP])
+            *(task_def.handler.kiq(self.state) for task_def in self.app.tasks[TaskType.STARTUP])
         ):
             results = await asyncio.gather(
                 *(startup_task.wait_result() for startup_task in startup_tasks)

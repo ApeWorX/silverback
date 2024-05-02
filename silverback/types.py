@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic.functional_serializers import PlainSerializer
 from typing_extensions import Annotated
 
@@ -37,18 +37,6 @@ UTCTimestamp = Annotated[
     # TODO: Bug in TaskIQ can't serialize `datetime`
     PlainSerializer(iso_format, return_type=str),
 ]
-
-
-class AppState(BaseModel):
-    # Last block number seen by runner
-    last_block_seen: int
-
-    # Last block number processed by a worker
-    last_block_processed: int
-
-    # Last time the state was updated
-    # NOTE: intended to use default when creating a model with this type
-    last_updated: UTCTimestamp = Field(default_factory=utc_now)
 
 
 class _BaseDatapoint(BaseModel):

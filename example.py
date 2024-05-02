@@ -6,7 +6,7 @@ from ape.types import ContractLog
 from ape_tokens import tokens  # type: ignore[import]
 from taskiq import Context, TaskiqDepends, TaskiqState
 
-from silverback import CircuitBreaker, SilverbackApp
+from silverback import AppState, CircuitBreaker, SilverbackApp
 
 # Do this first to initialize your app
 app = SilverbackApp()
@@ -17,11 +17,11 @@ YFI = tokens["YFI"]
 
 
 @app.on_startup()
-def app_startup():
+def app_startup(startup_state: AppState):
     # NOTE: This is called just as the app is put into "run" state,
     #       and handled by the first available worker
     # raise Exception  # NOTE: Any exception raised on startup aborts immediately
-    return {"block_number": app.state.last_block_seen}
+    return {"block_number": startup_state.last_block_seen}
 
 
 # Can handle some resource initialization for each worker, like LLMs or database connections

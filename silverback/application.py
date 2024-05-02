@@ -88,8 +88,6 @@ class SilverbackApp(ManagerAccessMixin):
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
-        self.state = None  # Runner manages this
-
     def broker_task_decorator(
         self,
         task_type: TaskType,
