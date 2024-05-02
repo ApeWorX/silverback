@@ -3,7 +3,7 @@ import os
 import sqlite3
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Optional, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel
 from taskiq import TaskiqResult
@@ -28,8 +28,8 @@ class HandlerResult(TaskiqResult):
     instance: str
     network: str
     handler_id: str
-    block_number: Optional[int]
-    log_index: Optional[int]
+    block_number: int | None
+    log_index: int | None
     created: datetime
 
     @classmethod
@@ -37,8 +37,8 @@ class HandlerResult(TaskiqResult):
         cls,
         ident: SilverbackID,
         handler_id: str,
-        block_number: Optional[int],
-        log_index: Optional[int],
+        block_number: int | None,
+        log_index: int | None,
         result: TaskiqResult,
     ) -> Self:
         return cls(
@@ -59,21 +59,21 @@ class BaseRecorder(ABC):
         ...
 
     @abstractmethod
-    async def get_state(self, ident: SilverbackID) -> Optional[SilverbackState]:
+    async def get_state(self, ident: SilverbackID) -> SilverbackState | None:
         """Return the stored state for a Silverback instance"""
         ...
 
     @abstractmethod
     async def set_state(
         self, ident: SilverbackID, last_block_seen: int, last_block_processed: int
-    ) -> Optional[SilverbackState]:
+    ) -> SilverbackState | None:
         """Set the stored state for a Silverback instance"""
         ...
 
     @abstractmethod
     async def get_latest_result(
-        self, ident: SilverbackID, handler: Optional[str] = None
-    ) -> Optional[HandlerResult]:
+        self, ident: SilverbackID, handler: str | None = None
+    ) -> HandlerResult | None:
         """Return the latest result for a Silverback instance's handler"""
         ...
 
@@ -136,7 +136,7 @@ class SQLiteRecorder(BaseRecorder):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
 
-    con: Optional[sqlite3.Connection]
+    con: sqlite3.Connection | None
     initialized: bool = False
 
     async def init(self):
@@ -182,7 +182,7 @@ class SQLiteRecorder(BaseRecorder):
 
         self.initialized = True
 
-    async def get_state(self, ident: SilverbackID) -> Optional[SilverbackState]:
+    async def get_state(self, ident: SilverbackID) -> SilverbackState | None:
         if not self.initialized:
             await self.init()
 
@@ -210,7 +210,7 @@ class SQLiteRecorder(BaseRecorder):
 
     async def set_state(
         self, ident: SilverbackID, last_block_seen: int, last_block_processed: int
-    ) -> Optional[SilverbackState]:
+    ) -> SilverbackState | None:
         if not self.initialized:
             await self.init()
 
@@ -261,8 +261,8 @@ class SQLiteRecorder(BaseRecorder):
         )
 
     async def get_latest_result(
-        self, ident: SilverbackID, handler: Optional[str] = None
-    ) -> Optional[HandlerResult]:
+        self, ident: SilverbackID, handler: str | None = None
+    ) -> HandlerResult | None:
         if not self.initialized:
             await self.init()
 

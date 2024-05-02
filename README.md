@@ -17,7 +17,7 @@ Read the [development userguide](https://docs.apeworx.io/silverback/stable/userg
 
 ## Dependencies
 
-- [python3](https://www.python.org/downloads) version 3.8 or greater, python3-dev
+- [python3](https://www.python.org/downloads) version 3.9 or greater, python3-dev
 
 ## Installation
 
