@@ -51,13 +51,15 @@ To run your bot against a live network, this SDK includes a simple runner you ca
 $ silverback run "example:app" --network :mainnet:alchemy
 ```
 
-**NOTE**: The example is designed to work with Python 3.9+, and we suggest using 3.11+ for speed.
+**NOTE**: The example is designed to work with Python 3.10+, and we suggest using 3.11+ for speed.
 
 ## Docker Usage
 
 ```sh
 $ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
 ```
+
+**NOTE**: The Docker image we publish uses Python 3.11
 
 ## Development
 
