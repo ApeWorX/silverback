@@ -13,7 +13,7 @@ from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, 
 from .recorder import BaseRecorder, TaskResult
 from .state import AppDatastore, AppState
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import SilverbackID, TaskType
+from .types import TaskType
 from .utils import async_wrap_iter, hexbytes_dict
 
 
