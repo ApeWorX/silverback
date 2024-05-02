@@ -2,7 +2,7 @@ import atexit
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Callable, Dict, Optional, Union
+from typing import Callable
 
 from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
@@ -18,7 +18,7 @@ from .types import TaskType
 
 @dataclass
 class TaskData:
-    container: Union[BlockContainer, ContractEvent, None]
+    container: BlockContainer | ContractEvent | None
     handler: AsyncTaskiqDecoratedTask
 
 
@@ -35,12 +35,12 @@ class SilverbackApp(ManagerAccessMixin):
         ...  # Connection has been initialized, can call broker methods e.g. `app.on_(...)`
     """
 
-    def __init__(self, settings: Optional[Settings] = None):
+    def __init__(self, settings: Settings | None = None):
         """
         Create app
 
         Args:
-            settings (Optional[~:class:`silverback.settings.Settings`]): Settings override.
+            settings (~:class:`silverback.settings.Settings` | None): Settings override.
                 Defaults to environment settings.
         """
         if not settings:
@@ -62,7 +62,7 @@ class SilverbackApp(ManagerAccessMixin):
         self.broker = settings.get_broker()
         # NOTE: If no tasks registered yet, defaults to empty list instead of raising KeyError
         self.tasks: defaultdict[TaskType, list[TaskData]] = defaultdict(list)
-        self.poll_settings: Dict[str, Dict] = {}
+        self.poll_settings: dict[str, dict] = {}
 
         atexit.register(self.network.__exit__, None, None, None)
 
@@ -84,14 +84,14 @@ class SilverbackApp(ManagerAccessMixin):
     def broker_task_decorator(
         self,
         task_type: TaskType,
-        container: Union[BlockContainer, ContractEvent, None] = None,
+        container: BlockContainer | ContractEvent | None = None,
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
 
         Args:
             task_type: :class:`~silverback.types.TaskType`: The type of task to create.
-            container: (Union[BlockContainer, ContractEvent]): The event source to watch.
+            container: (BlockContainer | ContractEvent): The event source to watch.
 
         Returns:
             Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
@@ -187,18 +187,18 @@ class SilverbackApp(ManagerAccessMixin):
 
     def on_(
         self,
-        container: Union[BlockContainer, ContractEvent],
-        new_block_timeout: Optional[int] = None,
-        start_block: Optional[int] = None,
+        container: BlockContainer | ContractEvent,
+        new_block_timeout: int | None = None,
+        start_block: int | None = None,
     ):
         """
         Create task to handle events created by `container`.
 
         Args:
-            container: (Union[BlockContainer, ContractEvent]): The event source to watch.
-            new_block_timeout: (Optional[int]): Override for block timeout that is acceptable.
+            container: (BlockContainer | ContractEvent): The event source to watch.
+            new_block_timeout: (int | None): Override for block timeout that is acceptable.
                 Defaults to whatever the app's settings are for default polling timeout are.
-            start_block (Optional[int]): block number to start processing events from.
+            start_block (int | None): block number to start processing events from.
                 Defaults to whatever the latest block is.
 
         Raises:

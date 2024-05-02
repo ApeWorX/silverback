@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum
-from typing import AsyncGenerator, Dict, List, Optional
+from typing import AsyncGenerator
 
 from ape.logging import logger
 from websockets import ConnectionClosedError
@@ -26,10 +26,10 @@ class Web3SubscriptionsManager:
         self._ws_provider_uri = ws_provider_uri
 
         # Stateful
-        self._connection: Optional[ws_client.WebSocketClientProtocol] = None
+        self._connection: ws_client.WebSocketClientProtocol | None = None
         self._last_request: int = 0
-        self._subscriptions: Dict[str, asyncio.Queue] = {}
-        self._rpc_msg_buffer: List[dict] = []
+        self._subscriptions: dict[str, asyncio.Queue] = {}
+        self._rpc_msg_buffer: list[dict] = []
         self._ws_lock = asyncio.Lock()
 
     def __repr__(self) -> str:
