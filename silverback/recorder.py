@@ -74,7 +74,7 @@ class TaskResult(BaseModel):
     def _extract_system_metrics(cls, labels: dict) -> dict:
         metrics = {}
 
-        if block_number := labels.get("number") or labels.get("block"):
+        if block_number := labels.get("block_number"):
             metrics["block_number"] = int(block_number)
 
         return metrics
