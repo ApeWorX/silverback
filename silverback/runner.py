@@ -131,6 +131,11 @@ class BaseRunner(ABC):
             if any(result.is_err for result in results):
                 # NOTE: Abort before even starting to run
                 raise StartupFailure(*(result.error for result in results if result.is_err))
+
+            elif self.recorder:
+                converted_results = map(TaskResult.from_taskiq, results)
+                await asyncio.gather(*(self.recorder.add_result(r) for r in converted_results))
+
             # NOTE: No need to handle results otherwise
 
         # Create our long-running event listeners
@@ -171,6 +176,11 @@ class BaseRunner(ABC):
             if any(result.is_err for result in results):
                 errors_str = "\n".join(str(result.error) for result in results if result.is_err)
                 logger.error(f"Errors while shutting down:\n{errors_str}")
+
+            elif self.recorder:
+                converted_results = map(TaskResult.from_taskiq, results)
+                await asyncio.gather(*(self.recorder.add_result(r) for r in converted_results))
+
             # NOTE: No need to handle results otherwise
 
         await self.app.broker.shutdown()
