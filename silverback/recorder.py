@@ -151,7 +151,7 @@ class JSONLineRecorder(BaseRecorder):
 
     To use this recorder, you must configure the following environment variable:
 
-    - `SILVERBACK_RECORDER_CLASS`: `"silverback.recorder.JSONLineRecorder"`
+    - `SILVERBACK_RECORDER_CLASS`: `"silverback.recorder:JSONLineRecorder"`
 
     You may also want to give your app a unique name so the data does not get overwritten,
     if you are using multiple apps from the same directory:

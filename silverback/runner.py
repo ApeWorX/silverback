@@ -22,7 +22,7 @@ class BaseRunner(ABC):
         app: SilverbackApp,
         *args,
         max_exceptions: int = 3,
-        recorder: Optional[BaseRecorder] = None,
+        recorder: BaseRecorder | None = None,
         **kwargs,
     ):
         self.app = app
