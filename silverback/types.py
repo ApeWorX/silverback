@@ -6,14 +6,14 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from pydantic.functional_serializers import PlainSerializer
 from taskiq import Context, TaskiqDepends, TaskiqState
-from typing_extensions import Annotated  # Introduced 3.9
+from typing_extensions import Annotated
 
 
 class TaskType(str, Enum):
-    STARTUP = "silverback_startup"  # TODO: Shorten in 0.4.0
+    STARTUP = "startup"
     NEW_BLOCKS = "block"
     EVENT_LOG = "event"
-    SHUTDOWN = "silverback_shutdown"  # TODO: Shorten in 0.4.0
+    SHUTDOWN = "shutdown"
 
     def __str__(self) -> str:
         return self.value
