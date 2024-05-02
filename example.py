@@ -1,9 +1,12 @@
+from typing import Annotated
+
 from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
 from ape_tokens import tokens  # type: ignore[import]
+from taskiq import Context, TaskiqDepends, TaskiqState
 
-from silverback import CircuitBreaker, SilverbackApp, WorkerState
+from silverback import CircuitBreaker, SilverbackApp
 
 # Do this first to initialize your app
 app = SilverbackApp()
@@ -28,7 +31,7 @@ class MyDB:
 
 
 @app.on_worker_startup()
-def worker_startup(state: WorkerState):  # NOTE: You need the type hint here
+def worker_startup(state: TaskiqState):  # NOTE: You need the type hint here
     # NOTE: Can put anything here, any python object works
     state.db = MyDB()
     state.block_count = 0
@@ -38,9 +41,9 @@ def worker_startup(state: WorkerState):  # NOTE: You need the type hint here
 # This is how we trigger off of new blocks
 @app.on_(chain.blocks)
 # NOTE: The type hint for block is `BlockAPI`, but we parse it using `EcosystemAPI`
-# NOTE: If you need something from worker state, you have to use the type hint
-def exec_block(block: BlockAPI, state: WorkerState):
-    state.db.execute(f"some query {block.number}")
+# NOTE: If you need something from worker state, you have to use taskiq context
+def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
+    context.state.db.execute(f"some query {block.number}")
     return len(block.transactions)
 
 
@@ -76,6 +79,6 @@ def app_shutdown():
 
 # Just in case you need to release some resources or something inside each worker
 @app.on_worker_shutdown()
-def worker_shutdown(state):
+def worker_shutdown(state: TaskiqState):  # NOTE: You need the type hint here
     state.db = None
     # raise Exception  # NOTE: Any exception raised on worker shutdown is ignored

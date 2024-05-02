@@ -5,7 +5,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 from pydantic.functional_serializers import PlainSerializer
-from taskiq import Context, TaskiqDepends, TaskiqState
 from typing_extensions import Annotated
 
 
@@ -50,13 +49,6 @@ class AppState(BaseModel):
     # Last time the state was updated
     # NOTE: intended to use default when creating a model with this type
     last_updated: UTCTimestamp = Field(default_factory=utc_now)
-
-
-def get_worker_state(context: Annotated[Context, TaskiqDepends()]) -> TaskiqState:
-    return context.state
-
-
-WorkerState = Annotated[TaskiqState, TaskiqDepends(get_worker_state)]
 
 
 class _BaseDatapoint(BaseModel):
