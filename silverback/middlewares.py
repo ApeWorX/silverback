@@ -45,7 +45,10 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
     def _create_label(self, message: TaskiqMessage) -> str:
         if labels_str := ",".join(
-            f"{k}={v}" for k, v in message.labels.items() if k != "task_name"
+            # NOTE: Have to add extra quotes around event signatures so they display as a string
+            f"{k}={v}" if k != "event_signature" else f'{k}="{v}"'
+            for k, v in message.labels.items()
+            if k != "task_name"
         ):
             return f"{message.task_name}[{labels_str}]"
 
