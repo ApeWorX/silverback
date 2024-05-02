@@ -84,7 +84,6 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.middlewares</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.post_execute"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.post_execute()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.post_save"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.post_save()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.pre_execute"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.pre_execute()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.pre_send"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.pre_send()</span></code></a></li>
 </ul>
@@ -139,22 +138,6 @@ in worker process.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>message</strong> – incoming message.</p></li>
 <li><p><strong>result</strong> – result of execution for current task.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware.post_save">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">post_save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqResult</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.post_save" title="Permalink to this definition"></a></dt>
-<dd><p>Post save hook.</p>
-<p>This function is called after result of
-the executions is saved in the result_backend.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>message</strong> – processed message.</p></li>
-<li><p><strong>result</strong> – returned value.</p></li>
 </ul>
 </dd>
 </dl>

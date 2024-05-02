@@ -128,7 +128,7 @@
 of different scenarios and trigger methods.</p>
 <span class="target" id="module-silverback.runner"></span><dl class="py class">
 <dt class="sig sig-object py" id="silverback.runner.BaseRunner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">BaseRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="application.html#silverback.application.SilverbackApp" title="silverback.application.SilverbackApp"><span class="pre">SilverbackApp</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_exceptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">BaseRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="application.html#silverback.application.SilverbackApp" title="silverback.application.SilverbackApp"><span class="pre">SilverbackApp</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_exceptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recorder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseRecorder</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.runner.BaseRunner.run">
@@ -138,7 +138,10 @@ of different scenarios and trigger methods.</p>
 and process them by kicking events over to the configured broker.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.Halt" title="silverback.exceptions.Halt"><strong>Halt</strong></a> – If there are no configured tasks to execute.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.StartupFailure" title="silverback.exceptions.StartupFailure"><strong>StartupFailure</strong></a> – If there was an exception during startup.</p></li>
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.NoTasksAvailableError" title="silverback.exceptions.NoTasksAvailableError"><strong>NoTasksAvailableError</strong></a> – If there are no configured tasks to execute.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -165,7 +168,10 @@ and process them by kicking events over to the configured broker.</p>
 and process them by kicking events over to the configured broker.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.Halt" title="silverback.exceptions.Halt"><strong>Halt</strong></a> – If there are no configured tasks to execute.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.StartupFailure" title="silverback.exceptions.StartupFailure"><strong>StartupFailure</strong></a> – If there was an exception during startup.</p></li>
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.NoTasksAvailableError" title="silverback.exceptions.NoTasksAvailableError"><strong>NoTasksAvailableError</strong></a> – If there are no configured tasks to execute.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
