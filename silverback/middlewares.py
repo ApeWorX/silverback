@@ -56,8 +56,10 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         # NOTE: Ensure we always have this, no matter what
         message.labels["task_name"] = message.task_name
 
-        if not (task_type_str := message.labels.pop("task_type")):
+        if "task_type" not in message.labels:
             return message  # Not a silverback task
+
+        task_type_str = message.labels.pop("task_type")
 
         try:
             task_type = TaskType(task_type_str)
