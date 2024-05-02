@@ -124,7 +124,10 @@ class SilverbackApp(ManagerAccessMixin):
         def add_taskiq_task(handler: Callable) -> AsyncTaskiqDecoratedTask:
             labels = {"task_type": str(task_type)}
 
-            if container and isinstance(container, ContractEvent):
+            # NOTE: Do *not* do `if container` because that does a `len(container)` call,
+            #       which for ContractEvent queries *every single log* ever emitted, and really
+            #       we only want to determine if it is not None
+            if container is not None and isinstance(container, ContractEvent):
                 # Address is almost a certainty if the container is being used as a filter here.
                 if contract_address := getattr(container.contract, "address", None):
                     labels["contract_address"] = contract_address
