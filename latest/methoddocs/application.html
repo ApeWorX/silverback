@@ -148,7 +148,7 @@ Silverback application, meant to be used to expose method handlers and other fun
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>task_type</strong> – <code class="xref py py-class docutils literal notranslate"><span class="pre">TaskType</span></code>: The type of task to create.</p></li>
-<li><p><strong>container</strong> – (Union[BlockContainer, ContractEvent]): The event source to watch.</p></li>
+<li><p><strong>container</strong> – (BlockContainer | ContractEvent): The event source to watch.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -171,10 +171,10 @@ Silverback application, meant to be used to expose method handlers and other fun
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>container</strong> – (Union[BlockContainer, ContractEvent]): The event source to watch.</p></li>
-<li><p><strong>new_block_timeout</strong> – (Optional[int]): Override for block timeout that is acceptable.
+<li><p><strong>container</strong> – (BlockContainer | ContractEvent): The event source to watch.</p></li>
+<li><p><strong>new_block_timeout</strong> – (int | None): Override for block timeout that is acceptable.
 Defaults to whatever the app’s settings are for default polling timeout are.</p></li>
-<li><p><strong>start_block</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – block number to start processing events from.
+<li><p><strong>start_block</strong> (<em>int</em><em> | </em><em>None</em>) – block number to start processing events from.
 Defaults to whatever the latest block is.</p></li>
 </ul>
 </dd>
@@ -236,7 +236,7 @@ Defaults to whatever the latest block is.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="silverback.application.TaskData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.application.</span></span><span class="sig-name descname"><span class="pre">TaskData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ape.managers.chain.BlockContainer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ape.contracts.base.ContractEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">NoneType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">taskiq.decor.AsyncTaskiqDecoratedTask</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.application.TaskData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.application.</span></span><span class="sig-name descname"><span class="pre">TaskData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ape.managers.chain.BlockContainer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ape.contracts.base.ContractEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">taskiq.decor.AsyncTaskiqDecoratedTask</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.application.TaskData" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 </dd></dl>
 
