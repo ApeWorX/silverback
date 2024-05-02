@@ -13,7 +13,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
-from .types import TaskType
+from .types import SilverbackID, TaskType
 
 
 @dataclass
@@ -46,9 +46,15 @@ class SilverbackApp(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
-        self.network = settings.get_provider_context()
+        provider_context = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
-        provider = self.network.__enter__()
+        provider = provider_context.__enter__()
+
+        self.identifier = SilverbackID(
+            name=settings.APP_NAME,
+            network=provider.network.name,
+            ecosystem=provider.network.ecosystem.name,
+        )
 
         # Adjust defaults from connection
         if settings.NEW_BLOCK_TIMEOUT is None and (
@@ -64,20 +70,21 @@ class SilverbackApp(ManagerAccessMixin):
         self.tasks: defaultdict[TaskType, list[TaskData]] = defaultdict(list)
         self.poll_settings: dict[str, dict] = {}
 
-        atexit.register(self.network.__exit__, None, None, None)
+        atexit.register(provider_context.__exit__, None, None, None)
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
         self.start_block = settings.START_BLOCK
 
-        network_str = f'\n  NETWORK="{provider.network.ecosystem.name}:{provider.network.name}"'
         signer_str = f"\n  SIGNER={repr(self.signer)}"
         start_block_str = f"\n  START_BLOCK={self.start_block}" if self.start_block else ""
         new_block_timeout_str = (
             f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
         )
-        logger.info(
-            f"Loaded Silverback App:{network_str}"
+
+        network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
+        logger.success(
+            f'Loaded Silverback App:\n  NETWORK="{network_choice}"'
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
@@ -120,11 +127,14 @@ class SilverbackApp(ManagerAccessMixin):
         def add_taskiq_task(handler: Callable) -> AsyncTaskiqDecoratedTask:
             labels = {"task_type": str(task_type)}
 
-            if container and isinstance(container, ContractEvent):
+            # NOTE: Do *not* do `if container` because that does a `len(container)` call,
+            #       which for ContractEvent queries *every single log* ever emitted, and really
+            #       we only want to determine if it is not None
+            if container is not None and isinstance(container, ContractEvent):
                 # Address is almost a certainty if the container is being used as a filter here.
                 if contract_address := getattr(container.contract, "address", None):
                     labels["contract_address"] = contract_address
-                labels["event_signature"] = container.abi.signature
+                labels["event_signature"] = f"{container.abi.signature}"
 
             broker_task = self.broker.register_task(
                 handler,

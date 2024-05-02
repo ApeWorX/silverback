@@ -6,8 +6,7 @@ from ape.utils import ManagerAccessMixin
 from eth_utils.conversions import to_hex
 from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 
-from silverback.recorder import HandlerResult
-from silverback.types import SilverbackID, TaskType
+from silverback.types import TaskType
 from silverback.utils import hexbytes_dict
 
 
@@ -22,11 +21,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
             return int((head.timestamp - genesis.timestamp) / head.number)
 
-        settings = kwargs.pop("silverback_settings")
-
         self.block_time = self.chain_manager.provider.network.block_time or compute_block_time()
-        self.ident = SilverbackID.from_settings(settings)
-        self.recorder = settings.get_recorder()
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
         # TODO: Necessary because bytes/HexBytes doesn't encode/deocde well for some reason
@@ -49,20 +44,28 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         return message
 
     def _create_label(self, message: TaskiqMessage) -> str:
-        if labels_str := ",".join(f"{k}={v}" for k, v in message.labels.items()):
+        if labels_str := ",".join(
+            # NOTE: Have to add extra quotes around event signatures so they display as a string
+            f"{k}={v}" if k != "event_signature" else f'{k}="{v}"'
+            for k, v in message.labels.items()
+            if k != "task_name"
+        ):
             return f"{message.task_name}[{labels_str}]"
 
         else:
             return message.task_name
 
     def pre_execute(self, message: TaskiqMessage) -> TaskiqMessage:
+        # NOTE: Ensure we always have this, no matter what
+        message.labels["task_name"] = message.task_name
+
         if "task_type" not in message.labels:
             return message  # Not a silverback task
 
-        task_type = message.labels.pop("task_type")
+        task_type_str = message.labels.pop("task_type")
 
         try:
-            task_type = TaskType(task_type)
+            task_type = TaskType(task_type_str)
         except ValueError:
             return message  # Not a silverback task
 
@@ -96,22 +99,5 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         (logger.error if result.error else logger.success)(
             f"{self._create_label(message)} " f"- {result.execution_time:.3f}s{percent_display}"
         )
-
-    async def post_save(self, message: TaskiqMessage, result: TaskiqResult):
-        if not self.recorder:
-            return
-
-        handler_result = HandlerResult.from_taskiq(
-            self.ident,
-            message.task_name,
-            message.labels.get("block_number"),
-            message.labels.get("log_index"),
-            result,
-        )
-
-        try:
-            await self.recorder.add_result(handler_result)
-        except Exception as err:
-            logger.error(f"Error storing result: {err}")
 
     # NOTE: Unless stdout is ignored, error traceback appears in stdout, no need for `on_error`
