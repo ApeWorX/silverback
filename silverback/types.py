@@ -1,5 +1,5 @@
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Optional, Protocol
+from typing import Protocol
 
 from pydantic import BaseModel
 from typing_extensions import Self  # Introduced 3.11
@@ -20,7 +20,7 @@ class ISilverbackSettings(Protocol):
     a type reference."""
 
     INSTANCE: str
-    RECORDER_CLASS: Optional[str]
+    RECORDER_CLASS: str | None
 
     def get_network_choice(self) -> str:
         ...

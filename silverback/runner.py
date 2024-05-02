@@ -1,6 +1,5 @@
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
 
 from ape import chain
 from ape.contracts import ContractEvent, ContractInstance
@@ -28,7 +27,7 @@ class BaseRunner(ABC):
         self.exceptions = 0
         self.last_block_seen = 0
         self.last_block_processed = 0
-        self.recorder: Optional[BaseRecorder] = None
+        self.recorder: BaseRecorder | None = None
         self.ident = SilverbackID.from_settings(settings)
 
     def _handle_result(self, result: TaskiqResult):
@@ -43,7 +42,7 @@ class BaseRunner(ABC):
 
     async def _checkpoint(
         self, last_block_seen: int = 0, last_block_processed: int = 0
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """Set latest checkpoint block number"""
         if (
             last_block_seen > self.last_block_seen
