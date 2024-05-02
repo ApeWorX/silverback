@@ -53,7 +53,6 @@ class TaskResult(BaseModel):
             logger.warning(f"Cannot handle return type of '{task_name}': '{type(result)}'.")
             return {}
 
-        # else:
         converted_result = {}
 
         for metric_name, metric_value in result.items():

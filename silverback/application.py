@@ -131,6 +131,7 @@ class SilverbackApp(ManagerAccessMixin):
                 # Address is almost a certainty if the container is being used as a filter here.
                 if contract_address := getattr(container.contract, "address", None):
                     labels["contract_address"] = contract_address
+                # NOTE: event signature is a string with spaces/commas, so encapsulate it in quotes
                 labels["event_signature"] = f'"{container.abi.signature}"'
 
             broker_task = self.broker.register_task(
