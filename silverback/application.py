@@ -13,7 +13,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
-from .types import TaskType
+from .types import SilverbackID, TaskType
 
 
 @dataclass
@@ -46,11 +46,15 @@ class SilverbackApp(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
-        self.name = settings.APP_NAME
-
         network = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
         provider = network.__enter__()
+
+        self.identifier = SilverbackID(
+            name=settings.APP_NAME,
+            network=provider.network.name,
+            ecosystem=provider.network.ecosystem.name,
+        )
 
         # Adjust defaults from connection
         if settings.NEW_BLOCK_TIMEOUT is None and (
@@ -72,14 +76,15 @@ class SilverbackApp(ManagerAccessMixin):
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
         self.start_block = settings.START_BLOCK
 
-        self.network_choice = f"{provider.network.ecosystem.name}:{provider.network.name}"
         signer_str = f"\n  SIGNER={repr(self.signer)}"
         start_block_str = f"\n  START_BLOCK={self.start_block}" if self.start_block else ""
         new_block_timeout_str = (
             f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
         )
-        logger.info(
-            f'Loaded Silverback App:\n  NETWORK="{self.network_choice}"'
+
+        network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
+        logger.success(
+            f'Loaded Silverback App:\n  NETWORK="{network_choice}"'
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 

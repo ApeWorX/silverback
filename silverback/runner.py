@@ -31,13 +31,6 @@ class BaseRunner(ABC):
         self.max_exceptions = max_exceptions
         self.exceptions = 0
 
-        ecosystem_name, network_name = app.network_choice.split(":")
-        self.identifier = SilverbackID(
-            name=app.name,
-            ecosystem=ecosystem_name,
-            network=network_name,
-        )
-
         logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
 
     async def _handle_task(self, task: AsyncTaskiqTask):
@@ -111,7 +104,7 @@ class BaseRunner(ABC):
                 If there are no configured tasks to execute.
         """
         # Initialize recorder (if available) and fetch state if app has been run previously
-        if self.recorder and (startup_state := (await self.recorder.init(app_id=self.identifier))):
+        if self.recorder and (startup_state := (await self.recorder.init(app_id=self.app.identifier))):
             self.app.state = startup_state
 
         else:  # use empty state
