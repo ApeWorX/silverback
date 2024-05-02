@@ -46,9 +46,9 @@ class SilverbackApp(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
-        network = settings.get_provider_context()
+        provider_context = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
-        provider = network.__enter__()
+        provider = provider_context.__enter__()
 
         self.identifier = SilverbackID(
             name=settings.APP_NAME,
@@ -70,7 +70,7 @@ class SilverbackApp(ManagerAccessMixin):
         self.tasks: defaultdict[TaskType, list[TaskData]] = defaultdict(list)
         self.poll_settings: dict[str, dict] = {}
 
-        atexit.register(network.__exit__, None, None, None)
+        atexit.register(provider_context.__exit__, None, None, None)
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
