@@ -74,7 +74,7 @@ async def exec_event2(log: ContractLog):
 @app.on_shutdown()
 def app_shutdown():
     # raise Exception  # NOTE: Any exception raised on shutdown is ignored
-    return {"block_number": app.state.last_block_processed}
+    return {"some_metric": 123}
 
 
 # Just in case you need to release some resources or something inside each worker
