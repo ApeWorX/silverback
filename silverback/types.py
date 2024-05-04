@@ -88,3 +88,19 @@ class Datapoints(RootModel):
             )
 
         return datapoints
+
+    # Add dict methods
+    def get(self, key: str, default: Datapoint | None = None) -> Datapoint | None:
+        if key in self:
+            return self[key]
+
+        return default
+
+    def __iter__(self):
+        return iter(self.root)
+
+    def __getitem__(self, item):
+        return self.root[item]
+
+    def items(self):
+        return self.root.items()
