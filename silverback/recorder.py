@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, get_args
 
 from ape.logging import get_logger
 from pydantic import BaseModel, Field
@@ -43,7 +43,7 @@ class TaskResult(BaseModel):
         if isinstance(result, Datapoint):  # type: ignore[arg-type,misc]
             return {"result": result}
 
-        elif isinstance(result, ScalarType):
+        elif isinstance(result, get_args(ScalarType)):
             if isinstance(result, int) and not (INT96_RANGE[0] <= result <= INT96_RANGE[1]):
                 logger.warn("Result integer is out of range suitable for parquet. Ignoring.")
             else:
