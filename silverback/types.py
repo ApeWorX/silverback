@@ -3,9 +3,12 @@ from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from ape.logging import get_logger
+from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
 from pydantic.functional_serializers import PlainSerializer
 from typing_extensions import Annotated
+
+logger = get_logger(__name__)
 
 
 class TaskType(str, Enum):
@@ -47,6 +50,8 @@ class _BaseDatapoint(BaseModel):
 Int96 = Annotated[int, Field(ge=-(2**95), le=2**95 - 1)]
 # NOTE: only these types of data are implicitly converted e.g. `{"something": 1, "else": 0.001}`
 ScalarType = bool | Int96 | float | Decimal
+# NOTE: Interesting side effect is that `int` outside the INT96 range parse as `Decimal`
+#       This is okay, preferable actually, because it means we can store ints outside that range
 
 
 class ScalarDatapoint(_BaseDatapoint):
@@ -54,7 +59,48 @@ class ScalarDatapoint(_BaseDatapoint):
     data: ScalarType
 
 
-# NOTE: Other datapoint types must be explicitly used
+# NOTE: Other datapoint types must be explicitly defined as subclasses of `_BaseDatapoint`
+#       Users will have to import and use these directly
 
-# TODO: Other datapoint types added to union here...
+# NOTE: Other datapoint types must be added to this union
 Datapoint = ScalarDatapoint
+
+
+class Datapoints(RootModel):
+    root: dict[str, Datapoint]
+
+    @model_validator(mode="before")
+    def parse_datapoints(cls, datapoints: dict) -> dict:
+        names_to_remove: dict[str, ValidationError] = {}
+        # Automatically convert raw scalar types
+        for name in datapoints:
+            if not isinstance(datapoints[name], Datapoint):
+                try:
+                    datapoints[name] = ScalarDatapoint(data=datapoints[name])
+                except ValidationError as e:
+                    names_to_remove[name] = e
+
+        # Prune and raise a warning about unconverted datapoints
+        for name in names_to_remove:
+            data = datapoints.pop(name)
+            logger.warning(
+                f"Cannot convert datapoint '{name}' of type '{type(data)}': {names_to_remove[name]}"
+            )
+
+        return datapoints
+
+    # Add dict methods
+    def get(self, key: str, default: Datapoint | None = None) -> Datapoint | None:
+        if key in self:
+            return self[key]
+
+        return default
+
+    def __iter__(self):
+        return iter(self.root)
+
+    def __getitem__(self, item):
+        return self.root[item]
+
+    def items(self):
+        return self.root.items()

@@ -7,15 +7,7 @@ from pydantic import BaseModel, Field
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import (
-    Datapoint,
-    ScalarDatapoint,
-    ScalarType,
-    SilverbackID,
-    UTCTimestamp,
-    iso_format,
-    utc_now,
-)
+from .types import Datapoints, SilverbackID, UTCTimestamp, iso_format, utc_now
 
 logger = get_logger(__name__)
 
@@ -35,39 +27,17 @@ class TaskResult(BaseModel):
     block_number: int | None = None
 
     # Custom user metrics here
-    metrics: dict[str, Datapoint] = {}
+    metrics: Datapoints
 
     @classmethod
-    def _extract_custom_metrics(cls, result: Any, task_name: str) -> dict[str, Datapoint]:
-        if isinstance(result, Datapoint):  # type: ignore[arg-type,misc]
-            return {"result": result}
+    def _extract_custom_metrics(cls, return_value: Any, task_name: str) -> Datapoints:
+        if return_value is None:
+            return Datapoints(root={})
 
-        elif isinstance(result, ScalarType):  # type: ignore[arg-type,misc]
-            return {"result": ScalarDatapoint(data=result)}
+        elif not isinstance(return_value, dict):
+            return_value = {"return_value": return_value}
 
-        elif result is None:
-            return {}
-
-        elif not isinstance(result, dict):
-            logger.warning(f"Cannot handle return type of '{task_name}': '{type(result)}'.")
-            return {}
-
-        converted_result = {}
-
-        for metric_name, metric_value in result.items():
-            if isinstance(metric_value, Datapoint):  # type: ignore[arg-type,misc]
-                converted_result[metric_name] = metric_value
-
-            elif isinstance(metric_value, ScalarType):  # type: ignore[arg-type,misc]
-                converted_result[metric_name] = ScalarDatapoint(data=metric_value)
-
-            else:
-                logger.warning(
-                    f"Cannot handle type of metric '{task_name}.{metric_name}':"
-                    f" '{type(metric_value)}'."
-                )
-
-        return converted_result
+        return Datapoints(root=return_value)
 
     @classmethod
     def _extract_system_metrics(cls, labels: dict) -> dict:
