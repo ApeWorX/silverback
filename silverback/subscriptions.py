@@ -1,8 +1,10 @@
 import asyncio
 import json
+from collections import defaultdict
 from enum import Enum
 from typing import AsyncGenerator
 
+import quattro
 from ape.logging import logger
 from websockets import ConnectionClosedError
 from websockets import client as ws_client
@@ -28,7 +30,7 @@ class Web3SubscriptionsManager:
         # Stateful
         self._connection: ws_client.WebSocketClientProtocol | None = None
         self._last_request: int = 0
-        self._subscriptions: dict[str, asyncio.Queue] = {}
+        self._subscriptions: dict[str, asyncio.Queue] = defaultdict(asyncio.Queue)
         self._rpc_msg_buffer: list[dict] = []
         self._ws_lock = asyncio.Lock()
 
@@ -36,17 +38,17 @@ class Web3SubscriptionsManager:
         return f"<{self.__class__.__name__} uri={self._ws_provider_uri}>"
 
     async def __aenter__(self) -> "Web3SubscriptionsManager":
-        self.connection = await ws_client.connect(self._ws_provider_uri)
+        self._connection = await ws_client.connect(self._ws_provider_uri)
         return self
 
     def __aiter__(self) -> "Web3SubscriptionsManager":
         return self
 
     async def __anext__(self) -> str:
-        if not self.connection:
+        if not self._connection:
             raise StopAsyncIteration
 
-        message = await self.connection.recv()
+        message = await self._connection.recv()
         # TODO: Handle retries when connection breaks
 
         response = json.loads(message)
@@ -55,9 +57,6 @@ class Web3SubscriptionsManager:
             if not (sub_id := sub_params.get("subscription")) or not isinstance(sub_id, str):
                 logger.debug(f"Corrupted subscription data: {response}")
                 return response
-
-            if sub_id not in self._subscriptions:
-                self._subscriptions[sub_id] = asyncio.Queue()
 
             await self._subscriptions[sub_id].put(sub_params.get("result", {}))
 
@@ -94,7 +93,7 @@ class Web3SubscriptionsManager:
         raise RuntimeError("Timeout waiting for response.")
 
     async def subscribe(self, type: SubscriptionType, **filter_params) -> str:
-        if not self.connection:
+        if not self._connection:
             raise ValueError("Connection required.")
 
         if type is SubscriptionType.BLOCKS and filter_params:
@@ -104,7 +103,7 @@ class Web3SubscriptionsManager:
             "eth_subscribe",
             [type.value, filter_params] if type is SubscriptionType.EVENTS else [type.value],
         )
-        await self.connection.send(json.dumps(request))
+        await self._connection.send(json.dumps(request))
         response = await self._get_response(request.get("id") or self._last_request)
 
         sub_id = response.get("result")
@@ -116,24 +115,27 @@ class Web3SubscriptionsManager:
 
     async def get_subscription_data(self, sub_id: str) -> AsyncGenerator[dict, None]:
         while True:
-            if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
+            if self._subscriptions[sub_id].empty():
                 async with self._ws_lock:
                     # Keep pulling until a message comes to process
                     # NOTE: Python <3.10 does not support `anext` function
                     await self.__anext__()
             else:
-                yield await queue.get()
+                yield await self._subscriptions[sub_id].get()
 
     async def unsubscribe(self, sub_id: str) -> bool:
         if sub_id not in self._subscriptions:
             raise ValueError(f"Unknown sub_id '{sub_id}'")
 
-        if not self.connection:
+        if not self._connection:
             # Nothing to unsubscribe.
             return True
 
         request = self._create_request("eth_unsubscribe", [sub_id])
-        await self.connection.send(json.dumps(request))
+        try:
+            await self._connection.send(json.dumps(request))
+        except ConnectionClosedError:
+            return False
 
         response = await self._get_response(request.get("id") or self._last_request)
         if success := response.get("result", False):
@@ -142,16 +144,16 @@ class Web3SubscriptionsManager:
         return success
 
     async def __aexit__(self, exc_type, exc, tb):
-        try:
-            # Try to gracefully unsubscribe to all events
-            await asyncio.gather(*(self.unsubscribe(sub_id) for sub_id in self._subscriptions))
+        if not all(
+            is_successful is True
+            for is_successful in await quattro.gather(
+                # Try to gracefully unsubscribe to all events
+                *(self.unsubscribe(sub_id) for sub_id in self._subscriptions),
+                # NOTE: Do not catch error
+                return_exceptions=True,
+            )
+        ):
+            logger.debug("Failed to unsubscribe from all tasks")
 
-        except ConnectionClosedError:
-            pass  # Websocket already closed (ctrl+C and patiently waiting)
-
-        finally:
-            # Disconnect and release websocket
-            try:
-                await self.connection.close()
-            except RuntimeError:
-                pass  # No running event loop to disconnect from (multiple ctrl+C presses)
+        # Disconnect and release websocket
+        await self._connection.close()
