@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Iterator, get_args
+from typing import Any, Iterator
 
 from ape.logging import get_logger
 from pydantic import BaseModel, Field
@@ -11,9 +11,9 @@ from .types import (
     INT96_RANGE,
     Datapoint,
     ScalarDatapoint,
-    ScalarType,
     SilverbackID,
     UTCTimestamp,
+    is_scalar_type,
     iso_format,
     utc_now,
 )
@@ -40,10 +40,10 @@ class TaskResult(BaseModel):
 
     @classmethod
     def _extract_custom_metrics(cls, result: Any, task_name: str) -> dict[str, Datapoint]:
-        if isinstance(result, Datapoint):  # type: ignore[arg-type,misc]
+        if isinstance(result, Datapoint):
             return {"result": result}
 
-        elif isinstance(result, get_args(ScalarType)):
+        elif is_scalar_type(result):
             if isinstance(result, int) and not (INT96_RANGE[0] <= result <= INT96_RANGE[1]):
                 logger.warn("Result integer is out of range suitable for parquet. Ignoring.")
             else:
@@ -56,14 +56,14 @@ class TaskResult(BaseModel):
             logger.warning(f"Cannot handle return type of '{task_name}': '{type(result)}'.")
             return {}
 
-        converted_result = {}
+        converted_results = {}
 
         for metric_name, metric_value in result.items():
             if isinstance(metric_value, Datapoint):  # type: ignore[arg-type,misc]
-                converted_result[metric_name] = metric_value
+                converted_results[metric_name] = metric_value
 
-            elif isinstance(metric_value, ScalarType):  # type: ignore[arg-type,misc]
-                converted_result[metric_name] = ScalarDatapoint(data=metric_value)
+            elif is_scalar_type(metric_value):
+                converted_results[metric_name] = ScalarDatapoint(data=metric_value)
 
             else:
                 logger.warning(
@@ -71,7 +71,7 @@ class TaskResult(BaseModel):
                     f" '{type(metric_value)}'."
                 )
 
-        return converted_result
+        return converted_results
 
     @classmethod
     def _extract_system_metrics(cls, labels: dict) -> dict:
