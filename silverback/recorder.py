@@ -7,16 +7,7 @@ from pydantic import BaseModel, Field
 from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
-from .types import (
-    INT96_RANGE,
-    Datapoint,
-    ScalarDatapoint,
-    SilverbackID,
-    UTCTimestamp,
-    is_scalar_type,
-    iso_format,
-    utc_now,
-)
+from .types import Datapoints, SilverbackID, UTCTimestamp, iso_format, utc_now
 
 logger = get_logger(__name__)
 
@@ -36,44 +27,17 @@ class TaskResult(BaseModel):
     block_number: int | None = None
 
     # Custom user metrics here
-    metrics: dict[str, Datapoint] = {}
+    metrics: Datapoints
 
     @classmethod
-    def _extract_custom_metrics(cls, return_value: Any, task_name: str) -> dict[str, Datapoint]:
-        if isinstance(return_value, Datapoint):
-            return {"return_value": return_value}
-
-        elif is_scalar_type(return_value):
-            if isinstance(return_value, int) and not (
-                INT96_RANGE[0] <= return_value <= INT96_RANGE[1]
-            ):
-                logger.warn("Result integer is out of range suitable for parquet. Ignoring.")
-            else:
-                return {"return_value": ScalarDatapoint(data=return_value)}
-
-        elif return_value is None:
-            return {}
+    def _extract_custom_metrics(cls, return_value: Any, task_name: str) -> Datapoints:
+        if return_value is None:
+            return Datapoints(root={})
 
         elif not isinstance(return_value, dict):
-            logger.warning(f"Cannot handle return type of '{task_name}': '{type(return_value)}'.")
-            return {}
+            return_value = {"return_value": return_value}
 
-        converted_return_values = {}
-
-        for metric_name, metric_value in return_value.items():
-            if isinstance(metric_value, Datapoint):  # type: ignore[arg-type,misc]
-                converted_return_values[metric_name] = metric_value
-
-            elif is_scalar_type(metric_value):
-                converted_return_values[metric_name] = ScalarDatapoint(data=metric_value)
-
-            else:
-                logger.warning(
-                    f"Cannot handle type of metric '{task_name}.{metric_name}':"
-                    f" '{type(metric_value)}'."
-                )
-
-        return converted_return_values
+        return Datapoints(root=return_value)
 
     @classmethod
     def _extract_system_metrics(cls, labels: dict) -> dict:

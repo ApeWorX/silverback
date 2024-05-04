@@ -3,9 +3,12 @@ from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from ape.logging import get_logger
+from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
 from pydantic.functional_serializers import PlainSerializer
 from typing_extensions import Annotated, get_args
+
+logger = get_logger(__name__)
 
 
 class TaskType(str, Enum):
@@ -44,15 +47,11 @@ class _BaseDatapoint(BaseModel):
 
 
 # NOTE: Maximum supported parquet integer type: https://parquet.apache.org/docs/file-format/types
-INT96_RANGE = (-(2**95), 2**95 - 1)
-Int96 = Annotated[int, Field(ge=INT96_RANGE[0], le=INT96_RANGE[1])]
+Int96 = Annotated[int, Field(ge=-(2**95), le=2**95 - 1)]
 # NOTE: only these types of data are implicitly converted e.g. `{"something": 1, "else": 0.001}`
 ScalarType = bool | Int96 | float | Decimal
-SCALAR_TYPES = tuple(t.__origin__ if hasattr(t, "__origin__") else t for t in get_args(ScalarType))
-
-
-def is_scalar_type(val: Any) -> bool:
-    return isinstance(val, SCALAR_TYPES)
+# NOTE: Interesting side effect is that `int` outside the INT96 range parse as `Decimal`
+#       This is okay, preferable actually, because it means we can store ints outside that range
 
 
 class ScalarDatapoint(_BaseDatapoint):
@@ -60,7 +59,32 @@ class ScalarDatapoint(_BaseDatapoint):
     data: ScalarType
 
 
-# NOTE: Other datapoint types must be explicitly used
+# NOTE: Other datapoint types must be explicitly defined as subclasses of `_BaseDatapoint`
+#       Users will have to import and use these directly
 
-# TODO: Other datapoint types added to union here...
+# NOTE: Other datapoint types must be added to this union
 Datapoint = ScalarDatapoint
+
+
+class Datapoints(RootModel):
+    root: dict[str, Datapoint]
+
+    @model_validator(mode="before")
+    def parse_datapoints(cls, datapoints: dict) -> dict:
+        names_to_remove: dict[str, ValidationError] = {}
+        # Automatically convert raw scalar types
+        for name in datapoints:
+            if not isinstance(datapoints[name], Datapoint):
+                try:
+                    datapoints[name] = ScalarDatapoint(data=datapoints[name])
+                except ValidationError as e:
+                    names_to_remove[name] = e
+
+        # Prune and raise a warning about unconverted datapoints
+        for name in names_to_remove:
+            data = datapoints.pop(name)
+            logger.warning(
+                f"Cannot convert datapoint '{name}' of type '{type(data)}': {names_to_remove[name]}"
+            )
+
+        return datapoints
