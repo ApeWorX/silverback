@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Any, Literal
+from typing import Literal
 
 from ape.logging import get_logger
 from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
 from pydantic.functional_serializers import PlainSerializer
-from typing_extensions import Annotated, get_args
+from typing_extensions import Annotated
 
 logger = get_logger(__name__)
 
