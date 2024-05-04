@@ -44,14 +44,17 @@ class _BaseDatapoint(BaseModel):
 
 
 # NOTE: Maximum supported parquet integer type: https://parquet.apache.org/docs/file-format/types
-Int96 = Annotated[int, Field(ge=-(2**95), le=2**95 - 1)]
+INT96_RANGE = (-(2**95), 2**95 - 1)
+Int96 = Annotated[int, Field(ge=INT96_RANGE[0], le=INT96_RANGE[1])]
 # NOTE: only these types of data are implicitly converted e.g. `{"something": 1, "else": 0.001}`
-ScalarType = bool | Int96 | float | Decimal
+PydanticScalarType = bool | Int96 | float | Decimal
+# NOTE: Use this for isinstance() comparisons and the like
+ScalarType = bool | int | float | Decimal
 
 
 class ScalarDatapoint(_BaseDatapoint):
     type: Literal["scalar"] = "scalar"
-    data: ScalarType
+    data: PydanticScalarType
 
 
 # NOTE: Other datapoint types must be explicitly used

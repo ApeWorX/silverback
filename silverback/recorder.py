@@ -8,6 +8,7 @@ from taskiq import TaskiqResult
 from typing_extensions import Self  # Introduced 3.11
 
 from .types import (
+    INT96_RANGE,
     Datapoint,
     ScalarDatapoint,
     ScalarType,
@@ -42,8 +43,11 @@ class TaskResult(BaseModel):
         if isinstance(result, Datapoint):  # type: ignore[arg-type,misc]
             return {"result": result}
 
-        elif isinstance(result, ScalarType):  # type: ignore[arg-type,misc]
-            return {"result": ScalarDatapoint(data=result)}
+        elif isinstance(result, ScalarType):
+            if isinstance(result, int) and not (INT96_RANGE[0] <= result <= INT96_RANGE[1]):
+                logger.warn("Result integer is out of range suitable for parquet. Ignoring.")
+            else:
+                return {"result": ScalarDatapoint(data=result)}
 
         elif result is None:
             return {}
