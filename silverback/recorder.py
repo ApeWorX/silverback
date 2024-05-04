@@ -39,31 +39,33 @@ class TaskResult(BaseModel):
     metrics: dict[str, Datapoint] = {}
 
     @classmethod
-    def _extract_custom_metrics(cls, result: Any, task_name: str) -> dict[str, Datapoint]:
-        if isinstance(result, Datapoint):
-            return {"result": result}
+    def _extract_custom_metrics(cls, return_value: Any, task_name: str) -> dict[str, Datapoint]:
+        if isinstance(return_value, Datapoint):
+            return {"return_value": return_value}
 
-        elif is_scalar_type(result):
-            if isinstance(result, int) and not (INT96_RANGE[0] <= result <= INT96_RANGE[1]):
+        elif is_scalar_type(return_value):
+            if isinstance(return_value, int) and not (
+                INT96_RANGE[0] <= return_value <= INT96_RANGE[1]
+            ):
                 logger.warn("Result integer is out of range suitable for parquet. Ignoring.")
             else:
-                return {"result": ScalarDatapoint(data=result)}
+                return {"return_value": ScalarDatapoint(data=return_value)}
 
-        elif result is None:
+        elif return_value is None:
             return {}
 
-        elif not isinstance(result, dict):
-            logger.warning(f"Cannot handle return type of '{task_name}': '{type(result)}'.")
+        elif not isinstance(return_value, dict):
+            logger.warning(f"Cannot handle return type of '{task_name}': '{type(return_value)}'.")
             return {}
 
-        converted_results = {}
+        converted_return_values = {}
 
-        for metric_name, metric_value in result.items():
+        for metric_name, metric_value in return_value.items():
             if isinstance(metric_value, Datapoint):  # type: ignore[arg-type,misc]
-                converted_results[metric_name] = metric_value
+                converted_return_values[metric_name] = metric_value
 
             elif is_scalar_type(metric_value):
-                converted_results[metric_name] = ScalarDatapoint(data=metric_value)
+                converted_return_values[metric_name] = ScalarDatapoint(data=metric_value)
 
             else:
                 logger.warning(
@@ -71,7 +73,7 @@ class TaskResult(BaseModel):
                     f" '{type(metric_value)}'."
                 )
 
-        return converted_results
+        return converted_return_values
 
     @classmethod
     def _extract_system_metrics(cls, labels: dict) -> dict:
