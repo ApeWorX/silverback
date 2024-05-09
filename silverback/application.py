@@ -9,11 +9,23 @@ from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
 from ape.utils import ManagerAccessMixin
+from packaging.version import Version
+from pydantic import BaseModel
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
 from .types import SilverbackID, TaskType
+
+
+@dataclass
+class SystemConfig:
+    # NOTE: Do not change this datatype unless major breaking
+
+    # NOTE: Useful for determining if Runner can handle this app
+    sdk_version: str
+    # NOTE: Useful for specifying what task types can be specified by app
+    task_types: list[str]
 
 
 @dataclass
@@ -86,6 +98,32 @@ class SilverbackApp(ManagerAccessMixin):
         logger.success(
             f'Loaded Silverback App:\n  NETWORK="{network_choice}"'
             f"{signer_str}{start_block_str}{new_block_timeout_str}"
+        )
+
+        # NOTE: Runner must call this to configure itself for all SDK hooks
+        self._get_system_config = self.__register_system_task(
+            TaskType.SYSTEM_CONFIG, self.__get_system_config_handler
+        )
+
+    def __register_system_task(
+        self, task_type: TaskType, task_handler: Callable
+    ) -> AsyncTaskiqDecoratedTask:
+        assert str(task_type).startswith("system:"), "Can only add system tasks"
+        # NOTE: This has to be registered with the broker in the worker
+        return self.broker.register_task(
+            task_handler,
+            # NOTE: Name makes it impossible to conflict with user's handler fn names
+            task_name=str(task_type),
+            task_type=str(task_type),
+        )
+
+    def __get_system_config_handler(self) -> SystemConfig:
+        # NOTE: This is actually executed on the worker side
+        from silverback.version import __version__
+
+        return SystemConfig(
+            sdk_version=Version(__version__).base_version,
+            task_types=[str(t) for t in TaskType],
         )
 
     def broker_task_decorator(

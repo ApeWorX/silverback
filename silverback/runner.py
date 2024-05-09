@@ -6,15 +6,17 @@ from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 from taskiq import AsyncTaskiqDecoratedTask, AsyncTaskiqTask
 
-from .application import SilverbackApp
+from .application import SilverbackApp, SystemConfig
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
 from .recorder import BaseRecorder, TaskResult
 from .state import AppDatastore, AppState
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import TaskType
-from .utils import async_wrap_iter, hexbytes_dict
+from .utils import async_wrap_iter, hexbytes_dict, run_taskiq_task_wait_result
 
 
 class BaseRunner(ABC):
@@ -106,6 +108,27 @@ class BaseRunner(ABC):
             :class:`~silverback.exceptions.NoTasksAvailableError`:
                 If there are no configured tasks to execute.
         """
+        # Obtain system configuration for worker
+        result = await run_taskiq_task_wait_result(self.app._get_system_config)
+        if result.is_err or not isinstance(result.return_value, SystemConfig):
+            raise StartupFailure("Unable to determine system configuration of worker")
+
+        # NOTE: Increase the specifier set here if there is a breaking change to this
+        if Version(result.return_value.sdk_version) not in SpecifierSet(">=0.4.1"):
+            # TODO: set to next breaking change release before release
+            raise StartupFailure("Worker SDK version too old, please rebuild")
+
+        if not (
+            system_tasks := set(TaskType(task_name) for task_name in result.return_value.task_types)
+        ):
+            raise StartupFailure("No system tasks detected, startup failure")
+        # NOTE: Guaranteed to be at least one because of `TaskType.SYSTEM_CONFIG`
+        system_tasks_str = "\n- ".join(system_tasks)
+        logger.info(
+            f"Worker using Silverback SDK v{result.return_value.sdk_version}"
+            f", available task types:\n- {system_tasks_str}"
+        )
+
         # Initialize recorder (if available) and fetch state if app has been run previously
         if self.recorder:
             await self.recorder.init(app_id=self.app.identifier)

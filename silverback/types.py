@@ -12,6 +12,10 @@ logger = get_logger(__name__)
 
 
 class TaskType(str, Enum):
+    # System-only Tasks
+    SYSTEM_CONFIG = "system:config"
+
+    # User-accessible Tasks
     STARTUP = "startup"
     NEW_BLOCKS = "block"
     EVENT_LOG = "event"
