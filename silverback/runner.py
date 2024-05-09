@@ -108,6 +108,9 @@ class BaseRunner(ABC):
             :class:`~silverback.exceptions.NoTasksAvailableError`:
                 If there are no configured tasks to execute.
         """
+        # Initialize broker (run worker startup events)
+        await self.app.broker.startup()
+
         # Obtain system configuration for worker
         result = await run_taskiq_task_wait_result(self.app._get_system_config)
         if result.is_err or not isinstance(result.return_value, SystemConfig):
@@ -129,6 +132,10 @@ class BaseRunner(ABC):
             f", available task types:\n- {system_tasks_str}"
         )
 
+        # NOTE: Do this for other system tasks because they may not be in older SDK versions
+        #       `if TaskType.<SYSTEM_TASK_NAME> not in system_tasks: raise StartupFailure(...)`
+        #       or handle accordingly by having default logic if it is not available
+
         # Initialize recorder (if available) and fetch state if app has been run previously
         if self.recorder:
             await self.recorder.init(app_id=self.app.identifier)
@@ -138,9 +145,6 @@ class BaseRunner(ABC):
 
         else:  # use empty state
             self.state = AppState(last_block_seen=-1, last_block_processed=-1)
-
-        # Initialize broker (run worker startup events)
-        await self.app.broker.startup()
 
         # Execute Silverback startup task before we init the rest
         if startup_tasks := await asyncio.gather(
