@@ -1,8 +1,23 @@
 import asyncio
 import threading
-from typing import AsyncIterator, Iterator
+from typing import AsyncIterator, Iterable, Iterator
 
 from ape.types import HexBytes
+from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
+
+
+async def run_taskiq_task_wait_result(
+    task_def: AsyncTaskiqDecoratedTask, *args, **kwargs
+) -> TaskiqResult:
+    task = await task_def.kiq(*args, **kwargs)
+    return await task.wait_result()
+
+
+async def run_taskiq_task_group_wait_results(
+    task_defs: Iterable[AsyncTaskiqDecoratedTask], *args, **kwargs
+) -> list[TaskiqResult]:
+    tasks = await asyncio.gather(*(task_def.kiq(*args, **kwargs) for task_def in task_defs))
+    return await asyncio.gather(*(task.wait_result() for task in tasks))
 
 
 def async_wrap_iter(it: Iterator) -> AsyncIterator:
