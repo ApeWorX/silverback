@@ -160,12 +160,12 @@ class SilverbackApp(ManagerAccessMixin):
                 type it should handle.
         """
         if (
-            (task_type is TaskType.NEW_BLOCKS and not isinstance(container, BlockContainer))
+            (task_type is TaskType.NEW_BLOCK and not isinstance(container, BlockContainer))
             or (task_type is TaskType.EVENT_LOG and not isinstance(container, ContractEvent))
             or (
                 task_type
                 not in (
-                    TaskType.NEW_BLOCKS,
+                    TaskType.NEW_BLOCK,
                     TaskType.EVENT_LOG,
                 )
                 and container is not None
@@ -287,7 +287,7 @@ class SilverbackApp(ManagerAccessMixin):
                 else:
                     self.poll_settings["_blocks_"] = {"start_block": start_block}
 
-            return self.broker_task_decorator(TaskType.NEW_BLOCKS, container=container)
+            return self.broker_task_decorator(TaskType.NEW_BLOCK, container=container)
 
         elif isinstance(container, ContractEvent) and isinstance(
             container.contract, ContractInstance

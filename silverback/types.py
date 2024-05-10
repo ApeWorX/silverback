@@ -17,10 +17,10 @@ class TaskType(str, Enum):
     SYSTEM_USER_TASKDATA = "system:user-taskdata"
 
     # User-accessible Tasks
-    STARTUP = "startup"
-    NEW_BLOCKS = "block"
-    EVENT_LOG = "event"
-    SHUTDOWN = "shutdown"
+    STARTUP = "user:startup"
+    NEW_BLOCK = "user:new-block"
+    EVENT_LOG = "user:event-log"
+    SHUTDOWN = "user:shutdown"
 
     def __str__(self) -> str:
         return self.value

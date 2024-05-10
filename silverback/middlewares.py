@@ -70,7 +70,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             return message  # Not a silverback task
 
         # Add extra labels for our task to see what their source was
-        if task_type is TaskType.NEW_BLOCKS:
+        if task_type is TaskType.NEW_BLOCK:
             # NOTE: Necessary because we don't know the exact block class
             block = message.args[0] = self.provider.network.ecosystem.decode_block(
                 hexbytes_dict(message.args[0])

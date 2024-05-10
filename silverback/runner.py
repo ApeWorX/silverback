@@ -192,7 +192,7 @@ class BaseRunner(ABC):
 
         # Create our long-running event listeners
         new_block_taskdata_results = await run_taskiq_task_wait_result(
-            self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.NEW_BLOCKS
+            self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.NEW_BLOCK
         )
         if new_block_taskdata_results.is_err:
             raise StartupFailure(new_block_taskdata_results.error)
