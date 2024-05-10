@@ -348,18 +348,15 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
 
         if block_settings := self.app.poll_settings.get("_blocks_"):
             new_block_timeout = block_settings.get("new_block_timeout")
-            start_block = block_settings.get("start_block")
         else:
             new_block_timeout = None
-            start_block = None
 
         new_block_timeout = (
             new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
         )
-        start_block = start_block if start_block is not None else self.app.start_block
         async for block in async_wrap_iter(
             chain.blocks.poll_blocks(
-                start_block=start_block,
+                # NOTE: No start block because we should begin polling from head
                 new_block_timeout=new_block_timeout,
             )
         ):
@@ -377,18 +374,15 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         event_log_task_kicker = self._create_task_kicker(task_data)
         if address_settings := self.app.poll_settings.get(contract_address):
             new_block_timeout = address_settings.get("new_block_timeout")
-            start_block = address_settings.get("start_block")
         else:
             new_block_timeout = None
-            start_block = self.app.start_block
 
         new_block_timeout = (
             new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
         )
-        start_block = start_block if start_block is not None else self.app.start_block
         async for event in async_wrap_iter(
             self.provider.poll_logs(
-                start_block=start_block,
+                # NOTE: No start block because we should begin polling from head
                 address=contract_address,
                 new_block_timeout=new_block_timeout,
                 events=[event_abi],

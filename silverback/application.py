@@ -91,10 +91,8 @@ class SilverbackApp(ManagerAccessMixin):
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
-        self.start_block = settings.START_BLOCK
 
         signer_str = f"\n  SIGNER={repr(self.signer)}"
-        start_block_str = f"\n  START_BLOCK={self.start_block}" if self.start_block else ""
         new_block_timeout_str = (
             f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
         )
@@ -102,7 +100,7 @@ class SilverbackApp(ManagerAccessMixin):
         network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
         logger.success(
             f'Loaded Silverback App:\n  NETWORK="{network_choice}"'
-            f"{signer_str}{start_block_str}{new_block_timeout_str}"
+            f"{signer_str}{new_block_timeout_str}"
         )
 
         # NOTE: Runner must call this to configure itself for all SDK hooks
