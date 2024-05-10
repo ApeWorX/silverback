@@ -5,6 +5,7 @@ from ape import chain
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
+from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from taskiq import AsyncTaskiqTask
@@ -301,8 +302,10 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
-        if not (event_abi := task_data.event_abi):
-            raise StartupFailure("No Event ABI provided.")
+        if not (event_signature := task_data.labels.get("event_signature")):
+            raise StartupFailure("No Event Signature provided.")
+
+        event_abi = EventABI.from_signature(event_signature)
 
         event_log_task_kicker = self._create_task_kicker(task_data)
 
@@ -368,8 +371,10 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
-        if not (event_abi := task_data.event_abi):
-            raise StartupFailure("No Event ABI provided.")
+        if not (event_signature := task_data.labels.get("event_signature")):
+            raise StartupFailure("No Event Signature provided.")
+
+        event_abi = EventABI.from_signature(event_signature)
 
         event_log_task_kicker = self._create_task_kicker(task_data)
         if address_settings := self.app.poll_settings.get(contract_address):

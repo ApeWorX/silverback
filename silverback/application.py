@@ -32,7 +32,6 @@ class TaskData(BaseModel):
     labels: dict[str, Any]
 
     # NOTE: Any other items here must have a default value
-    event_abi: EventABI | None = None
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -188,15 +187,9 @@ class SilverbackApp(ManagerAccessMixin):
                     )
 
                 labels["contract_address"] = contract_address
-                labels["event_name"] = container.abi.name
-                event_abi = container.abi
+                labels["event_signature"] = container.abi.signature
 
-            else:
-                event_abi = None
-
-            self.tasks[task_type].append(
-                TaskData(name=handler.__name__, labels=labels, event_abi=event_abi)
-            )
+            self.tasks[task_type].append(TaskData(name=handler.__name__, labels=labels))
 
             return self.broker.register_task(
                 handler,
