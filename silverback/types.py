@@ -14,6 +14,7 @@ logger = get_logger(__name__)
 class TaskType(str, Enum):
     # System-only Tasks
     SYSTEM_CONFIG = "system:config"
+    SYSTEM_USER_TASKDATA = "system:user-taskdata"
 
     # User-accessible Tasks
     STARTUP = "startup"

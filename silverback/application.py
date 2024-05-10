@@ -1,14 +1,13 @@
 import atexit
-from collections import defaultdict
-from dataclasses import dataclass
 from datetime import timedelta
-from typing import Callable
+from typing import Any, Callable
 
 from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
 from ape.utils import ManagerAccessMixin
+from ethpm_types import EventABI
 from packaging.version import Version
 from pydantic import BaseModel
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
@@ -18,8 +17,7 @@ from .settings import Settings
 from .types import SilverbackID, TaskType
 
 
-@dataclass
-class SystemConfig:
+class SystemConfig(BaseModel):
     # NOTE: Do not change this datatype unless major breaking
 
     # NOTE: Useful for determining if Runner can handle this app
@@ -28,10 +26,13 @@ class SystemConfig:
     task_types: list[str]
 
 
-@dataclass
-class TaskData:
-    container: BlockContainer | ContractEvent | None
-    handler: AsyncTaskiqDecoratedTask
+class TaskData(BaseModel):
+    # NOTE: Data we need to know how to call a task via kicker
+    name: str  # Name of user function
+    labels: dict[str, Any]
+
+    # NOTE: Any other items here must have a default value
+    event_abi: EventABI | None = None
 
 
 class SilverbackApp(ManagerAccessMixin):
@@ -78,8 +79,12 @@ class SilverbackApp(ManagerAccessMixin):
         logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()
-        # NOTE: If no tasks registered yet, defaults to empty list instead of raising KeyError
-        self.tasks: defaultdict[TaskType, list[TaskData]] = defaultdict(list)
+        self.tasks: dict[TaskType, list[TaskData]] = {
+            task_type: []
+            for task_type in TaskType
+            # NOTE: Dont track system tasks
+            if not str(task_type).startswith("system:")
+        }
         self.poll_settings: dict[str, dict] = {}
 
         atexit.register(provider_context.__exit__, None, None, None)
@@ -104,6 +109,10 @@ class SilverbackApp(ManagerAccessMixin):
         self._get_system_config = self.__register_system_task(
             TaskType.SYSTEM_CONFIG, self.__get_system_config_handler
         )
+        # NOTE: Register other system tasks here
+        self._get_user_taskdata = self.__register_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, self.__get_user_taskdata_handler
+        )
 
     def __register_system_task(
         self, task_type: TaskType, task_handler: Callable
@@ -125,6 +134,11 @@ class SilverbackApp(ManagerAccessMixin):
             sdk_version=Version(__version__).base_version,
             task_types=[str(t) for t in TaskType],
         )
+
+    def __get_user_taskdata_handler(self, task_type: TaskType) -> list[TaskData]:
+        # NOTE: This is actually executed on the worker side
+        assert str(task_type).startswith("user:"), "Can only fetch user task data"
+        return self.tasks.get(task_type, [])
 
     def broker_task_decorator(
         self,
@@ -170,18 +184,27 @@ class SilverbackApp(ManagerAccessMixin):
             #       we only want to determine if it is not None
             if container is not None and isinstance(container, ContractEvent):
                 # Address is almost a certainty if the container is being used as a filter here.
-                if contract_address := getattr(container.contract, "address", None):
-                    labels["contract_address"] = contract_address
-                labels["event_signature"] = f"{container.abi.signature}"
+                if not (contract_address := getattr(container.contract, "address", None)):
+                    raise InvalidContainerTypeError(
+                        "Please provider a contract event from a valid contract instance."
+                    )
 
-            broker_task = self.broker.register_task(
+                labels["contract_address"] = contract_address
+                labels["event_name"] = container.abi.name
+                event_abi = container.abi
+
+            else:
+                event_abi = None
+
+            self.tasks[task_type].append(
+                TaskData(name=handler.__name__, labels=labels, event_abi=event_abi)
+            )
+
+            return self.broker.register_task(
                 handler,
                 task_name=handler.__name__,
                 **labels,
             )
-
-            self.tasks[task_type].append(TaskData(container=container, handler=broker_task))
-            return broker_task
 
         return add_taskiq_task
 
