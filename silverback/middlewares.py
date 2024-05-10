@@ -96,8 +96,12 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         else:
             percent_display = ""
 
-        (logger.error if result.error else logger.success)(
-            f"{self._create_label(message)} " f"- {result.execution_time:.3f}s{percent_display}"
-        )
+        msg = f"{self._create_label(message)} " f"- {result.execution_time:.3f}s{percent_display}"
+        if result.is_err:
+            logger.error(msg)
+        elif message.task_name.startswith("system:"):
+            logger.debug(msg)
+        else:
+            logger.success(msg)
 
     # NOTE: Unless stdout is ignored, error traceback appears in stdout, no need for `on_error`
