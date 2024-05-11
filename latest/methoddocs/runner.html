@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.4.2">v0.4.2</option>
                 <option value="v0.4.1">v0.4.1</option>
                 <option value="v0.4.0">v0.4.0</option>
                 <option value="v0.3.3">v0.3.3</option>
@@ -153,7 +154,7 @@ and process them by kicking events over to the configured broker.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="silverback.runner.PollingRunner">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">PollingRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="application.html#silverback.application.SilverbackApp" title="silverback.application.SilverbackApp"><span class="pre">SilverbackApp</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.PollingRunner" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#silverback.runner.BaseRunner" title="silverback.runner.BaseRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRunner</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#silverback.runner.BaseRunner" title="silverback.runner.BaseRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRunner</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
 <p>Run a single app against a live network using a basic in-memory queue.</p>
 </dd></dl>
 
