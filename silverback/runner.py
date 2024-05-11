@@ -133,7 +133,7 @@ class BaseRunner(ABC):
             raise StartupFailure("Unable to determine system configuration of worker")
 
         # NOTE: Increase the specifier set here if there is a breaking change to this
-        if Version(result.return_value.sdk_version) not in SpecifierSet(">=0.4.1"):
+        if Version(result.return_value.sdk_version) not in SpecifierSet(">=0.5.0"):
             # TODO: set to next breaking change release before release
             raise StartupFailure("Worker SDK version too old, please rebuild")
 
