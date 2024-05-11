@@ -12,10 +12,15 @@ logger = get_logger(__name__)
 
 
 class TaskType(str, Enum):
-    STARTUP = "startup"
-    NEW_BLOCKS = "block"
-    EVENT_LOG = "event"
-    SHUTDOWN = "shutdown"
+    # System-only Tasks
+    SYSTEM_CONFIG = "system:config"
+    SYSTEM_USER_TASKDATA = "system:user-taskdata"
+
+    # User-accessible Tasks
+    STARTUP = "user:startup"
+    NEW_BLOCK = "user:new-block"
+    EVENT_LOG = "user:event-log"
+    SHUTDOWN = "user:shutdown"
 
     def __str__(self) -> str:
         return self.value
