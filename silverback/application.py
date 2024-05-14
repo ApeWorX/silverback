@@ -109,6 +109,9 @@ class SilverbackApp(ManagerAccessMixin):
         self._get_user_taskdata = self.__register_system_task(
             TaskType.SYSTEM_USER_TASKDATA, self.__get_user_taskdata_handler
         )
+        self._get_user_all_taskdata = self.__register_system_task(
+            TaskType.SYSTEM_USER_ALL_TASKDATA, self.__get_user_all_taskdata_handler
+        )
 
     def __register_system_task(
         self, task_type: TaskType, task_handler: Callable
@@ -135,6 +138,9 @@ class SilverbackApp(ManagerAccessMixin):
         # NOTE: This is actually executed on the worker side
         assert str(task_type).startswith("user:"), "Can only fetch user task data"
         return self.tasks.get(task_type, [])
+
+    def __get_user_all_taskdata_handler(self) -> list[TaskData]:
+        return [v for k, l in self.tasks.items() if str(k).startswith("user:") for v in l]
 
     def broker_task_decorator(
         self,
