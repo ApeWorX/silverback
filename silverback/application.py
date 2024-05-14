@@ -140,7 +140,6 @@ class SilverbackApp(ManagerAccessMixin):
         return self.tasks.get(task_type, [])
 
     def __get_user_all_taskdata_handler(self) -> list[TaskData]:
-        # return {k: v for k, v in self.tasks.items() if str(k).startswith("user:")}
         return [v for k, l in self.tasks.items() if str(k).startswith("user:") for v in l]
 
     def broker_task_decorator(
