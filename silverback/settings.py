@@ -1,3 +1,5 @@
+from typing import Any
+
 from ape.api import AccountAPI, ProviderContextManager
 from ape.utils import ManagerAccessMixin
 from pydantic_settings import BaseSettings, SettingsConfigDict
