@@ -26,7 +26,8 @@ class Settings(BaseSettings, ManagerAccessMixin):
     APP_NAME: str = "bot"
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
-    BROKER_URI: str = ""
+    BROKER_URI: str = ""  # to be deprecated in 0.6
+    BROKER_KWARGS: dict[str, Any] = dict()
 
     ENABLE_METRICS: bool = False
 
@@ -69,8 +70,13 @@ class Settings(BaseSettings, ManagerAccessMixin):
             broker = broker_class()
 
         else:
-            # TODO: Not all brokers share a common arg signature.
-            broker = broker_class(self.BROKER_URI or None)
+            # NOTE: BROKER_URI to be deprecated in 0.6
+            if self.BROKER_URI:
+                broker = broker_class(self.BROKER_URI or None)
+            elif self.BROKER_KWARGS:
+                broker = broker_class(**self.BROKER_KWARGS)
+            else:
+                broker = broker_class()
 
         if middlewares := self.get_middlewares():
             broker = broker.with_middlewares(*middlewares)
