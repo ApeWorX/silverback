@@ -72,13 +72,13 @@ class Settings(BaseSettings, ManagerAccessMixin):
             broker = broker_class()
 
         else:
-            # NOTE: BROKER_URI to be deprecated in 0.6
+            broker_kwargs = self.BROKER_KWARGS
+
             if self.BROKER_URI:
-                broker = broker_class(self.BROKER_URI or None)
-            elif self.BROKER_KWARGS:
-                broker = broker_class(**self.BROKER_KWARGS)
-            else:
-                broker = broker_class()
+                # TODO: Maybe add a deprecation warning here for v0.6
+                broker_kwargs["url"] = self.BROKER_URI
+
+            broker = broker_class(**broker_kwargs)
 
         if middlewares := self.get_middlewares():
             broker = broker.with_middlewares(*middlewares)
