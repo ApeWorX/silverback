@@ -24,6 +24,16 @@ def cli():
     """Work with Silverback applications in local context (using Ape)."""
 
 
+def _runner_callback(ctx, param, val):
+    if not val:
+        return None
+
+    elif runner := import_from_string(val):
+        return runner
+
+    raise ValueError(f"Failed to import runner '{val}'.")
+
+
 def _recorder_callback(ctx, param, val):
     if not val:
         return None
@@ -88,22 +98,29 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
 )
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option(
+    "--runner",
+    "runner_class",
+    help="An import str in format '<module>:<CustomRunner>'",
+    callback=_runner_callback,
+)
+@click.option(
     "--recorder",
     help="An import string in format '<module>:<CustomRecorder>'",
     callback=_recorder_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
-def run(cli_ctx, account, recorder, max_exceptions, path):
-    if cli_ctx.provider.ws_uri:
+def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
+    if not runner_class:
         # NOTE: Automatically select runner class
-        runner_class = WebsocketRunner
-    elif cli_ctx.provider.http_uri:
-        runner_class = PollingRunner
-    else:
-        raise click.BadOptionUsage(
-            option_name="network", message="Network choice cannot support app"
-        )
+        if cli_ctx.provider.ws_uri:
+            runner_class = WebsocketRunner
+        elif cli_ctx.provider.http_uri:
+            runner_class = PollingRunner
+        else:
+            raise click.BadOptionUsage(
+                option_name="network", message="Network choice cannot support running app"
+            )
 
     app = import_from_string(path)
     runner = runner_class(app, recorder=recorder, max_exceptions=max_exceptions)
