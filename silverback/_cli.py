@@ -16,22 +16,12 @@ from taskiq.cli.worker.run import shutdown_broker
 from taskiq.receiver import Receiver
 
 from silverback._importer import import_from_string
-from silverback.runner import PollingRunner
+from silverback.runner import PollingRunner, WebsocketRunner
 
 
 @click.group()
 def cli():
     """Work with Silverback applications in local context (using Ape)."""
-
-
-def _runner_callback(ctx, param, val):
-    if not val:
-        return PollingRunner
-
-    elif runner := import_from_string(val):
-        return runner
-
-    raise ValueError(f"Failed to import runner '{val}'.")
 
 
 def _recorder_callback(ctx, param, val):
@@ -98,20 +88,25 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
 )
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option(
-    "--runner",
-    help="An import str in format '<module>:<CustomRunner>'",
-    callback=_runner_callback,
-)
-@click.option(
     "--recorder",
     help="An import string in format '<module>:<CustomRecorder>'",
     callback=_recorder_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
-def run(cli_ctx, account, runner, recorder, max_exceptions, path):
+def run(cli_ctx, account, recorder, max_exceptions, path):
+    if cli_ctx.provider.ws_uri:
+        # NOTE: Automatically select runner class
+        runner_class = WebsocketRunner
+    elif cli_ctx.provider.http_uri:
+        runner_class = PollingRunner
+    else:
+        raise click.BadOptionUsage(
+            option_name="network", message="Network choice cannot support app"
+        )
+
     app = import_from_string(path)
-    runner = runner(app, recorder=recorder, max_exceptions=max_exceptions)
+    runner = runner_class(app, recorder=recorder, max_exceptions=max_exceptions)
     asyncio.run(runner.run())
 
 
