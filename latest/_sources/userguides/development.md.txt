@@ -158,9 +158,7 @@ For this to work, you must configure a [TaskIQ broker](https://taskiq-python.git
 export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
 export SILVERBACK_BROKER_KWARGS='{"queue_name": "taskiq", "url": "redis://127.0.0.1:6379"}'
 
-silverback run "example:app" \
-    --network :mainnet:alchemy \
-    --runner "silverback.runner:WebsocketRunner"
+silverback run "example:app" --network :mainnet:alchemy
 ```
 
 And then the worker process with 2 worker subprocesses:

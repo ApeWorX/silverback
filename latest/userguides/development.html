@@ -272,9 +272,7 @@ Always test your applications throughly before deploying.
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;queue_name&quot;: &quot;taskiq&quot;, &quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
 
-silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--network<span class="w"> </span>:mainnet:alchemy<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--runner<span class="w"> </span><span class="s2">&quot;silverback.runner:WebsocketRunner&quot;</span>
+silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
 </pre></div>
 </div>
 <p>And then the worker process with 2 worker subprocesses:</p>
