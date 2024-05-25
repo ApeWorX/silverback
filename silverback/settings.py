@@ -1,3 +1,5 @@
+from typing import Any
+
 from ape.api import AccountAPI, ProviderContextManager
 from ape.utils import ManagerAccessMixin
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,7 +28,8 @@ class Settings(BaseSettings, ManagerAccessMixin):
     APP_NAME: str = "bot"
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
-    BROKER_URI: str = ""
+    BROKER_URI: str = ""  # to be deprecated in 0.6
+    BROKER_KWARGS: dict[str, Any] = dict()
 
     ENABLE_METRICS: bool = False
 
@@ -69,8 +72,13 @@ class Settings(BaseSettings, ManagerAccessMixin):
             broker = broker_class()
 
         else:
-            # TODO: Not all brokers share a common arg signature.
-            broker = broker_class(self.BROKER_URI or None)
+            broker_kwargs = self.BROKER_KWARGS
+
+            if self.BROKER_URI:
+                # TODO: Maybe add a deprecation warning here for v0.6
+                broker_kwargs["url"] = self.BROKER_URI
+
+            broker = broker_class(**broker_kwargs)
 
         if middlewares := self.get_middlewares():
             broker = broker.with_middlewares(*middlewares)
