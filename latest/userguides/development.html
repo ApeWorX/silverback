@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.5.1">v0.5.1</option>
                 <option value="v0.5.0">v0.5.0</option>
                 <option value="v0.4.2">v0.4.2</option>
                 <option value="v0.4.1">v0.4.1</option>
@@ -269,7 +270,7 @@ Always test your applications throughly before deploying.
 <p>The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.</p>
 <p>For this to work, you must configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#broker">TaskIQ broker</a> capable of distributed processing.  For instance, with <a class="reference external" href="https://github.com/taskiq-python/taskiq-redis"><code class="docutils literal notranslate"><span class="pre">taskiq_redis</span></code></a> you could do something like this for the client:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;queue_name&quot;: &quot;taskiq&quot;, &quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
 
 silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--network<span class="w"> </span>:mainnet:alchemy<span class="w"> </span><span class="se">\</span>
@@ -278,7 +279,7 @@ silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&q
 </div>
 <p>And then the worker process with 2 worker subprocesses:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
-<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
 
 silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="s2">&quot;example:app&quot;</span>
 </pre></div>
