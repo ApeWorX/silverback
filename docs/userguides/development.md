@@ -156,7 +156,7 @@ For this to work, you must configure a [TaskIQ broker](https://taskiq-python.git
 
 ```bash
 export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
-export SILVERBACK_BROKER_URI="redis://127.0.0.1:6379"
+export SILVERBACK_BROKER_KWARGS='{"queue_name": "taskiq", "url": "redis://127.0.0.1:6379"}'
 
 silverback run "example:app" --network :mainnet:alchemy
 ```
@@ -165,7 +165,7 @@ And then the worker process with 2 worker subprocesses:
 
 ```bash
 export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
-export SILVERBACK_BROKER_URI="redis://127.0.0.1:6379"
+export SILVERBACK_BROKER_KWARGS='{"url": "redis://127.0.0.1:6379"}'
 
 silverback worker -w 2 "example:app"
 ```
