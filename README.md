@@ -13,7 +13,7 @@ Some examples of these types of applications:
 
 ## Documentation
 
-Read the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html) to learn more how to develop an application.
+Please read the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html) for more information on how to develop an application.
 
 ## Dependencies
 
@@ -22,6 +22,10 @@ Read the [development userguide](https://docs.apeworx.io/silverback/stable/userg
 ## Installation
 
 Silverback relies heavily on the Ape development framework, so it's worth it to familarize yourself with how to install Ape and it's plugins using the [Ape installation userguide](https://docs.apeworx.io/ape/latest/userguides/quickstart#installation).
+
+```note
+It is suggested that you use a virtual environment of your choosing, and then install the Silverback package via one of the following options.
+```
 
 ### via `pip`
 
@@ -45,126 +49,89 @@ python3 setup.py install
 
 Checkout [the example](./example.py) to see how to use the library.
 
-To run your bot against a live network, this SDK includes a simple runner you can use via:
+```note
+The example makes use of the [Ape Tokens](https://github.com/ApeWorX/ape-tokens) plugin.
+Be sure to properly configure your environment for the USDC and YFI tokens on Ethereum mainnet.
+```
+
+To run your bot against a live network, this SDK includes a simple runner command you can use via:
 
 ```sh
 $ silverback run "example:app" --network :mainnet:alchemy
 ```
 
-**NOTE**: The example is designed to work with Python 3.10+, and we suggest using 3.11+ for speed.
+```note
+This runner uses an in-memory task broker by default.
+If you want to learn more about what that means, please visit the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html).
+```
 
 ## Docker Usage
 
 ```sh
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet
 ```
 
-**NOTE**: The Docker image we publish uses Python 3.11
-
-## Development
-
-This project is in development and should be considered a beta.
-Things might not be in their final state and breaking changes may occur.
-Comments, questions, criticisms and pull requests are welcomed.
-
-## Full Environment Execution Example
-
-Running the `Quick Usage` and `Docker Usage` examples will fail if you do not have a full environment setup.
-
-First, it is suggested that you use a virtual environment, and then install the Silverback application. Choose any of your liking. This is not a requirement, but will help with setup if you do not have a `~/.tokenslists` folder.
-
-```bash
-python3 -m venv venv
-source ./venv/bin/activate
-pip install .
+```note
+The Docker image we publish uses Python 3.11.
 ```
 
-Next, you will need a Web3 Alchemy key. If you attempt to run the `Docker Usage` command, you will get the following error:
+## Setting Up Your Environment
+
+Running the `Quick Usage` and `Docker Usage` with the provided example will fail if you do not have a fully-configured environment.
+Most common issues when using the SDK stem from the proper configuration of Ape plugins to unlock the behavior you desire.
+
+You should use a provider that supports websockets to run silverback.
+If you want to use a hosted provider with websocket support like Alchemy to run this example, you will need a Alchemy API key for Ethereum mainnet.
+If you attempt to run the `Docker Usage` command without supplying this key, you will get the following error:
 
 ```bash
 $ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
 Traceback (most recent call last):
-  File "/usr/local/bin/silverback", line 8, in <module>
-    sys.exit(cli())
-  File "/usr/local/lib/python3.10/site-packages/click/core.py", line 1157, in __call__
-    return self.main(*args, **kwargs)
-  File "/usr/local/lib/python3.10/site-packages/click/core.py", line 1078, in main
-    rv = self.invoke(ctx)
-  File "/usr/local/lib/python3.10/site-packages/click/core.py", line 1688, in invoke
-    return _process_result(sub_ctx.command.invoke(sub_ctx))
-  File "/usr/local/lib/python3.10/site-packages/ape/cli/commands.py", line 95, in invoke
-    with network_ctx as provider:
-  File "/usr/local/lib/python3.10/site-packages/ape/api/networks.py", line 679, in __enter__
-    return self.push_provider()
-  File "/usr/local/lib/python3.10/site-packages/ape/api/networks.py", line 692, in push_provider
-    self._provider.connect()
-  File "/usr/local/lib/python3.10/site-packages/ape_ethereum/provider.py", line 113, in connect_wrapper
-    connect(self)
-  File "/usr/local/lib/python3.10/site-packages/ape_alchemy/provider.py", line 102, in connect
-    self._web3 = Web3(HTTPProvider(self.uri))
-  File "/usr/local/lib/python3.10/site-packages/ape_alchemy/provider.py", line 72, in uri
-    raise MissingProjectKeyError(options)
+  ...
 ape_alchemy.exceptions.MissingProjectKeyError: Must set one of $WEB3_ALCHEMY_PROJECT_ID, $WEB3_ALCHEMY_API_KEY, $WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID, $WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY.
 ```
 
 Go to [Alchemy](https://alchemy.com), create an account, then create an application in their dashboard, and copy the API Key.
 
-Another requirement for the command from `Docker Usage` to run, is to have a `~/.tokenslists` hidden folder in your home folder. We mount that folder into the docker container, see below:
+Another requirement for the command from `Docker Usage` to run the given example is that it uses [ape-tokens](https://github.com/ApeWorX/ape-tokens) plugin to look up token interfaces by symbol.
+In order for this to work, you should have installed and configured that plugin using a token list that includes both YFI and USDC on Ethereum mainnet.
+Doing this will give you a `~/.tokenlists` hidden folder in your home folder that you must mount into the docker container with the following flag:
 
 ```bash
 ... --volume ~/.tokenlists:/home/harambe/.tokenlists ...
 ```
 
-It is suggested to install the [ape-tokens](https://github.com/ApeWorX/ape-tokens) plugin
+```note
+It is suggested to install the 1inch tokenlist via `ape tokens install tokens.1inch.eth`.
+See the [ape-tokens](https://github.com/ApeWorX/ape-tokens?tab=readme-ov-file#quick-usage) README for more information.
+```
+
+To check that both of the tokens exist in your configured tokenlist, you can execute this command:
 
 ```bash
-ape plugins install ape-tokens
+$ ape tokens token-info YFI
+      Symbol: YFI
+        Name: yearn.finance
+    Chain ID: 1
+     Address: 0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e
+    Decimals: 18
+
+$ ape tokens token-info USDC
+      Symbol: USDC
+        Name: Circle USD
+    Chain ID: 1
+     Address: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+    Decimals: 6
 ```
 
-Then use the CLI to install a token list. From the [ape-tokens](https://github.com/ApeWorX/ape-tokens?tab=readme-ov-file#quick-usage) README, it is suggested that you run the command:
-
-```bash
-ape tokens install tokens.1inch.eth
+```note
+If you want, you can comment out the two functions `exec_event1` and `exec_event2` that handle the contract log events from these contracts if you do not have the configured tokenlist, then your command should work.
 ```
 
-Check that the list of tokens exist, and that the `~/.tokenlists` folder exists:
+## Development
 
-```bash
-$ ape tokens list-tokens
-...
-0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e (YFI)
-...
-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 (USDC)
-...
-```
+This project is under active development in preparation of the release of the [Silverback Platform](https://silverback.apeworx.io).
+Things might not be in their final state and breaking changes may occur.
+Comments, questions, criticisms and pull requests are welcomed.
 
-```bash
-$ ls -la ~/ | grep .tokenlists
-drwxrwxr-x  2 usr grp         4096 Apr 11 09:26 .tokenlists
-```
-
-You can comment out the two comments that manage the `ContractLog` if you do not have an established contract.
-
-```python
-...
-# @app.on_(USDC.Transfer, start_block=18588777, new_block_timeout=25)
-# # NOTE: Typing isn't required
-# def exec_event1(log):
-#     if log.log_index % 7 == 3:
-#         # If you ever want the app to shutdown under some scenario, call this exception
-#         raise CircuitBreaker("Oopsie!")
-#     return {"amount": log.amount}
-#
-#
-# @app.on_(YFI.Approval)
-# # Any handler function can be async too
-# async def exec_event2(log: ContractLog):
-#     return log.amount
-...
-```
-
-Then run the following command:
-
-```bash
-$ docker run -e WEB3_ALCHEMY_API_KEY='your-alchemy-api-key-here' --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
-```
+See [Contributing](https://github.com/ApeWorX/silverback/blob/main/CONTRIBUTING.md) for more information.
