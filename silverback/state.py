@@ -43,7 +43,6 @@ class AppDatastore:
             Path.cwd() / ".silverback-sessions" / app_id.name / app_id.ecosystem / app_id.network
         )
         data_folder.mkdir(parents=True, exist_ok=True)
-
         self.state_backup_file = data_folder / "state.json"
 
         return (
@@ -53,12 +52,4 @@ class AppDatastore:
         )
 
     async def save(self, snapshot: StateSnapshot):
-        if self.state_backup_file.exists():
-            old_snapshot = AppState.parse_file(self.snapshot_backup_file)
-            if old_snapshot.last_block_seen > snapshot.last_block_seen:
-                snapshot.last_block_seen = old_snapshot.last_block_seen
-            if old_snapshot.last_block_processed > snapshot.last_block_processed:
-                snapshot.last_block_processed = old_snapshot.last_block_processed
-
-        snapshot.last_updated = utc_now()
         self.state_backup_file.write_text(snapshot.model_dump_json())

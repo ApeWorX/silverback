@@ -1,3 +1,4 @@
+import asyncio
 from typing import Annotated
 
 from ape import chain
@@ -11,6 +12,9 @@ from silverback import CircuitBreaker, SilverbackApp, StateSnapshot
 # Do this first to initialize your app
 app = SilverbackApp()
 
+# Cannot call `app.state` outside of an app function handler
+# app.state.something  # NOTE: raises AttributeError
+
 # NOTE: Don't do any networking until after initializing app
 USDC = tokens["USDC"]
 YFI = tokens["YFI"]
@@ -18,24 +22,37 @@ YFI = tokens["YFI"]
 
 @app.on_startup()
 def app_startup(startup_state: StateSnapshot):
-    # NOTE: This is called just as the app is put into "run" state,
-    #       and handled by the first available worker
-    # raise Exception  # NOTE: Any exception raised on startup aborts immediately
+    # This is called just as the app is put into "run" state,
+    # and handled by the first available worker
+
+    # Any exception raised on startup aborts immediately:
+    # raise Exception  # NOTE: raises StartupFailure
+
+    # This is a great place to set `app.state` values
+    app.state.logs_processed = 0
+    # NOTE: Can put anything here, any python object works
+
     return {"block_number": startup_state.last_block_seen}
 
 
 # Can handle some resource initialization for each worker, like LLMs or database connections
 class MyDB:
     def execute(self, query: str):
-        pass
+        pass  # Handle query somehow...
 
 
 @app.on_worker_startup()
-def worker_startup(state: TaskiqState):  # NOTE: You need the type hint here
+def worker_startup(worker_state: TaskiqState):  # NOTE: You need the type hint to load worker state
+    # NOTE: Worker state is per-worker, not shared with other workers
     # NOTE: Can put anything here, any python object works
-    state.db = MyDB()
-    state.block_count = 0
-    # raise Exception  # NOTE: Any exception raised on worker startup aborts immediately
+    worker_state.db = MyDB()
+    worker_state.block_count = 0
+
+    # Any exception raised on worker startup aborts immediately:
+    # raise Exception  # NOTE: raises StartupFailure
+
+    # Cannot call `app.state` because it is not set up yet on worker startup functions
+    # app.state.something  # NOTE: raises AttributeError
 
 
 # This is how we trigger off of new blocks
@@ -57,6 +74,9 @@ def exec_event1(log):
         # NOTE: By default, if you have 3 tasks fail in a row, the app will shutdown itself
         raise ValueError("I don't like the number 3.")
 
+    # You can update state whenever you want
+    app.state.logs_processed += 1
+
     return {"amount": log.amount}
 
 
@@ -67,18 +87,26 @@ async def exec_event2(log: ContractLog):
         # If you ever want the app to immediately shutdown under some scenario, raise this exception
         raise CircuitBreaker("Oopsie!")
 
+    # All `app.state` values are updated across all workers at the same time
+    app.state.logs_processed += 1
+    # Do any other long running tasks...
+    await asyncio.sleep(5)
     return log.amount
 
 
 # A final job to execute on Silverback shutdown
 @app.on_shutdown()
 def app_shutdown():
-    # raise Exception  # NOTE: Any exception raised on shutdown is ignored
+    # NOTE: Any exception raised on worker shutdown is ignored:
+    # raise Exception
     return {"some_metric": 123}
 
 
 # Just in case you need to release some resources or something inside each worker
 @app.on_worker_shutdown()
 def worker_shutdown(state: TaskiqState):  # NOTE: You need the type hint here
+    # This is a good time to release resources
     state.db = None
-    # raise Exception  # NOTE: Any exception raised on worker shutdown is ignored
+
+    # NOTE: Any exception raised on worker shutdown is ignored:
+    # raise Exception
