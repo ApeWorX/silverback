@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.5.2">v0.5.2</option>
                 <option value="v0.5.1">v0.5.1</option>
                 <option value="v0.5.0">v0.5.0</option>
                 <option value="v0.4.2">v0.4.2</option>
@@ -85,6 +86,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-usage">Quick Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#docker-usage">Docker Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-your-environment">Setting Up Your Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
 </ul>
 </li>
@@ -141,7 +143,7 @@ The Silverback library leverages the <a class="reference external" href="https:/
 </ul>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h2>
-<p>Read the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development.html">development userguide</a> to learn more how to develop an application.</p>
+<p>Please read the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development.html">development userguide</a> for more information on how to develop an application.</p>
 </section>
 <section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h2>
@@ -152,6 +154,10 @@ The Silverback library leverages the <a class="reference external" href="https:/
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>Silverback relies heavily on the Ape development framework, so it’s worth it to familarize yourself with how to install Ape and it’s plugins using the <a class="reference external" href="https://docs.apeworx.io/ape/latest/userguides/quickstart#installation">Ape installation userguide</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is suggested that you use a virtual environment of your choosing, and then install the Silverback package via one of the following options.</p>
+</div>
 <section id="via-pip">
 <h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Permalink to this heading"></a></h3>
 <p>You can install the latest release via <a class="reference external" href="https://pypi.org/project/pip/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>:</p>
@@ -172,24 +178,83 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install
 <section id="quick-usage">
 <h2>Quick Usage<a class="headerlink" href="#quick-usage" title="Permalink to this heading"></a></h2>
 <p>Checkout <a class="reference external" href="./example.py">the example</a> to see how to use the library.</p>
-<p>To run your bot against a live network, this SDK includes a simple runner you can use via:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The example makes use of the <a class="reference external" href="https://github.com/ApeWorX/ape-tokens">Ape Tokens</a> plugin.
+Be sure to properly configure your environment for the USDC and YFI tokens on Ethereum mainnet.</p>
+</div>
+<p>To run your bot against a live network, this SDK includes a simple runner command you can use via:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
 </pre></div>
 </div>
-<p><strong>NOTE</strong>: The example is designed to work with Python 3.10+, and we suggest using 3.11+ for speed.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This runner uses an in-memory task broker by default.
+If you want to learn more about what that means, please visit the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development.html">development userguide</a>.</p>
+</div>
 </section>
 <section id="docker-usage">
 <h2>Docker Usage<a class="headerlink" href="#docker-usage" title="Permalink to this heading"></a></h2>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet
 </pre></div>
 </div>
-<p><strong>NOTE</strong>: The Docker image we publish uses Python 3.11</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Docker image we publish uses Python 3.11.</p>
+</div>
+</section>
+<section id="setting-up-your-environment">
+<h2>Setting Up Your Environment<a class="headerlink" href="#setting-up-your-environment" title="Permalink to this heading"></a></h2>
+<p>Running the <code class="docutils literal notranslate"><span class="pre">Quick</span> <span class="pre">Usage</span></code> and <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> with the provided example will fail if you do not have a fully-configured environment.
+Most common issues when using the SDK stem from the proper configuration of Ape plugins to unlock the behavior you desire.</p>
+<p>You should use a provider that supports websockets to run silverback.
+If you want to use a hosted provider with websocket support like Alchemy to run this example, you will need a Alchemy API key for Ethereum mainnet.
+If you attempt to run the <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> command without supplying this key, you will get the following error:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+Traceback<span class="w"> </span><span class="o">(</span>most<span class="w"> </span>recent<span class="w"> </span>call<span class="w"> </span>last<span class="o">)</span>:
+<span class="w">  </span>...
+ape_alchemy.exceptions.MissingProjectKeyError:<span class="w"> </span>Must<span class="w"> </span><span class="nb">set</span><span class="w"> </span>one<span class="w"> </span>of<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_API_KEY</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY</span>.
+</pre></div>
+</div>
+<p>Go to <a class="reference external" href="https://alchemy.com">Alchemy</a>, create an account, then create an application in their dashboard, and copy the API Key.</p>
+<p>Another requirement for the command from <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> to run the given example is that it uses <a class="reference external" href="https://github.com/ApeWorX/ape-tokens">ape-tokens</a> plugin to look up token interfaces by symbol.
+In order for this to work, you should have installed and configured that plugin using a token list that includes both YFI and USDC on Ethereum mainnet.
+Doing this will give you a <code class="docutils literal notranslate"><span class="pre">~/.tokenlists</span></code> hidden folder in your home folder that you must mount into the docker container with the following flag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>...<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>...
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is suggested to install the 1inch tokenlist via <code class="docutils literal notranslate"><span class="pre">ape</span> <span class="pre">tokens</span> <span class="pre">install</span> <span class="pre">tokens.1inch.eth</span></code>.
+See the <a class="reference external" href="https://github.com/ApeWorX/ape-tokens?tab=readme-ov-file#quick-usage">ape-tokens</a> README for more information.</p>
+</div>
+<p>To check that both of the tokens exist in your configured tokenlist, you can execute this command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ape<span class="w"> </span>tokens<span class="w"> </span>token-info<span class="w"> </span>YFI
+<span class="w">      </span>Symbol:<span class="w"> </span>YFI
+<span class="w">        </span>Name:<span class="w"> </span>yearn.finance
+<span class="w">    </span>Chain<span class="w"> </span>ID:<span class="w"> </span><span class="m">1</span>
+<span class="w">     </span>Address:<span class="w"> </span>0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e
+<span class="w">    </span>Decimals:<span class="w"> </span><span class="m">18</span>
+
+$<span class="w"> </span>ape<span class="w"> </span>tokens<span class="w"> </span>token-info<span class="w"> </span>USDC
+<span class="w">      </span>Symbol:<span class="w"> </span>USDC
+<span class="w">        </span>Name:<span class="w"> </span>Circle<span class="w"> </span>USD
+<span class="w">    </span>Chain<span class="w"> </span>ID:<span class="w"> </span><span class="m">1</span>
+<span class="w">     </span>Address:<span class="w"> </span>0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+<span class="w">    </span>Decimals:<span class="w"> </span><span class="m">6</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you want, you can comment out the two functions <code class="docutils literal notranslate"><span class="pre">exec_event1</span></code> and <code class="docutils literal notranslate"><span class="pre">exec_event2</span></code> that handle the contract log events from these contracts if you do not have the configured tokenlist, then your command should work.</p>
+</div>
 </section>
 <section id="development">
 <h2>Development<a class="headerlink" href="#development" title="Permalink to this heading"></a></h2>
-<p>This project is in development and should be considered a beta.
+<p>This project is under active development in preparation of the release of the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.
 Things might not be in their final state and breaking changes may occur.
 Comments, questions, criticisms and pull requests are welcomed.</p>
+<p>See <a class="reference external" href="https://github.com/ApeWorX/silverback/blob/main/CONTRIBUTING.md">Contributing</a> for more information.</p>
 </section>
 </section>
 

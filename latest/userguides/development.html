@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.5.2">v0.5.2</option>
                 <option value="v0.5.1">v0.5.1</option>
                 <option value="v0.5.0">v0.5.0</option>
                 <option value="v0.4.2">v0.4.2</option>
@@ -260,17 +261,27 @@ You can use this in your application to enable a “test execution” mode, some
     <span class="c1"># Log what the transaction *would* have done, had a signer been enabled</span>
 </pre></div>
 </div>
-<div class="highlight-note notranslate"><div class="highlight"><pre><span></span>If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
-Always test your applications throughly before deploying.
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
+Always test your applications throughly before deploying.</p>
 </div>
 <section id="distributed-execution">
 <h3>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Permalink to this heading"></a></h3>
-<p>Using only the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code> command in a defualt configuration executes everything in one process and the job queue is completely in-memory with a shared state.  In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.</p>
+<p>Using only the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code> command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.
+In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.</p>
 <p>The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.</p>
-<p>For this to work, you must configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#broker">TaskIQ broker</a> capable of distributed processing.  For instance, with <a class="reference external" href="https://github.com/taskiq-python/taskiq-redis"><code class="docutils literal notranslate"><span class="pre">taskiq_redis</span></code></a> you could do something like this for the client:</p>
+<p>For this to work, you must configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#broker">TaskIQ broker</a> capable of distributed processing.
+Additonally, it is highly suggested you should also configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#result-backend">TaskIQ result backend</a> in order to process and store the results of executing tasks.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Without configuring a result backend, Silverback may not work as expected since your tasks will now suddenly return <code class="docutils literal notranslate"><span class="pre">None</span></code> instead of the actual result.</p>
+</div>
+<p>For instance, with <a class="reference external" href="https://github.com/taskiq-python/taskiq-redis"><code class="docutils literal notranslate"><span class="pre">taskiq_redis</span></code></a> you could do something like this for the client:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;queue_name&quot;: &quot;taskiq&quot;, &quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:RedisAsyncResultBackend&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
 
 silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
 </pre></div>
@@ -278,6 +289,8 @@ silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&q
 <p>And then the worker process with 2 worker subprocesses:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:RedisAsyncResultBackend&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
 
 silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="s2">&quot;example:app&quot;</span>
 </pre></div>
