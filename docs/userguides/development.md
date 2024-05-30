@@ -148,15 +148,25 @@ Always test your applications throughly before deploying.
 
 ### Distributed Execution
 
-Using only the `silverback run ...` command in a defualt configuration executes everything in one process and the job queue is completely in-memory with a shared state.  In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.
+Using only the `silverback run ...` command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.
+In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.
 
 The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.
 
-For this to work, you must configure a [TaskIQ broker](https://taskiq-python.github.io/guide/architecture-overview.html#broker) capable of distributed processing.  For instance, with [`taskiq_redis`](https://github.com/taskiq-python/taskiq-redis) you could do something like this for the client:
+For this to work, you must configure a [TaskIQ broker](https://taskiq-python.github.io/guide/architecture-overview.html#broker) capable of distributed processing.
+Additonally, it is highly suggested you should also configure a [TaskIQ result backend](https://taskiq-python.github.io/guide/architecture-overview.html#result-backend) in order to process and store the results of executing tasks.
+
+```note
+Without configuring a result backend, Silverback may not work as expected since your tasks will now suddenly return `None` instead of the actual result.
+```
+
+For instance, with [`taskiq_redis`](https://github.com/taskiq-python/taskiq-redis) you could do something like this for the client:
 
 ```bash
 export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
 export SILVERBACK_BROKER_KWARGS='{"queue_name": "taskiq", "url": "redis://127.0.0.1:6379"}'
+export SILVERBACK_RESULT_BACKEND_CLASS="taskiq_redis:RedisAsyncResultBackend"
+export SILVERBACK_RESULT_BACKEND_URI="redis://127.0.0.1:6379"
 
 silverback run "example:app" --network :mainnet:alchemy
 ```
@@ -166,6 +176,8 @@ And then the worker process with 2 worker subprocesses:
 ```bash
 export SILVERBACK_BROKER_CLASS="taskiq_redis:ListQueueBroker"
 export SILVERBACK_BROKER_KWARGS='{"url": "redis://127.0.0.1:6379"}'
+export SILVERBACK_RESULT_BACKEND_CLASS="taskiq_redis:RedisAsyncResultBackend"
+export SILVERBACK_RESULT_BACKEND_URI="redis://127.0.0.1:6379"
 
 silverback worker -w 2 "example:app"
 ```
