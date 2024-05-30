@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from .types import SilverbackID, UTCTimestamp, utc_now
 
 
-class AppState(BaseModel):
+class StateSnapshot(BaseModel):
     # Last block number seen by runner
     last_block_seen: int
 
@@ -38,7 +38,7 @@ class AppDatastore:
     - `SILVERBACK_APP_NAME`: Any alphabetical string valid as a folder name
     """
 
-    async def init(self, app_id: SilverbackID) -> AppState | None:
+    async def init(self, app_id: SilverbackID) -> StateSnapshot | None:
         data_folder = (
             Path.cwd() / ".silverback-sessions" / app_id.name / app_id.ecosystem / app_id.network
         )
@@ -47,16 +47,18 @@ class AppDatastore:
         self.state_backup_file = data_folder / "state.json"
 
         return (
-            AppState.parse_file(self.state_backup_file) if self.state_backup_file.exists() else None
+            StateSnapshot.parse_file(self.state_backup_file)
+            if self.state_backup_file.exists()
+            else None
         )
 
-    async def set_state(self, state: AppState):
+    async def save(self, snapshot: StateSnapshot):
         if self.state_backup_file.exists():
-            old_state = AppState.parse_file(self.state_backup_file)
-            if old_state.last_block_seen > state.last_block_seen:
-                state.last_block_seen = old_state.last_block_seen
-            if old_state.last_block_processed > state.last_block_processed:
-                state.last_block_processed = old_state.last_block_processed
+            old_snapshot = AppState.parse_file(self.snapshot_backup_file)
+            if old_snapshot.last_block_seen > snapshot.last_block_seen:
+                snapshot.last_block_seen = old_snapshot.last_block_seen
+            if old_snapshot.last_block_processed > snapshot.last_block_processed:
+                snapshot.last_block_processed = old_snapshot.last_block_processed
 
-        state.last_updated = utc_now()
-        self.state_backup_file.write_text(state.model_dump_json())
+        snapshot.last_updated = utc_now()
+        self.state_backup_file.write_text(snapshot.model_dump_json())

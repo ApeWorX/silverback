@@ -14,7 +14,7 @@ from taskiq.kicker import AsyncKicker
 from .application import SilverbackApp, SystemConfig, TaskData
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
 from .recorder import BaseRecorder, TaskResult
-from .state import AppDatastore, AppState
+from .state import AppDatastore, StateSnapshot
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import TaskType
 from .utils import (
@@ -160,7 +160,7 @@ class BaseRunner(ABC):
             self.state = startup_state
 
         else:  # use empty state
-            self.state = AppState(last_block_seen=-1, last_block_processed=-1)
+            self.state = StateSnapshot(last_block_seen=-1, last_block_processed=-1)
 
         # Execute Silverback startup task before we init the rest
         startup_taskdata_result = await run_taskiq_task_wait_result(
