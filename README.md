@@ -23,7 +23,7 @@ Please read the [development userguide](https://docs.apeworx.io/silverback/stabl
 
 Silverback relies heavily on the Ape development framework, so it's worth it to familarize yourself with how to install Ape and it's plugins using the [Ape installation userguide](https://docs.apeworx.io/ape/latest/userguides/quickstart#installation).
 
-```note
+```{note}
 It is suggested that you use a virtual environment of your choosing, and then install the Silverback package via one of the following options.
 ```
 
@@ -49,7 +49,7 @@ python3 setup.py install
 
 Checkout [the example](./example.py) to see how to use the library.
 
-```note
+```{note}
 The example makes use of the [Ape Tokens](https://github.com/ApeWorX/ape-tokens) plugin.
 Be sure to properly configure your environment for the USDC and YFI tokens on Ethereum mainnet.
 ```
@@ -60,7 +60,7 @@ To run your bot against a live network, this SDK includes a simple runner comman
 $ silverback run "example:app" --network :mainnet:alchemy
 ```
 
-```note
+```{note}
 This runner uses an in-memory task broker by default.
 If you want to learn more about what that means, please visit the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html).
 ```
@@ -71,7 +71,7 @@ If you want to learn more about what that means, please visit the [development u
 $ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet
 ```
 
-```note
+```{note}
 The Docker image we publish uses Python 3.11.
 ```
 
@@ -101,7 +101,7 @@ Doing this will give you a `~/.tokenlists` hidden folder in your home folder tha
 ... --volume ~/.tokenlists:/home/harambe/.tokenlists ...
 ```
 
-```note
+```{note}
 It is suggested to install the 1inch tokenlist via `ape tokens install tokens.1inch.eth`.
 See the [ape-tokens](https://github.com/ApeWorX/ape-tokens?tab=readme-ov-file#quick-usage) README for more information.
 ```
@@ -124,7 +124,7 @@ $ ape tokens token-info USDC
     Decimals: 6
 ```
 
-```note
+```{note}
 If you want, you can comment out the two functions `exec_event1` and `exec_event2` that handle the contract log events from these contracts if you do not have the configured tokenlist, then your command should work.
 ```
 

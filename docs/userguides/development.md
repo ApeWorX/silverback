@@ -141,7 +141,7 @@ else:
     # Log what the transaction *would* have done, had a signer been enabled
 ```
 
-```note
+```{note}
 If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
 Always test your applications throughly before deploying.
 ```
@@ -156,7 +156,7 @@ The primary components are the client and workers.  The client handles Silverbac
 For this to work, you must configure a [TaskIQ broker](https://taskiq-python.github.io/guide/architecture-overview.html#broker) capable of distributed processing.
 Additonally, it is highly suggested you should also configure a [TaskIQ result backend](https://taskiq-python.github.io/guide/architecture-overview.html#result-backend) in order to process and store the results of executing tasks.
 
-```note
+```{note}
 Without configuring a result backend, Silverback may not work as expected since your tasks will now suddenly return `None` instead of the actual result.
 ```
 
