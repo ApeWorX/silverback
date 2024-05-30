@@ -15,7 +15,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
 from .state import AppDatastore, StateSnapshot
-from .types import SilverbackID, TaskType
+from .types import ParamChangeDatapoint, SilverbackID, TaskType, is_scalar_type
 
 
 class SystemConfig(BaseModel):
@@ -31,6 +31,12 @@ class TaskData(BaseModel):
     # NOTE: Data we need to know how to call a task via kicker
     name: str  # Name of user function
     labels: dict[str, Any]
+
+    # NOTE: Any other items here must have a default value
+
+
+class ParameterInfo(BaseModel):
+    default: Any
 
     # NOTE: Any other items here must have a default value
 
@@ -109,8 +115,10 @@ class SilverbackApp(ManagerAccessMixin):
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
+        self.start_block = settings.START_BLOCK
 
         signer_str = f"\n  SIGNER={repr(self.signer)}"
+        start_block_str = f"\n  START_BLOCK={self.start_block}" if self.start_block else ""
         new_block_timeout_str = (
             f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
         )
@@ -118,7 +126,7 @@ class SilverbackApp(ManagerAccessMixin):
         network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
         logger.success(
             f'Loaded Silverback App:\n  NETWORK="{network_choice}"'
-            f"{signer_str}{new_block_timeout_str}"
+            f"{signer_str}{start_block_str}{new_block_timeout_str}"
         )
 
         # NOTE: Runner must call this to configure itself for all SDK hooks
@@ -141,6 +149,17 @@ class SilverbackApp(ManagerAccessMixin):
         )
         self._save_snapshot = self.__register_system_task(
             TaskType.SYSTEM_SAVE_SNAPSHOT, self.__save_snapshot_handler
+        )
+
+        # NOTE: The runner needs to know the set of things that the app is tracking as a parameter
+        # NOTE: We also need to know the defaults in case the parameters are not in the snapshot
+        self.__parameters: dict[str, ParameterInfo] = {
+            # System state parameters
+            "system:last_block_seen": ParameterInfo(default=-1),
+            "system:last_block_processed": ParameterInfo(default=-1),
+        }
+        self._batch_set_param = self.__register_system_task(
+            TaskType.SYSTEM_SET_PARAM_BATCH, self.__batch_param_set_handler
         )
 
     def __register_system_task(
@@ -191,6 +210,21 @@ class SilverbackApp(ManagerAccessMixin):
                 last_block_processed=-1,
             )  # Use empty snapshot
 
+        for param_name, param_info in self.parameters.items():
+
+            if (cached_value := startup_state.parameters.get(param_name)) is not None:
+                logger.info(f"Found cached value for app.state['{param_name}']: {cached_value}")
+                self.state[param_name] = cached_value
+
+            elif param_info.default is not None:
+                logger.info(
+                    f"Cached value not found for app.state['{param_name}']"
+                    f", using default: {param_info.default}"
+                )
+                self.state[param_name] = param_info.default
+
+            # NOTE: `None` default doesn't need to be set because that's how SharedState works
+
         return startup_state
 
     async def __save_snapshot_handler(
@@ -209,9 +243,50 @@ class SilverbackApp(ManagerAccessMixin):
             # TODO: Migrate these to parameters (remove explicitly from state)
             last_block_processed=self.state["system:last_block_seen"] or -1,
             last_block_seen=self.state["system:last_block_processed"] or -1,
+            parameters={param_name: self.state[param_name] for param_name in self.parameters},
         )
 
         return await self.datastore.save(snapshot)
+
+    async def __batch_param_set_handler(
+        self, parameter_updates: dict
+    ) -> dict[str, ParamChangeDatapoint]:
+        datapoints = {}
+        for param_name, new_value in parameter_updates.items():
+            if "system:" in param_name:
+                logger.error(f"Cannot update system parameter '{param_name}'")
+
+            elif param_name not in self.parameters:
+                logger.error(f"Unrecognized parameter '{param_name}'")
+
+            else:
+                datapoints[param_name] = ParamChangeDatapoint(
+                    old=self.state[param_name], new=new_value
+                )
+                logger.success(f"Update: app.state['{param_name}'] = {new_value}")
+                self.state[param_name] = new_value
+
+        # NOTE: This is one blocking atomic task, it must be handled atomically
+        await self.datastore.save(self._create_snapshot())
+        return datapoints
+
+    @property
+    def parameters(self) -> dict[str, ParameterInfo]:
+        # NOTE: makes this variable read-only
+        return self.__parameters
+
+    def add_parameter(self, param_name: str, default: Any = None):
+        if "system:" in param_name:
+            raise ValueError("Cannot override system parameters")
+
+        if param_name in self.parameters:
+            raise ValueError(f"{param_name} already added!")
+
+        if default and not is_scalar_type(default):
+            raise ValueError(f"Default value type '{type(default)}' is not a valid scalar type.")
+
+        # Update this to track parameter existance/default value/update handler
+        self.__parameters[param_name] = ParameterInfo(default=default)
 
     def broker_task_decorator(
         self,

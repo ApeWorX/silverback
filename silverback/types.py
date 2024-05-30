@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Literal
+from typing import Any, Literal, get_args
 
 from ape.logging import get_logger
-from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
+from pydantic import BaseModel, Field, RootModel, model_validator
 from pydantic.functional_serializers import PlainSerializer
 from typing_extensions import Annotated
 
@@ -18,6 +18,8 @@ class TaskType(str, Enum):
     SYSTEM_USER_ALL_TASKDATA = "system:user-all-taskdata"
     SYSTEM_LOAD_SNAPSHOT = "system:load-snapshot"
     SYSTEM_SAVE_SNAPSHOT = "system:save-snapshot"
+    SYSTEN_SET_PARAM = "system:set-param"
+    SYSTEM_SET_PARAM_BATCH = "system:batch-param"
 
     # User-accessible Tasks
     STARTUP = "user:startup"
@@ -62,16 +64,33 @@ ScalarType = bool | Int96 | float | Decimal
 #       This is okay, preferable actually, because it means we can store ints outside that range
 
 
+def is_scalar_type(val: Any) -> bool:
+    return any(
+        isinstance(val, d_type.__origin__ if hasattr(d_type, "__origin__") else d_type)
+        for d_type in get_args(ScalarType)
+    )
+
+
 class ScalarDatapoint(_BaseDatapoint):
     type: Literal["scalar"] = "scalar"
     data: ScalarType
+
+
+class ParamChangeDatapoint(_BaseDatapoint):
+    type: Literal["setparam"] = "setparam"
+    old: ScalarType | None
+    new: ScalarType
 
 
 # NOTE: Other datapoint types must be explicitly defined as subclasses of `_BaseDatapoint`
 #       Users will have to import and use these directly
 
 # NOTE: Other datapoint types must be added to this union
-Datapoint = ScalarDatapoint
+Datapoint = ScalarDatapoint | ParamChangeDatapoint
+
+
+def is_datapoint(val: Any) -> bool:
+    return any(isinstance(val, d_type) for d_type in get_args(Datapoint))
 
 
 class Datapoints(RootModel):
@@ -79,23 +98,22 @@ class Datapoints(RootModel):
 
     @model_validator(mode="before")
     def parse_datapoints(cls, datapoints: dict) -> dict:
-        names_to_remove: dict[str, ValidationError] = {}
-        # Automatically convert raw scalar types
-        for name in datapoints:
-            if not isinstance(datapoints[name], Datapoint):
-                try:
-                    datapoints[name] = ScalarDatapoint(data=datapoints[name])
-                except ValidationError as e:
-                    names_to_remove[name] = e
+        successfully_parsed_datapoints = {}
+        for name, datapoint in datapoints.items():
+            if is_datapoint(datapoint):
+                successfully_parsed_datapoints[name] = datapoint
 
-        # Prune and raise a warning about unconverted datapoints
-        for name in names_to_remove:
-            data = datapoints.pop(name)
-            logger.warning(
-                f"Cannot convert datapoint '{name}' of type '{type(data)}': {names_to_remove[name]}"
-            )
+            elif is_scalar_type(datapoint):
+                # Automatically convert raw scalar types into datapoints
+                successfully_parsed_datapoints[name] = ScalarDatapoint(data=datapoints[name])
 
-        return datapoints
+            else:
+                # Prune and raise a warning about unconverted datapoints
+                logger.warning(
+                    f"Cannot convert datapoint '{name}' of type '{type(datapoint)}': {datapoint}"
+                )
+
+        return successfully_parsed_datapoints
 
     # Add dict methods
     def get(self, key: str, default: Datapoint | None = None) -> Datapoint | None:

@@ -41,6 +41,8 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
         message.args = [(fix_dict(arg) if isinstance(arg, dict) else arg) for arg in message.args]
 
+        # Record trigger (appears on runner in distributed mode)
+        logger.debug(f"{self._create_label(message)} - Task Created")
         return message
 
     def _create_label(self, message: TaskiqMessage) -> str:
@@ -85,7 +87,8 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             message.labels["transaction_hash"] = log.transaction_hash
             message.labels["log_index"] = str(log.log_index)
 
-        logger.debug(f"{self._create_label(message)} - Started")
+        # Record task start (appears on worker in distributed mode)
+        logger.debug(f"{self._create_label(message)} - Starting...")
         return message
 
     def post_execute(self, message: TaskiqMessage, result: TaskiqResult):
@@ -96,10 +99,12 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         else:
             percent_display = ""
 
+        # Record complete (appears on worker in distributed mode)
         msg = f"{self._create_label(message)} " f"- {result.execution_time:.3f}s{percent_display}"
         if result.is_err:
             logger.error(msg)
-        elif message.task_name.startswith("system:"):
+        elif "system:" in message.task_name:
+            # NOTE: So we can ignore these in user logs
             logger.debug(msg)
         else:
             logger.success(msg)

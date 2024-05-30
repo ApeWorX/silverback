@@ -1,6 +1,7 @@
 import asyncio
 import os
 from concurrent.futures import ThreadPoolExecutor
+from decimal import Decimal
 
 import click
 from ape.cli import (
@@ -12,11 +13,15 @@ from ape.cli import (
 )
 from ape.exceptions import Abort
 from taskiq import AsyncBroker
+from taskiq.brokers.inmemory_broker import InMemoryBroker
 from taskiq.cli.worker.run import shutdown_broker
+from taskiq.kicker import AsyncKicker
 from taskiq.receiver import Receiver
 
 from silverback._importer import import_from_string
-from silverback.runner import PollingRunner, WebsocketRunner
+from silverback.runner import PollingRunner
+from silverback.settings import Settings
+from silverback.types import ScalarType, TaskType, is_scalar_type
 
 
 @click.group()
@@ -26,7 +31,7 @@ def cli():
 
 def _runner_callback(ctx, param, val):
     if not val:
-        return None
+        return PollingRunner
 
     elif runner := import_from_string(val):
         return runner
@@ -99,7 +104,6 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option(
     "--runner",
-    "runner_class",
     help="An import str in format '<module>:<CustomRunner>'",
     callback=_runner_callback,
 )
@@ -110,20 +114,9 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
-def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
-    if not runner_class:
-        # NOTE: Automatically select runner class
-        if cli_ctx.provider.ws_uri:
-            runner_class = WebsocketRunner
-        elif cli_ctx.provider.http_uri:
-            runner_class = PollingRunner
-        else:
-            raise click.BadOptionUsage(
-                option_name="network", message="Network choice cannot support running app"
-            )
-
+def run(cli_ctx, account, runner, recorder, max_exceptions, path):
     app = import_from_string(path)
-    runner = runner_class(app, recorder=recorder, max_exceptions=max_exceptions)
+    runner = runner(app, recorder=recorder, max_exceptions=max_exceptions)
     asyncio.run(runner.run())
 
 
@@ -142,3 +135,68 @@ def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
 def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
     app = import_from_string(path)
     asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
+
+
+class ScalarParam(click.ParamType):
+    name = "scalar"
+
+    def convert(self, val, param, ctx) -> ScalarType:
+        if not isinstance(val, str) or is_scalar_type(val):
+            return val
+
+        elif val.lower() in ("f", "false"):
+            return False
+
+        elif val.lower() in ("t", "true"):
+            return True
+
+        try:
+            return int(val)
+        except Exception:
+            pass
+
+        try:
+            return float(val)
+        except Exception:
+            pass
+
+        # NOTE: Decimal allows the most values, so leave last
+        return Decimal(val)
+
+
+@cli.command(cls=ConnectedProviderCommand, help="Set parameters against a running silverback app")
+@network_option(
+    default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
+    callback=_network_callback,
+)
+@click.option(
+    "-p",
+    "--param",
+    "param_updates",
+    type=(str, ScalarParam()),
+    multiple=True,
+)
+def set_param(param_updates):
+
+    if len(param_updates) > 1:
+        task_name = str(TaskType._SET_PARAM_BATCH)
+        arg = dict(param_updates)
+    else:
+        param_name, arg = param_updates[0]
+        task_name = f"{TaskType._SET_PARAM}:{param_name}"
+
+    async def set_parameters():
+        broker = Settings().get_broker()
+        if isinstance(broker, InMemoryBroker):
+            raise RuntimeError("Cannot use with default in-memory broker")
+
+        kicker = AsyncKicker(task_name, broker, labels={})
+        task = await kicker.kiq(arg)
+        result = await task.wait_result()
+
+        if result.is_err:
+            click.echo(result.error)
+        else:
+            click.echo(result.return_value)
+
+    asyncio.run(set_parameters())

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Sequence
 
 from ape.exceptions import ApeException
 
@@ -32,10 +32,8 @@ class SilverbackException(ApeException):
 
 # TODO: `ExceptionGroup` added in Python 3.11
 class StartupFailure(SilverbackException):
-    def __init__(self, *exceptions: Exception | str):
-        if len(exceptions) == 1 and isinstance(exceptions[0], str):
-            super().__init__(exceptions[0])
-        elif error_str := "\n".join(str(e) for e in exceptions):
+    def __init__(self, *exceptions: Sequence[Exception]):
+        if error_str := "\n".join(str(e) for e in exceptions):
             super().__init__(f"Startup failure(s):\n{error_str}")
         else:
             super().__init__("Startup failure(s) detected. See logs for details.")

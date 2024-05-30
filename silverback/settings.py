@@ -40,6 +40,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
     SIGNER_ALIAS: str = ""
 
     NEW_BLOCK_TIMEOUT: int | None = None
+    START_BLOCK: int | None = None
 
     # Used for recorder
     RECORDER_CLASS: str | None = None

@@ -1,20 +1,58 @@
 from pathlib import Path
+from typing import Any
 
-from pydantic import BaseModel, Field
+from ape.logging import get_logger
+from pydantic import BaseModel, Field, field_validator
 
-from .types import SilverbackID, UTCTimestamp, utc_now
+from .types import ScalarType, SilverbackID, UTCTimestamp, is_scalar_type, utc_now
+
+logger = get_logger(__name__)
 
 
 class StateSnapshot(BaseModel):
-    # Last block number seen by runner
-    last_block_seen: int
-
-    # Last block number processed by a worker
-    last_block_processed: int
-
     # Last time the state was updated
     # NOTE: intended to use default when creating a model with this type
     last_updated: UTCTimestamp = Field(default_factory=utc_now)
+
+    # Stored parameters from last session
+    parameters: dict[str, ScalarType] = {}
+
+    @field_validator("parameters", mode="before")
+    def parse_parameters(cls, parameters: dict) -> dict:
+        # NOTE: Filter out any values that we cannot serialize
+        successfully_parsed_parameters = {}
+        for param_name, param_value in parameters.items():
+            if is_scalar_type(param_value):
+                successfully_parsed_parameters[param_name] = param_value
+            else:
+                logger.error(
+                    f"Cannot backup '{param_name}' of type '{type(param_value)}': {param_value}"
+                )
+
+        return successfully_parsed_parameters
+
+    @property
+    def last_block_seen(self) -> int:
+        # Last block number seen by runner
+        return self.parameters.get("system:last_block_seen", -1)  # type: ignore[return-value]
+
+    @property
+    def last_block_processed(self) -> int:
+        # Last block number processed by a worker
+        return self.parameters.get("system:last_block_processed", -1)  # type: ignore[return-value]
+
+    def __dir__(self) -> list[str]:
+        return [
+            *(param for param in self.parameters if "system:" not in param),
+            "last_block_processed",
+            "last_block_seen",
+        ]
+
+    def __getattr__(self, attr: str) -> Any:
+        try:
+            return super().__getattr__(attr)  # type: ignore[misc]
+        except AttributeError:
+            return self.parameters.get(attr)
 
 
 class AppDatastore:

@@ -12,6 +12,9 @@ from silverback import CircuitBreaker, SilverbackApp, StateSnapshot
 # Do this first to initialize your app
 app = SilverbackApp()
 
+# We can add parameters, which are values in state that can be updated by external triggers
+app.add_parameter("bad_number", default=3)
+
 # Cannot call `app.state` outside of an app function handler
 # app.state.something  # NOTE: raises AttributeError
 
@@ -28,7 +31,8 @@ def app_startup(startup_state: StateSnapshot):
     # Any exception raised on startup aborts immediately:
     # raise Exception  # NOTE: raises StartupFailure
 
-    # This is a great place to set `app.state` values
+    # This is a great place to set `app.state` values that aren't parameters
+    # NOTE: Non-parameter state is `None` by default
     app.state.logs_processed = 0
     # NOTE: Can put anything here, any python object works
 
@@ -69,10 +73,10 @@ def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
 @app.on_(USDC.Transfer, start_block=19784367, new_block_timeout=25)
 # NOTE: Typing isn't required, it will still be an Ape `ContractLog` type
 def exec_event1(log):
-    if log.log_index % 7 == 3:
+    if log.log_index % 7 == app.state.bad_number:
         # If you raise any exception, Silverback will track the failure and keep running
         # NOTE: By default, if you have 3 tasks fail in a row, the app will shutdown itself
-        raise ValueError("I don't like the number 3.")
+        raise ValueError(f"I don't like the number {app.state.bad_number}.")
 
     # You can update state whenever you want
     app.state.logs_processed += 1
@@ -87,7 +91,7 @@ async def exec_event2(log: ContractLog):
         # If you ever want the app to immediately shutdown under some scenario, raise this exception
         raise CircuitBreaker("Oopsie!")
 
-    # All `app.state` values are updated across all workers at the same time
+    # All `app.state` values (including parameters) are updated across all workers at the same time
     app.state.logs_processed += 1
     # Do any other long running tasks...
     await asyncio.sleep(5)
