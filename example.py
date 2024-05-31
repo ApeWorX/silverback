@@ -46,7 +46,6 @@ def worker_startup(worker_state: TaskiqState):  # NOTE: You need the type hint t
     # NOTE: Worker state is per-worker, not shared with other workers
     # NOTE: Can put anything here, any python object works
     worker_state.db = MyDB()
-    worker_state.block_count = 0
 
     # Any exception raised on worker startup aborts immediately:
     # raise Exception  # NOTE: raises StartupFailure
