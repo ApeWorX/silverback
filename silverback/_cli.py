@@ -109,8 +109,9 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
     callback=_recorder_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
+@click.option("--debug", is_flag=True, default=False)
 @click.argument("path")
-def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
+def run(cli_ctx, account, runner_class, recorder, max_exceptions, debug, path):
     if not runner_class:
         # NOTE: Automatically select runner class
         if cli_ctx.provider.ws_uri:
@@ -124,7 +125,7 @@ def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
 
     app = import_from_string(path)
     runner = runner_class(app, recorder=recorder, max_exceptions=max_exceptions)
-    asyncio.run(runner.run())
+    asyncio.run(runner.run(), debug=debug)
 
 
 @cli.command(cls=ConnectedProviderCommand, help="Run Silverback application task workers")
@@ -138,7 +139,11 @@ def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
 @click.option("-w", "--workers", type=int, default=2)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
+@click.option("--debug", is_flag=True, default=False)
 @click.argument("path")
-def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
+def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, path):
     app = import_from_string(path)
-    asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
+    asyncio.run(
+        run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout),
+        debug=debug,
+    )
