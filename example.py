@@ -42,8 +42,8 @@ def worker_startup(state: TaskiqState):  # NOTE: You need the type hint here
 # You can run cron jobs in your apps (functions that execute at a regular time period)
 # NOTE: Great for things like regular DB cleanups or producing metrics at regular intervals
 @app.cron("*/2 * * * *")
-def every_two_minutes():
-    return {"crontime": datetime.utcnow()}
+def every_two_minutes(current_time_utc: datetime):
+    return {"crontime": current_time_utc}
 
 
 # This is how we trigger off of new blocks

@@ -135,7 +135,7 @@ class BaseRunner(ABC):
                 td for td, cron in cron_jobs.items() if cron.is_ready(current_time)
             ]:
                 tasks = await asyncio.gather(
-                    *((self._create_task_kicker(td).kiq() for td in task_data_to_kiq))
+                    *((self._create_task_kicker(td).kiq(current_time) for td in task_data_to_kiq))
                 )
                 await asyncio.gather(*(self._handle_task(task) for task in tasks))
 
