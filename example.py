@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated  # NOTE: Only Python 3.9+
+from typing import Annotated
 
 from ape import chain
 from ape.api import BlockAPI
