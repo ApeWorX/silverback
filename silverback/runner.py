@@ -110,7 +110,8 @@ class BaseRunner(ABC):
         """
 
     async def _cron_task(self, task_data: list[TaskData]):
-        cron_jobs = {}
+        cron_jobs: dict[TaskData, CronSchedule] = dict()
+
         for td in task_data:
             if cron_schedule := td.labels.get("cron"):
                 cron_jobs[td] = CronSchedule(cron=cron_schedule)
@@ -263,6 +264,7 @@ class BaseRunner(ABC):
         # NOTE: Any propagated failure in here should be handled such that shutdown tasks also run
         # TODO: `asyncio.TaskGroup` added in Python 3.11
         listener_tasks = (
+            asyncio.create_task(self._cron_task(cron_job_taskdata_results.return_value)),
             *(
                 asyncio.create_task(self._block_task(task_def))
                 for task_def in new_block_taskdata_results.return_value
@@ -271,7 +273,6 @@ class BaseRunner(ABC):
                 asyncio.create_task(self._event_task(task_def))
                 for task_def in event_log_taskdata_results.return_value
             ),
-            asyncio.create_task(self._cron_task(cron_job_taskdata_results.return_value)),
         )
 
         # NOTE: Safe to do this because no tasks were actually scheduled to run
