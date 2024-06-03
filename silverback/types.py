@@ -49,6 +49,9 @@ UTCTimestamp = Annotated[
 ]
 
 
+CRON_CHECK_SECONDS = 5
+
+
 class CronSchedule(BaseModel):
     minute: str
     hour: str
@@ -100,6 +103,7 @@ class CronSchedule(BaseModel):
     def is_ready(self, current_time: datetime) -> bool:
         return all(
             [
+                abs(current_time.second) < CRON_CHECK_SECONDS,  # NOTE: Ensure close to :00 seconds
                 self._check_value(self.minute, current_time.minute),
                 self._check_value(self.hour, current_time.hour),
                 self._check_value(self.day_month, current_time.day),

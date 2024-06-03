@@ -16,15 +16,13 @@ from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, 
 from .recorder import BaseRecorder, TaskResult
 from .state import AppDatastore, AppState
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
-from .types import CronSchedule, TaskType, utc_now
+from .types import CRON_CHECK_SECONDS, CronSchedule, TaskType, utc_now
 from .utils import (
     async_wrap_iter,
     hexbytes_dict,
     run_taskiq_task_group_wait_results,
     run_taskiq_task_wait_result,
 )
-
-CRON_CHECK_SECONDS = 5
 
 
 class BaseRunner(ABC):
