@@ -40,8 +40,9 @@ def worker_startup(state: TaskiqState):  # NOTE: You need the type hint here
 
 
 # You can run cron jobs in your apps (functions that execute at a regular time period)
-@app.cron("*/5 * * * *")
-def every_five_minutes():
+# NOTE: Great for things like regular DB cleanups or producing metrics at regular intervals
+@app.cron("*/2 * * * *")
+def every_two_minutes():
     return {"crontime": datetime.utcnow()}
 
 
