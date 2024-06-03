@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from abc import ABC, abstractmethod
 
 from ape import chain
@@ -283,9 +284,11 @@ class BaseRunner(ABC):
         tasks_with_errors, tasks_running = await asyncio.wait(
             listener_tasks, return_when=asyncio.FIRST_EXCEPTION
         )
-        if runtime_errors := "\n".join(str(task.exception()) for task in tasks_with_errors):
+        if runtime_errors := "\n\n".join(
+            "".join(traceback.format_exception(task.exception())) for task in tasks_with_errors
+        ):
             # NOTE: In case we are somehow not displaying the error correctly with task status
-            logger.debug(f"Runtime error(s) detected, shutting down:\n{runtime_errors}")
+            logger.warning(f"Runtime error(s) detected, shutting down\n{runtime_errors}")
 
         # Cancel any still running
         (task.cancel() for task in tasks_running)
