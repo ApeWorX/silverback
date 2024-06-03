@@ -32,6 +32,9 @@ class TaskData(BaseModel):
 
     # NOTE: Any other items here must have a default value
 
+    def __hash__(self):
+        return hash(self.name)  # NOTE: Name should be unique, okay for hashing
+
 
 class SilverbackApp(ManagerAccessMixin):
     """
