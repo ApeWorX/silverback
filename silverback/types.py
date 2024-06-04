@@ -96,16 +96,33 @@ class CronSchedule(BaseModel):
         return current in matches
 
     def is_ready(self, current_time: datetime) -> bool:
-        return all(
-            [
-                abs(current_time.second) < CRON_CHECK_SECONDS,  # NOTE: Ensure close to :00 seconds
-                self._check_value(self.minute, current_time.minute),
-                self._check_value(self.hour, current_time.hour),
-                self._check_value(self.day_month, current_time.day),
-                self._check_value(self.month, current_time.month),
-                self._check_value(self.day_week, current_time.weekday() + 1),
-            ]
-        )
+        # Intersection/union "bug": https://crontab.guru/cron-bug.html
+        if self.day_month.startswith("*") or self.day_week.startswith("*"):
+            # Intersection (all must match)
+            return all(
+                [
+                    abs(current_time.second)
+                    < CRON_CHECK_SECONDS,  # NOTE: Ensure close to :00 seconds
+                    self._check_value(self.minute, current_time.minute),
+                    self._check_value(self.hour, current_time.hour),
+                    self._check_value(self.day_month, current_time.day),
+                    self._check_value(self.month, current_time.month),
+                    self._check_value(self.day_week, current_time.weekday() + 1),
+                ]
+            )
+        else:  # Union: only one of day/wk and day/mth must match
+            return all(
+                [
+                    abs(current_time.second)
+                    < CRON_CHECK_SECONDS,  # NOTE: Ensure close to :00 seconds
+                    self._check_value(self.minute, current_time.minute),
+                    self._check_value(self.hour, current_time.hour),
+                    self._check_value(self.month, current_time.month),
+                ]
+            ) and (
+                self._check_value(self.day_month, current_time.day)
+                or self._check_value(self.day_week, current_time.weekday() + 1)
+            )
 
 
 class _BaseDatapoint(BaseModel):
