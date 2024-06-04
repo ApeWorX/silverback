@@ -74,6 +74,8 @@ setup(
         "packaging",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
         "taskiq[metrics]>=0.11.3,<0.12",
+        "tomlkit>=0.12,<1",  # For reading/writing global platform profile
+        "fief-client[cli]>=0.19,<1",  # for platform auth/cluster login
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],
