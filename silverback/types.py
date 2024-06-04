@@ -61,18 +61,13 @@ class CronSchedule(BaseModel):
 
     def __init__(self, cron: str = "", **field_values):
         if cron:
-            field_values = dict(
-                zip(
-                    iter(self.__fields__),  # type: ignore[call-overload]
-                    cron.split(" "),
-                )
-            )
+            field_values = dict(zip(self.model_fields, cron.split(" ")))
 
         super().__init__(**field_values)
 
     @model_serializer
     def create_cron_string(self) -> str:
-        return " ".join(map(lambda f: getattr(self, f), self.__fields__))
+        return " ".join(map(lambda f: getattr(self, f), self.model_fields))
 
     def __str__(self) -> str:
         return self.create_cron_string()
