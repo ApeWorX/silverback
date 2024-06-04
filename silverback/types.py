@@ -88,7 +88,7 @@ class CronSchedule(BaseModel):
             matches = list(map(int, val.split(",")))
 
         elif val == "*":
-            return current % step == 0
+            return current % step == step - 1
 
         else:
             matches = [int(val)]
@@ -103,7 +103,7 @@ class CronSchedule(BaseModel):
                 self._check_value(self.hour, current_time.hour),
                 self._check_value(self.day_month, current_time.day),
                 self._check_value(self.month, current_time.month),
-                self._check_value(self.day_week, current_time.weekday()),
+                self._check_value(self.day_week, current_time.weekday() + 1),
             ]
         )
 
