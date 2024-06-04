@@ -182,6 +182,44 @@ def handle_on_shutdown():
 
 *Changed in 0.2.0*: The behavior of the `@bot.on_startup()` decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on `@bot.on_worker_startup()`.
 
+## Application State
+
+Sometimes it is very useful to have access to values in a shared state across your workers.
+For example you might have a value or complex reference type that you wish to update during one of your tasks, and read during another.
+Silverback provides `app.state` to help with these use cases.
+
+For example, you might want to pre-populate a large dataframe into state on startup, keeping that dataframe in sync with the chain through event logs,
+and then use that data to determine a signal under which you want trigger transactions to commit back to the chain.
+Such an application might look like this:
+
+```py
+@app.on_startup()
+def create_table(startup_state):
+    df = contract.MyEvent.query(..., start_block=startup_state.last_block_processed)
+    ...  # Do some further processing on df
+    app.state.table = df
+
+
+@app.on_(contract.MyEvent)
+def update_table(log):
+    app.state.table = ...  # Update using stuff from `log`
+
+
+@app.on_(chain.blocks)
+def use_table(blk):
+    if app.state.table[...].mean() > app.state.table[...].sum():
+        contract.myMethod(..., sender=app.signer)
+    ...
+```
+
+```{warning}
+You can use `app.state` to store any python variable type, however note that the item is not networked nor threadsafe so it is not recommended to have multiple tasks write to the same value in state at the same time.
+```
+
+```{note}
+Application startup and application runtime events (e.g. block or event container) are handled distinctly and can be trusted not to execute at the same time.
+```
+
 ### Signing Transactions
 
 If configured, your bot with have `bot.signer` which is an Ape account that can sign arbitrary transactions you ask it to.

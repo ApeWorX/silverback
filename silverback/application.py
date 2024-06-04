@@ -36,6 +36,35 @@ class TaskData(BaseModel):
 
 
 class SharedState(defaultdict):
+    """
+    Class containing the application shared state that all workers can read from and write to.
+
+    ```{warning}
+    This is not networked in any way, nor is it multi-process safe, but will be
+    accessible across multiple thread workers within a single process.
+    ```
+
+    Usage example::
+
+        @app.on_(...)
+        def do_something_with_state(value):
+            # Read from state using `getattr`
+            ... = app.state.something
+
+            # Set state using `setattr`
+            app.state.something = ...
+
+            # Read from state using `getitem`
+            ... = app.state["something"]
+
+            # Set state using setitem
+            app.state["something"] = ...
+    """
+
+    # TODO: This class does not have thread-safe access control, but should remain safe due to
+    #       it being a memory mapping, and writes are strictly controlled to be handled only by
+    #       one worker at a time. There may be issues with using this in production however.
+
     def __init__(self):
         # Any unknown key returns None
         super().__init__(lambda: None)
@@ -173,8 +202,6 @@ class SilverbackApp(ManagerAccessMixin):
         return [v for k, l in self.tasks.items() if str(k).startswith("user:") for v in l]
 
     async def __load_snapshot_handler(self) -> StateSnapshot:
-        # NOTE: This is not networked in any way, nor thread-safe nor multi-process safe,
-        #       but will be accessible across multiple workers in a single container
         # NOTE: *DO NOT USE* in Runner, as it will not be updated by the app
         self.state = SharedState()
         # NOTE: attribute does not exist before this task is executed,
@@ -220,6 +247,11 @@ class SilverbackApp(ManagerAccessMixin):
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
+
+        ```{warning}
+        Dynamically creating a task does not ensure that the runner will be aware of the task
+        in order to trigger it. Use at your own risk.
+        ```
 
         Args:
             task_type: :class:`~silverback.types.TaskType`: The type of task to create.
@@ -277,19 +309,21 @@ class SilverbackApp(ManagerAccessMixin):
 
     def on_startup(self) -> Callable:
         """
-        Code to execute on one worker upon startup / restart after an error.
+        Code that will be exected by one worker after worker startup, but before the
+        application is put into the "run" state by the Runner.
 
         Usage example::
 
             @app.on_startup()
-            def do_something_on_startup(startup_state):
+            def do_something_on_startup(startup_state: StateSnapshot):
                 ...  # Reprocess missed events or blocks
         """
         return self.broker_task_decorator(TaskType.STARTUP)
 
     def on_shutdown(self) -> Callable:
         """
-        Code to execute on one worker at shutdown.
+        Code that will be exected by one worker before worker shutdown, after the
+        Runner has decided to put the application into the "shutdown" state.
 
         Usage example::
 
@@ -299,25 +333,37 @@ class SilverbackApp(ManagerAccessMixin):
         """
         return self.broker_task_decorator(TaskType.SHUTDOWN)
 
+    # TODO: Abstract away worker startup into dependency system
     def on_worker_startup(self) -> Callable:
         """
-        Code to execute on every worker at startup / restart after an error.
+        Code to execute on every worker immediately after broker startup.
+
+        ```{note}
+        This is a great place to load heavy dependencies for the workers,
+        such as database connections, ML models, etc.
+        ```
 
         Usage example::
 
-            @app.on_startup()
+            @app.on_worker_startup()
             def do_something_on_startup(state):
                 ...  # Can provision resources, or add things to `state`.
         """
         return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
 
+    # TODO: Abstract away worker shutdown into dependency system
     def on_worker_shutdown(self) -> Callable:
         """
-        Code to execute on every worker at shutdown.
+        Code to execute on every worker immediately before broker shutdown.
+
+        ```{note}
+        This is where you should also release any resources you have loaded during
+        worker startup.
+        ```
 
         Usage example::
 
-            @app.on_shutdown()
+            @app.on_worker_shutdown()
             def do_something_on_shutdown(state):
                 ...  # Update some external service, perhaps using information from `state`.
         """
@@ -326,11 +372,12 @@ class SilverbackApp(ManagerAccessMixin):
     def on_(
         self,
         container: BlockContainer | ContractEvent,
+        # TODO: possibly remove these
         new_block_timeout: int | None = None,
         start_block: int | None = None,
     ):
         """
-        Create task to handle events created by `container`.
+        Create task to handle events created by the `container` trigger.
 
         Args:
             container: (BlockContainer | ContractEvent): The event source to watch.
@@ -378,5 +425,5 @@ class SilverbackApp(ManagerAccessMixin):
             return self.broker_task_decorator(TaskType.EVENT_LOG, container=container)
 
         # TODO: Support account transaction polling
-        # TODO: Support mempool polling
+        # TODO: Support mempool polling?
         raise InvalidContainerTypeError(container)
