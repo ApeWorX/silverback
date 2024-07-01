@@ -73,6 +73,7 @@ setup(
         "eth-pydantic-types",  # Use same version as eth-ape
         "packaging",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
+        "quattro>=24.1,<25",
         "taskiq[metrics]>=0.11.3,<0.12",
     ],
     entry_points={
