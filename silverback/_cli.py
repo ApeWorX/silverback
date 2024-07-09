@@ -211,12 +211,39 @@ def login(platform_client: PlatformClient):
     )
 
 
+@cluster.command()
+def workspaces(platform_client: PlatformClient):
+    """List available workspaces"""
+
+    user_id = platform_client.userinfo["sub"]
+    if workspaces := platform_client.workspaces:
+        for workspace_slug, workspace_info in workspaces.items():
+            click.echo(f"{workspace_slug}:")
+            click.echo(f"  id: {workspace_info.id}")
+            click.echo(f"  name: {workspace_info.name}")
+            is_owner = str(workspace_info.owner_id) == user_id
+            click.echo(f"  owner: {is_owner}")
+
+    else:
+        click.secho(
+            "No workspaces available for this account. "
+            "Go to https://silverback.apeworx.io to sign up and create a new workspace",
+            bold=True,
+            fg="red",
+        )
+
+
 @cluster.command(name="list")
-def list_clusters(platform_client: PlatformClient):
+@click.option("-w", "--workspace", "workspace_name")
+def list_clusters(platform_client: PlatformClient, workspace_name: str):
     """List available clusters"""
-    if clusters := platform_client.clusters:
-        for cluster_name, cluster_info in clusters.items():
-            click.echo(f"{cluster_name}:")
+    if not (workspace := platform_client.workspaces.get(workspace_name)):
+        raise click.BadOptionUsage("workspace_name", f"Unknown workspace '{workspace_name}'")
+
+    if clusters := workspace.clusters:
+        for cluster_slug, cluster_info in clusters.items():
+            click.echo(f"{cluster_slug}:")
+            click.echo(f"  name: {cluster_info.name}")
             click.echo(f"  status: {cluster_info.status}")
             click.echo("  configuration:")
             click.echo(f"    cpu: {256 * 2 ** cluster_info.configuration.cpu / 1024} vCPU")
@@ -235,6 +262,7 @@ def list_clusters(platform_client: PlatformClient):
 
 
 @cluster.command(name="new")
+@click.option("-w", "--workspace", "workspace_name")
 @click.option(
     "-n",
     "--name",
@@ -250,16 +278,20 @@ def list_clusters(platform_client: PlatformClient):
 @click.option("-c", "--config", "config_updates", type=(str, str), multiple=True)
 def new_cluster(
     platform_client: PlatformClient,
+    workspace_name: str,
     cluster_name: str,
     tier: str,
     config_updates: list[tuple[str, str]],
 ):
     """Create a new cluster"""
+    if not (workspace := platform_client.workspaces.get(workspace_name)):
+        raise click.BadOptionUsage("workspace_name", f"Unknown workspace '{workspace_name}'")
+
     base_configuration = getattr(ClusterTier, tier.upper()).configuration()
     upgrades = ClusterConfiguration(
         **{k: int(v) if v.isnumeric() else v for k, v in config_updates}
     )
-    cluster = platform_client.create_cluster(
+    cluster = workspace.create_cluster(
         cluster_name=cluster_name,
         configuration=base_configuration | upgrades,
     )
@@ -270,6 +302,7 @@ def new_cluster(
 
 
 @cluster.command()
+@click.option("-w", "--workspace", "workspace_name")
 @click.option(
     "-c",
     "--cluster",
@@ -277,10 +310,13 @@ def new_cluster(
     help="Name of cluster to connect with.",
     required=True,
 )
-def bots(platform_client: PlatformClient, cluster_name: str):
+def bots(platform_client: PlatformClient, workspace_name: str, cluster_name: str):
     """List all bots in a cluster"""
-    if not (cluster := platform_client.clusters.get(cluster_name)):
-        if clusters := "', '".join(platform_client.clusters):
+    if not (workspace := platform_client.workspaces.get(workspace_name)):
+        raise click.BadOptionUsage("workspace_name", f"Unknown workspace '{workspace_name}'")
+
+    if not (cluster := workspace.clusters.get(cluster_name)):
+        if clusters := "', '".join(workspace.clusters):
             message = f"'{cluster_name}' is not a valid cluster, must be one of: '{clusters}'."
 
         else:

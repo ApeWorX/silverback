@@ -11,7 +11,7 @@ from fief_client.integrations.cli import FiefAuth
 from silverback.platform.types import ClusterConfiguration
 from silverback.version import version
 
-from .types import BotInfo, ClusterInfo
+from .types import BotInfo, ClusterInfo, WorkspaceInfo
 
 CREDENTIALS_FOLDER = Path.home() / ".silverback"
 CREDENTIALS_FOLDER.mkdir(exist_ok=True)
@@ -19,8 +19,9 @@ DEFAULT_PROFILE = "production"
 
 
 class ClusterClient(ClusterInfo):
+    workspace: WorkspaceInfo
     # NOTE: Client used only for this SDK
-    platform_client: ClassVar[httpx.Client | None] = None
+    _client: ClassVar[httpx.Client]
 
     def __hash__(self) -> int:
         return int(self.id)
@@ -28,12 +29,12 @@ class ClusterClient(ClusterInfo):
     @property
     @cache
     def client(self) -> httpx.Client:
-        assert self.platform_client, "Forgot to link platform client"
+        assert self._client, "Forgot to link platform client"
         # NOTE: DI happens in `PlatformClient.client`
         return httpx.Client(
-            base_url=f"{self.platform_client.base_url}/clusters/{self.name}",
-            cookies=self.platform_client.cookies,
-            headers=self.platform_client.headers,
+            base_url=f"{self._client.base_url}/{self.workspace.slug}/{self.slug}",
+            cookies=self._client.cookies,
+            headers=self._client.headers,
         )
 
     @property
@@ -45,6 +46,60 @@ class ClusterClient(ClusterInfo):
     def bots(self) -> dict[str, BotInfo]:
         # TODO: Actually connect to cluster and display options
         return {}
+
+
+class WorkspaceClient(WorkspaceInfo):
+    # NOTE: Client used only for this SDK
+    # NOTE: DI happens in `PlatformClient.client`
+    client: ClassVar[httpx.Client]
+
+    def __hash__(self) -> int:
+        return int(self.id)
+
+    def parse_cluster(self, data: dict) -> ClusterClient:
+        return ClusterClient.model_validate(dict(**data, workspace=self))
+
+    @property
+    @cache
+    def clusters(self) -> dict[str, ClusterClient]:
+        response = self.client.get("/clusters", params=dict(org=str(self.id)))
+        response.raise_for_status()
+        clusters = response.json()
+        # TODO: Support paging
+        return {cluster.slug: cluster for cluster in map(self.parse_cluster, clusters)}
+
+    def create_cluster(
+        self,
+        cluster_slug: str = "",
+        cluster_name: str = "",
+        configuration: ClusterConfiguration = ClusterConfiguration(),
+    ) -> ClusterClient:
+        body: dict = dict(configuration=configuration.model_dump())
+
+        if cluster_slug:
+            body["slug"] = cluster_slug
+
+        if cluster_name:
+            body["name"] = cluster_name
+
+        if (
+            response := self.client.post(
+                "/clusters/",
+                params=dict(org=str(self.id)),
+                json=body,
+            )
+        ).status_code >= 400:
+            message = response.text
+            try:
+                message = response.json().get("detail", response.text)
+            except Exception:
+                pass
+
+            raise RuntimeError(message)
+
+        new_cluster = ClusterClient.model_validate_json(response.text)
+        self.clusters.update({new_cluster.slug: new_cluster})  # NOTE: Update cache
+        return new_cluster
 
 
 class PlatformClient:
@@ -94,8 +149,9 @@ class PlatformClient:
         except Exception:
             raise RuntimeError(f"Error with API Host at '{self.base_url}'.")
 
-        # DI for `ClusterClient`
-        ClusterClient.platform_client = client  # Connect to client
+        # DI for other client classes
+        WorkspaceClient.client = client  # Connect to client
+        ClusterClient._client = client  # Connect to client
         return client
 
     @property
@@ -108,31 +164,12 @@ class PlatformClient:
 
     @property
     @cache
-    def clusters(self) -> dict[str, ClusterClient]:
-        response = self.client.get("/clusters/")
+    def workspaces(self) -> dict[str, WorkspaceClient]:
+        response = self.client.get("/organizations")
         response.raise_for_status()
-        clusters = response.json()
+        workspaces = response.json()
         # TODO: Support paging
-        return {cluster.name: cluster for cluster in map(ClusterClient.parse_obj, clusters)}
-
-    def create_cluster(
-        self,
-        cluster_name: str = "",
-        configuration: ClusterConfiguration = ClusterConfiguration(),
-    ) -> ClusterClient:
-        if (
-            response := self.client.post(
-                "/clusters/",
-                params=dict(name=cluster_name),
-                json=configuration.model_dump(),
-            )
-        ).status_code >= 400:
-            message = response.text
-            try:
-                message = response.json().get("detail", response.text)
-            except Exception:
-                pass
-
-            raise RuntimeError(message)
-
-        return ClusterClient.parse_raw(response.text)
+        return {
+            workspace.slug: workspace
+            for workspace in map(WorkspaceClient.model_validate, workspaces)
+        }

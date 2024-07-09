@@ -10,9 +10,11 @@ from pydantic import BaseModel, Field, field_validator
 UINT8_MAX = 2**8 - 1
 
 
-class BotInfo(BaseModel):
+class WorkspaceInfo(BaseModel):
     id: uuid.UUID
+    owner_id: uuid.UUID
     name: str
+    slug: str
 
 
 class ClusterConfiguration(BaseModel):
@@ -101,7 +103,7 @@ class ClusterConfiguration(BaseModel):
 
 
 class ClusterTier(enum.IntEnum):
-    """Default configuration for different tier suggestions"""
+    """Suggestions for different tier configurations"""
 
     PERSONAL = ClusterConfiguration(
         cpu="0.25 vCPU",
@@ -137,8 +139,16 @@ class ClusterInfo(BaseModel):
     # NOTE: Raw API object (gets exported)
     id: uuid.UUID  # NOTE: Keep this private, used as a temporary secret key for payment
     name: str
+    slug: str
     configuration: ClusterConfiguration
 
     created: datetime
     status: ClusterStatus
     last_updated: datetime
+
+
+class BotInfo(BaseModel):
+    id: uuid.UUID
+    name: str
+
+    # TODO: More fields
