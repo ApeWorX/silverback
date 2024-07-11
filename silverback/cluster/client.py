@@ -2,18 +2,9 @@ from functools import cache
 from typing import ClassVar
 
 import httpx
-from fief_client import Fief, FiefAccessTokenInfo, FiefUserInfo
-from fief_client.integrations.cli import FiefAuth
 
 from silverback.version import version
 
-from .settings import (
-    DEFAULT_PROFILE,
-    PROFILE_PATH,
-    AuthenticationConfig,
-    PlatformProfile,
-    ProfileSettings,
-)
 from .types import BotInfo, ClusterConfiguration, ClusterInfo, WorkspaceInfo
 
 DEFAULT_HEADERS = {"User-Agent": f"Silverback SDK/{version}"}
