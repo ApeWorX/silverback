@@ -252,10 +252,10 @@ def cluster():
 @cluster.command()
 @client_option()
 def workspaces(client: Client):
-    """List available workspaces"""
+    """[Platform Only] List available workspaces"""
 
     if not isinstance(client, PlatformClient):
-        raise click.UsageError("This feature is not available when directly connected to a cluster")
+        raise click.UsageError("This feature is not available outside of the silverback platform")
 
     if workspaces := client.workspaces:
         for workspace_slug, workspace_info in workspaces.items():
@@ -275,17 +275,17 @@ def workspaces(client: Client):
 
 @cluster.command(name="list")
 @client_option()
-@click.option("-w", "--workspace", "workspace_name")
-def list_clusters(client: Client, workspace_name: str):
-    """List available clusters"""
+@click.argument("workspace")
+def list_clusters(client: Client, workspace: str):
+    """[Platform Only] List available clusters in WORKSPACE"""
 
-    if not isinstance(client, PlatformClient):
+    if isinstance(client, ClusterClient):
         raise click.UsageError("This feature is not available when directly connected to a cluster")
 
-    if not (workspace := client.workspaces.get(workspace_name)):
-        raise click.BadOptionUsage("workspace_name", f"Unknown workspace '{workspace_name}'")
+    if not (workspace_client := client.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if clusters := workspace.clusters:
+    if clusters := workspace_client.clusters:
         for cluster_slug, cluster_info in clusters.items():
             click.echo(f"{cluster_slug}:")
             click.echo(f"  name: {cluster_info.name}")
@@ -308,7 +308,6 @@ def list_clusters(client: Client, workspace_name: str):
 
 @cluster.command(name="new")
 @client_option()
-@click.option("-w", "--workspace", "workspace_name")
 @click.option(
     "-n",
     "--name",
@@ -322,48 +321,57 @@ def list_clusters(client: Client, workspace_name: str):
     default=ClusterTier.PERSONAL.name,
 )
 @click.option("-c", "--config", "config_updates", type=(str, str), multiple=True)
+@click.argument("workspace")
 def new_cluster(
     client: Client,
-    workspace_name: str,
+    workspace: str,
     cluster_name: str,
     tier: str,
     config_updates: list[tuple[str, str]],
 ):
-    """Create a new cluster"""
+    """[Platform Only] Create a new cluster in WORKSPACE"""
 
-    if not isinstance(client, PlatformClient):
+    if isinstance(client, ClusterClient):
         raise click.UsageError("This feature is not available when directly connected to a cluster")
 
-    if not (workspace := client.workspaces.get(workspace_name)):
-        raise click.BadOptionUsage("workspace_name", f"Unknown workspace '{workspace_name}'")
+    if not (workspace_client := client.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
     base_configuration = getattr(ClusterTier, tier.upper()).configuration()
     upgrades = ClusterConfiguration(
         **{k: int(v) if v.isnumeric() else v for k, v in config_updates}
     )
-    cluster = workspace.create_cluster(
+    cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
         configuration=base_configuration | upgrades,
     )
-    # TODO: Create a signature scheme for ClusterInfo
-    #         (ClusterInfo configuration as plaintext, .id as nonce?)
-    # TODO: Test payment w/ Signature validation of extra data
     click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
+
+
+# `silverback cluster pay WORKSPACE/CLUSTER_NAME --account ALIAS --time "10 days"`
+# TODO: Create a signature scheme for ClusterInfo
+#         (ClusterInfo configuration as plaintext, .id as nonce?)
+# TODO: Test payment w/ Signature validation of extra data
 
 
 @cluster.command()
 @client_option()
-@click.option("-w", "--workspace", "workspace_name")
-@click.option(
-    "-c",
-    "--cluster",
-    "cluster_name",
-    help="Name of cluster to connect with.",
-)
-def bots(client: Client, workspace_name: str, cluster_name: str):
-    """List all bots in a cluster"""
+@click.argument("cluster", default=None)
+def bots(client: Client, cluster: str):
+    """
+    List all bots in a CLUSTER
+
+    For clusters on the Silverback Platform, please provide a name for the cluster to access using
+    your platform authentication obtained via `silverback login` in `workspace/cluster-name` format
+
+    NOTE: Connecting directly to clusters is supported, but is an advanced use case.
+    """
     if not isinstance(client, ClusterClient):
-        client = client.get_cluster_client(workspace_name, cluster_name)
+        workspace_name, cluster_name = cluster.split("/")
+        try:
+            client = client.get_cluster_client(workspace_name, cluster_name)
+        except ValueError as e:
+            raise click.UsageError(str(e))
 
     if bots := client.bots:
         click.echo("Available Bots:")
