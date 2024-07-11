@@ -356,6 +356,28 @@ def new_cluster(
 
 @cluster.command()
 @client_option()
+@click.argument("cluster", default=None, required=False)
+def status(client: Client, cluster: str):
+    """
+    Get Status information about a CLUSTER
+
+    For clusters on the Silverback Platform, please provide a name for the cluster to access using
+    your platform authentication obtained via `silverback login` in `workspace/cluster-name` format
+
+    NOTE: Connecting directly to clusters is supported, but is an advanced use case.
+    """
+    if not isinstance(client, ClusterClient):
+        workspace_name, cluster_name = cluster.split("/")
+        try:
+            client = client.get_cluster_client(workspace_name, cluster_name)
+        except ValueError as e:
+            raise click.UsageError(str(e))
+
+    click.echo(client.status)
+
+
+@cluster.command()
+@client_option()
 @click.argument("cluster", default=None)
 def bots(client: Client, cluster: str):
     """
