@@ -170,7 +170,6 @@ def get_auth(profile_name: str = DEFAULT_PROFILE) -> FiefAuth:
 
 def display_login_message(auth: FiefAuth, host: str):
     userinfo = auth.current_user()
-
     user_id = userinfo["sub"]
     username = userinfo["fields"].get("username")
     click.echo(
@@ -178,6 +177,27 @@ def display_login_message(auth: FiefAuth, host: str):
         f"Logged in to '{click.style(host, bold=True)}' as "
         f"'{click.style(username if username else user_id, bold=True)}'"
     )
+
+
+@cli.command()
+@click.argument(
+    "auth",
+    metavar="PROFILE",
+    default=DEFAULT_PROFILE,
+    callback=lambda ctx, param, value: get_auth(value),
+)
+def login(auth: FiefAuth):
+    """
+    CLI Login to Managed Authorization Service
+
+    Initiate a login in to the configured service using the given auth PROFILE.
+    Defaults to https://account.apeworx.io if PROFILE not provided.
+
+    NOTE: You likely do not need to use an auth PROFILE here.
+    """
+
+    auth.authorize()
+    display_login_message(auth, auth.client.base_url)
 
 
 def client_option():
@@ -227,22 +247,6 @@ def client_option():
 @cli.group(cls=OrderedCommands)
 def cluster():
     """Connect to hosted application clusters"""
-
-
-@cluster.command()
-@click.option(
-    "-a",
-    "--auth-profile",
-    "auth",
-    default=DEFAULT_PROFILE,
-    callback=lambda ctx, param, value: get_auth(value),
-    help="Authentication profile to use for Platform login.",
-)
-def login(auth: FiefAuth):
-    """Login to hosted clusters"""
-
-    auth.authorize()
-    display_login_message(auth, auth.client.base_url)
 
 
 @cluster.command()
