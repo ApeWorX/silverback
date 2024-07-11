@@ -30,7 +30,13 @@ from silverback.cluster.types import ClusterConfiguration, ClusterTier
 from silverback.runner import PollingRunner, WebsocketRunner
 
 
-@click.group()
+class OrderedCommands(click.Group):
+    # NOTE: Override so we get the list ordered by definition order
+    def list_commands(self, ctx: click.Context) -> list[str]:
+        return list(self.commands)
+
+
+@click.group(cls=OrderedCommands)
 def cli():
     """Work with Silverback applications in local context (using Ape)."""
 
@@ -218,13 +224,7 @@ def client_option():
     )
 
 
-class PlatformCommands(click.Group):
-    # NOTE: Override so we get the list ordered by definition order
-    def list_commands(self, ctx: click.Context) -> list[str]:
-        return list(self.commands)
-
-
-@cli.group(cls=PlatformCommands)
+@cli.group(cls=OrderedCommands)
 def cluster():
     """Connect to hosted application clusters"""
 
