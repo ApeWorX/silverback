@@ -206,6 +206,8 @@ def client_option():
                 headers={"X-API-Key": profile.api_key},
             )
 
+        raise NotImplementedError  # Should not be possible, but mypy barks
+
     return click.option(
         "-p",
         "--profile",
