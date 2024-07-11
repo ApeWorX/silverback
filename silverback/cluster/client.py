@@ -10,15 +10,42 @@ from .types import BotInfo, ClusterConfiguration, ClusterInfo, WorkspaceInfo
 DEFAULT_HEADERS = {"User-Agent": f"Silverback SDK/{version}"}
 
 
+def handle_error_with_response(response: httpx.Response):
+    if 400 <= response.status_code < 500:
+        message = response.text
+        try:
+            message = response.json().get("detail", response.text)
+        except Exception:
+            pass
+
+        raise RuntimeError(message)
+
+    response.raise_for_status()
+
+    assert response.status_code < 300, "Should follow redirects, so not sure what the issue is"
+
+
 class ClusterClient(httpx.Client):
     def __init__(self, *args, **kwargs):
         kwargs["headers"] = {**kwargs.get("headers", {}), **DEFAULT_HEADERS}
         super().__init__(*args, **kwargs)
 
+    def send(self, request, *args, **kwargs):
+        try:
+            return super().send(request, *args, **kwargs)
+
+        except httpx.ConnectError as e:
+            raise ValueError(f"{e} '{request.url}'") from e
+
     @property
     @cache
     def openapi_schema(self) -> dict:
         return self.get("/openapi.json").json()
+
+    @property
+    def status(self) -> str:
+        # NOTE: Just return full response directly to avoid errors
+        return self.get("/").text
 
     @property
     def bots(self) -> dict[str, BotInfo]:
@@ -47,7 +74,7 @@ class Workspace(WorkspaceInfo):
     @cache
     def clusters(self) -> dict[str, ClusterInfo]:
         response = self.client.get("/clusters", params=dict(org=str(self.id)))
-        response.raise_for_status()
+        handle_error_with_response(response)
         clusters = response.json()
         # TODO: Support paging
         return {cluster.slug: cluster for cluster in map(ClusterInfo.model_validate, clusters)}
@@ -66,21 +93,13 @@ class Workspace(WorkspaceInfo):
         if cluster_name:
             body["name"] = cluster_name
 
-        if (
-            response := self.client.post(
-                "/clusters/",
-                params=dict(org=str(self.id)),
-                json=body,
-            )
-        ).status_code >= 400:
-            message = response.text
-            try:
-                message = response.json().get("detail", response.text)
-            except Exception:
-                pass
+        response = self.client.post(
+            "/clusters/",
+            params=dict(org=str(self.id)),
+            json=body,
+        )
 
-            raise RuntimeError(message)
-
+        handle_error_with_response(response)
         new_cluster = ClusterInfo.model_validate_json(response.text)
         self.clusters.update({new_cluster.slug: new_cluster})  # NOTE: Update cache
         return new_cluster
@@ -97,6 +116,13 @@ class PlatformClient(httpx.Client):
         # DI for other client classes
         Workspace.client = self  # Connect to platform client
 
+    def send(self, request, *args, **kwargs):
+        try:
+            return super().send(request, *args, **kwargs)
+
+        except httpx.ConnectError as e:
+            raise ValueError(f"{e} '{request.url}'") from e
+
     def get_cluster_client(self, workspace_name: str, cluster_name: str) -> ClusterClient:
         if not (workspace := self.workspaces.get(workspace_name)):
             raise ValueError(f"Unknown workspace '{workspace_name}'.")
@@ -107,7 +133,7 @@ class PlatformClient(httpx.Client):
     @cache
     def workspaces(self) -> dict[str, Workspace]:
         response = self.get("/organizations")
-        response.raise_for_status()
+        handle_error_with_response(response)
         workspaces = response.json()
         # TODO: Support paging
         return {
@@ -123,7 +149,7 @@ class PlatformClient(httpx.Client):
             "/organizations",
             json=dict(slug=workspace_slug, name=workspace_name),
         )
-        response.raise_for_status()
+        handle_error_with_response(response)
         new_workspace = Workspace.model_validate_json(response.text)
         self.workspaces.update({new_workspace.slug: new_workspace})  # NOTE: Update cache
         return new_workspace
