@@ -144,10 +144,11 @@ class Web3SubscriptionsManager:
         """
         while True:
             if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
-                try:
-                    await self._receive(timeout=timeout)
-                except TimeoutError:
-                    pass
+                async with self._ws_lock:
+                    try:
+                        await self._receive(timeout=timeout)
+                    except TimeoutError:
+                        pass
             else:
                 try:
                     yield queue.get_nowait()
