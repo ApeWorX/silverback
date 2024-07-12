@@ -139,7 +139,7 @@ class Web3SubscriptionsManager:
                     await self.__anext__()
             else:
                 try:
-                    yield await queue.get_nowait()
+                    yield queue.get_nowait()
                 except asyncio.QueueEmpty:
                     pass
 
@@ -154,7 +154,7 @@ class Web3SubscriptionsManager:
 
         if queue:
             try:
-                return await queue.get_nowait()
+                return queue.get_nowait()
             except asyncio.QueueEmpty:
                 pass
 
