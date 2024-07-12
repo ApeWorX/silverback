@@ -127,6 +127,22 @@ class Web3SubscriptionsManager:
             else:
                 yield await queue.get()
 
+    async def get_subscription_data_nowait(self, sub_id: str) -> AsyncGenerator[dict, None]:
+        """Iterate items from the subscription queue. If nothing is in the
+        queue, return.
+        """
+        while True:
+            if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
+                async with self._ws_lock:
+                    # Keep pulling until a message comes to process
+                    # NOTE: Python <3.10 does not support `anext` function
+                    await self.__anext__()
+            else:
+                try:
+                    yield await queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+
     async def pop_subscription_data(self, sub_id: str) -> Union[dict, None]:
         """Remove and return a single item from the subscription queue."""
 
