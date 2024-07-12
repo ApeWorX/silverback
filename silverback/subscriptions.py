@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum
-from typing import AsyncGenerator, Union
+from typing import AsyncGenerator, Optional, Union
 
 from ape.logging import logger
 from websockets import ConnectionClosedError
@@ -46,14 +46,14 @@ class Web3SubscriptionsManager:
         if not self.connection:
             raise StopAsyncIteration
 
-        return self._receive()
+        return await self._receive()
 
     async def _receive(self, timeout: Optional[int] = None) -> str:
         """Receive (and wait if no timeout) for the next message from the
         socket.
         """
         if not self.connection:
-            raise ConnectionClosedError()
+            raise ConnectionError("Connection not opened")
 
         async with asyncio.timeout(timeout):
             message = await self.connection.recv()
