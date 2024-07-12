@@ -155,23 +155,6 @@ class Web3SubscriptionsManager:
                 except asyncio.QueueEmpty:
                     pass
 
-    async def pop_subscription_data(self, sub_id: str) -> Union[dict, None]:
-        """Remove and return a single item from the subscription queue."""
-
-        async with self._ws_lock:
-            # NOTE: Python <3.10 does not support `anext` function
-            await self.__anext__()
-
-        queue = self._subscriptions.get(sub_id)
-
-        if queue:
-            try:
-                return queue.get_nowait()
-            except asyncio.QueueEmpty:
-                pass
-
-        return None
-
     async def unsubscribe(self, sub_id: str) -> bool:
         if sub_id not in self._subscriptions:
             raise ValueError(f"Unknown sub_id '{sub_id}'")
