@@ -55,9 +55,8 @@ class Web3SubscriptionsManager:
         if not self.connection:
             raise ConnectionError("Connection not opened")
 
-        async with asyncio.timeout(timeout):
-            message = await self.connection.recv()
-            # TODO: Handle retries when connection breaks
+        message = await asyncio.wait_for(self.connection.recv(), timeout)
+        # TODO: Handle retries when connection breaks
 
         response = json.loads(message)
         if response.get("method") == "eth_subscription":
