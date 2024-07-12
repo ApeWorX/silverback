@@ -367,6 +367,12 @@ def status(client: Client, cluster: str):
     NOTE: Connecting directly to clusters is supported, but is an advanced use case.
     """
     if not isinstance(client, ClusterClient):
+        if cluster is None:
+            raise click.UsageError("CLUSTER is required for a platform-managed cluster")
+
+        elif "/" not in cluster or len(cluster.split("/")) > 2:
+            raise click.UsageError("CLUSTER should be in format `WORKSPACE-NAME/CLUSTER-NAME`")
+
         workspace_name, cluster_name = cluster.split("/")
         try:
             client = client.get_cluster_client(workspace_name, cluster_name)
@@ -378,7 +384,7 @@ def status(client: Client, cluster: str):
 
 @cluster.command()
 @client_option()
-@click.argument("cluster", default=None)
+@click.argument("cluster", default=None, required=False)
 def bots(client: Client, cluster: str):
     """
     List all bots in a CLUSTER
@@ -389,6 +395,12 @@ def bots(client: Client, cluster: str):
     NOTE: Connecting directly to clusters is supported, but is an advanced use case.
     """
     if not isinstance(client, ClusterClient):
+        if cluster is None:
+            raise click.UsageError("CLUSTER is required for a platform-managed cluster")
+
+        elif "/" not in cluster or len(cluster.split("/")) > 2:
+            raise click.UsageError("CLUSTER should be in format `WORKSPACE-NAME/CLUSTER-NAME`")
+
         workspace_name, cluster_name = cluster.split("/")
         try:
             client = client.get_cluster_client(workspace_name, cluster_name)
