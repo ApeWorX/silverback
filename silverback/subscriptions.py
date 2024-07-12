@@ -46,8 +46,18 @@ class Web3SubscriptionsManager:
         if not self.connection:
             raise StopAsyncIteration
 
-        message = await self.connection.recv()
-        # TODO: Handle retries when connection breaks
+        return self._receive()
+
+    async def _receive(self, timeout: Optional[int] = None) -> str:
+        """Receive (and wait if no timeout) for the next message from the
+        socket.
+        """
+        if not self.connection:
+            raise ConnectionClosedError()
+
+        async with asyncio.timeout(timeout):
+            message = await self.connection.recv()
+            # TODO: Handle retries when connection breaks
 
         response = json.loads(message)
         if response.get("method") == "eth_subscription":
@@ -127,16 +137,18 @@ class Web3SubscriptionsManager:
             else:
                 yield await queue.get()
 
-    async def get_subscription_data_nowait(self, sub_id: str) -> AsyncGenerator[dict, None]:
+    async def get_subscription_data_nowait(
+        self, sub_id: str, timeout: Optional[int] = 15
+    ) -> AsyncGenerator[dict, None]:
         """Iterate items from the subscription queue. If nothing is in the
         queue, return.
         """
         while True:
             if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
-                async with self._ws_lock:
-                    # Keep pulling until a message comes to process
-                    # NOTE: Python <3.10 does not support `anext` function
-                    await self.__anext__()
+                try:
+                    await self._receive(timeout=timeout)
+                except TimeoutError:
+                    pass
             else:
                 try:
                     yield queue.get_nowait()
