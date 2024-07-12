@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Union
 
 from ape.logging import logger
 from websockets import ConnectionClosedError
@@ -115,6 +115,9 @@ class Web3SubscriptionsManager:
         return sub_id
 
     async def get_subscription_data(self, sub_id: str) -> AsyncGenerator[dict, None]:
+        """Iterate items from the subscription queue. If nothing is in the
+        queue, await.
+        """
         while True:
             if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
                 async with self._ws_lock:
@@ -123,6 +126,23 @@ class Web3SubscriptionsManager:
                     await self.__anext__()
             else:
                 yield await queue.get()
+
+    async def pop_subscription_data(self, sub_id: str) -> Union[dict, None]:
+        """Remove and return a single item from the subscription queue."""
+
+        async with self._ws_lock:
+            # NOTE: Python <3.10 does not support `anext` function
+            await self.__anext__()
+
+        queue = self._subscriptions.get(sub_id)
+
+        if queue:
+            try:
+                return await queue.get_nowait()
+            except asyncio.QueueEmpty:
+                pass
+
+        return None
 
     async def unsubscribe(self, sub_id: str) -> bool:
         if sub_id not in self._subscriptions:
