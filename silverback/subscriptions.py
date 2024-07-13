@@ -144,23 +144,16 @@ class Web3SubscriptionsManager:
         """
         while True:
             if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
-                logger.debug(
-                    f"Acquiring lock for recv (no wait). (is locked? {self._ws_lock.locked()})"
-                )
                 async with self._ws_lock:
-                    logger.debug("Acquired lock for recv (no wait).")
                     try:
                         await self._receive(timeout=timeout)
                     except TimeoutError:
                         logger.debug("Receive call timed out.")
                         return
-                    else:
-                        logger.debug("Receive call completed.")
             else:
                 try:
                     yield queue.get_nowait()
                 except asyncio.QueueEmpty:
-                    logger.debug("Subscription queue empty.")
                     return
 
     async def unsubscribe(self, sub_id: str) -> bool:
