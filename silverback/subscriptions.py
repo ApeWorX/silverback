@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum
-from typing import AsyncGenerator, Optional, Union
+from typing import AsyncGenerator, Optional
 
 from ape.logging import logger
 from websockets import ConnectionClosedError
@@ -62,7 +62,7 @@ class Web3SubscriptionsManager:
         if response.get("method") == "eth_subscription":
             sub_params: dict = response.get("params", {})
             if not (sub_id := sub_params.get("subscription")) or not isinstance(sub_id, str):
-                logger.debug(f"Corrupted subscription data: {response}")
+                logger.warning(f"Corrupted subscription data: {response}")
                 return response
 
             if sub_id not in self._subscriptions:
@@ -144,16 +144,24 @@ class Web3SubscriptionsManager:
         """
         while True:
             if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
+                logger.debug(
+                    f"Acquiring lock for recv (no wait). (is locked? {self._ws_lock.locked()})"
+                )
                 async with self._ws_lock:
+                    logger.debug("Acquired lock for recv (no wait).")
                     try:
                         await self._receive(timeout=timeout)
                     except TimeoutError:
-                        pass
+                        logger.debug("Receive call timed out.")
+                        return
+                    else:
+                        logger.debug("Receive call completed.")
             else:
                 try:
                     yield queue.get_nowait()
                 except asyncio.QueueEmpty:
-                    pass
+                    logger.debug("Subscription queue empty.")
+                    return
 
     async def unsubscribe(self, sub_id: str) -> bool:
         if sub_id not in self._subscriptions:
