@@ -312,20 +312,34 @@ def list_clusters(client: Client, workspace: str):
     "-n",
     "--name",
     "cluster_name",
-    default="",
     help="Name for new cluster (Defaults to random)",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "cluster_slug",
+    help="Slug for new cluster (Defaults to name.lower())",
 )
 @click.option(
     "-t",
     "--tier",
     default=ClusterTier.PERSONAL.name,
+    help="Named set of options to use for cluster (Defaults to PERSONAL)",
 )
-@click.option("-c", "--config", "config_updates", type=(str, str), multiple=True)
+@click.option(
+    "-c",
+    "--config",
+    "config_updates",
+    type=(str, str),
+    multiple=True,
+    help="Config options to set for cluster (overrides value of -t/--tier)",
+)
 @click.argument("workspace")
 def new_cluster(
     client: Client,
     workspace: str,
-    cluster_name: str,
+    cluster_name: str | None,
+    cluster_slug: str | None,
     tier: str,
     config_updates: list[tuple[str, str]],
 ):
@@ -337,15 +351,20 @@ def new_cluster(
     if not (workspace_client := client.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    base_configuration = getattr(ClusterTier, tier.upper()).configuration()
-    upgrades = ClusterConfiguration(
-        **{k: int(v) if v.isnumeric() else v for k, v in config_updates}
-    )
-    cluster = workspace_client.create_cluster(
-        cluster_name=cluster_name,
-        configuration=base_configuration | upgrades,
-    )
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
+    configuration = getattr(ClusterTier, tier.upper()).configuration()
+
+    for k, v in config_updates:
+        setattr(configuration, k, int(v) if v.isnumeric() else v)
+
+    try:
+        cluster = workspace_client.create_cluster(
+            cluster_name=cluster_name,
+            cluster_slug=cluster_slug,
+            configuration=configuration,
+        )
+        click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
+    except RuntimeError as e:
+        raise click.UsageError(str(e))
 
 
 # `silverback cluster pay WORKSPACE/CLUSTER_NAME --account ALIAS --time "10 days"`
@@ -379,7 +398,10 @@ def status(client: Client, cluster: str):
         except ValueError as e:
             raise click.UsageError(str(e))
 
-    click.echo(client.status)
+    try:
+        click.echo(client.status)
+    except RuntimeError as e:
+        raise click.UsageError(str(e))
 
 
 @cluster.command()
@@ -407,7 +429,12 @@ def bots(client: Client, cluster: str):
         except ValueError as e:
             raise click.UsageError(str(e))
 
-    if bots := client.bots:
+    try:
+        bots = client.bots
+    except RuntimeError as e:
+        raise click.UsageError(str(e))
+
+    if bots:
         click.echo("Available Bots:")
         for bot_name, bot_info in bots.items():
             click.echo(f"- {bot_name} (UUID: {bot_info.id})")

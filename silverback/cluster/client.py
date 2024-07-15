@@ -13,10 +13,29 @@ DEFAULT_HEADERS = {"User-Agent": f"Silverback SDK/{version}"}
 def handle_error_with_response(response: httpx.Response):
     if 400 <= response.status_code < 500:
         message = response.text
+
         try:
-            message = response.json().get("detail", response.text)
+            message = response.json()
         except Exception:
             pass
+
+        if isinstance(message, dict):
+            if detail := message.get("detail"):
+                if isinstance(detail, list):
+
+                    def render_error(error: dict):
+                        location = ".".join(error["loc"])
+                        return f"- {location}: '{error['msg']}'"
+
+                    message = "Multiple validation errors found:\n" + "\n".join(
+                        map(render_error, detail)
+                    )
+
+                else:
+                    message = detail
+
+            else:
+                message = response.text
 
         raise RuntimeError(message)
 
@@ -44,11 +63,15 @@ class ClusterClient(httpx.Client):
 
     @property
     def status(self) -> str:
+        response = self.get("/")
+        handle_error_with_response(response)
         # NOTE: Just return full response directly to avoid errors
-        return self.get("/").text
+        return response.text
 
     @property
     def bots(self) -> dict[str, BotInfo]:
+        response = self.get("/bots")
+        handle_error_with_response(response)
         # TODO: Actually connect to cluster and display options
         return {}
 
@@ -81,22 +104,18 @@ class Workspace(WorkspaceInfo):
 
     def create_cluster(
         self,
-        cluster_slug: str = "",
-        cluster_name: str = "",
+        cluster_slug: str | None = None,
+        cluster_name: str | None = None,
         configuration: ClusterConfiguration = ClusterConfiguration(),
     ) -> ClusterInfo:
-        body: dict = dict(configuration=configuration.model_dump())
-
-        if cluster_slug:
-            body["slug"] = cluster_slug
-
-        if cluster_name:
-            body["name"] = cluster_name
-
         response = self.client.post(
             "/clusters/",
             params=dict(org=str(self.id)),
-            json=body,
+            json=dict(
+                name=cluster_name,
+                slug=cluster_slug,
+                configuration=configuration.model_dump(),
+            ),
         )
 
         handle_error_with_response(response)

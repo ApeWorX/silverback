@@ -66,16 +66,6 @@ class ClusterConfiguration(BaseModel):
         assert units.lower() == "gb"
         return int(mem)
 
-    def __or__(self, other: "ClusterConfiguration") -> "ClusterConfiguration":
-        # NOTE: Helps combine configurations
-        assert isinstance(other, ClusterConfiguration)
-
-        new = self.copy()
-        for field in self.model_fields:
-            setattr(new, field, max(getattr(self, field), getattr(other, field)))
-
-        return new
-
     @classmethod
     def decode(cls, value: int) -> "ClusterConfiguration":
         """Decode the configuration from 16 byte integer value"""
