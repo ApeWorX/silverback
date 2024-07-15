@@ -79,6 +79,9 @@ class ClusterConfiguration(BaseModel):
     @classmethod
     def decode(cls, value: int) -> "ClusterConfiguration":
         """Decode the configuration from 16 byte integer value"""
+        if isinstance(value, ClusterConfiguration):
+            return value  # TODO: Something weird with SQLModel
+
         # NOTE: Do not change the order of these, these are not forwards compatible
         return cls(
             version=value & UINT8_MAX,
