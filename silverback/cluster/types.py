@@ -117,12 +117,13 @@ class ClusterTier(enum.IntEnum):
         return ClusterConfiguration.decode(int(self))
 
 
-class ClusterStatus(enum.Enum):
-    CREATED = enum.auto()  # User record created, but not paid for yet
-    STANDUP = enum.auto()  # Payment received, provisioning infrastructure
-    RUNNING = enum.auto()  # Paid for and fully deployed by payment handler
-    TEARDOWN = enum.auto()  # User triggered shutdown or payment expiration recorded
-    REMOVED = enum.auto()  # Infrastructure de-provisioning complete
+class ClusterStatus(enum.IntEnum):
+    # NOTE: Selected integer values with some space for other steps
+    CREATED = 0  # User record created, but not paid for yet
+    STANDUP = 3  # Payment received, provisioning infrastructure
+    RUNNING = 5  # Paid for and fully deployed by payment handler
+    TEARDOWN = 6  # User triggered shutdown or payment expiration recorded
+    REMOVED = 9  # Infrastructure de-provisioning complete
 
     def __str__(self) -> str:
         return self.name.capitalize()
