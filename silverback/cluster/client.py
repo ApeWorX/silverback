@@ -81,6 +81,22 @@ class Workspace(WorkspaceInfo):
     # NOTE: DI happens in `PlatformClient.client`
     client: ClassVar[httpx.Client]
 
+    @property
+    @cache
+    def owner(self) -> str:
+        response = self.client.get(f"/users/{self.owner_id}")
+        handle_error_with_response(response)
+        return response.json().get("username")
+
+    def build_display_fields(self) -> dict[str, str]:
+        return dict(
+            # `.id` is internal
+            name=self.name,
+            # `.slug` is index
+            # `.owner_id` is UUID, use for client lookup instead
+            owner=self.owner,
+        )
+
     def __hash__(self) -> int:
         return int(self.id)
 

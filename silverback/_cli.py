@@ -26,7 +26,7 @@ from silverback.cluster.settings import (
     PlatformProfile,
     ProfileSettings,
 )
-from silverback.cluster.types import ClusterConfiguration, ClusterTier
+from silverback.cluster.types import ClusterConfiguration, ClusterTier, render_dict_as_yaml
 from silverback.runner import PollingRunner, WebsocketRunner
 
 
@@ -257,12 +257,8 @@ def workspaces(client: Client):
     if not isinstance(client, PlatformClient):
         raise click.UsageError("This feature is not available outside of the silverback platform")
 
-    if workspaces := client.workspaces:
-        for workspace_slug, workspace_info in workspaces.items():
-            click.echo(f"{workspace_slug}:")
-            click.echo(f"  id: {workspace_info.id}")
-            click.echo(f"  name: {workspace_info.name}")
-            click.echo(f"  owner: {workspace_info.owner_id}")
+    if workspace_display := render_dict_as_yaml(client.workspaces):
+        click.echo(workspace_display)
 
     else:
         click.secho(
@@ -285,22 +281,8 @@ def list_clusters(client: Client, workspace: str):
     if not (workspace_client := client.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if clusters := workspace_client.clusters:
-        for cluster_slug, cluster_info in clusters.items():
-            click.echo(f"{cluster_slug}:")
-            click.echo(f"  name: {cluster_info.name}")
-            click.echo(f"  status: {cluster_info.status}")
-            click.echo("  configuration:")
-            click.echo(f"    cpu: {256 * 2 ** cluster_info.configuration.cpu / 1024} vCPU")
-            memory_display = (
-                f"{cluster_info.configuration.memory} GB"
-                if cluster_info.configuration.memory > 0
-                else "512 MiB"
-            )
-            click.echo(f"    memory: {memory_display}")
-            click.echo(f"    networks: {cluster_info.configuration.networks}")
-            click.echo(f"    bots: {cluster_info.configuration.bots}")
-            click.echo(f"    triggers: {cluster_info.configuration.triggers}")
+    if cluster_display := render_dict_as_yaml(workspace_client.clusters):
+        click.echo(cluster_display)
 
     else:
         click.secho("No clusters for this account", bold=True, fg="red")
@@ -392,16 +374,8 @@ def status(client: Client, cluster: str):
         elif "/" not in cluster or len(cluster.split("/")) > 2:
             raise click.UsageError("CLUSTER should be in format `WORKSPACE-NAME/CLUSTER-NAME`")
 
-        workspace_name, cluster_name = cluster.split("/")
-        try:
-            client = client.get_cluster_client(workspace_name, cluster_name)
-        except ValueError as e:
-            raise click.UsageError(str(e))
+    click.echo(render_dict_as_yaml(client.build_display_fields()))
 
-    try:
-        click.echo(client.status)
-    except RuntimeError as e:
-        raise click.UsageError(str(e))
 
 
 @cluster.command()
@@ -429,15 +403,9 @@ def bots(client: Client, cluster: str):
         except ValueError as e:
             raise click.UsageError(str(e))
 
-    try:
-        bots = client.bots
-    except RuntimeError as e:
-        raise click.UsageError(str(e))
-
-    if bots:
-        click.echo("Available Bots:")
-        for bot_name, bot_info in bots.items():
-            click.echo(f"- {bot_name} (UUID: {bot_info.id})")
-
+    if bot_display := render_dict_as_yaml(client.bots):
+        click.echo(bot_display)
     else:
         click.secho("No bots in this cluster", bold=True, fg="red")
+
+

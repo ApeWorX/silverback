@@ -2,12 +2,31 @@ import enum
 import math
 import uuid
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import BaseModel, Field, field_validator
 
 # NOTE: All configuration settings must be uint8 integer values
 UINT8_MAX = 2**8 - 1
+
+TIME_FORMAT_STRING = "{0:%x} {0:%X}"
+
+
+def render_dict_as_yaml(value: Any, prepend: str = "\n") -> str:
+    if hasattr(value, "build_display_fields"):
+        return render_dict_as_yaml(value.build_display_fields(), prepend=prepend)
+
+    elif not isinstance(value, dict):
+        raise ValueError(f"'{type(value)}' is not renderable.")
+
+    return prepend.join(
+        (
+            f"{key}: {value}"
+            if isinstance(value, str)
+            else f"{key}:{prepend + '  '}{render_dict_as_yaml(value, prepend=(prepend + '  '))}"
+        )
+        for key, value in value.items()
+    )
 
 
 class WorkspaceInfo(BaseModel):
@@ -94,6 +113,15 @@ class ClusterConfiguration(BaseModel):
             + (self.triggers // 5 << 40)
         )
 
+    def build_display_fields(self) -> dict[str, str]:
+        return dict(
+            cpu=f"{256 * 2 ** self.cpu / 1024} vCPU",
+            memory=(f"{self.memory} GB" if self.memory > 0 else "512 MiB"),
+            networks=str(self.networks),
+            bots=str(self.bots),
+            triggers=str(self.triggers),
+        )
+
 
 class ClusterTier(enum.IntEnum):
     """Suggestions for different tier configurations"""
@@ -139,6 +167,18 @@ class ClusterInfo(BaseModel):
     created: datetime
     status: ClusterStatus
     last_updated: datetime
+
+    def build_display_fields(self) -> dict[str, str | dict[str, str]]:
+        return dict(
+            # No `.id`, not visible to client user
+            name=self.name,
+            # No `.slug`, primary identifier used in dict
+            # NOTE: Convert local time
+            created=TIME_FORMAT_STRING.format(self.created.astimezone()),
+            last_updated=TIME_FORMAT_STRING.format(self.last_updated.astimezone()),
+            status=str(self.status),
+            configuration=self.configuration.build_display_fields(),
+        )
 
 
 class BotInfo(BaseModel):
