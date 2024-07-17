@@ -5,7 +5,7 @@ import httpx
 
 from silverback.version import version
 
-from .types import BotInfo, ClusterConfiguration, ClusterInfo, WorkspaceInfo
+from .types import BotInfo, ClusterConfiguration, ClusterInfo, ClusterState, WorkspaceInfo
 
 DEFAULT_HEADERS = {"User-Agent": f"Silverback SDK/{version}"}
 
@@ -62,18 +62,29 @@ class ClusterClient(httpx.Client):
         return self.get("/openapi.json").json()
 
     @property
-    def status(self) -> str:
+    def state(self) -> ClusterState:
         response = self.get("/")
         handle_error_with_response(response)
-        # NOTE: Just return full response directly to avoid errors
-        return response.text
+        return ClusterState.model_validate(response.json())
 
     @property
     def bots(self) -> dict[str, BotInfo]:
-        response = self.get("/bots")
+        response = self.get("/bot")  # TODO: rename `/bots`
         handle_error_with_response(response)
-        # TODO: Actually connect to cluster and display options
-        return {}
+        return {bot.slug: bot for bot in map(BotInfo.model_validate, response.json())}
+
+    def build_display_fields(self) -> dict[str, str | dict[str, str]]:
+        state = self.state
+
+        display_fields: dict[str, str | dict[str, str]] = dict(
+            version=state.version,
+            bots=str(len(self.bots)),  # TODO: Source this from `ClusterState`
+        )
+
+        if state.configuration:
+            display_fields["configuration"] = state.configuration.build_display_fields()
+
+        return display_fields
 
 
 class Workspace(WorkspaceInfo):

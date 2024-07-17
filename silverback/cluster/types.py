@@ -2,9 +2,10 @@ import enum
 import math
 import uuid
 from datetime import datetime
+from hashlib import blake2s
 from typing import Annotated, Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # NOTE: All configuration settings must be uint8 integer values
 UINT8_MAX = 2**8 - 1
@@ -181,8 +182,48 @@ class ClusterInfo(BaseModel):
         )
 
 
-class BotInfo(BaseModel):
-    id: uuid.UUID
-    name: str
+# TODO: Merge `/health` with `/`
+class ClusterState(BaseModel):
+    """
+    Cluster Build Information and Configuration, direct from cluster control service
+    """
 
-    # TODO: More fields
+    version: str = Field(alias="cluster_version")  # TODO: Rename in cluster
+    configuration: ClusterConfiguration | None = None  # TODO: Add to cluster
+    # TODO: Add other useful summary fields for frontend use (`bots: int`, `errors: int`, etc.)
+
+
+class BotInfo(BaseModel):
+    id: uuid.UUID  # TODO: Change `.instance_id` field to `id: UUID`
+
+    # TODO: Add `.network`, `.slug`, `.network` fields to cluster model
+    @model_validator(mode="before")
+    def set_expected_fields(cls, data: dict) -> dict:
+        instance_id: str = data.get("instance_id", "random:network:<unknown>")
+        name_hash = blake2s(instance_id.encode("utf-8"))
+        data["id"] = uuid.UUID(bytes=name_hash.digest()[:16])
+        ecosystem, network, name = instance_id.split(":")
+        data["slug"] = name
+        data["name"] = name.capitalize()
+        data["network"] = f"{ecosystem}:{network}"
+        return data
+
+    slug: str
+    name: str
+    network: str
+
+    # TODO: More config fields (`.description`, `.image`, `.account`, `.environment`)
+
+    # Other fields that are currently in there (TODO: Remove)
+    config_set_name: str
+    config_set_revision: int
+    revision: int
+    terminated: bool
+
+    def build_display_fields(self) -> dict[str, str]:
+        return dict(
+            # No `.id`, not visible to client user
+            # No `.slug`, primary identifier used in dict
+            name=self.name,
+            network=self.network,
+        )
