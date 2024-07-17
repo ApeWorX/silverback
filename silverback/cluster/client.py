@@ -1,3 +1,4 @@
+import uuid
 from functools import cache
 from typing import ClassVar
 
@@ -5,7 +6,7 @@ import httpx
 
 from silverback.version import version
 
-from .types import BotInfo, ClusterConfiguration, ClusterInfo, ClusterState, WorkspaceInfo
+from .types import BotInfo, ClusterConfiguration, ClusterInfo, ClusterState, EnvInfo, WorkspaceInfo
 
 DEFAULT_HEADERS = {"User-Agent": f"Silverback SDK/{version}"}
 
@@ -44,10 +45,38 @@ def handle_error_with_response(response: httpx.Response):
     assert response.status_code < 300, "Should follow redirects, so not sure what the issue is"
 
 
+class Env(EnvInfo):
+    # NOTE: Client used only for this SDK
+    # NOTE: DI happens in `PlatformClient.client`
+    client: ClassVar[httpx.Client]
+
+    def update(self, name: str | None = None):
+        response = self.client.put(f"/env/{self.id}", json=dict(name=name))
+        handle_error_with_response(response)
+
+    @property
+    def revisions(self) -> list[EnvInfo]:
+        response = self.client.get(f"/env/{self.id}")
+        handle_error_with_response(response)
+        return [EnvInfo.model_validate(env_info) for env_info in response.json()]
+
+    def add_revision(self, variables: dict[str, str | None]) -> "Env":
+        response = self.client.post(f"/env/{self.id}", json=dict(variables=variables))
+        handle_error_with_response(response)
+        return Env.model_validate(response.json())
+
+    def rm(self):
+        response = self.client.delete(f"/env/{self.id}")
+        handle_error_with_response(response)
+
+
 class ClusterClient(httpx.Client):
     def __init__(self, *args, **kwargs):
         kwargs["headers"] = {**kwargs.get("headers", {}), **DEFAULT_HEADERS}
         super().__init__(*args, **kwargs)
+
+        # DI for other client classes
+        Env.client = self  # Connect to cluster client
 
     def send(self, request, *args, **kwargs):
         try:
@@ -66,6 +95,17 @@ class ClusterClient(httpx.Client):
         response = self.get("/")
         handle_error_with_response(response)
         return ClusterState.model_validate(response.json())
+
+    @property
+    def envs(self) -> dict[str, Env]:
+        response = self.get("/env")
+        handle_error_with_response(response)
+        return {env.name: env for env in map(Env.model_validate, response.json())}
+
+    def new_env(self, name: str, variables: dict[str, str]) -> EnvInfo:
+        response = self.post("/env", json=dict(name=name, variables=variables))
+        handle_error_with_response(response)
+        return EnvInfo.model_validate(response.json())
 
     @property
     def bots(self) -> dict[str, BotInfo]:
@@ -199,6 +239,3 @@ class PlatformClient(httpx.Client):
         new_workspace = Workspace.model_validate_json(response.text)
         self.workspaces.update({new_workspace.slug: new_workspace})  # NOTE: Update cache
         return new_workspace
-
-
-Client = PlatformClient | ClusterClient

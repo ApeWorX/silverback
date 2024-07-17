@@ -17,6 +17,14 @@ def render_dict_as_yaml(value: Any, prepend: str = "\n") -> str:
     if hasattr(value, "build_display_fields"):
         return render_dict_as_yaml(value.build_display_fields(), prepend=prepend)
 
+    elif isinstance(value, str):
+        return value
+
+    elif isinstance(value, list):
+        return "- " + f"{prepend}- ".join(
+            render_dict_as_yaml(i, prepend=f"{prepend}  ") for i in value
+        )
+
     elif not isinstance(value, dict):
         raise ValueError(f"'{type(value)}' is not renderable.")
 
@@ -191,6 +199,33 @@ class ClusterState(BaseModel):
     version: str = Field(alias="cluster_version")  # TODO: Rename in cluster
     configuration: ClusterConfiguration | None = None  # TODO: Add to cluster
     # TODO: Add other useful summary fields for frontend use (`bots: int`, `errors: int`, etc.)
+
+
+class EnvInfo(BaseModel):
+    id: uuid.UUID
+
+    @model_validator(mode="before")
+    def set_expected_fields(cls, data: dict) -> dict:
+        name: str = data["name"]
+        instance_id: str = f"{name}.{data['revision']}"
+        name_hash = blake2s(instance_id.encode("utf-8"))
+        data["id"] = uuid.UUID(bytes=name_hash.digest()[:16])
+        data["variables"] = list(data["variables"])
+        return data
+
+    name: str
+    revision: int
+    variables: list[str]  # TODO: Change to list
+    created: datetime
+
+    def build_display_fields(self) -> dict[str, str | list[str]]:
+        return dict(
+            # No `.id`, not visible to client user
+            # '.name` is primary identifier
+            revision=str(self.revision),
+            created=TIME_FORMAT_STRING.format(self.created.astimezone()),
+            variables=self.variables,
+        )
 
 
 class BotInfo(BaseModel):

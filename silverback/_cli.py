@@ -415,8 +415,148 @@ def status(client: ClusterClient):
     click.echo(render_dict_as_yaml(client.build_display_fields()))
 
 
-@cluster.command(cls=PlatformCommand)
-def bots(client: ClusterClient):
+@cluster.group(cls=OrderedCommands)
+def env():
+    """Commands for managing environment variables in CLUSTER"""
+
+
+def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
+    def parse_envar(item: str):
+        if not ("=" in item and len(item.split("=")) == 2):
+            raise click.UsageError("Value '{item}' must be in form `NAME=VAL`")
+
+        return item.split("=")
+
+    return dict(parse_envar(item) for item in value)
+
+
+@env.command(cls=PlatformCommand)
+@click.option(
+    "-e",
+    "--env",
+    "variables",
+    multiple=True,
+    type=str,
+    metavar="NAME=VAL",
+    callback=parse_envvars,
+    help="Environment variable key and value to add (Multiple allowed)",
+)
+@click.argument("name")
+def add(client: ClusterClient, variables: dict, name: str):
+    """Create a new GROUP of environment variables in CLUSTER"""
+    if len(variables) == 0:
+        raise click.UsageError("Must supply at least one var via `-e`")
+
+    try:
+        click.echo(render_dict_as_yaml(client.new_env(name=name, variables=variables)))
+
+    except RuntimeError as e:
+        raise click.UsageError(str(e))
+
+
+@env.command(name="list", cls=PlatformCommand)
+def list_envs(client: ClusterClient):
+    """List latest revisions of all variable groups in CLUSTER"""
+    if all_envs := render_dict_as_yaml(client.envs):
+        click.echo(all_envs)
+
+    else:
+        click.secho("No envs in this cluster", bold=True, fg="red")
+
+
+@env.command(cls=PlatformCommand)
+@click.argument("name")
+@click.argument("new_name")
+def change_name(client: ClusterClient, name: str, new_name: str):
+    """Change the display name of a variable GROUP in CLUSTER"""
+    if not (env := client.envs.get(name)):
+        raise click.UsageError(f"Unknown Variable Group '{name}'")
+
+    click.echo(render_dict_as_yaml(env.update(name=new_name)))
+
+
+@env.command(name="set", cls=PlatformCommand)
+@click.option(
+    "-e",
+    "--env",
+    "updated_vars",
+    multiple=True,
+    type=str,
+    metavar="NAME=VAL",
+    callback=parse_envvars,
+    help="Environment variable key and value to add/update (Multiple allowed)",
+)
+@click.option(
+    "-d",
+    "--del",
+    "deleted_vars",
+    multiple=True,
+    type=str,
+    metavar="NAME",
+    help="Environment variable name to delete (Multiple allowed)",
+)
+@click.argument("name")
+def set_env(
+    client: ClusterClient,
+    name: str,
+    updated_vars: dict[str, str],
+    deleted_vars: tuple[str],
+):
+    """Create a new revision of GROUP in CLUSTER with updated values"""
+    if dup := "', '".join(set(updated_vars) & set(deleted_vars)):
+        raise click.UsageError(f"Cannot update and delete vars at the same time: '{dup}'")
+
+    if not (env := client.envs.get(name)):
+        raise click.UsageError(f"Unknown Variable Group '{name}'")
+
+    if missing := "', '".join(set(deleted_vars) - set(env.variables)):
+        raise click.UsageError(f"Cannot delete vars not in env: '{missing}'")
+
+    click.echo(
+        render_dict_as_yaml(
+            env.add_revision(dict(**updated_vars, **{v: None for v in deleted_vars}))
+        )
+    )
+
+
+@env.command(cls=PlatformCommand)
+@click.argument("name")
+@click.option("-r", "--revision", type=int, help="Revision of GROUP to show (Defaults to latest)")
+def show(client: ClusterClient, name: str, revision: int | None):
+    """Show all variables in latest revision of GROUP in CLUSTER"""
+    if not (env := client.envs.get(name)):
+        raise click.UsageError(f"Unknown Variable Group '{name}'")
+
+    for env_info in env.revisions:
+        if revision is None or env_info.revision == revision:
+            click.echo(render_dict_as_yaml(env_info))
+            return
+
+    raise click.UsageError(f"Revision {revision} of '{name}' not found")
+
+
+@env.command(cls=PlatformCommand)
+@click.argument("name")
+def rm(client: ClusterClient, name: str):
+    """
+    Remove a variable GROUP from CLUSTER
+
+    NOTE: Cannot delete if any bots reference any revision of GROUP
+    """
+    if not (env := client.envs.get(name)):
+        raise click.UsageError(f"Unknown Variable Group '{name}'")
+
+    env.rm()
+    click.secho(f"Variable Group '{env.name}' removed.", fg="green", bold=True)
+
+
+@cluster.group(cls=OrderedCommands)
+def bot():
+    """Commands for managing bots in a CLUSTER"""
+
+
+@bot.command(name="list", cls=PlatformCommand)
+def list_bots(client: ClusterClient):
     """
     List all bots in a CLUSTER
 
