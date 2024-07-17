@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 from ape.logging import logger
 from websockets import ConnectionClosedError
@@ -46,14 +46,23 @@ class Web3SubscriptionsManager:
         if not self.connection:
             raise StopAsyncIteration
 
-        message = await self.connection.recv()
+        return await self._receive()
+
+    async def _receive(self, timeout: Optional[int] = None) -> str:
+        """Receive (and wait if no timeout) for the next message from the
+        socket.
+        """
+        if not self.connection:
+            raise ConnectionError("Connection not opened")
+
+        message = await asyncio.wait_for(self.connection.recv(), timeout)
         # TODO: Handle retries when connection breaks
 
         response = json.loads(message)
         if response.get("method") == "eth_subscription":
             sub_params: dict = response.get("params", {})
             if not (sub_id := sub_params.get("subscription")) or not isinstance(sub_id, str):
-                logger.debug(f"Corrupted subscription data: {response}")
+                logger.warning(f"Corrupted subscription data: {response}")
                 return response
 
             if sub_id not in self._subscriptions:
@@ -115,6 +124,9 @@ class Web3SubscriptionsManager:
         return sub_id
 
     async def get_subscription_data(self, sub_id: str) -> AsyncGenerator[dict, None]:
+        """Iterate items from the subscription queue. If nothing is in the
+        queue, await.
+        """
         while True:
             if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
                 async with self._ws_lock:
@@ -123,6 +135,26 @@ class Web3SubscriptionsManager:
                     await self.__anext__()
             else:
                 yield await queue.get()
+
+    async def get_subscription_data_nowait(
+        self, sub_id: str, timeout: Optional[int] = 15
+    ) -> AsyncGenerator[dict, None]:
+        """Iterate items from the subscription queue. If nothing is in the
+        queue, return.
+        """
+        while True:
+            if not (queue := self._subscriptions.get(sub_id)) or queue.empty():
+                async with self._ws_lock:
+                    try:
+                        await self._receive(timeout=timeout)
+                    except TimeoutError:
+                        logger.debug("Receive call timed out.")
+                        return
+            else:
+                try:
+                    yield queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    return
 
     async def unsubscribe(self, sub_id: str) -> bool:
         if sub_id not in self._subscriptions:
