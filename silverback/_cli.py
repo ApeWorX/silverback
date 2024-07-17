@@ -18,15 +18,15 @@ from taskiq.cli.worker.run import shutdown_broker
 from taskiq.receiver import Receiver
 
 from silverback._importer import import_from_string
-from silverback.cluster.client import Client, ClusterClient, PlatformClient
+from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.settings import (
     DEFAULT_PROFILE,
     PROFILE_PATH,
-    ClusterProfile,
+    BaseProfile,
     PlatformProfile,
     ProfileSettings,
 )
-from silverback.cluster.types import ClusterConfiguration, ClusterTier, render_dict_as_yaml
+from silverback.cluster.types import ClusterTier, render_dict_as_yaml
 from silverback.runner import PollingRunner, WebsocketRunner
 
 
@@ -161,13 +161,6 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
     asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
 
-def get_auth(profile_name: str = DEFAULT_PROFILE) -> FiefAuth:
-    settings = ProfileSettings.from_config_file()
-    auth_info = settings.auth[profile_name]
-    fief = Fief(auth_info.host, auth_info.client_id)
-    return FiefAuth(fief, str(PROFILE_PATH.parent / f"{profile_name}.json"))
-
-
 def display_login_message(auth: FiefAuth, host: str):
     userinfo = auth.current_user()
     user_id = userinfo["sub"]
@@ -179,13 +172,123 @@ def display_login_message(auth: FiefAuth, host: str):
     )
 
 
-@cli.command()
-@click.argument(
-    "auth",
-    metavar="PROFILE",
-    default=DEFAULT_PROFILE,
-    callback=lambda ctx, param, value: get_auth(value),
-)
+class PlatformCommand(click.Command):
+    # NOTE: ClassVar assures only loaded once
+    settings = ProfileSettings.from_config_file()
+
+    # NOTE: Cache this class-wide
+    platform_client: PlatformClient | None = None
+
+    def get_params(self, ctx: click.Context):
+        params = super().get_params(ctx)
+
+        def get_profile(ctx, param, value) -> BaseProfile:
+
+            if not (profile := self.settings.profile.get(value)):
+                raise click.BadOptionUsage(option_name=param, message=f"Unknown profile '{value}'.")
+
+            return profile
+
+        params.append(
+            click.Option(
+                param_decls=("-p", "--profile", "profile"),
+                metavar="PROFILE",
+                default=DEFAULT_PROFILE,
+                callback=get_profile,
+            )
+        )
+
+        params.append(
+            click.Argument(
+                param_decls=("cluster",),
+                metavar="WORKSPACE/CLUSTER",
+                required=False,
+                default=None,
+            ),
+        )
+
+        return params
+
+    def get_auth(self, profile: BaseProfile) -> FiefAuth:
+        if not isinstance(profile, PlatformProfile):
+            raise click.UsageError(
+                "This feature is not available outside of the Silverback Platform"
+            )
+
+        auth_info = self.settings.auth[profile.auth]
+        fief = Fief(auth_info.host, auth_info.client_id)
+        return FiefAuth(fief, str(PROFILE_PATH.parent / f"{profile.auth}.json"))
+
+    def get_platform_client(self, auth: FiefAuth, profile: PlatformProfile) -> PlatformClient:
+        try:
+            display_login_message(auth, profile.host)
+        except FiefAuthNotAuthenticatedError as e:
+            raise click.UsageError("Not authenticated, please use `silverback login` first.") from e
+
+        return PlatformClient(
+            base_url=profile.host,
+            cookies=dict(session=auth.access_token_info()["access_token"]),
+        )
+
+    def get_cluster_client(self, cluster_path):
+        assert self.platform_client, "Something parsing out of order"
+
+        if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+            raise click.BadArgumentUsage("CLUSTER should be in format `WORKSPACE/CLUSTER-NAME`")
+
+        workspace_name, cluster_name = cluster_path.split("/")
+        try:
+            return self.platform_client.get_cluster_client(workspace_name, cluster_name)
+        except ValueError as e:
+            raise click.UsageError(str(e))
+
+    def invoke(self, ctx: click.Context):
+        callback_params = self.callback.__annotations__ if self.callback else {}
+
+        cluster_path = ctx.params.pop("cluster")
+
+        if "profile" not in callback_params:
+            profile = ctx.params.pop("profile")
+
+        else:
+            profile = ctx.params["profile"]
+
+        if "auth" in callback_params:
+            ctx.params["auth"] = self.get_auth(profile)
+
+        if "client" in callback_params:
+            client_type_needed = callback_params.get("client")
+
+            if isinstance(profile, PlatformProfile):
+                self.platform_client = self.get_platform_client(
+                    ctx.params.get("auth", self.get_auth(profile)), profile
+                )
+
+                if client_type_needed == PlatformClient:
+                    ctx.params["client"] = self.platform_client
+
+                else:
+                    ctx.params["client"] = self.get_cluster_client(cluster_path)
+
+            elif not client_type_needed == ClusterClient:
+                raise click.UsageError("A cluster profile can only directly connect to a cluster.")
+
+            else:
+                click.echo(
+                    f"{click.style('INFO', fg='blue')}: Logged in to "
+                    f"'{click.style(profile.host, bold=True)}' using API Key"
+                )
+                ctx.params["client"] = ClusterClient(
+                    base_url=profile.host,
+                    headers={"X-API-Key": profile.api_key},
+                )
+
+            assert ctx.params["client"], "Something went wrong"
+
+        super().invoke(ctx)
+
+
+@cli.command(cls=PlatformCommand)
 def login(auth: FiefAuth):
     """
     CLI Login to Managed Authorization Service
@@ -200,62 +303,14 @@ def login(auth: FiefAuth):
     display_login_message(auth, auth.client.base_url)
 
 
-def client_option():
-    settings = ProfileSettings.from_config_file()
-
-    def get_client_from_profile(ctx, param, value) -> Client:
-        if not (profile := settings.profile.get(value)):
-            raise click.BadOptionUsage(option_name=param, message=f"Unknown profile '{value}'.")
-
-        if isinstance(profile, PlatformProfile):
-            auth = get_auth(profile.auth)
-
-            try:
-                display_login_message(auth, profile.host)
-            except FiefAuthNotAuthenticatedError as e:
-                raise click.UsageError(
-                    "Not authenticated, please use `silverback login` first."
-                ) from e
-
-            return PlatformClient(
-                base_url=profile.host,
-                cookies=dict(session=auth.access_token_info()["access_token"]),
-            )
-
-        elif isinstance(profile, ClusterProfile):
-            click.echo(
-                f"{click.style('INFO', fg='blue')}: Logged in to "
-                f"'{click.style(profile.host, bold=True)}' using API Key"
-            )
-            return ClusterClient(
-                base_url=profile.host,
-                headers={"X-API-Key": profile.api_key},
-            )
-
-        raise NotImplementedError  # Should not be possible, but mypy barks
-
-    return click.option(
-        "-p",
-        "--profile",
-        "client",
-        default=DEFAULT_PROFILE,
-        callback=get_client_from_profile,
-        help="Profile to use for connecting to Cluster Host.",
-    )
-
-
 @cli.group(cls=OrderedCommands)
 def cluster():
     """Connect to hosted application clusters"""
 
 
-@cluster.command()
-@client_option()
-def workspaces(client: Client):
+@cluster.command(cls=PlatformCommand)
+def workspaces(client: PlatformClient):
     """[Platform Only] List available workspaces"""
-
-    if not isinstance(client, PlatformClient):
-        raise click.UsageError("This feature is not available outside of the silverback platform")
 
     if workspace_display := render_dict_as_yaml(client.workspaces):
         click.echo(workspace_display)
@@ -269,14 +324,10 @@ def workspaces(client: Client):
         )
 
 
-@cluster.command(name="list")
-@client_option()
+@cluster.command(name="list", cls=PlatformCommand)
 @click.argument("workspace")
-def list_clusters(client: Client, workspace: str):
+def list_clusters(client: PlatformClient, workspace: str):
     """[Platform Only] List available clusters in WORKSPACE"""
-
-    if isinstance(client, ClusterClient):
-        raise click.UsageError("This feature is not available when directly connected to a cluster")
 
     if not (workspace_client := client.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
@@ -288,8 +339,7 @@ def list_clusters(client: Client, workspace: str):
         click.secho("No clusters for this account", bold=True, fg="red")
 
 
-@cluster.command(name="new")
-@client_option()
+@cluster.command(name="new", cls=PlatformCommand)
 @click.option(
     "-n",
     "--name",
@@ -318,7 +368,7 @@ def list_clusters(client: Client, workspace: str):
 )
 @click.argument("workspace")
 def new_cluster(
-    client: Client,
+    client: PlatformClient,
     workspace: str,
     cluster_name: str | None,
     cluster_slug: str | None,
@@ -326,9 +376,6 @@ def new_cluster(
     config_updates: list[tuple[str, str]],
 ):
     """[Platform Only] Create a new cluster in WORKSPACE"""
-
-    if isinstance(client, ClusterClient):
-        raise click.UsageError("This feature is not available when directly connected to a cluster")
 
     if not (workspace_client := client.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
@@ -355,10 +402,8 @@ def new_cluster(
 # TODO: Test payment w/ Signature validation of extra data
 
 
-@cluster.command()
-@client_option()
-@click.argument("cluster", default=None, required=False)
-def status(client: Client, cluster: str):
+@cluster.command(cls=PlatformCommand)
+def status(client: ClusterClient):
     """
     Get Status information about a CLUSTER
 
@@ -367,21 +412,11 @@ def status(client: Client, cluster: str):
 
     NOTE: Connecting directly to clusters is supported, but is an advanced use case.
     """
-    if not isinstance(client, ClusterClient):
-        if cluster is None:
-            raise click.UsageError("CLUSTER is required for a platform-managed cluster")
-
-        elif "/" not in cluster or len(cluster.split("/")) > 2:
-            raise click.UsageError("CLUSTER should be in format `WORKSPACE-NAME/CLUSTER-NAME`")
-
     click.echo(render_dict_as_yaml(client.build_display_fields()))
 
 
-
-@cluster.command()
-@client_option()
-@click.argument("cluster", default=None, required=False)
-def bots(client: Client, cluster: str):
+@cluster.command(cls=PlatformCommand)
+def bots(client: ClusterClient):
     """
     List all bots in a CLUSTER
 
@@ -390,21 +425,9 @@ def bots(client: Client, cluster: str):
 
     NOTE: Connecting directly to clusters is supported, but is an advanced use case.
     """
-    if not isinstance(client, ClusterClient):
-        if cluster is None:
-            raise click.UsageError("CLUSTER is required for a platform-managed cluster")
-
-        elif "/" not in cluster or len(cluster.split("/")) > 2:
-            raise click.UsageError("CLUSTER should be in format `WORKSPACE-NAME/CLUSTER-NAME`")
-
-        workspace_name, cluster_name = cluster.split("/")
-        try:
-            client = client.get_cluster_client(workspace_name, cluster_name)
-        except ValueError as e:
-            raise click.UsageError(str(e))
-
     if bot_display := render_dict_as_yaml(client.bots):
         click.echo(bot_display)
+
     else:
         click.secho("No bots in this cluster", bold=True, fg="red")
 
