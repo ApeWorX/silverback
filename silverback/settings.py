@@ -34,7 +34,8 @@ class Settings(BaseSettings, ManagerAccessMixin):
     ENABLE_METRICS: bool = False
 
     RESULT_BACKEND_CLASS: str = ""
-    RESULT_BACKEND_URI: str = ""
+    RESULT_BACKEND_URI: str = ""  # to be deprecated in 0.6
+    RESULT_BACKEND_KWARGS: str = ""
 
     NETWORK_CHOICE: str = ""
     SIGNER_ALIAS: str = ""
@@ -60,11 +61,17 @@ class Settings(BaseSettings, ManagerAccessMixin):
         return middlewares
 
     def get_result_backend(self) -> AsyncResultBackend | None:
-        if not (backend_cls_str := self.RESULT_BACKEND_CLASS):
+        if self.RESULT_BACKEND_CLASS:
             return None
 
-        result_backend_cls = import_from_string(backend_cls_str)
-        return result_backend_cls(self.RESULT_BACKEND_URI)
+        result_backend_cls = import_from_string(self.RESULT_BACKEND_CLASS)
+
+        if self.RESULT_BACKEND_URI:
+            # TODO: Maybe add a deprecation warning here for v0.6
+            return result_backend_cls(self.RESULT_BACKEND_URI)
+
+        backend_kwargs = self.RESULT_BACKEND_KWARGS
+        return result_backend_cls(**backend_kwargs)
 
     def get_broker(self) -> AsyncBroker:
         broker_class = import_from_string(self.BROKER_CLASS)
