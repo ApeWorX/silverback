@@ -389,6 +389,50 @@ def bot():
     """Commands for managing bots in a CLUSTER"""
 
 
+@bot.command(name="new")
+@click.option("-n", "--name", required=True)
+@click.option("-i", "--image", required=True)
+@click.option("-n", "--network", required=True)
+@click.option("-a", "--account")
+@click.option("-g", "--group", "groups", multiple=True)
+def new_bot(
+    client: ClusterClient,
+    name: str,
+    image: str,
+    network: str,
+    account: str | None,
+    groups: list[str],
+):
+    """Create a new bot in CLUSTER"""
+
+    if name in client.bots:
+        raise click.UsageError(f"Cannot use name '{name}' to create bot")
+
+    environment = list()
+    rendered_environment = dict()
+    for env_id in groups:
+        if "/" in env_id:
+            env_name, revision = env_id.split("/")
+            env = client.envs[env_name].revisions[int(revision)]
+
+        else:
+            env = client.envs[env_id]
+
+        environment.append(env)
+
+        for var_name in env.variables:
+            rendered_environment[var_name] = f"{env.name}/{env.revision}"
+
+    display = render_dict_as_yaml(rendered_environment, prepend="\n  ")
+    click.echo(f"Environment:\n  {display}")
+
+    if not click.confirm("Do you want to create this bot?"):
+        return
+
+    bot = client.new_bot(name, image, network, account=account, environment=environment)
+    click.secho(f"Bot ({bot.id}) deploying...", fg="green", bold=True)
+
+
 @bot.command(name="list")
 def list_bots(client: ClusterClient):
     """
@@ -406,3 +450,130 @@ def list_bots(client: ClusterClient):
         click.secho("No bots in this cluster", bold=True, fg="red")
 
 
+@bot.command(name="status")
+@click.argument("bot_name", metavar="BOT")
+def show_bot_status(client: ClusterClient, bot_name: str):
+    """Show status of BOT in CLUSTER"""
+
+    if not (bot := client.bots.get(bot_name)):
+        raise click.UsageError(f"Unknown bot '{bot_name}'.")
+
+    click.echo(render_dict_as_yaml(bot))
+
+
+@bot.command(name="update")
+@click.option("-n", "--name", "new_name")
+@click.option("-i", "--image")
+@click.option("-n", "--network")
+@click.option("-a", "--account")
+@click.option("-g", "--group", "groups", multiple=True)
+@click.argument("bot_name", metavar="BOT")
+def update_bot(
+    client: ClusterClient,
+    bot_name: str,
+    new_name: str,
+    image: str,
+    network: str,
+    account: str | None,
+    groups: list[str],
+):
+    """Update configuration of BOT in CLUSTER"""
+
+    if new_name in client.bots:
+        raise click.UsageError(f"Cannot use name '{new_name}' to update bot '{bot_name}'")
+
+    if not (bot := client.bots.get(bot_name)):
+        raise click.UsageError(f"Unknown bot '{bot_name}'.")
+
+    environment = list()
+    rendered_environment = dict()
+    for env_id in groups:
+        if "/" in env_id:
+            env_name, revision = env_id.split("/")
+            env = client.envs[env_name].revisions[int(revision)]
+
+        else:
+            env = client.envs[env_id]
+
+        environment.append(env)
+
+        for var_name in env.variables:
+            rendered_environment[var_name] = f"{env.name}/{env.revision}"
+
+    set_environment = True
+
+    if len(environment) == 0:
+        set_environment = click.confirm("Do you want to clear all environment variables?")
+
+    else:
+        display = render_dict_as_yaml(rendered_environment, prepend="\n  ")
+        click.echo(f"Environment:\n  {display}")
+
+    if not click.confirm("Do you want to create this bot?"):
+        return
+
+    bot.update(
+        name=new_name,
+        image=image,
+        network=network,
+        account=account,
+        environment=environment if set_environment else None,
+    )
+
+
+@bot.command(name="rm")
+@click.argument("name", metavar="BOT")
+def rm_bot(client: ClusterClient, name: str):
+    """Remove BOT from CLUSTER"""
+
+    if not (bot := client.bots.get(name)):
+        raise click.UsageError(f"Unknown bot '{name}'.")
+
+    bot.remove()
+    click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
+
+
+@bot.command(name="start")
+@click.argument("name", metavar="BOT")
+def start_bot(client: ClusterClient, name: str):
+    """Start BOT running in CLUSTER (if stopped or terminated)"""
+
+    if not (bot := client.bots.get(name)):
+        raise click.UsageError(f"Unknown bot '{name}'.")
+
+    bot.start()
+
+
+@bot.command(name="stop")
+@click.argument("name", metavar="BOT")
+def stop_bot(client: ClusterClient, name: str):
+    """Stop BOT running in CLUSTER (if running)"""
+
+    if not (bot := client.bots.get(name)):
+        raise click.UsageError(f"Unknown bot '{name}'.")
+
+    bot.stop()
+
+
+@bot.command(name="logs")
+@click.argument("name", metavar="BOT")
+def show_bot_logs(client: ClusterClient, name: str):
+    """Show runtime logs for BOT in CLUSTER"""
+
+    if not (bot := client.bots.get(name)):
+        raise click.UsageError(f"Unknown bot '{name}'.")
+
+    for log in bot.logs:
+        click.echo(log)
+
+
+@bot.command(name="errors")
+@click.argument("name", metavar="BOT")
+def show_bot_errors(client: ClusterClient, name: str):
+    """Show errors for BOT in CLUSTER"""
+
+    if not (bot := client.bots.get(name)):
+        raise click.UsageError(f"Unknown bot '{name}'.")
+
+    for log in bot.errors:
+        click.echo(log)

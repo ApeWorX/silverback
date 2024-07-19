@@ -1,4 +1,3 @@
-import uuid
 from functools import cache
 from typing import ClassVar
 
@@ -70,6 +69,59 @@ class Env(EnvInfo):
         handle_error_with_response(response)
 
 
+class Bot(BotInfo):
+    # NOTE: Client used only for this SDK
+    # NOTE: DI happens in `ClusterClient.__init__`
+    cluster: ClassVar["ClusterClient"]
+
+    def update(
+        self,
+        name: str | None = None,
+        image: str | None = None,
+        network: str | None = None,
+        account: str | None = None,
+        environment: list[EnvInfo] | None = None,
+    ):
+        form: dict = dict(
+            name=name,
+            network=network,
+            account=account,
+            image=image,
+        )
+
+        if environment:
+            form["environment"] = [
+                dict(id=str(env.id), revision=env.revision) for env in environment
+            ]
+
+        response = self.cluster.put(f"/bots/{self.id}", json=form)
+        handle_error_with_response(response)
+
+    def stop(self):
+        response = self.cluster.post(f"/bots/{self.id}/stop")
+        handle_error_with_response(response)
+
+    def start(self):
+        response = self.cluster.post(f"/bots/{self.id}/start")
+        handle_error_with_response(response)
+
+    @property
+    def errors(self) -> list[str]:
+        response = self.cluster.get(f"/bots/{self.id}/errors")
+        handle_error_with_response(response)
+        return response.json()
+
+    @property
+    def logs(self) -> list[str]:
+        response = self.cluster.get(f"/bots/{self.id}/logs")
+        handle_error_with_response(response)
+        return response.json()
+
+    def remove(self):
+        response = self.cluster.delete(f"/bots/{self.id}")
+        handle_error_with_response(response)
+
+
 class ClusterClient(httpx.Client):
     def __init__(self, *args, **kwargs):
         kwargs["headers"] = {**kwargs.get("headers", {}), **DEFAULT_HEADERS}
@@ -77,6 +129,7 @@ class ClusterClient(httpx.Client):
 
         # DI for other client classes
         Env.cluster = self  # Connect to cluster client
+        Bot.cluster = self  # Connect to cluster client
 
     def send(self, request, *args, **kwargs):
         try:
@@ -108,10 +161,34 @@ class ClusterClient(httpx.Client):
         return EnvInfo.model_validate(response.json())
 
     @property
-    def bots(self) -> dict[str, BotInfo]:
-        response = self.get("/bot")  # TODO: rename `/bots`
+    def bots(self) -> dict[str, Bot]:
+        response = self.get("/bots")  # TODO: rename `/bots`
         handle_error_with_response(response)
-        return {bot.slug: bot for bot in map(BotInfo.model_validate, response.json())}
+        return {bot.slug: bot for bot in map(Bot.model_validate, response.json())}
+
+    def new_bot(
+        self,
+        name: str,
+        image: str,
+        network: str,
+        account: str | None = None,
+        environment: list[EnvInfo] | None = None,
+    ) -> Bot:
+        form: dict = dict(
+            name=name,
+            image=image,
+            network=network,
+            account=account,
+        )
+
+        if environment is not None:
+            form["environment"] = [
+                dict(id=str(env.id), revision=env.revision) for env in environment
+            ]
+
+        response = self.post("/bots", json=form)
+        handle_error_with_response(response)
+        return Bot.model_validate(response.json())
 
     def build_display_fields(self) -> dict[str, str | dict[str, str]]:
         state = self.state
