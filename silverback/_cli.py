@@ -1,6 +1,5 @@
 import asyncio
 import os
-from concurrent.futures import ThreadPoolExecutor
 
 import click
 from ape.cli import (
@@ -13,10 +12,6 @@ from ape.cli import (
 from ape.exceptions import Abort
 from fief_client import Fief
 from fief_client.integrations.cli import FiefAuth, FiefAuthNotAuthenticatedError
-from taskiq import AsyncBroker
-from taskiq.cli.worker.run import shutdown_broker
-from taskiq.receiver import Receiver
-
 from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.settings import (
@@ -28,6 +23,7 @@ from silverback.cluster.settings import (
 )
 from silverback.cluster.types import ClusterTier, render_dict_as_yaml
 from silverback.runner import PollingRunner, WebsocketRunner
+from silverback.worker import run_worker
 
 
 class OrderedCommands(click.Group):
@@ -84,26 +80,6 @@ def _network_callback(ctx, param, val):
         os.environ["SILVERBACK_NETWORK_CHOICE"] = val.network_choice
 
     return val
-
-
-async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
-    try:
-        tasks = []
-        with ThreadPoolExecutor(max_workers=worker_count) as pool:
-            for _ in range(worker_count):
-                receiver = Receiver(
-                    broker=broker,
-                    executor=pool,
-                    validate_params=True,
-                    max_async_tasks=1,
-                    max_prefetch=0,
-                )
-                broker.is_worker_process = True
-                tasks.append(receiver.listen())
-
-            await asyncio.gather(*tasks)
-    finally:
-        await shutdown_broker(broker, shutdown_timeout)
 
 
 @cli.command(cls=ConnectedProviderCommand, help="Run Silverback application client")
