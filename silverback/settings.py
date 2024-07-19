@@ -61,7 +61,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
         return middlewares
 
     def get_result_backend(self) -> AsyncResultBackend | None:
-        if self.RESULT_BACKEND_CLASS:
+        if not self.RESULT_BACKEND_CLASS:
             return None
 
         result_backend_cls = import_from_string(self.RESULT_BACKEND_CLASS)
