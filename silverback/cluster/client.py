@@ -47,26 +47,26 @@ def handle_error_with_response(response: httpx.Response):
 
 class Env(EnvInfo):
     # NOTE: Client used only for this SDK
-    # NOTE: DI happens in `PlatformClient.client`
-    client: ClassVar[httpx.Client]
+    # NOTE: DI happens in `ClusterClient.__init__`
+    cluster: ClassVar["ClusterClient"]
 
     def update(self, name: str | None = None):
-        response = self.client.put(f"/env/{self.id}", json=dict(name=name))
+        response = self.cluster.put(f"/variables/{self.id}", json=dict(name=name))
         handle_error_with_response(response)
 
     @property
     def revisions(self) -> list[EnvInfo]:
-        response = self.client.get(f"/env/{self.id}")
+        response = self.cluster.get(f"/variables/{self.id}")
         handle_error_with_response(response)
         return [EnvInfo.model_validate(env_info) for env_info in response.json()]
 
     def add_revision(self, variables: dict[str, str | None]) -> "Env":
-        response = self.client.post(f"/env/{self.id}", json=dict(variables=variables))
+        response = self.cluster.post(f"/variables/{self.id}", json=dict(variables=variables))
         handle_error_with_response(response)
         return Env.model_validate(response.json())
 
-    def rm(self):
-        response = self.client.delete(f"/env/{self.id}")
+    def remove(self):
+        response = self.cluster.delete(f"/variables/{self.id}")
         handle_error_with_response(response)
 
 
@@ -76,7 +76,7 @@ class ClusterClient(httpx.Client):
         super().__init__(*args, **kwargs)
 
         # DI for other client classes
-        Env.client = self  # Connect to cluster client
+        Env.cluster = self  # Connect to cluster client
 
     def send(self, request, *args, **kwargs):
         try:
@@ -98,12 +98,12 @@ class ClusterClient(httpx.Client):
 
     @property
     def envs(self) -> dict[str, Env]:
-        response = self.get("/env")
+        response = self.get("/variables")
         handle_error_with_response(response)
         return {env.name: env for env in map(Env.model_validate, response.json())}
 
     def new_env(self, name: str, variables: dict[str, str]) -> EnvInfo:
-        response = self.post("/env", json=dict(name=name, variables=variables))
+        response = self.post("/variables", json=dict(name=name, variables=variables))
         handle_error_with_response(response)
         return EnvInfo.model_validate(response.json())
 

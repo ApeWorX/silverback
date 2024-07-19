@@ -10,26 +10,20 @@ from ape.cli import (
     verbosity_option,
 )
 from ape.exceptions import Abort
-from fief_client import Fief
-from fief_client.integrations.cli import FiefAuth, FiefAuthNotAuthenticatedError
+from fief_client.integrations.cli import FiefAuth
+
+from silverback._click_ext import (
+    AuthCommand,
+    OrderedCommands,
+    PlatformGroup,
+    cls_import_callback,
+    display_login_message,
+)
 from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.settings import (
-    DEFAULT_PROFILE,
-    PROFILE_PATH,
-    BaseProfile,
-    PlatformProfile,
-    ProfileSettings,
-)
 from silverback.cluster.types import ClusterTier, render_dict_as_yaml
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
-
-
-class OrderedCommands(click.Group):
-    # NOTE: Override so we get the list ordered by definition order
-    def list_commands(self, ctx: click.Context) -> list[str]:
-        return list(self.commands)
 
 
 @click.group(cls=OrderedCommands)
@@ -37,26 +31,8 @@ def cli():
     """Work with Silverback applications in local context (using Ape)."""
 
 
-def _runner_callback(ctx, param, val):
-    if not val:
-        return None
-
-    elif runner := import_from_string(val):
-        return runner
-
-    raise ValueError(f"Failed to import runner '{val}'.")
-
-
-def _recorder_callback(ctx, param, val):
-    if not val:
-        return None
-
-    elif recorder := import_from_string(val):
-        return recorder()
-
-    raise ValueError(f"Failed to import recorder '{val}'.")
-
-
+# TODO: Make `silverback.settings.Settings` (to remove having to set envvars)
+# TODO: Use `envvar=...` to be able to set the value of options from correct envvar
 def _account_callback(ctx, param, val):
     if val:
         val = val.alias.replace("dev_", "TEST::")
@@ -65,6 +41,8 @@ def _account_callback(ctx, param, val):
     return val
 
 
+# TODO: Make `silverback.settings.Settings` (to remove having to set envvars)
+# TODO: Use `envvar=...` to be able to set the value of options from correct envvar
 def _network_callback(ctx, param, val):
     # NOTE: Make sure both of these have the same setting
     if env_network_choice := os.environ.get("SILVERBACK_NETWORK_CHOICE"):
@@ -94,16 +72,17 @@ def _network_callback(ctx, param, val):
     "--runner",
     "runner_class",
     help="An import str in format '<module>:<CustomRunner>'",
-    callback=_runner_callback,
+    callback=cls_import_callback,
 )
 @click.option(
     "--recorder",
+    "recorder_class",
     help="An import string in format '<module>:<CustomRecorder>'",
-    callback=_recorder_callback,
+    callback=cls_import_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
-def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
+def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     if not runner_class:
         # NOTE: Automatically select runner class
         if cli_ctx.provider.ws_uri:
@@ -116,7 +95,11 @@ def run(cli_ctx, account, runner_class, recorder, max_exceptions, path):
             )
 
     app = import_from_string(path)
-    runner = runner_class(app, recorder=recorder, max_exceptions=max_exceptions)
+    runner = runner_class(
+        app,
+        recorder=recorder_class() if recorder_class else None,
+        max_exceptions=max_exceptions,
+    )
     asyncio.run(runner.run())
 
 
@@ -137,134 +120,7 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
     asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
 
-def display_login_message(auth: FiefAuth, host: str):
-    userinfo = auth.current_user()
-    user_id = userinfo["sub"]
-    username = userinfo["fields"].get("username")
-    click.echo(
-        f"{click.style('INFO', fg='blue')}: "
-        f"Logged in to '{click.style(host, bold=True)}' as "
-        f"'{click.style(username if username else user_id, bold=True)}'"
-    )
-
-
-class PlatformCommand(click.Command):
-    # NOTE: ClassVar assures only loaded once
-    settings = ProfileSettings.from_config_file()
-
-    # NOTE: Cache this class-wide
-    platform_client: PlatformClient | None = None
-
-    def get_params(self, ctx: click.Context):
-        params = super().get_params(ctx)
-
-        def get_profile(ctx, param, value) -> BaseProfile:
-
-            if not (profile := self.settings.profile.get(value)):
-                raise click.BadOptionUsage(option_name=param, message=f"Unknown profile '{value}'.")
-
-            return profile
-
-        params.append(
-            click.Option(
-                param_decls=("-p", "--profile", "profile"),
-                metavar="PROFILE",
-                default=DEFAULT_PROFILE,
-                callback=get_profile,
-            )
-        )
-
-        params.append(
-            click.Argument(
-                param_decls=("cluster",),
-                metavar="WORKSPACE/CLUSTER",
-                required=False,
-                default=None,
-            ),
-        )
-
-        return params
-
-    def get_auth(self, profile: BaseProfile) -> FiefAuth:
-        if not isinstance(profile, PlatformProfile):
-            raise click.UsageError(
-                "This feature is not available outside of the Silverback Platform"
-            )
-
-        auth_info = self.settings.auth[profile.auth]
-        fief = Fief(auth_info.host, auth_info.client_id)
-        return FiefAuth(fief, str(PROFILE_PATH.parent / f"{profile.auth}.json"))
-
-    def get_platform_client(self, auth: FiefAuth, profile: PlatformProfile) -> PlatformClient:
-        try:
-            display_login_message(auth, profile.host)
-        except FiefAuthNotAuthenticatedError as e:
-            raise click.UsageError("Not authenticated, please use `silverback login` first.") from e
-
-        return PlatformClient(
-            base_url=profile.host,
-            cookies=dict(session=auth.access_token_info()["access_token"]),
-        )
-
-    def get_cluster_client(self, cluster_path):
-        assert self.platform_client, "Something parsing out of order"
-
-        if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
-            raise click.BadArgumentUsage("CLUSTER should be in format `WORKSPACE/CLUSTER-NAME`")
-
-        workspace_name, cluster_name = cluster_path.split("/")
-        try:
-            return self.platform_client.get_cluster_client(workspace_name, cluster_name)
-        except ValueError as e:
-            raise click.UsageError(str(e))
-
-    def invoke(self, ctx: click.Context):
-        callback_params = self.callback.__annotations__ if self.callback else {}
-
-        cluster_path = ctx.params.pop("cluster")
-
-        if "profile" not in callback_params:
-            profile = ctx.params.pop("profile")
-
-        else:
-            profile = ctx.params["profile"]
-
-        if "auth" in callback_params:
-            ctx.params["auth"] = self.get_auth(profile)
-
-        if "client" in callback_params:
-            client_type_needed = callback_params.get("client")
-
-            if isinstance(profile, PlatformProfile):
-                self.platform_client = self.get_platform_client(
-                    ctx.params.get("auth", self.get_auth(profile)), profile
-                )
-
-                if client_type_needed == PlatformClient:
-                    ctx.params["client"] = self.platform_client
-
-                else:
-                    ctx.params["client"] = self.get_cluster_client(cluster_path)
-
-            elif not client_type_needed == ClusterClient:
-                raise click.UsageError("A cluster profile can only directly connect to a cluster.")
-
-            else:
-                click.echo(
-                    f"{click.style('INFO', fg='blue')}: Logged in to "
-                    f"'{click.style(profile.host, bold=True)}' using API Key"
-                )
-                ctx.params["client"] = ClusterClient(
-                    base_url=profile.host,
-                    headers={"X-API-Key": profile.api_key},
-                )
-
-            assert ctx.params["client"], "Something went wrong"
-
-        super().invoke(ctx)
-
-
-@cli.command(cls=PlatformCommand)
+@cli.command(cls=AuthCommand)
 def login(auth: FiefAuth):
     """
     CLI Login to Managed Authorization Service
@@ -279,12 +135,12 @@ def login(auth: FiefAuth):
     display_login_message(auth, auth.client.base_url)
 
 
-@cli.group(cls=OrderedCommands)
+@cli.group(cls=PlatformGroup)
 def cluster():
     """Connect to hosted application clusters"""
 
 
-@cluster.command(cls=PlatformCommand)
+@cluster.command()
 def workspaces(client: PlatformClient):
     """[Platform Only] List available workspaces"""
 
@@ -300,7 +156,7 @@ def workspaces(client: PlatformClient):
         )
 
 
-@cluster.command(name="list", cls=PlatformCommand)
+@cluster.command(name="list")
 @click.argument("workspace")
 def list_clusters(client: PlatformClient, workspace: str):
     """[Platform Only] List available clusters in WORKSPACE"""
@@ -315,7 +171,7 @@ def list_clusters(client: PlatformClient, workspace: str):
         click.secho("No clusters for this account", bold=True, fg="red")
 
 
-@cluster.command(name="new", cls=PlatformCommand)
+@cluster.command(name="new")
 @click.option(
     "-n",
     "--name",
@@ -371,15 +227,17 @@ def new_cluster(
     except RuntimeError as e:
         raise click.UsageError(str(e))
 
+    # TODO: Pay for cluster via new stream
 
-# `silverback cluster pay WORKSPACE/CLUSTER_NAME --account ALIAS --time "10 days"`
+
+# `silverback cluster pay WORKSPACE/NAME --account ALIAS --time "10 days"`
 # TODO: Create a signature scheme for ClusterInfo
 #         (ClusterInfo configuration as plaintext, .id as nonce?)
 # TODO: Test payment w/ Signature validation of extra data
 
 
-@cluster.command(cls=PlatformCommand)
-def status(client: ClusterClient):
+@cluster.command(name="status")
+def cluster_status(client: ClusterClient):
     """
     Get Status information about a CLUSTER
 
@@ -406,7 +264,7 @@ def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
     return dict(parse_envar(item) for item in value)
 
 
-@env.command(cls=PlatformCommand)
+@env.command(name="new")
 @click.option(
     "-e",
     "--env",
@@ -418,7 +276,7 @@ def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
     help="Environment variable key and value to add (Multiple allowed)",
 )
 @click.argument("name")
-def add(client: ClusterClient, variables: dict, name: str):
+def new_env(client: ClusterClient, variables: dict, name: str):
     """Create a new GROUP of environment variables in CLUSTER"""
     if len(variables) == 0:
         raise click.UsageError("Must supply at least one var via `-e`")
@@ -430,7 +288,7 @@ def add(client: ClusterClient, variables: dict, name: str):
         raise click.UsageError(str(e))
 
 
-@env.command(name="list", cls=PlatformCommand)
+@env.command(name="list")
 def list_envs(client: ClusterClient):
     """List latest revisions of all variable groups in CLUSTER"""
     if all_envs := render_dict_as_yaml(client.envs):
@@ -440,7 +298,7 @@ def list_envs(client: ClusterClient):
         click.secho("No envs in this cluster", bold=True, fg="red")
 
 
-@env.command(cls=PlatformCommand)
+@env.command()
 @click.argument("name")
 @click.argument("new_name")
 def change_name(client: ClusterClient, name: str, new_name: str):
@@ -451,7 +309,7 @@ def change_name(client: ClusterClient, name: str, new_name: str):
     click.echo(render_dict_as_yaml(env.update(name=new_name)))
 
 
-@env.command(name="set", cls=PlatformCommand)
+@env.command(name="set")
 @click.option(
     "-e",
     "--env",
@@ -495,10 +353,10 @@ def set_env(
     )
 
 
-@env.command(cls=PlatformCommand)
+@env.command(name="show")
 @click.argument("name")
 @click.option("-r", "--revision", type=int, help="Revision of GROUP to show (Defaults to latest)")
-def show(client: ClusterClient, name: str, revision: int | None):
+def show_env(client: ClusterClient, name: str, revision: int | None):
     """Show all variables in latest revision of GROUP in CLUSTER"""
     if not (env := client.envs.get(name)):
         raise click.UsageError(f"Unknown Variable Group '{name}'")
@@ -511,9 +369,9 @@ def show(client: ClusterClient, name: str, revision: int | None):
     raise click.UsageError(f"Revision {revision} of '{name}' not found")
 
 
-@env.command(cls=PlatformCommand)
+@env.command(name="rm")
 @click.argument("name")
-def rm(client: ClusterClient, name: str):
+def remove_env(client: ClusterClient, name: str):
     """
     Remove a variable GROUP from CLUSTER
 
@@ -522,7 +380,7 @@ def rm(client: ClusterClient, name: str):
     if not (env := client.envs.get(name)):
         raise click.UsageError(f"Unknown Variable Group '{name}'")
 
-    env.rm()
+    env.remove()
     click.secho(f"Variable Group '{env.name}' removed.", fg="green", bold=True)
 
 
@@ -531,7 +389,7 @@ def bot():
     """Commands for managing bots in a CLUSTER"""
 
 
-@bot.command(name="list", cls=PlatformCommand)
+@bot.command(name="list")
 def list_bots(client: ClusterClient):
     """
     List all bots in a CLUSTER
