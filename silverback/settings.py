@@ -28,13 +28,13 @@ class Settings(BaseSettings, ManagerAccessMixin):
     APP_NAME: str = "bot"
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
-    BROKER_URI: str = ""  # to be deprecated in 0.6
+    BROKER_URI: str = ""  # To be deprecated in 0.6
     BROKER_KWARGS: dict[str, Any] = dict()
 
     ENABLE_METRICS: bool = False
 
     RESULT_BACKEND_CLASS: str = ""
-    RESULT_BACKEND_URI: str = ""  # to be deprecated in 0.6
+    RESULT_BACKEND_URI: str = ""  # To be deprecated in 0.6
     RESULT_BACKEND_KWARGS: str = ""
 
     NETWORK_CHOICE: str = ""
