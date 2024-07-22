@@ -1,9 +1,14 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Literal
+from typing import Any, Literal
 
+from ape.contracts import ContractEvent
 from ape.logging import get_logger
+from ape.types import HexBytes
+from ape.utils import ManagerAccessMixin
+from ape.utils.abi import StructParser
+from eth_utils import keccak
 from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
 from pydantic.functional_serializers import PlainSerializer
 from typing_extensions import Annotated
@@ -39,6 +44,58 @@ def iso_format(dt: datetime) -> str:
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class EventFilterArgs(RootModel, ManagerAccessMixin):
+    """Represents input that should be used when filtering"""
+
+    # TODO: Migrate this back to Ape
+
+    root: list[HexBytes | list[HexBytes] | None] = Field(min_length=1, max_length=4)
+    # NOTE: len > 4 should never happen
+
+    @classmethod
+    def from_event_and_filter_args(cls, event: ContractEvent, filter_args: dict[str, Any]):
+        parser = StructParser(event.abi)
+        root: list[HexBytes | list[HexBytes] | None] = [
+            HexBytes(keccak(text=event.abi.selector))  # Full 32 bytes for event_id
+        ]
+        for arg in event.abi.inputs:
+            assert arg.name, "Corrupted ABI"
+            if len(filter_args) == 0:
+                break  # No need to add more filter args to list, used them all
+
+            elif not arg.indexed:
+                if arg.name in filter_args:
+                    raise ValueError(f"'{event.name}.{arg.name}' cannot be used for filtering.")
+
+                continue  # otherwise skip it
+
+            elif value := filter_args.pop(arg.name, None):
+                py_type = cls.provider.network.ecosystem.get_python_types(arg)
+
+                if isinstance(value, dict):
+                    ls_values = list(value.values())
+                    encoded_values = cls.conversion_manager.convert(ls_values, py_type)
+                    converted_value = parser.decode_input([encoded_values])
+
+                # TODO: How to handle OR filters?
+                elif isinstance(value, (list, tuple)):
+                    converted_value = parser.decode_input(value)
+
+                else:
+                    converted_value = cls.conversion_manager.convert(value, py_type)
+
+                root.append(converted_value)
+
+            else:
+                # This means wildcard, but there are more args to add in the filter after it
+                root.append(None)
+
+        if unsupported_args := ", ".join(filter_args):
+            raise ValueError(f"Arg(s) not in '{event.name}': {unsupported_args}")
+
+        return cls(root=root)
 
 
 UTCTimestamp = Annotated[

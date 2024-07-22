@@ -45,7 +45,7 @@ Any errors you raise during this function will get captured by the client, and r
 
 Similarly to blocks, you can handle events emitted by a contract by adding an event handler:
 
-```
+```python
 from ape import Contract
 
 TOKEN = Contract(<your token address here>)
@@ -59,13 +59,24 @@ Inside of `handle_token_transfer_events` you can define any logic that you want 
 Again, you can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
 Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this `transfer` event log.
 
+### Event Log Filters
+
+You can also filter event logs by event parameters.
+For example, if you want to handle only `Transfer` events that represent a burn (a transfer to the zero address):
+
+```python
+@app.on_(USDC.Transfer, start_block=18588777, to="0x0000000000000000000000000000000000000000")
+def handle_burn(log):
+    return {"burned": log.value}
+```
+
 ## Startup and Shutdown
 
 ### Worker Events
 
 If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:
 
-```py
+```python
 @app.on_worker_startup()
 def handle_on_worker_startup(state):
     # Connect to DB, set initial state, etc
@@ -89,7 +100,7 @@ The `state` variable is also useful as this can be made available to each handle
 
 To access the state from a handler, you must annotate `context` as a dependency like so:
 
-```py
+```python
 from typing import Annotated
 from taskiq import Context, TaskiqDepends
 
@@ -103,7 +114,7 @@ def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
 
 You can also add an application startup and shutdown handler that will be **executed once upon every application startup**.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.
 
-```py
+```python
 @app.on_startup()
 def handle_on_startup(startup_state):
     # Process missed events, etc
@@ -133,7 +144,7 @@ $ silverback run my_bot:app --network :sepolia --account acct-name
 It's important to note that signers are optional, if not configured in the application then `app.signer` will be `None`.
 You can use this in your application to enable a "test execution" mode, something like this:
 
-```py
+```python
 # Compute some metric that might lead to creating a transaction
 if app.signer:
     # Execute a transaction via `sender=app.signer`
