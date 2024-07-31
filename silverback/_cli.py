@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import click
+import yaml  # type: ignore[import-untyped]
 from ape.cli import (
     AccountAliasPromptChoice,
     ConnectedProviderCommand,
@@ -21,7 +22,7 @@ from silverback._click_ext import (
 )
 from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.types import ClusterTier, render_dict_as_yaml
+from silverback.cluster.types import ClusterTier
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
@@ -152,8 +153,8 @@ def cluster():
 def workspaces(client: PlatformClient):
     """[Platform Only] List available workspaces"""
 
-    if workspace_display := render_dict_as_yaml(client.workspaces):
-        click.echo(workspace_display)
+    if workspace_names := list(client.workspaces):
+        click.echo(yaml.safe_dump(workspace_names))
 
     else:
         click.secho(
@@ -172,8 +173,8 @@ def list_clusters(client: PlatformClient, workspace: str):
     if not (workspace_client := client.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_display := render_dict_as_yaml(workspace_client.clusters):
-        click.echo(cluster_display)
+    if cluster_names := list(workspace_client.clusters):
+        click.echo(yaml.safe_dump(cluster_names))
 
     else:
         click.secho("No clusters for this account", bold=True, fg="red")
@@ -295,6 +296,7 @@ def new_env(client: ClusterClient, variables: dict, name: str):
     except RuntimeError as e:
         raise click.UsageError(str(e))
 
+    click.echo(yaml.safe_dump(vg.model_dump(exclude={"id"})))  # NOTE: Skip machine `.id`
 
 @env.command(name="list")
 def list_envs(client: ClusterClient):
@@ -314,7 +316,11 @@ def change_name(client: ClusterClient, name: str, new_name: str):
     if not (env := client.envs.get(name)):
         raise click.UsageError(f"Unknown Variable Group '{name}'")
 
-    click.echo(render_dict_as_yaml(env.update(name=new_name)))
+    click.echo(
+        yaml.safe_dump(
+            env.update(name=new_slug).model_dump(exclude={"id"})  # NOTE: Skip machine `.id`
+        )
+    )
 
 
 @env.command(name="set")

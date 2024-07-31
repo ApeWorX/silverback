@@ -190,19 +190,6 @@ class ClusterClient(httpx.Client):
         handle_error_with_response(response)
         return Bot.model_validate(response.json())
 
-    def build_display_fields(self) -> dict[str, str | dict[str, str]]:
-        state = self.state
-
-        display_fields: dict[str, str | dict[str, str]] = dict(
-            version=state.version,
-            bots=str(len(self.bots)),  # TODO: Source this from `ClusterState`
-        )
-
-        if state.configuration:
-            display_fields["configuration"] = state.configuration.build_display_fields()
-
-        return display_fields
-
 
 class Workspace(WorkspaceInfo):
     # NOTE: Client used only for this SDK

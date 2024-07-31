@@ -3,39 +3,12 @@ import math
 import uuid
 from datetime import datetime
 from hashlib import blake2s
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # NOTE: All configuration settings must be uint8 integer values
 UINT8_MAX = 2**8 - 1
-
-TIME_FORMAT_STRING = "{0:%x} {0:%X}"
-
-
-def render_dict_as_yaml(value: Any, prepend: str = "\n") -> str:
-    if hasattr(value, "build_display_fields"):
-        return render_dict_as_yaml(value.build_display_fields(), prepend=prepend)
-
-    elif isinstance(value, str):
-        return value
-
-    elif isinstance(value, list):
-        return "- " + f"{prepend}- ".join(
-            render_dict_as_yaml(i, prepend=f"{prepend}  ") for i in value
-        )
-
-    elif not isinstance(value, dict):
-        raise ValueError(f"'{type(value)}' is not renderable.")
-
-    return prepend.join(
-        (
-            f"{key}: {value}"
-            if isinstance(value, str)
-            else f"{key}:{prepend + '  '}{render_dict_as_yaml(value, prepend=(prepend + '  '))}"
-        )
-        for key, value in value.items()
-    )
 
 
 class WorkspaceInfo(BaseModel):
@@ -122,15 +95,6 @@ class ClusterConfiguration(BaseModel):
             + (self.triggers // 5 << 40)
         )
 
-    def build_display_fields(self) -> dict[str, str]:
-        return dict(
-            cpu=f"{256 * 2 ** self.cpu / 1024} vCPU",
-            memory=(f"{self.memory} GB" if self.memory > 0 else "512 MiB"),
-            networks=str(self.networks),
-            bots=str(self.bots),
-            triggers=str(self.triggers),
-        )
-
 
 class ClusterTier(enum.IntEnum):
     """Suggestions for different tier configurations"""
@@ -177,18 +141,6 @@ class ClusterInfo(BaseModel):
     status: ClusterStatus
     last_updated: datetime
 
-    def build_display_fields(self) -> dict[str, str | dict[str, str]]:
-        return dict(
-            # No `.id`, not visible to client user
-            name=self.name,
-            # No `.slug`, primary identifier used in dict
-            # NOTE: Convert local time
-            created=TIME_FORMAT_STRING.format(self.created.astimezone()),
-            last_updated=TIME_FORMAT_STRING.format(self.last_updated.astimezone()),
-            status=str(self.status),
-            configuration=self.configuration.build_display_fields(),
-        )
-
 
 # TODO: Merge `/health` with `/`
 class ClusterState(BaseModel):
@@ -218,14 +170,6 @@ class EnvInfo(BaseModel):
     variables: list[str]  # TODO: Change to list
     created: datetime
 
-    def build_display_fields(self) -> dict[str, str | list[str]]:
-        return dict(
-            # No `.id`, not visible to client user
-            # '.name` is primary identifier
-            revision=str(self.revision),
-            created=TIME_FORMAT_STRING.format(self.created.astimezone()),
-            variables=self.variables,
-        )
 
 
 class BotInfo(BaseModel):
@@ -254,11 +198,3 @@ class BotInfo(BaseModel):
     config_set_revision: int
     revision: int
     terminated: bool
-
-    def build_display_fields(self) -> dict[str, str]:
-        return dict(
-            # No `.id`, not visible to client user
-            # No `.slug`, primary identifier used in dict
-            name=self.name,
-            network=self.network,
-        )
