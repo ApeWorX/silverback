@@ -14,8 +14,8 @@ from fief_client.integrations.cli import FiefAuth
 
 from silverback._click_ext import (
     AuthCommand,
-    OrderedCommands,
     PlatformGroup,
+    SectionedHelpGroup,
     cls_import_callback,
     display_login_message,
 )
@@ -26,7 +26,7 @@ from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
 
-@click.group(cls=OrderedCommands)
+@click.group(cls=SectionedHelpGroup)
 def cli():
     """Work with Silverback applications in local context (using Ape)."""
 
@@ -60,7 +60,11 @@ def _network_callback(ctx, param, val):
     return val
 
 
-@cli.command(cls=ConnectedProviderCommand, help="Run Silverback application client")
+@cli.command(
+    cls=ConnectedProviderCommand,
+    help="Run Silverback application client",
+    section="Local Commands",
+)
 @ape_cli_context()
 @verbosity_option()
 @network_option(
@@ -103,7 +107,11 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     asyncio.run(runner.run())
 
 
-@cli.command(cls=ConnectedProviderCommand, help="Run Silverback application task workers")
+@cli.command(
+    cls=ConnectedProviderCommand,
+    help="Run Silverback application task workers",
+    section="Local Commands",
+)
 @ape_cli_context()
 @verbosity_option()
 @network_option(
@@ -120,7 +128,7 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
     asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
 
-@cli.command(cls=AuthCommand)
+@cli.command(cls=AuthCommand, section="Cloud Commands (https://silverback.apeworx.io)")
 def login(auth: FiefAuth):
     """
     CLI Login to Managed Authorization Service
@@ -135,12 +143,12 @@ def login(auth: FiefAuth):
     display_login_message(auth, auth.client.base_url)
 
 
-@cli.group(cls=PlatformGroup)
+@cli.group(cls=PlatformGroup, section="Cloud Commands (https://silverback.apeworx.io)")
 def cluster():
     """Connect to hosted application clusters"""
 
 
-@cluster.command()
+@cluster.command(section="Platform Commands (https://silverback.apeworx.io)")
 def workspaces(client: PlatformClient):
     """[Platform Only] List available workspaces"""
 
@@ -156,7 +164,7 @@ def workspaces(client: PlatformClient):
         )
 
 
-@cluster.command(name="list")
+@cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
 def list_clusters(client: PlatformClient, workspace: str):
     """[Platform Only] List available clusters in WORKSPACE"""
@@ -171,7 +179,7 @@ def list_clusters(client: PlatformClient, workspace: str):
         click.secho("No clusters for this account", bold=True, fg="red")
 
 
-@cluster.command(name="new")
+@cluster.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
 @click.option(
     "-n",
     "--name",

@@ -34,6 +34,51 @@ class OrderedCommands(click.Group):
         return list(self.commands)
 
 
+class SectionedHelpGroup(OrderedCommands):
+    """Section commands into help groups"""
+
+    sections: dict[str | None, list[click.Command | click.Group]]
+
+    def __init__(self, *args, section=None, **kwargs):
+        self.section = section or "Commands"
+        self.sections = kwargs.pop("sections", {})
+        commands = {}
+
+        for section, command_list in self.sections.items():
+            for cmd in command_list:
+                cmd.section = section
+                commands[cmd.name] = cmd
+
+        super().__init__(*args, commands=commands, **kwargs)
+
+    def command(self, *args, **kwargs):
+        section = kwargs.pop("section", "Commands")
+        decorator = super().command(*args, **kwargs)
+
+        def new_decorator(f):
+            cmd = decorator(f)
+            cmd.section = section
+            self.sections.setdefault(section, []).append(cmd)
+            return cmd
+
+        return new_decorator
+
+    def format_commands(self, ctx, formatter):
+        for section, cmds in self.sections.items():
+            rows = []
+            for subcommand in self.list_commands(ctx):
+                cmd = self.get_command(ctx, subcommand)
+
+                if cmd is None or cmd.section != section:
+                    continue
+
+                rows.append((subcommand, cmd.get_short_help_str(formatter.width) or ""))
+
+            if rows:
+                with formatter.section(section):
+                    formatter.write_dl(rows)
+
+
 def display_login_message(auth: FiefAuth, host: str):
     userinfo = auth.current_user()
     user_id = userinfo["sub"]
@@ -187,7 +232,7 @@ class ClientCommand(AuthCommand):
         return super().invoke(ctx)
 
 
-class PlatformGroup(OrderedCommands):
+class PlatformGroup(SectionedHelpGroup):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
