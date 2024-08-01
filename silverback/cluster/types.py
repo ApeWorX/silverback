@@ -87,6 +87,26 @@ class ClusterConfiguration(BaseModel):
         assert units.lower() == "tb"
         return int(storage)
 
+    def settings_display_dict(self) -> dict:
+        return dict(
+            version=self.version,
+            bots=dict(
+                cpu=f"{256 * 2**self.cpu / 1024} vCPU",
+                memory=f"{self.memory} GB" if self.memory > 0 else "512 MiB",
+            ),
+            general=dict(
+                bots=self.bots,
+                secrets=self.secrets,
+            ),
+            runner=dict(
+                networks=self.networks,
+                triggers=self.triggers,
+            ),
+            recorder=dict(
+                storage=f"{self.storage} TB" if self.storage > 0 else "512 GB",
+            ),
+        )
+
     @staticmethod
     def _decode_byte(value: int, byte: int) -> int:
         # NOTE: All configuration settings must be uint8 integer values when encoded

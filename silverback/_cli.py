@@ -234,6 +234,18 @@ def new_cluster(
     for k, v in config_updates:
         setattr(configuration, k, int(v) if v.isnumeric() else v)
 
+    if cluster_name:
+        click.echo(f"name: {cluster_name}")
+        click.echo(f"slug: {cluster_slug or cluster_name.lower().replace(' ', '-')}")
+
+    elif cluster_slug:
+        click.echo(f"slug: {cluster_slug}")
+
+    click.echo(yaml.safe_dump(dict(configuration=configuration.settings_display_dict())))
+
+    if not click.confirm("Do you want to make a new cluster with this configuration?"):
+        return
+
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
         cluster_slug=cluster_slug,
@@ -258,7 +270,7 @@ def cluster_info(cluster: ClusterClient):
     click.echo(f"Cluster Version: v{cluster.version}")
 
     if config := cluster.state.configuration:
-        click.echo(yaml.safe_dump(config.model_dump()))
+        click.echo(yaml.safe_dump(config.settings_display_dict()))
 
     else:
         click.secho("No Cluster Configuration detected", fg="yellow", bold=True)
