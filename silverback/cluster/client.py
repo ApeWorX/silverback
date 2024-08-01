@@ -220,7 +220,7 @@ class Workspace(WorkspaceInfo):
             raise ValueError(f"Unknown cluster '{cluster_name}' in workspace '{self.name}'.")
 
         return ClusterClient(
-            base_url=f"{self.client.base_url}/{self.slug}/{cluster.slug}",
+            base_url=f"{self.client.base_url}/c/{self.slug}/{cluster.slug}",
             cookies=self.client.cookies,  # NOTE: pass along platform cookies for proxy auth
         )
 
