@@ -8,7 +8,6 @@ from ape.cli import (
     ConnectedProviderCommand,
     ape_cli_context,
     network_option,
-    verbosity_option,
 )
 from ape.exceptions import Abort
 from fief_client.integrations.cli import FiefAuth
@@ -67,7 +66,6 @@ def _network_callback(ctx, param, val):
     section="Local Commands",
 )
 @ape_cli_context()
-@verbosity_option()
 @network_option(
     default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
     callback=_network_callback,
@@ -114,7 +112,6 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     section="Local Commands",
 )
 @ape_cli_context()
-@verbosity_option()
 @network_option(
     default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
     callback=_network_callback,
