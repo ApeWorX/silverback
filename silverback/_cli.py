@@ -234,16 +234,12 @@ def new_cluster(
     for k, v in config_updates:
         setattr(configuration, k, int(v) if v.isnumeric() else v)
 
-    try:
-        cluster = workspace_client.create_cluster(
-            cluster_name=cluster_name,
-            cluster_slug=cluster_slug,
-            configuration=configuration,
-        )
-        click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
-    except RuntimeError as e:
-        raise click.UsageError(str(e))
-
+    cluster = workspace_client.create_cluster(
+        cluster_name=cluster_name,
+        cluster_slug=cluster_slug,
+        configuration=configuration,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
     # TODO: Pay for cluster via new stream
 
 
@@ -298,11 +294,8 @@ def new_env(client: ClusterClient, variables: dict, name: str):
     if len(variables) == 0:
         raise click.UsageError("Must supply at least one var via `-e`")
 
-    try:
-        click.echo(render_dict_as_yaml(client.new_env(name=name, variables=variables)))
+    click.echo(render_dict_as_yaml(client.new_env(name=name, variables=variables)))
 
-    except RuntimeError as e:
-        raise click.UsageError(str(e))
 
     click.echo(yaml.safe_dump(vg.model_dump(exclude={"id"})))  # NOTE: Skip machine `.id`
 
