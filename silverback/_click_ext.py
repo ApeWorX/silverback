@@ -144,21 +144,22 @@ class ClientCommand(AuthCommand):
     workspace_name: str | None = None
     cluster_name: str | None = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, disable_cluster_option: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.params.append(
-            click.Option(
-                param_decls=(
-                    "-c",
-                    "--cluster",
-                ),
-                metavar="WORKSPACE/NAME",
-                expose_value=False,
-                callback=self.get_cluster_path,
-                help="[Platform Only] The NAME of the cluster in the WORKSPACE you wish to access",
+        if not disable_cluster_option:
+            self.params.append(
+                click.Option(
+                    param_decls=(
+                        "-c",
+                        "--cluster",
+                    ),
+                    metavar="WORKSPACE/NAME",
+                    expose_value=False,
+                    callback=self.get_cluster_path,
+                    help="[Platform Only] NAME of the cluster in the WORKSPACE you wish to access",
+                )
             )
-        )
 
     def get_cluster_path(self, ctx, param, value) -> str | None:
         if isinstance(self.profile, PlatformProfile):

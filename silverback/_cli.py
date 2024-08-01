@@ -146,7 +146,10 @@ def cluster():
     """Connect to hosted application clusters"""
 
 
-@cluster.command(section="Platform Commands (https://silverback.apeworx.io)")
+@cluster.command(
+    section="Platform Commands (https://silverback.apeworx.io)",
+    disable_cluster_option=True,
+)
 def workspaces(client: PlatformClient):
     """[Platform Only] List available workspaces"""
 
@@ -162,7 +165,11 @@ def workspaces(client: PlatformClient):
         )
 
 
-@cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
+@cluster.command(
+    name="list",
+    section="Platform Commands (https://silverback.apeworx.io)",
+    disable_cluster_option=True,
+)
 @click.argument("workspace")
 def list_clusters(client: PlatformClient, workspace: str):
     """[Platform Only] List available clusters in WORKSPACE"""
@@ -177,7 +184,11 @@ def list_clusters(client: PlatformClient, workspace: str):
         click.secho("No clusters for this account", bold=True, fg="red")
 
 
-@cluster.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
+@cluster.command(
+    name="new",
+    section="Platform Commands (https://silverback.apeworx.io)",
+    disable_cluster_option=True,
+)
 @click.option(
     "-n",
     "--name",
