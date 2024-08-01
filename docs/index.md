@@ -15,6 +15,7 @@
    :maxdepth: 1
 
    commands/run.rst
+   commands/cluster.rst
 ```
 
 ```{eval-rst}
