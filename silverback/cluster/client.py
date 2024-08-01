@@ -5,7 +5,16 @@ import httpx
 
 from silverback.version import version
 
-from .types import BotInfo, ClusterConfiguration, ClusterInfo, ClusterState, EnvInfo, WorkspaceInfo
+from .types import (
+    BotHealth,
+    BotInfo,
+    ClusterConfiguration,
+    ClusterHealth,
+    ClusterInfo,
+    ClusterState,
+    VariableGroupInfo,
+    WorkspaceInfo,
+)
 
 DEFAULT_HEADERS = {"User-Agent": f"Silverback SDK/{version}"}
 
@@ -44,25 +53,34 @@ def handle_error_with_response(response: httpx.Response):
     assert response.status_code < 300, "Should follow redirects, so not sure what the issue is"
 
 
-class Env(EnvInfo):
+class VariableGroup(VariableGroupInfo):
     # NOTE: Client used only for this SDK
     # NOTE: DI happens in `ClusterClient.__init__`
     cluster: ClassVar["ClusterClient"]
 
-    def update(self, name: str | None = None):
-        response = self.cluster.put(f"/variables/{self.id}", json=dict(name=name))
-        handle_error_with_response(response)
+    def __hash__(self) -> int:
+        return int(self.id)
 
-    @property
-    def revisions(self) -> list[EnvInfo]:
-        response = self.cluster.get(f"/variables/{self.id}")
-        handle_error_with_response(response)
-        return [EnvInfo.model_validate(env_info) for env_info in response.json()]
+    def update(
+        self, name: str | None = None, variables: dict[str, str | None] | None = None
+    ) -> "VariableGroup":
+        if name is not None:
+            # Update metadata
+            response = self.cluster.put(f"/variables/{self.id}", json=dict(name=name))
+            handle_error_with_response(response)
 
-    def add_revision(self, variables: dict[str, str | None]) -> "Env":
-        response = self.cluster.post(f"/variables/{self.id}", json=dict(variables=variables))
+        if variables is not None:
+            # Create a new revision
+            response = self.cluster.post(f"/variables/{self.id}", json=dict(variables=variables))
+            handle_error_with_response(response)
+            return VariableGroup.model_validate(response.json())
+
+        return self
+
+    def get_revision(self, revision: int) -> VariableGroupInfo:
+        response = self.cluster.get(f"/variables/{self.id}/{revision}")
         handle_error_with_response(response)
-        return Env.model_validate(response.json())
+        return VariableGroupInfo.model_validate(response.json())
 
     def remove(self):
         response = self.cluster.delete(f"/variables/{self.id}")
@@ -80,13 +98,13 @@ class Bot(BotInfo):
         image: str | None = None,
         network: str | None = None,
         account: str | None = None,
-        environment: list[EnvInfo] | None = None,
-    ):
+        environment: list[VariableGroupInfo] | None = None,
+    ) -> "Bot":
         form: dict = dict(
             name=name,
-            network=network,
             account=account,
             image=image,
+            network=network,
         )
 
         if environment:
@@ -96,13 +114,24 @@ class Bot(BotInfo):
 
         response = self.cluster.put(f"/bots/{self.id}", json=form)
         handle_error_with_response(response)
+        return Bot.model_validate(response.json())
+
+    @property
+    def health(self) -> BotHealth:
+        response = self.cluster.get("/health")  # TODO: Migrate this endpoint
+        # response = self.cluster.get(f"/bots/{self.id}/health")
+        handle_error_with_response(response)
+        raw_health = next(bot for bot in response.json()["bots"] if bot["bot_id"] == str(self.id))
+        return BotHealth.model_validate(raw_health)  # response.json())  TODO: Migrate this endpoint
 
     def stop(self):
         response = self.cluster.post(f"/bots/{self.id}/stop")
         handle_error_with_response(response)
 
     def start(self):
-        response = self.cluster.post(f"/bots/{self.id}/start")
+        # response = self.cluster.post(f"/bots/{self.id}/start") TODO: Add `/start`
+        # NOTE: Currently, a noop PUT request will trigger a start
+        response = self.cluster.put(f"/bots/{self.id}", json=dict(name=self.name))
         handle_error_with_response(response)
 
     @property
@@ -128,7 +157,7 @@ class ClusterClient(httpx.Client):
         super().__init__(*args, **kwargs)
 
         # DI for other client classes
-        Env.cluster = self  # Connect to cluster client
+        VariableGroup.cluster = self  # Connect to cluster client
         Bot.cluster = self  # Connect to cluster client
 
     def send(self, request, *args, **kwargs):
@@ -144,27 +173,38 @@ class ClusterClient(httpx.Client):
         return self.get("/openapi.json").json()
 
     @property
+    def version(self) -> str:
+        # NOTE: Does not call routes
+        return self.openapi_schema["info"]["version"]
+
+    @property
     def state(self) -> ClusterState:
         response = self.get("/")
         handle_error_with_response(response)
         return ClusterState.model_validate(response.json())
 
     @property
-    def envs(self) -> dict[str, Env]:
+    def health(self) -> ClusterHealth:
+        response = self.get("/health")
+        handle_error_with_response(response)
+        return ClusterHealth.model_validate(response.json())
+
+    @property
+    def variable_groups(self) -> dict[str, VariableGroup]:
         response = self.get("/variables")
         handle_error_with_response(response)
-        return {env.name: env for env in map(Env.model_validate, response.json())}
+        return {vg.name: vg for vg in map(VariableGroup.model_validate, response.json())}
 
-    def new_env(self, name: str, variables: dict[str, str]) -> EnvInfo:
+    def new_variable_group(self, name: str, variables: dict[str, str]) -> VariableGroup:
         response = self.post("/variables", json=dict(name=name, variables=variables))
         handle_error_with_response(response)
-        return EnvInfo.model_validate(response.json())
+        return VariableGroup.model_validate(response.json())
 
     @property
     def bots(self) -> dict[str, Bot]:
-        response = self.get("/bots")  # TODO: rename `/bots`
+        response = self.get("/bots")
         handle_error_with_response(response)
-        return {bot.slug: bot for bot in map(Bot.model_validate, response.json())}
+        return {bot.name: bot for bot in map(Bot.model_validate, response.json())}
 
     def new_bot(
         self,
@@ -172,7 +212,7 @@ class ClusterClient(httpx.Client):
         image: str,
         network: str,
         account: str | None = None,
-        environment: list[EnvInfo] | None = None,
+        environment: list[VariableGroupInfo] | None = None,
     ) -> Bot:
         form: dict = dict(
             name=name,
