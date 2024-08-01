@@ -145,6 +145,9 @@ def platform_client(f):
     @click.pass_context
     def get_platform_client(ctx: click.Context, *args, **kwargs):
         if not isinstance(profile := ctx.obj["profile"], PlatformProfile):
+            if not expose_value:
+                return ctx.invoke(f, *args, **kwargs)
+
             raise click.UsageError("This command only works with the Silveback Platform")
 
         auth: FiefAuth = ctx.obj["auth"]
