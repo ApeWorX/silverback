@@ -7,6 +7,7 @@
 
    userguides/quickstart
    userguides/development
+   userguides/platform
 ```
 
 ```{eval-rst}
