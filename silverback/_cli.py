@@ -28,7 +28,11 @@ from silverback.worker import run_worker
 
 @click.group(cls=SectionedHelpGroup)
 def cli():
-    """Work with Silverback applications in local context (using Ape)."""
+    """
+    Silverback: Build Python apps that react to on-chain events
+
+    To learn more about our cloud offering, please check out https://silverback.apeworx.io
+    """
 
 
 # TODO: Make `silverback.settings.Settings` (to remove having to set envvars)
@@ -62,7 +66,7 @@ def _network_callback(ctx, param, val):
 
 @cli.command(
     cls=ConnectedProviderCommand,
-    help="Run Silverback application client",
+    help="Run local Silverback application",
     section="Local Commands",
 )
 @ape_cli_context()
@@ -108,7 +112,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
 
 @cli.command(
     cls=ConnectedProviderCommand,
-    help="Run Silverback application task workers",
+    help="Start Silverback distributed task workers (advanced)",
     section="Local Commands",
 )
 @ape_cli_context()
@@ -128,14 +132,7 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
 
 @cli.command(cls=AuthCommand, section="Cloud Commands (https://silverback.apeworx.io)")
 def login(auth: FiefAuth):
-    """
-    CLI Login to Managed Authorization Service
-
-    Initiate a login in to the configured service using the given auth PROFILE.
-    Defaults to https://account.apeworx.io if PROFILE not provided.
-
-    NOTE: You likely do not need to use an auth PROFILE here.
-    """
+    """Login to ApeWorX Authorization Service (https://account.apeworx.io)"""
 
     auth.authorize()
     display_login_message(auth, auth.client.base_url)
@@ -143,7 +140,10 @@ def login(auth: FiefAuth):
 
 @cli.group(cls=PlatformGroup, section="Cloud Commands (https://silverback.apeworx.io)")
 def cluster():
-    """Connect to hosted application clusters"""
+    """Manage a Silverback hosted application cluster
+
+    For clusters on the Silverback Platform, please provide a name for the cluster to access under
+    your platform account via `-c WORKSPACE/NAME`"""
 
 
 @cluster.command(
@@ -151,7 +151,7 @@ def cluster():
     disable_cluster_option=True,
 )
 def workspaces(client: PlatformClient):
-    """[Platform Only] List available workspaces"""
+    """List available workspaces for your account"""
 
     if workspace_names := list(client.workspaces):
         click.echo(yaml.safe_dump(workspace_names))
@@ -172,7 +172,7 @@ def workspaces(client: PlatformClient):
 )
 @click.argument("workspace")
 def list_clusters(client: PlatformClient, workspace: str):
-    """[Platform Only] List available clusters in WORKSPACE"""
+    """List available clusters in a WORKSPACE"""
 
     if not (workspace_client := client.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
@@ -224,7 +224,7 @@ def new_cluster(
     tier: str,
     config_updates: list[tuple[str, str]],
 ):
-    """[Platform Only] Create a new cluster in WORKSPACE"""
+    """Create a new cluster in WORKSPACE"""
 
     if not (workspace_client := client.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
@@ -395,7 +395,7 @@ def show_env(client: ClusterClient, name: str, revision: int | None):
 @click.argument("name")
 def remove_env(client: ClusterClient, name: str):
     """
-    Remove a variable GROUP from CLUSTER
+    Remove a variable GROUP from a CLUSTER
 
     NOTE: Cannot delete if any bots reference any revision of GROUP
     """
@@ -425,7 +425,7 @@ def new_bot(
     account: str | None,
     groups: list[str],
 ):
-    """Create a new bot in CLUSTER"""
+    """Create a new bot in a CLUSTER with the given configuration"""
 
     if name in client.bots:
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
@@ -457,8 +457,7 @@ def new_bot(
 
 @bot.command(name="list")
 def list_bots(client: ClusterClient):
-    """
-    List all bots in a CLUSTER
+    """List all bots in a CLUSTER (Regardless of status)"""
 
     For clusters on the Silverback Platform, please provide a name for the cluster to access using
     your platform authentication obtained via `silverback login` in `workspace/cluster-name` format
@@ -499,7 +498,9 @@ def update_bot(
     account: str | None,
     groups: list[str],
 ):
-    """Update configuration of BOT in CLUSTER"""
+    """Update configuration of BOT in CLUSTER
+
+    NOTE: Some configuration updates will trigger a redeploy"""
 
     if new_name in client.bots:
         raise click.UsageError(f"Cannot use name '{new_name}' to update bot '{bot_name}'")
@@ -569,7 +570,7 @@ def start_bot(client: ClusterClient, name: str):
 @bot.command(name="stop")
 @click.argument("name", metavar="BOT")
 def stop_bot(client: ClusterClient, name: str):
-    """Stop BOT running in CLUSTER (if running)"""
+    """Stop BOT from running in CLUSTER (if running)"""
 
     if not (bot := client.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
@@ -592,7 +593,7 @@ def show_bot_logs(client: ClusterClient, name: str):
 @bot.command(name="errors")
 @click.argument("name", metavar="BOT")
 def show_bot_errors(client: ClusterClient, name: str):
-    """Show errors for BOT in CLUSTER"""
+    """Show unacknowledged errors for BOT in CLUSTER"""
 
     if not (bot := client.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
