@@ -13,11 +13,12 @@ from ape.exceptions import Abort
 from fief_client.integrations.cli import FiefAuth
 
 from silverback._click_ext import (
-    AuthCommand,
-    PlatformGroup,
     SectionedHelpGroup,
+    auth_required,
     cls_import_callback,
+    cluster_client,
     display_login_message,
+    platform_client,
 )
 from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
@@ -132,7 +133,8 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
     asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
 
-@cli.command(cls=AuthCommand, section="Cloud Commands (https://silverback.apeworx.io)")
+@cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
+@auth_required
 def login(auth: FiefAuth):
     """Login to ApeWorX Authorization Service (https://account.apeworx.io)"""
 
@@ -140,7 +142,7 @@ def login(auth: FiefAuth):
     display_login_message(auth, auth.client.base_url)
 
 
-@cli.group(cls=PlatformGroup, section="Cloud Commands (https://silverback.apeworx.io)")
+@cli.group(cls=SectionedHelpGroup, section="Cloud Commands (https://silverback.apeworx.io)")
 def cluster():
     """Manage a Silverback hosted application cluster
 
@@ -148,14 +150,12 @@ def cluster():
     your platform account via `-c WORKSPACE/NAME`"""
 
 
-@cluster.command(
-    section="Platform Commands (https://silverback.apeworx.io)",
-    disable_cluster_option=True,
-)
-def workspaces(client: PlatformClient):
+@cluster.command(section="Platform Commands (https://silverback.apeworx.io)")
+@platform_client
+def workspaces(platform: PlatformClient):
     """List available workspaces for your account"""
 
-    if workspace_names := list(client.workspaces):
+    if workspace_names := list(platform.workspaces):
         click.echo(yaml.safe_dump(workspace_names))
 
     else:
@@ -167,16 +167,13 @@ def workspaces(client: PlatformClient):
         )
 
 
-@cluster.command(
-    name="list",
-    section="Platform Commands (https://silverback.apeworx.io)",
-    disable_cluster_option=True,
-)
+@cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
-def list_clusters(client: PlatformClient, workspace: str):
+@platform_client
+def list_clusters(platform: PlatformClient, workspace: str):
     """List available clusters in a WORKSPACE"""
 
-    if not (workspace_client := client.workspaces.get(workspace)):
+    if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
     if cluster_names := list(workspace_client.clusters):
@@ -186,11 +183,7 @@ def list_clusters(client: PlatformClient, workspace: str):
         click.secho("No clusters for this account", bold=True, fg="red")
 
 
-@cluster.command(
-    name="new",
-    section="Platform Commands (https://silverback.apeworx.io)",
-    disable_cluster_option=True,
-)
+@cluster.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
 @click.option(
     "-n",
     "--name",
@@ -208,6 +201,7 @@ def list_clusters(client: PlatformClient, workspace: str):
     "--tier",
     default=ClusterTier.PERSONAL.name,
     metavar="NAME",
+    callback=lambda tier: getattr(ClusterTier, tier.upper()),
     help="Named set of options to use for cluster as a base (Defaults to Personal)",
 )
 @click.option(
@@ -219,20 +213,21 @@ def list_clusters(client: PlatformClient, workspace: str):
     help="Config options to set for cluster (overrides value of -t/--tier)",
 )
 @click.argument("workspace")
+@platform_client
 def new_cluster(
-    client: PlatformClient,
+    platform: PlatformClient,
     workspace: str,
     cluster_name: str | None,
     cluster_slug: str | None,
-    tier: str,
+    tier: ClusterTier,
     config_updates: list[tuple[str, str]],
 ):
     """Create a new cluster in WORKSPACE"""
 
-    if not (workspace_client := client.workspaces.get(workspace)):
+    if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    configuration = getattr(ClusterTier, tier.upper()).configuration()
+    configuration = tier.configuration()
 
     for k, v in config_updates:
         setattr(configuration, k, int(v) if v.isnumeric() else v)
@@ -253,13 +248,14 @@ def new_cluster(
 
 
 @cluster.command(name="info")
-def cluster_info(client: ClusterClient):
+@cluster_client
+def cluster_info(cluster: ClusterClient):
     """Get Configuration information about a CLUSTER"""
 
     # NOTE: This actually doesn't query the cluster's routes, which are protected
-    click.echo(f"Cluster Version: v{client.version}")
+    click.echo(f"Cluster Version: v{cluster.version}")
 
-    if config := client.state.configuration:
+    if config := cluster.state.configuration:
         click.echo(yaml.safe_dump(config.model_dump()))
 
     else:
@@ -267,13 +263,14 @@ def cluster_info(client: ClusterClient):
 
 
 @cluster.command(name="health")
-def cluster_health(client: ClusterClient):
+@cluster_client
+def cluster_health(cluster: ClusterClient):
     """Get Health information about a CLUSTER"""
 
-    click.echo(yaml.safe_dump(client.health.model_dump()))
+    click.echo(yaml.safe_dump(cluster.health.model_dump()))
 
 
-@cluster.group()
+@cluster.group(cls=SectionedHelpGroup)
 def vars():
     """Manage groups of environment variables in a CLUSTER"""
 
@@ -300,21 +297,23 @@ def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
     help="Environment variable key and value to add (Multiple allowed)",
 )
 @click.argument("name")
-def new_vargroup(client: ClusterClient, variables: dict, name: str):
+@cluster_client
+def new_vargroup(cluster: ClusterClient, variables: dict, name: str):
     """Create a new group of environment variables in a CLUSTER"""
 
     if len(variables) == 0:
         raise click.UsageError("Must supply at least one var via `-e`")
 
-    vg = client.new_variable_group(name=name, variables=variables)
+    vg = cluster.new_variable_group(name=name, variables=variables)
     click.echo(yaml.safe_dump(vg.model_dump(exclude={"id"})))  # NOTE: Skip machine `.id`
 
 
 @vars.command(name="list")
-def list_vargroups(client: ClusterClient):
+@cluster_client
+def list_vargroups(cluster: ClusterClient):
     """List latest revisions of all variable groups in a CLUSTER"""
 
-    if group_names := list(client.variable_groups):
+    if group_names := list(cluster.variable_groups):
         click.echo(yaml.safe_dump(group_names))
 
     else:
@@ -323,10 +322,11 @@ def list_vargroups(client: ClusterClient):
 
 @vars.command(name="info")
 @click.argument("name")
-def vargroup_info(client: ClusterClient, name: str):
+@cluster_client
+def vargroup_info(cluster: ClusterClient, name: str):
     """Show latest revision of a variable GROUP in a CLUSTER"""
 
-    if not (vg := client.variable_groups.get(name)):
+    if not (vg := cluster.variable_groups.get(name)):
         raise click.UsageError(f"Unknown Variable Group '{name}'")
 
     click.echo(yaml.safe_dump(vg.model_dump(exclude={"id", "name"})))
@@ -354,8 +354,9 @@ def vargroup_info(client: ClusterClient, name: str):
     help="Environment variable name to delete (Multiple allowed)",
 )
 @click.argument("name")
+@cluster_client
 def update_vargroup(
-    client: ClusterClient,
+    cluster: ClusterClient,
     name: str,
     new_name: str,
     updated_vars: dict[str, str],
@@ -366,7 +367,7 @@ def update_vargroup(
     NOTE: Changing the values of variables in GROUP by create a new revision, since variable groups
     are immutable. New revisions do not automatically update bot configuration."""
 
-    if not (vg := client.variable_groups.get(name)):
+    if not (vg := cluster.variable_groups.get(name)):
         raise click.UsageError(f"Unknown Variable Group '{name}'")
 
     if dup := "', '".join(set(updated_vars) & set(deleted_vars)):
@@ -390,20 +391,21 @@ def update_vargroup(
 
 @vars.command(name="remove")
 @click.argument("name")
-def remove_vargroup(client: ClusterClient, name: str):
+@cluster_client
+def remove_vargroup(cluster: ClusterClient, name: str):
     """
     Remove a variable GROUP from a CLUSTER
 
     NOTE: Cannot delete if any bots reference any revision of GROUP
     """
-    if not (vg := client.variable_groups.get(name)):
+    if not (vg := cluster.variable_groups.get(name)):
         raise click.UsageError(f"Unknown Variable Group '{name}'")
 
     vg.remove()  # NOTE: No confirmation because can only delete if no references exist
     click.secho(f"Variable Group '{vg.name}' removed.", fg="green", bold=True)
 
 
-@cluster.group()
+@cluster.group(cls=SectionedHelpGroup)
 def bots():
     """Manage bots in a CLUSTER"""
 
@@ -414,8 +416,9 @@ def bots():
 @click.option("-a", "--account")
 @click.option("-g", "--group", "groups", multiple=True)
 @click.argument("name")
+@cluster_client
 def new_bot(
-    client: ClusterClient,
+    cluster: ClusterClient,
     image: str,
     network: str,
     account: str | None,
@@ -424,17 +427,17 @@ def new_bot(
 ):
     """Create a new bot in a CLUSTER with the given configuration"""
 
-    if name in client.bots:
+    if name in cluster.bots:
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
 
     environment = list()
     for vg_id in groups:
         if "/" in vg_id:
             vg_name, revision = vg_id.split("/")
-            vg = client.variable_groups[vg_name].get_revision(int(revision))
+            vg = cluster.variable_groups[vg_name].get_revision(int(revision))
 
         else:
-            vg = client.variable_groups[vg_id]
+            vg = cluster.variable_groups[vg_id]
 
         environment.append(vg)
 
@@ -446,15 +449,16 @@ def new_bot(
         click.echo(yaml.safe_dump([var for vg in environment for var in vg.variables]))
 
     if not click.confirm("Do you want to create this bot?"):
-        bot = client.new_bot(name, image, network, account=account, environment=environment)
+        bot = cluster.new_bot(name, image, network, account=account, environment=environment)
         click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
 
 
 @bots.command(name="list", section="Configuration Commands")
-def list_bots(client: ClusterClient):
+@cluster_client
+def list_bots(cluster: ClusterClient):
     """List all bots in a CLUSTER (Regardless of status)"""
 
-    if bot_names := list(client.bots):
+    if bot_names := list(cluster.bots):
         click.echo(yaml.safe_dump(bot_names))
 
     else:
@@ -463,10 +467,11 @@ def list_bots(client: ClusterClient):
 
 @bots.command(name="info", section="Configuration Commands")
 @click.argument("bot_name", metavar="BOT")
-def bot_info(client: ClusterClient, bot_name: str):
+@cluster_client
+def bot_info(cluster: ClusterClient, bot_name: str):
     """Get configuration information of a BOT in a CLUSTER"""
 
-    if not (bot := client.bots.get(bot_name)):
+    if not (bot := cluster.bots.get(bot_name)):
         raise click.UsageError(f"Unknown bot '{bot_name}'.")
 
     # NOTE: Skip machine `.id`, and we already know it is `.name`
@@ -483,8 +488,9 @@ def bot_info(client: ClusterClient, bot_name: str):
 @click.option("-a", "--account")
 @click.option("-g", "--group", "groups", multiple=True)
 @click.argument("name", metavar="BOT")
+@cluster_client
 def update_bot(
-    client: ClusterClient,
+    cluster: ClusterClient,
     new_name: str | None,
     image: str | None,
     network: str | None,
@@ -496,10 +502,10 @@ def update_bot(
 
     NOTE: Some configuration updates will trigger a redeploy"""
 
-    if new_name in client.bots:
+    if new_name in cluster.bots:
         raise click.UsageError(f"Cannot use name '{new_name}' to update bot '{name}'")
 
-    if not (bot := client.bots.get(name)):
+    if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
     if new_name:
@@ -517,10 +523,10 @@ def update_bot(
     for vg_id in groups:
         if "/" in vg_id:
             vg_name, revision = vg_id.split("/")
-            vg = client.variable_groups[vg_name].get_revision(int(revision))
+            vg = cluster.variable_groups[vg_name].get_revision(int(revision))
 
         else:
-            vg = client.variable_groups[vg_id]
+            vg = cluster.variable_groups[vg_id]
 
         environment.append(vg)
 
@@ -558,10 +564,11 @@ def update_bot(
 
 @bots.command(name="remove", section="Configuration Commands")
 @click.argument("name", metavar="BOT")
-def remove_bot(client: ClusterClient, name: str):
+@cluster_client
+def remove_bot(cluster: ClusterClient, name: str):
     """Remove BOT from CLUSTER (Shutdown if running)"""
 
-    if not (bot := client.bots.get(name)):
+    if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
     elif click.confirm(f"Do you want to shutdown and delete '{name}'?"):
@@ -571,10 +578,11 @@ def remove_bot(client: ClusterClient, name: str):
 
 @bots.command(name="health", section="Bot Operation Commands")
 @click.argument("bot_name", metavar="BOT")
-def bot_health(client: ClusterClient, bot_name: str):
+@cluster_client
+def bot_health(cluster: ClusterClient, bot_name: str):
     """Show current health of BOT in a CLUSTER"""
 
-    if not (bot := client.bots.get(bot_name)):
+    if not (bot := cluster.bots.get(bot_name)):
         raise click.UsageError(f"Unknown bot '{bot_name}'.")
 
     click.echo(yaml.safe_dump(bot.health.model_dump(exclude={"bot_id"})))
@@ -582,10 +590,11 @@ def bot_health(client: ClusterClient, bot_name: str):
 
 @bots.command(name="start", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
-def start_bot(client: ClusterClient, name: str):
+@cluster_client
+def start_bot(cluster: ClusterClient, name: str):
     """Start BOT running in CLUSTER (if stopped or terminated)"""
 
-    if not (bot := client.bots.get(name)):
+    if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
     elif click.confirm(f"Do you want to start running '{name}'?"):
@@ -595,10 +604,11 @@ def start_bot(client: ClusterClient, name: str):
 
 @bots.command(name="stop", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
-def stop_bot(client: ClusterClient, name: str):
+@cluster_client
+def stop_bot(cluster: ClusterClient, name: str):
     """Stop BOT from running in CLUSTER (if running)"""
 
-    if not (bot := client.bots.get(name)):
+    if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
     elif click.confirm(f"Do you want to stop '{name}' from running?"):
@@ -608,10 +618,11 @@ def stop_bot(client: ClusterClient, name: str):
 
 @bots.command(name="logs", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
-def show_bot_logs(client: ClusterClient, name: str):
+@cluster_client
+def show_bot_logs(cluster: ClusterClient, name: str):
     """Show runtime logs for BOT in CLUSTER"""
 
-    if not (bot := client.bots.get(name)):
+    if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
     for log in bot.logs:
@@ -620,10 +631,11 @@ def show_bot_logs(client: ClusterClient, name: str):
 
 @bots.command(name="errors", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
-def show_bot_errors(client: ClusterClient, name: str):
+@cluster_client
+def show_bot_errors(cluster: ClusterClient, name: str):
     """Show unacknowledged errors for BOT in CLUSTER"""
 
-    if not (bot := client.bots.get(name)):
+    if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
     for log in bot.errors:

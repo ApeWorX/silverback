@@ -1,3 +1,5 @@
+from functools import update_wrapper
+
 import click
 from fief_client import Fief
 from fief_client.integrations.cli import FiefAuth, FiefAuthNotAuthenticatedError
@@ -90,152 +92,118 @@ def display_login_message(auth: FiefAuth, host: str):
     )
 
 
-class AuthCommand(click.Command):
-    # NOTE: ClassVar for any command to access
-    profile: ClusterProfile | PlatformProfile
-    auth: FiefAuth | None
+def profile_option(f):
+    expose_value = "profile" in f.__annotations__
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.params.append(
-            click.Option(
-                param_decls=("-p", "--profile", "profile"),
-                expose_value=False,
-                metavar="PROFILE",
-                default=DEFAULT_PROFILE,
-                callback=self.get_profile,
-                help="The authentication profile to use (Advanced)",
-            )
-        )
-
-    def get_profile(self, ctx, param, value) -> BaseProfile:
-
+    def get_profile(ctx: click.Context, param, value) -> BaseProfile:
         if not (profile := settings.profile.get(value)):
             raise click.BadOptionUsage(option_name=param, message=f"Unknown profile '{value}'.")
 
-        self.profile = profile
-        self.auth = self.get_auth(profile)
+        # Add it to context in case we need it elsewhere
+        ctx.obj = ctx.obj or {}
+        ctx.obj["profile"] = profile
         return profile
 
-    def get_auth(self, profile: BaseProfile) -> FiefAuth | None:
-        if not isinstance(profile, PlatformProfile):
-            return None
-
-        auth_info = settings.auth[profile.auth]
-        fief = Fief(auth_info.host, auth_info.client_id)
-        return FiefAuth(fief, str(PROFILE_PATH.parent / f"{profile.auth}.json"))
-
-    def invoke(self, ctx: click.Context):
-        callback_params = self.callback.__annotations__ if self.callback else {}
-
-        # HACK: Click commands will fail otherwise if something is in context
-        #       the callback doesn't expect, so delete these:
-        if "profile" not in callback_params and "profile" in ctx.params:
-            del ctx.params["profile"]
-
-        if "auth" not in callback_params and "auth" in ctx.params:
-            del ctx.params["auth"]
-
-        return super().invoke(ctx)
+    opt = click.option(
+        "-p",
+        "--profile",
+        "profile",
+        metavar="PROFILE",
+        default=DEFAULT_PROFILE,
+        callback=get_profile,
+        expose_value=expose_value,
+        help="The authentication profile to use (Advanced)",
+    )
+    return opt(f)
 
 
-class ClientCommand(AuthCommand):
-    workspace_name: str | None = None
-    cluster_name: str | None = None
+def auth_required(f):
+    expose_value = "auth" in f.__annotations__
 
-    def __init__(self, *args, disable_cluster_option: bool = False, **kwargs):
-        super().__init__(*args, **kwargs)
+    @profile_option
+    @click.pass_context
+    def add_auth(ctx: click.Context, *args, **kwargs):
+        profile: BaseProfile = ctx.obj["profile"]
 
-        if not disable_cluster_option:
-            self.params.append(
-                click.Option(
-                    param_decls=(
-                        "-c",
-                        "--cluster",
-                    ),
-                    metavar="WORKSPACE/NAME",
-                    expose_value=False,
-                    callback=self.get_cluster_path,
-                    help="[Platform Only] NAME of the cluster in the WORKSPACE you wish to access",
-                )
-            )
+        if isinstance(profile, PlatformProfile):
+            auth_info = settings.auth[profile.auth]
+            fief = Fief(auth_info.host, auth_info.client_id)
+            ctx.obj["auth"] = FiefAuth(fief, str(PROFILE_PATH.parent / f"{profile.auth}.json"))
 
-    def get_cluster_path(self, ctx, param, value) -> str | None:
-        if isinstance(self.profile, PlatformProfile):
-            if not value:
-                return value
+        if expose_value:
+            kwargs["auth"] = ctx.obj.get("auth")
 
-            elif "/" not in value or len(parts := value.split("/")) > 2:
-                raise click.BadParameter("CLUSTER should be in format `WORKSPACE/CLUSTER-NAME`")
+        return ctx.invoke(f, *args, **kwargs)
 
-            self.workspace_name, self.cluster_name = parts
+    return update_wrapper(add_auth, f)
 
-        elif self.profile and value:
-            raise click.BadParameter("CLUSTER not needed unless using a platform profile")
 
-        return value
+def platform_client(f):
+    expose_value = "platform" in f.__annotations__
 
-    def get_platform_client(self, auth: FiefAuth, profile: PlatformProfile) -> PlatformClient:
+    @auth_required
+    @click.pass_context
+    def get_platform_client(ctx: click.Context, *args, **kwargs):
+        if not isinstance(profile := ctx.obj["profile"], PlatformProfile):
+            raise click.UsageError("This command only works with the Silveback Platform")
+
+        auth: FiefAuth = ctx.obj["auth"]
+
         try:
             display_login_message(auth, profile.host)
         except FiefAuthNotAuthenticatedError as e:
             raise click.UsageError("Not authenticated, please use `silverback login` first.") from e
 
-        return PlatformClient(
+        ctx.obj["platform"] = PlatformClient(
             base_url=profile.host,
             cookies=dict(session=auth.access_token_info()["access_token"]),
         )
 
-    def invoke(self, ctx: click.Context):
-        callback_params = self.callback.__annotations__ if self.callback else {}
+        if expose_value:
+            kwargs["platform"] = ctx.obj["platform"]
 
-        if "client" in callback_params:
-            client_type_needed = callback_params.get("client")
+        return ctx.invoke(f, *args, **kwargs)
 
-            if isinstance(self.profile, PlatformProfile):
-                if not self.auth:
-                    raise click.UsageError(
-                        "This feature is not available outside of the Silverback Platform"
-                    )
-
-                platform_client = self.get_platform_client(self.auth, self.profile)
-
-                if client_type_needed == PlatformClient:
-                    ctx.params["client"] = platform_client
-
-                elif not self.workspace_name or not self.cluster_name:
-                    raise click.UsageError(
-                        "-c WORKSPACE/NAME should be present when using a Platform profile"
-                    )
-
-                else:
-                    try:
-                        ctx.params["client"] = platform_client.get_cluster_client(
-                            self.workspace_name, self.cluster_name
-                        )
-                    except ValueError as e:
-                        raise click.UsageError(str(e))
-
-            elif not client_type_needed == ClusterClient:
-                raise click.UsageError("A cluster profile can only directly connect to a cluster.")
-
-            else:
-                click.echo(
-                    f"{click.style('INFO', fg='blue')}: Logged in to "
-                    f"'{click.style(self.profile.host, bold=True)}' using API Key"
-                )
-                ctx.params["client"] = ClusterClient(
-                    base_url=self.profile.host,
-                    headers={"X-API-Key": self.profile.api_key},
-                )
-
-        return super().invoke(ctx)
+    return update_wrapper(get_platform_client, f)
 
 
-class PlatformGroup(SectionedHelpGroup):
+def cluster_client(f):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.command_class = ClientCommand
-        self.group_class = PlatformGroup
+    def inject_cluster(ctx, param, value: str | None):
+        if isinstance(ctx.obj["profile"], ClusterProfile):
+            return value  # Ignore processing this for cluster clients
+
+        elif value is None or "/" not in value or len(parts := value.split("/")) > 2:
+            raise click.BadParameter(
+                param=param,
+                message="CLUSTER should be in format `WORKSPACE/NAME`",
+            )
+
+        ctx.obj["cluster_path"] = parts
+        return parts
+
+    @click.option(
+        "-c",
+        "--cluster",
+        "cluster_path",
+        metavar="WORKSPACE/NAME",
+        expose_value=False,  # We don't actually need this exposed
+        callback=inject_cluster,
+        help="NAME of the cluster in WORKSPACE you wish to access",
+    )
+    @platform_client
+    @click.pass_context
+    def get_cluster_client(ctx: click.Context, *args, **kwargs):
+        if isinstance(profile := ctx.obj["profile"], ClusterProfile):
+            kwargs["cluster"] = ClusterClient(
+                base_url=profile.host,
+                headers={"X-API-Key": profile.api_key},
+            )
+
+        else:  # profile is PlatformProfile
+            platform: PlatformClient = ctx.obj["platform"]
+            kwargs["cluster"] = platform.get_cluster_client(*ctx.obj["cluster_path"])
+
+        return ctx.invoke(f, *args, **kwargs)
+
+    return update_wrapper(get_cluster_client, f)
