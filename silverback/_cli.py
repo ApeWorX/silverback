@@ -201,7 +201,6 @@ def list_clusters(platform: PlatformClient, workspace: str):
     "--tier",
     default=ClusterTier.PERSONAL.name,
     metavar="NAME",
-    callback=lambda tier: getattr(ClusterTier, tier.upper()),
     help="Named set of options to use for cluster as a base (Defaults to Personal)",
 )
 @click.option(
@@ -219,7 +218,7 @@ def new_cluster(
     workspace: str,
     cluster_name: str | None,
     cluster_slug: str | None,
-    tier: ClusterTier,
+    tier: str,
     config_updates: list[tuple[str, str]],
 ):
     """Create a new cluster in WORKSPACE"""
@@ -227,7 +226,10 @@ def new_cluster(
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    configuration = tier.configuration()
+    if not hasattr(ClusterTier, tier.upper()):
+        raise click.BadOptionUsage("tier", f"Invalid choice: {tier}")
+
+    configuration = getattr(ClusterTier, tier.upper()).configuration()
 
     for k, v in config_updates:
         setattr(configuration, k, int(v) if v.isnumeric() else v)
