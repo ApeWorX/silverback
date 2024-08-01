@@ -78,12 +78,14 @@ def _network_callback(ctx, param, val):
 @click.option(
     "--runner",
     "runner_class",
+    metavar="CLASS_REF",
     help="An import str in format '<module>:<CustomRunner>'",
     callback=cls_import_callback,
 )
 @click.option(
     "--recorder",
     "recorder_class",
+    metavar="CLASS_REF",
     help="An import string in format '<module>:<CustomRecorder>'",
     callback=cls_import_callback,
 )
@@ -199,13 +201,14 @@ def list_clusters(client: PlatformClient, workspace: str):
     "-s",
     "--slug",
     "cluster_slug",
-    help="Slug for new cluster (Defaults to name.lower())",
+    help="Slug for new cluster (Defaults to `name.lower()`)",
 )
 @click.option(
     "-t",
     "--tier",
     default=ClusterTier.PERSONAL.name,
-    help="Named set of options to use for cluster (Defaults to PERSONAL)",
+    metavar="NAME",
+    help="Named set of options to use for cluster as a base (Defaults to Personal)",
 )
 @click.option(
     "-c",

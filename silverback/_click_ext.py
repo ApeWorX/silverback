@@ -105,7 +105,7 @@ class AuthCommand(click.Command):
                 metavar="PROFILE",
                 default=DEFAULT_PROFILE,
                 callback=self.get_profile,
-                help="The profile to use to connect with the cluster (Advanced)",
+                help="The authentication profile to use (Advanced)",
             )
         )
 
