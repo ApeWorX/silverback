@@ -10,13 +10,10 @@ Each Cluster is bespoke for an individual or organization, and isolates your app
 
 Before we deploy our Application, we have to create a Cluster.
 If you haven't yet, please sign up for Silverback at [https://silverback.apeworx.io](https://silverback.apeworx.io).
-<!-- TODO: Make CLI autodoc to link to -->
+
 Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
 logging in to the Platform using [`silverback login`][silverback-login],
 and then using [`silverback cluster new`][silverback-cluster-new] to follow the steps necessary to deploy it.
-
-[silverback-login]: ../commands/cluster.html#silverback-login
-[silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
 
 ```{note}
 The Platform UI will let you create and manage Clusters using a graphical experience, which may be preferred.
@@ -35,11 +32,6 @@ If you have no bots, we will first have to containerize our Applications and upl
 ```{note}
 Building a container for your application can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
 ```
-
-[silverback-cluster]: ../commands/cluster.html#silverback-cluster
-[silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
-[silverback-cluster-health]: ../commands/cluster.html#silverback-cluster-health
-[silverback-cluster-bots-list]: ../commands/cluster.html#silverback-cluster-bots-list
 
 ## Building your Bot
 
@@ -87,12 +79,6 @@ You can only remove a Variable Group if it is not referenced by any existing Bot
 
 Once you have created all the Variable Group(s) that you need to operate your Bot, you can reference these groups by name when adding your Bot to the cluster.
 
-[silverback-cluster-vars]: ../commands/cluster.html#silverback-cluster-vars
-[silverback-cluster-vars-new]: ../commands/cluster.html#silverback-cluster-vars-new
-[silverback-cluster-vars-info]: ../commands/cluster.html#silverback-cluster-vars-info
-[silverback-cluster-vars-list]: ../commands/cluster.html#silverback-cluster-vars-list
-[silverback-cluster-vars-remove]: ../commands/cluster.html#silverback-cluster-vars-remove
-
 ## Deploying your Bot
 
 You are finally ready to deploy your bot on the Cluster and get it running!
@@ -127,13 +113,6 @@ Configuration updates do not redeploy your Bots automatically, you must manually
 Removing a Bot will immediately trigger a SHUTDOWN if the Bot is not already STOPPED.
 ```
 
-[silverback-cluster-bots-new]: ../commands/cluster.html#silverback-cluster-bots-new
-[silverback-cluster-bots-info]: ../commands/cluster.html#silverback-cluster-bots-info
-[silverback-cluster-bots-update]: ../commands/cluster.html#silverback-cluster-bots-update
-[silverback-cluster-bots-remove]: ../commands/cluster.html#silverback-cluster-bots-remove
-
-[silverback-cluster-bots-health]: ../commands/cluster.html#silverback-cluster-bots-health
-
 ## Monitoring your Bot
 
 Once your bot is successfully running in the RUNNING state, you can monitor your bot with a series of commands
@@ -160,9 +139,6 @@ and to take corrective or preventative action if it is determined that it should
 Your Bots can also be monitored from the Platform UI at [https://silverback.apeworx.io](https://silverback.apeworx.io).
 ```
 
-[silverback-cluster-bots-logs]: ../commands/cluster.html#silverback-cluster-bots-logs
-[silverback-cluster-bots-errors]: ../commands/cluster.html#silverback-cluster-bots-errors
-
 ## Controlling your Bot
 
 As we already saw, once a Bot is configured in a Cluster, we can control it using commands from the [`silverback cluster bots`][silverback-cluster-bots] subcommand group.
@@ -176,10 +152,28 @@ Controlling your bots can be done from the Platform UI at [https://silverback.ap
 
 TODO: Updating runtime parameters
 
-[silverback-cluster-bots]: ../commands/cluster.html#silverback-cluster-bots
-[silverback-cluster-bots-start]: ../commands/cluster.html#silverback-cluster-bots-start
-[silverback-cluster-bots-stop]: ../commands/cluster.html#silverback-cluster-bots-stop
-
 ## Viewing Measured Metrics
 
 TODO: Downloading metrics from your Bot
+
+[silverback-cluster]: ../commands/cluster.html#silverback-cluster
+[silverback-cluster-bots]: ../commands/cluster.html#silverback-cluster-bots
+[silverback-cluster-bots-errors]: ../commands/cluster.html#silverback-cluster-bots-errors
+[silverback-cluster-bots-health]: ../commands/cluster.html#silverback-cluster-bots-health
+[silverback-cluster-bots-info]: ../commands/cluster.html#silverback-cluster-bots-info
+[silverback-cluster-bots-list]: ../commands/cluster.html#silverback-cluster-bots-list
+[silverback-cluster-bots-logs]: ../commands/cluster.html#silverback-cluster-bots-logs
+[silverback-cluster-bots-new]: ../commands/cluster.html#silverback-cluster-bots-new
+[silverback-cluster-bots-remove]: ../commands/cluster.html#silverback-cluster-bots-remove
+[silverback-cluster-bots-start]: ../commands/cluster.html#silverback-cluster-bots-start
+[silverback-cluster-bots-stop]: ../commands/cluster.html#silverback-cluster-bots-stop
+[silverback-cluster-bots-update]: ../commands/cluster.html#silverback-cluster-bots-update
+[silverback-cluster-health]: ../commands/cluster.html#silverback-cluster-health
+[silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
+[silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
+[silverback-cluster-vars]: ../commands/cluster.html#silverback-cluster-vars
+[silverback-cluster-vars-info]: ../commands/cluster.html#silverback-cluster-vars-info
+[silverback-cluster-vars-list]: ../commands/cluster.html#silverback-cluster-vars-list
+[silverback-cluster-vars-new]: ../commands/cluster.html#silverback-cluster-vars-new
+[silverback-cluster-vars-remove]: ../commands/cluster.html#silverback-cluster-vars-remove
+[silverback-login]: ../commands/cluster.html#silverback-login
