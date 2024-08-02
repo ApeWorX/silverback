@@ -428,7 +428,7 @@ def bots():
 @click.option("-i", "--image", required=True)
 @click.option("-n", "--network", required=True)
 @click.option("-a", "--account")
-@click.option("-g", "--group", "groups", multiple=True)
+@click.option("-g", "--group", "vargroups", multiple=True)
 @click.argument("name")
 @cluster_client
 def new_bot(
@@ -436,7 +436,7 @@ def new_bot(
     image: str,
     network: str,
     account: str | None,
-    groups: list[str],
+    vargroups: list[str],
     name: str,
 ):
     """Create a new bot in a CLUSTER with the given configuration"""
@@ -445,7 +445,7 @@ def new_bot(
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
 
     environment = list()
-    for vg_id in groups:
+    for vg_id in vargroups:
         if "/" in vg_id:
             vg_name, revision = vg_id.split("/")
             vg = cluster.variable_groups[vg_name].get_revision(int(revision))
@@ -500,7 +500,7 @@ def bot_info(cluster: ClusterClient, bot_name: str):
 @click.option("-i", "--image")
 @click.option("-n", "--network")
 @click.option("-a", "--account")
-@click.option("-g", "--group", "groups", multiple=True)
+@click.option("-g", "--group", "vargroups", multiple=True)
 @click.argument("name", metavar="BOT")
 @cluster_client
 def update_bot(
@@ -509,7 +509,7 @@ def update_bot(
     image: str | None,
     network: str | None,
     account: str | None,
-    groups: list[str],
+    vargroups: list[str],
     name: str,
 ):
     """Update configuration of BOT in CLUSTER
@@ -534,7 +534,7 @@ def update_bot(
         click.echo(f"Image:\n  old: {bot.image}\n  new: {image}")
 
     environment = list()
-    for vg_id in groups:
+    for vg_id in vargroups:
         if "/" in vg_id:
             vg_name, revision = vg_id.split("/")
             vg = cluster.variable_groups[vg_name].get_revision(int(revision))
