@@ -1,5 +1,5 @@
 from functools import cache
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import httpx
 
@@ -77,7 +77,11 @@ class VariableGroup(VariableGroupInfo):
 
         return self
 
-    def get_revision(self, revision: int) -> VariableGroupInfo:
+    def get_revision(self, revision: int | Literal["latest"] = "latest") -> VariableGroupInfo:
+        # TODO: Add `/latest` revision route
+        if revision == "latest":
+            revision = ""  # type: ignore[assignment]
+
         response = self.cluster.get(f"/variables/{self.id}/{revision}")
         handle_error_with_response(response)
         return VariableGroupInfo.model_validate(response.json())
