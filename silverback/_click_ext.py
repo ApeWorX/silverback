@@ -113,6 +113,7 @@ def profile_option(f):
         default=DEFAULT_PROFILE,
         callback=get_profile,
         expose_value=expose_value,
+        is_eager=True,  # NOTE: Required to ensure that `profile` is always set, even if not provied
         help="The authentication profile to use (Advanced)",
     )
     return opt(f)
@@ -178,11 +179,11 @@ def cluster_client(f):
 
     def inject_cluster(ctx, param, value: str | None):
         ctx.obj = ctx.obj or {}
-        if isinstance(profile := ctx.obj.get("profile"), ClusterProfile):
-            return value  # Ignore processing this for cluster clients
-
-        elif profile is None:
+        if not (profile := ctx.obj.get("profile")):
             raise AssertionError("Shouldn't happen, fix cli")
+
+        elif isinstance(profile, ClusterProfile):
+            return value  # Ignore processing this for cluster clients
 
         elif value is None or "/" not in value:
             if not profile.default_workspace:
