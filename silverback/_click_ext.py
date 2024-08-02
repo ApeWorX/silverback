@@ -124,15 +124,15 @@ def auth_required(f):
     @click.pass_context
     def add_auth(ctx: click.Context, *args, **kwargs):
         ctx.obj = ctx.obj or {}
-        profile: BaseProfile = ctx.obj["profile"]
+        profile: BaseProfile | None = ctx.obj.get("profile")
 
         if isinstance(profile, PlatformProfile):
             auth_info = settings.auth[profile.auth]
             fief = Fief(auth_info.host, auth_info.client_id)
             ctx.obj["auth"] = FiefAuth(fief, str(PROFILE_PATH.parent / f"{profile.auth}.json"))
 
-        if expose_value:
-            kwargs["auth"] = ctx.obj.get("auth")
+            if expose_value:
+                kwargs["auth"] = ctx.obj["auth"]
 
         return ctx.invoke(f, *args, **kwargs)
 
@@ -146,12 +146,13 @@ def platform_client(f):
     @click.pass_context
     def get_platform_client(ctx: click.Context, *args, **kwargs):
         ctx.obj = ctx.obj or {}
-        if not isinstance(profile := ctx.obj["profile"], PlatformProfile):
+        if not isinstance(profile := ctx.obj.get("profile"), PlatformProfile):
             if not expose_value:
                 return ctx.invoke(f, *args, **kwargs)
 
-            raise click.UsageError("This command only works with the Silveback Platform")
+            raise click.UsageError("This command only works with the Silverback Platform")
 
+        # NOTE: `auth` should be set if `profile` is set and is `PlatformProfile`
         auth: FiefAuth = ctx.obj["auth"]
 
         try:
@@ -176,7 +177,7 @@ def cluster_client(f):
 
     def inject_cluster(ctx, param, value: str | None):
         ctx.obj = ctx.obj or {}
-        if isinstance(ctx.obj["profile"], ClusterProfile):
+        if isinstance(ctx.obj.get("profile"), ClusterProfile):
             return value  # Ignore processing this for cluster clients
 
         elif value is None or "/" not in value or len(parts := value.split("/")) > 2:
@@ -201,15 +202,18 @@ def cluster_client(f):
     @click.pass_context
     def get_cluster_client(ctx: click.Context, *args, **kwargs):
         ctx.obj = ctx.obj or {}
-        if isinstance(profile := ctx.obj["profile"], ClusterProfile):
+        if isinstance(profile := ctx.obj.get("profile"), ClusterProfile):
             kwargs["cluster"] = ClusterClient(
                 base_url=profile.host,
                 headers={"X-API-Key": profile.api_key},
             )
 
-        else:  # profile is PlatformProfile
+        elif isinstance(profile, PlatformProfile):
             platform: PlatformClient = ctx.obj["platform"]
             kwargs["cluster"] = platform.get_cluster_client(*ctx.obj["cluster_path"])
+
+        else:
+            raise AssertionError("Profile not set, something wrong")
 
         return ctx.invoke(f, *args, **kwargs)
 
