@@ -1,4 +1,5 @@
 from functools import update_wrapper
+from pathlib import Path
 
 import click
 from fief_client import Fief
@@ -177,10 +178,33 @@ def cluster_client(f):
 
     def inject_cluster(ctx, param, value: str | None):
         ctx.obj = ctx.obj or {}
-        if isinstance(ctx.obj.get("profile"), ClusterProfile):
+        if isinstance(profile := ctx.obj.get("profile"), ClusterProfile):
             return value  # Ignore processing this for cluster clients
 
-        elif value is None or "/" not in value or len(parts := value.split("/")) > 2:
+        elif profile is None:
+            raise AssertionError("Shouldn't happen, fix cli")
+
+        elif value is None or "/" not in value:
+            if not profile.default_workspace:
+                raise click.UsageError(
+                    "Must provide `-c CLUSTER`, or set `profile.<profile-name>.default-workspace` "
+                    f"in your `~/{PROFILE_PATH.relative_to(Path.home())}`"
+                )
+
+            if value is None and profile.default_workspace not in profile.default_cluster:
+                raise click.UsageError(
+                    "Must provide `-c CLUSTER`, or set "
+                    "`profile.<profile-name>.default-cluster.<workspace-name>` "
+                    f"in your `~/{PROFILE_PATH.relative_to(Path.home())}`"
+                )
+
+            parts = [
+                profile.default_workspace,
+                # NOTE: `value` works as cluster selector, if set
+                value or profile.default_cluster[profile.default_workspace],
+            ]
+
+        elif len(parts := value.split("/")) > 2:
             raise click.BadParameter(
                 param=param,
                 message="CLUSTER should be in format `WORKSPACE/NAME`",

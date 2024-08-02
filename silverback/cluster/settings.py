@@ -27,6 +27,8 @@ class ClusterProfile(BaseProfile):
 
 class PlatformProfile(BaseProfile):
     auth: str  # key of `AuthenticationConfig` in authentication section
+    default_workspace: str = Field(alias="default-workspace", default="")
+    default_cluster: dict[str, str] = Field(alias="default-cluster", default_factory=dict)
 
 
 class ProfileSettings(BaseModel):
