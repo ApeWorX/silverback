@@ -28,11 +28,18 @@ class ClusterConfiguration(BaseModel):
     version: int = 1
 
     # Bot Worker Configuration (Bytes 1-2)
-    cpu: Annotated[int, Field(ge=0, le=16)] = 0  # 0.25 vCPU
-    """Allocated vCPUs per bot: 0.25 vCPU (0) to 16 vCPU (6)"""
+    cpu: Annotated[int, Field(ge=0, le=6)] = 0  # defaults to 0.25 vCPU
+    """Allocated vCPUs per bot:
+    - 0.25 vCPU (0)
+    - 0.50 vCPU (1)
+    - 1.00 vCPU (2)
+    - 2.00 vCPU (3)
+    - 4.00 vCPU (4)
+    - 8.00 vCPU (5)
+    - 16.0 vCPU (6)"""
 
-    memory: Annotated[int, Field(ge=0, le=120)] = 0  # 512 MiB
-    """Total memory per bot (in GB)"""
+    memory: Annotated[int, Field(ge=0, le=120)] = 0  # defaults to 512 MiB
+    """Total memory per bot (in GB, 0 means '512 MiB')"""
 
     # NOTE: Configure # of workers based on cpu & memory settings
 
@@ -48,7 +55,7 @@ class ClusterConfiguration(BaseModel):
 
     # Recorder configuration (Byte 6)
     storage: Annotated[int, Field(ge=0, le=250)] = 0  # 512 GB
-    """Total task results and metrics parquet storage (in TB)"""
+    """Total task results and metrics parquet storage (in TB, 0 means '512 GB')"""
 
     # Cluster general configuration (Byte 7)
     secrets: Annotated[int, Field(ge=10, le=100)] = 10
