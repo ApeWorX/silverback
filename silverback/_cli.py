@@ -65,11 +65,7 @@ def _network_callback(ctx, param, val):
     return val
 
 
-@cli.command(
-    cls=ConnectedProviderCommand,
-    help="Run local Silverback application",
-    section="Local Commands",
-)
+@cli.command(cls=ConnectedProviderCommand, section="Local Commands")
 @ape_cli_context()
 @network_option(
     default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
@@ -93,6 +89,8 @@ def _network_callback(ctx, param, val):
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path")
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
+    """Run Silverback application"""
+
     if not runner_class:
         # NOTE: Automatically select runner class
         if cli_ctx.provider.ws_uri:
@@ -113,11 +111,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     asyncio.run(runner.run())
 
 
-@cli.command(
-    cls=ConnectedProviderCommand,
-    help="Start Silverback distributed task workers (advanced)",
-    section="Local Commands",
-)
+@cli.command(cls=ConnectedProviderCommand, section="Local Commands")
 @ape_cli_context()
 @network_option(
     default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
@@ -129,6 +123,8 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
 @click.argument("path")
 def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
+    """Run Silverback task workers (advanced)"""
+
     app = import_from_string(path)
     asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
