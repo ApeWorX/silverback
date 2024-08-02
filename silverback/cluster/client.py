@@ -154,6 +154,9 @@ class Bot(BotInfo):
 class ClusterClient(httpx.Client):
     def __init__(self, *args, **kwargs):
         kwargs["headers"] = {**kwargs.get("headers", {}), **DEFAULT_HEADERS}
+        if "follow_redirects" not in kwargs:
+            kwargs["follow_redirects"] = True
+
         super().__init__(*args, **kwargs)
 
         # DI for other client classes
