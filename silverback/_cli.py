@@ -440,16 +440,7 @@ def new_bot(
     if name in cluster.bots:
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
 
-    environment = list()
-    for vg_id in vargroups:
-        if "/" in vg_id:
-            vg_name, revision = vg_id.split("/")
-            vg = cluster.variable_groups[vg_name].get_revision(int(revision))
-
-        else:
-            vg = cluster.variable_groups[vg_id]
-
-        environment.append(vg)
+    environment = [cluster.variable_groups[vg_name].get_revision("latest") for vg_name in vargroups]
 
     click.echo(f"Name: {name}")
     click.echo(f"Image: {image}")
@@ -531,16 +522,7 @@ def update_bot(
         redeploy_required = True
         click.echo(f"Image:\n  old: {bot.image}\n  new: {image}")
 
-    environment = list()
-    for vg_id in vargroups:
-        if "/" in vg_id:
-            vg_name, revision = vg_id.split("/")
-            vg = cluster.variable_groups[vg_name].get_revision(int(revision))
-
-        else:
-            vg = cluster.variable_groups[vg_id]
-
-        environment.append(vg)
+    environment = [cluster.variable_groups[vg_name].get_revision("latest") for vg_name in vargroups]
 
     set_environment = True
 
