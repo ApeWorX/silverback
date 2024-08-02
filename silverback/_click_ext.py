@@ -8,7 +8,6 @@ from fief_client.integrations.cli import FiefAuth, FiefAuthNotAuthenticatedError
 from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.settings import (
-    DEFAULT_PROFILE,
     PROFILE_PATH,
     BaseProfile,
     ClusterProfile,
@@ -110,7 +109,7 @@ def profile_option(f):
         "--profile",
         "profile",
         metavar="PROFILE",
-        default=DEFAULT_PROFILE,
+        default=settings.default_profile,
         callback=get_profile,
         expose_value=expose_value,
         is_eager=True,  # NOTE: Required to ensure that `profile` is always set, even if not provied

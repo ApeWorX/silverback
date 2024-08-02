@@ -36,6 +36,7 @@ class ProfileSettings(BaseModel):
 
     auth: dict[str, AuthenticationConfig]
     profile: dict[str, PlatformProfile | ClusterProfile]
+    default_profile: str = Field(default=DEFAULT_PROFILE, alias="default-profile")
 
     @model_validator(mode="after")
     def ensure_auth_exists_for_profile(self) -> Self:
