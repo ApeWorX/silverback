@@ -123,6 +123,7 @@ def auth_required(f):
     @profile_option
     @click.pass_context
     def add_auth(ctx: click.Context, *args, **kwargs):
+        ctx.obj = ctx.obj or {}
         profile: BaseProfile = ctx.obj["profile"]
 
         if isinstance(profile, PlatformProfile):
@@ -144,6 +145,7 @@ def platform_client(f):
     @auth_required
     @click.pass_context
     def get_platform_client(ctx: click.Context, *args, **kwargs):
+        ctx.obj = ctx.obj or {}
         if not isinstance(profile := ctx.obj["profile"], PlatformProfile):
             if not expose_value:
                 return ctx.invoke(f, *args, **kwargs)
@@ -173,6 +175,7 @@ def platform_client(f):
 def cluster_client(f):
 
     def inject_cluster(ctx, param, value: str | None):
+        ctx.obj = ctx.obj or {}
         if isinstance(ctx.obj["profile"], ClusterProfile):
             return value  # Ignore processing this for cluster clients
 
@@ -197,6 +200,7 @@ def cluster_client(f):
     @platform_client
     @click.pass_context
     def get_cluster_client(ctx: click.Context, *args, **kwargs):
+        ctx.obj = ctx.obj or {}
         if isinstance(profile := ctx.obj["profile"], ClusterProfile):
             kwargs["cluster"] = ClusterClient(
                 base_url=profile.host,
