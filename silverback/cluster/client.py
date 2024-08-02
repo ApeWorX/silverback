@@ -170,7 +170,9 @@ class ClusterClient(httpx.Client):
     @property
     @cache
     def openapi_schema(self) -> dict:
-        return self.get("/openapi.json").json()
+        response = self.get("/openapi.json")
+        handle_error_with_response(response)
+        return response.json()
 
     @property
     def version(self) -> str:
