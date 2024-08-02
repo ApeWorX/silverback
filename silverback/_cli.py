@@ -462,9 +462,11 @@ def new_bot(
         click.echo("Environment:")
         click.echo(yaml.safe_dump([var for vg in environment for var in vg.variables]))
 
-    if not click.confirm("Do you want to create this bot?"):
-        bot = cluster.new_bot(name, image, network, account=account, environment=environment)
-        click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
+    if not click.confirm("Do you want to create and start running this bot?"):
+        return
+        
+    bot = cluster.new_bot(name, image, network, account=account, environment=environment)
+    click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
 
 
 @bots.command(name="list", section="Configuration Commands")
@@ -557,23 +559,26 @@ def update_bot(
 
     redeploy_required |= set_environment
 
-    if click.confirm(
+    if not click.confirm(
         f"Do you want to update '{name}'?"
         if not redeploy_required
         else f"Do you want to update and redeploy '{name}'?"
     ):
-        bot = bot.update(
-            name=new_name,
-            image=image,
-            network=network,
-            account=account,
-            environment=environment if set_environment else None,
-        )
-        # NOTE: Skip machine `.id`
-        click.echo(yaml.safe_dump(bot.model_dump(exclude={"id", "environment"})))
-        if bot.environment:
-            click.echo("environment:")
-            click.echo(yaml.safe_dump([var.name for var in bot.environment]))
+        return
+        
+    bot = bot.update(
+        name=new_name,
+        image=image,
+        network=network,
+        account=account,
+        environment=environment if set_environment else None,
+    )
+        
+    # NOTE: Skip machine `.id`
+    click.echo(yaml.safe_dump(bot.model_dump(exclude={"id", "environment"})))
+    if bot.environment:
+        click.echo("environment:")
+        click.echo(yaml.safe_dump([var.name for var in bot.environment]))
 
 
 @bots.command(name="remove", section="Configuration Commands")
@@ -585,9 +590,11 @@ def remove_bot(cluster: ClusterClient, name: str):
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
-    elif click.confirm(f"Do you want to shutdown and delete '{name}'?"):
-        bot.remove()
-        click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
+    elif not click.confirm(f"Do you want to shutdown and delete '{name}'?"):
+        return
+        
+    bot.remove()
+    click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
 
 
 @bots.command(name="health", section="Bot Operation Commands")
@@ -611,9 +618,11 @@ def start_bot(cluster: ClusterClient, name: str):
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
-    elif click.confirm(f"Do you want to start running '{name}'?"):
-        bot.start()
-        click.secho(f"Bot '{bot.name}' starting...", fg="green", bold=True)
+    elif not click.confirm(f"Do you want to start running '{name}'?"):
+        return
+        
+    bot.start()
+    click.secho(f"Bot '{bot.name}' starting...", fg="green", bold=True)
 
 
 @bots.command(name="stop", section="Bot Operation Commands")
@@ -625,9 +634,11 @@ def stop_bot(cluster: ClusterClient, name: str):
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
-    elif click.confirm(f"Do you want to stop '{name}' from running?"):
-        bot.stop()
-        click.secho(f"Bot '{bot.name}' stopping...", fg="green", bold=True)
+    elif not click.confirm(f"Do you want to stop '{name}' from running?"):
+        return
+        
+    bot.stop()
+    click.secho(f"Bot '{bot.name}' stopping...", fg="green", bold=True)
 
 
 @bots.command(name="logs", section="Bot Operation Commands")
