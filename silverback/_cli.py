@@ -464,7 +464,7 @@ def new_bot(
 
     if not click.confirm("Do you want to create and start running this bot?"):
         return
-        
+
     bot = cluster.new_bot(name, image, network, account=account, environment=environment)
     click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
 
@@ -565,7 +565,7 @@ def update_bot(
         else f"Do you want to update and redeploy '{name}'?"
     ):
         return
-        
+
     bot = bot.update(
         name=new_name,
         image=image,
@@ -573,7 +573,7 @@ def update_bot(
         account=account,
         environment=environment if set_environment else None,
     )
-        
+
     # NOTE: Skip machine `.id`
     click.echo(yaml.safe_dump(bot.model_dump(exclude={"id", "environment"})))
     if bot.environment:
@@ -592,7 +592,7 @@ def remove_bot(cluster: ClusterClient, name: str):
 
     elif not click.confirm(f"Do you want to shutdown and delete '{name}'?"):
         return
-        
+
     bot.remove()
     click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
 
@@ -620,7 +620,7 @@ def start_bot(cluster: ClusterClient, name: str):
 
     elif not click.confirm(f"Do you want to start running '{name}'?"):
         return
-        
+
     bot.start()
     click.secho(f"Bot '{bot.name}' starting...", fg="green", bold=True)
 
@@ -636,7 +636,7 @@ def stop_bot(cluster: ClusterClient, name: str):
 
     elif not click.confirm(f"Do you want to stop '{name}' from running?"):
         return
-        
+
     bot.stop()
     click.secho(f"Bot '{bot.name}' stopping...", fg="green", bold=True)
 
