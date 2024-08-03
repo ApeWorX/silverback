@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developing a Silverback Application &mdash; silverback  documentation</title>
+  <title>Developing Applications &mdash; silverback  documentation</title>
       <link rel="stylesheet" href="/silverback/latest/_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="/silverback/latest/_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="/silverback/latest/_static/custom.css" type="text/css" />
@@ -27,7 +27,7 @@
   </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="run" href="../commands/run.html" />
+    <link rel="next" title="Deploying Applications" href="platform.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
 </head>
 
@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.5.5">v0.5.5</option>
                 <option value="v0.5.4">v0.5.4</option>
                 <option value="v0.5.3">v0.5.3</option>
                 <option value="v0.5.2">v0.5.2</option>
@@ -79,7 +80,7 @@
               <p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Developing a Silverback Application</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developing Applications</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-an-application">Creating an Application</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#new-block-events">New Block Events</a></li>
@@ -97,13 +98,15 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#testing-your-application">Testing your Application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#deploying-to-the-silverback-platform">Deploying to the Silverback Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-your-application">Deploying your Application</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="platform.html">Deploying Applications</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">CLI Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Python Reference</span></p>
 <ul>
@@ -129,7 +132,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Developing a Silverback Application</li>
+      <li class="breadcrumb-item active">Developing Applications</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/userguides/development.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -139,8 +142,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="developing-a-silverback-application">
-<h1>Developing a Silverback Application<a class="headerlink" href="#developing-a-silverback-application" title="Permalink to this heading"></a></h1>
+  <section id="developing-applications">
+<h1>Developing Applications<a class="headerlink" href="#developing-applications" title="Permalink to this heading"></a></h1>
 <p>In this guide, we are going to show you more details on how to build an application with Silverback.</p>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
@@ -297,16 +300,16 @@ silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&q
 silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="s2">&quot;example:app&quot;</span>
 </pre></div>
 </div>
-<p>This will run one client and 2 workers and all queue data will be go through Redis.</p>
+<p>The client will send tasks to the 2 worker subprocesses, and all task queue and results data will be go through Redis.</p>
 </section>
 </section>
 <section id="testing-your-application">
 <h2>Testing your Application<a class="headerlink" href="#testing-your-application" title="Permalink to this heading"></a></h2>
 <p>TODO: Add backtesting mode w/ <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">test</span></code></p>
 </section>
-<section id="deploying-to-the-silverback-platform">
-<h2>Deploying to the Silverback Platform<a class="headerlink" href="#deploying-to-the-silverback-platform" title="Permalink to this heading"></a></h2>
-<p>TODO: Add packaging and deployment to the Silverback platform, once available.</p>
+<section id="deploying-your-application">
+<h2>Deploying your Application<a class="headerlink" href="#deploying-your-application" title="Permalink to this heading"></a></h2>
+<p>Check out the <a class="reference external" href="./platform.html">Platform Deployment Userguide</a> for more information on how to deploy your application to the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
 </section>
 </section>
 
@@ -315,7 +318,7 @@ silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../commands/run.html" class="btn btn-neutral float-right" title="run" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="platform.html" class="btn btn-neutral float-right" title="Deploying Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

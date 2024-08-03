@@ -47,6 +47,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.5.5">v0.5.5</option>
                 <option value="v0.5.4">v0.5.4</option>
                 <option value="v0.5.3">v0.5.3</option>
                 <option value="v0.5.2">v0.5.2</option>
@@ -76,11 +77,13 @@
               <p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="userguides/quickstart.html">Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="userguides/development.html">Developing a Silverback Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguides/development.html">Developing Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguides/platform.html">Deploying Applications</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">CLI Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="commands/run.html">run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands/cluster.html">Cloud Platform</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Python Reference</span></p>
 <ul>
@@ -142,58 +145,414 @@
     --account
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-account">run command line option</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-a">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-a">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-account">silverback-run command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-account">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --cluster
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-c">silverback-cluster-bots-errors command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-c">silverback-cluster-bots-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-c">silverback-cluster-bots-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-c">silverback-cluster-bots-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-c">silverback-cluster-bots-logs command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-c">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-c">silverback-cluster-bots-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-c">silverback-cluster-bots-start command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-c">silverback-cluster-bots-stop command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-c">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-c">silverback-cluster-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-c">silverback-cluster-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-c">silverback-cluster-vars-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-c">silverback-cluster-vars-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-c">silverback-cluster-vars-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-c">silverback-cluster-vars-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-c">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --config
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-c">silverback-cluster-new command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --del
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-d">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --env
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-e">silverback-cluster-vars-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-e">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --group
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-g">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-g">silverback-cluster-bots-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --image
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-i">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-i">silverback-cluster-bots-update command line option</a>
 </li>
       </ul></li>
       <li>
     --max-exceptions
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-x">run command line option</a>
+        <li><a href="commands/run.html#cmdoption-silverback-run-x">silverback-run command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-x">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --name
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-n">silverback-cluster-new command line option</a>
 </li>
       </ul></li>
       <li>
     --network
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-network">run command line option</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-n">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-network">silverback-run command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-network">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --new-name
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-new-name">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-new-name">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --profile
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-p">silverback-cluster-bots-errors command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-p">silverback-cluster-bots-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-p">silverback-cluster-bots-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-p">silverback-cluster-bots-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-p">silverback-cluster-bots-logs command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-p">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-p">silverback-cluster-bots-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-p">silverback-cluster-bots-start command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-p">silverback-cluster-bots-stop command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-p">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-p">silverback-cluster-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-p">silverback-cluster-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-list-p">silverback-cluster-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-p">silverback-cluster-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-p">silverback-cluster-vars-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-p">silverback-cluster-vars-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-p">silverback-cluster-vars-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-p">silverback-cluster-vars-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-p">silverback-cluster-vars-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">silverback-cluster-workspaces command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-login-p">silverback-login command line option</a>
 </li>
       </ul></li>
       <li>
     --recorder
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-recorder">run command line option</a>
+        <li><a href="commands/run.html#cmdoption-silverback-run-recorder">silverback-run command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --runner
+
+      <ul>
+        <li><a href="commands/run.html#cmdoption-silverback-run-runner">silverback-run command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --shutdown_timeout
+
+      <ul>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-s">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --slug
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-s">silverback-cluster-new command line option</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
-    --runner
+    --tier
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-runner">run command line option</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-t">silverback-cluster-new command line option</a>
 </li>
       </ul></li>
       <li>
     --verbosity
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-0">run command line option</a>, <a href="commands/run.html#cmdoption-run-v">[1]</a>
+        <li><a href="commands/run.html#cmdoption-silverback-run-v">silverback-run command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-v">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --workers
+
+      <ul>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-w">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -a
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-a">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-a">silverback-cluster-bots-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -c
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-c">silverback-cluster-bots-errors command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-c">silverback-cluster-bots-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-c">silverback-cluster-bots-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-c">silverback-cluster-bots-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-c">silverback-cluster-bots-logs command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-c">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-c">silverback-cluster-bots-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-c">silverback-cluster-bots-start command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-c">silverback-cluster-bots-stop command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-c">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-c">silverback-cluster-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-c">silverback-cluster-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-c">silverback-cluster-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-c">silverback-cluster-vars-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-c">silverback-cluster-vars-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-c">silverback-cluster-vars-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-c">silverback-cluster-vars-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-c">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -d
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-d">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -e
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-e">silverback-cluster-vars-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-e">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -g
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-g">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-g">silverback-cluster-bots-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -i
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-i">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-i">silverback-cluster-bots-update command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -n
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-n">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-n">silverback-cluster-new command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -p
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-p">silverback-cluster-bots-errors command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-p">silverback-cluster-bots-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-p">silverback-cluster-bots-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-p">silverback-cluster-bots-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-p">silverback-cluster-bots-logs command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-p">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-p">silverback-cluster-bots-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-p">silverback-cluster-bots-start command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-p">silverback-cluster-bots-stop command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-p">silverback-cluster-bots-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-p">silverback-cluster-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-p">silverback-cluster-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-list-p">silverback-cluster-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-p">silverback-cluster-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-p">silverback-cluster-vars-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-p">silverback-cluster-vars-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-p">silverback-cluster-vars-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-p">silverback-cluster-vars-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-p">silverback-cluster-vars-update command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">silverback-cluster-workspaces command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-login-p">silverback-login command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -s
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-s">silverback-cluster-new command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-s">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -t
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-t">silverback-cluster-new command line option</a>
 </li>
       </ul></li>
       <li>
     -v
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-0">run command line option</a>, <a href="commands/run.html#cmdoption-run-v">[1]</a>
+        <li><a href="commands/run.html#cmdoption-silverback-run-v">silverback-run command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-v">silverback-worker command line option</a>
+</li>
+      </ul></li>
+      <li>
+    -w
+
+      <ul>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-w">silverback-worker command line option</a>
 </li>
       </ul></li>
       <li>
     -x
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-x">run command line option</a>
+        <li><a href="commands/run.html#cmdoption-silverback-run-x">silverback-run command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-x">silverback-worker command line option</a>
 </li>
       </ul></li>
   </ul></td>
@@ -212,6 +571,27 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/runner.html#silverback.runner.BaseRunner">BaseRunner (class in silverback.runner)</a>
 </li>
+      <li>
+    BOT
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-arg-BOT">silverback-cluster-bots-errors command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-arg-BOT">silverback-cluster-bots-health command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-arg-BOT">silverback-cluster-bots-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-arg-BOT">silverback-cluster-bots-logs command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-arg-BOT">silverback-cluster-bots-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-arg-BOT">silverback-cluster-bots-start command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-arg-BOT">silverback-cluster-bots-stop command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-arg-BOT">silverback-cluster-bots-update command line option</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/application.html#silverback.application.SilverbackApp.broker_task_decorator">broker_task_decorator() (silverback.application.SilverbackApp method)</a>
@@ -301,10 +681,25 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="methoddocs/exceptions.html#silverback.exceptions.NoTasksAvailableError">NoTasksAvailableError</a>
+      <li>
+    NAME
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-arg-NAME">silverback-cluster-bots-new command line option</a>
 </li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-arg-NAME">silverback-cluster-vars-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-arg-NAME">silverback-cluster-vars-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-arg-NAME">silverback-cluster-vars-remove command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-arg-NAME">silverback-cluster-vars-update command line option</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="methoddocs/exceptions.html#silverback.exceptions.NoTasksAvailableError">NoTasksAvailableError</a>
+</li>
       <li><a href="methoddocs/exceptions.html#silverback.exceptions.NoWebsocketAvailableError">NoWebsocketAvailableError</a>
 </li>
   </ul></td>
@@ -335,13 +730,15 @@
     PATH
 
       <ul>
-        <li><a href="commands/run.html#cmdoption-run-arg-PATH">run command line option</a>
+        <li><a href="commands/run.html#cmdoption-silverback-run-arg-PATH">silverback-run command line option</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-arg-PATH">silverback-worker command line option</a>
 </li>
       </ul></li>
-      <li><a href="methoddocs/runner.html#silverback.runner.PollingRunner">PollingRunner (class in silverback.runner)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="methoddocs/runner.html#silverback.runner.PollingRunner">PollingRunner (class in silverback.runner)</a>
+</li>
       <li><a href="methoddocs/middlewares.html#silverback.middlewares.SilverbackMiddleware.post_execute">post_execute() (silverback.middlewares.SilverbackMiddleware method)</a>
 </li>
       <li><a href="methoddocs/middlewares.html#silverback.middlewares.SilverbackMiddleware.pre_execute">pre_execute() (silverback.middlewares.SilverbackMiddleware method)</a>
@@ -353,31 +750,6 @@
 
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    run command line option
-
-      <ul>
-        <li><a href="commands/run.html#cmdoption-run-account">--account</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-x">--max-exceptions</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-network">--network</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-recorder">--recorder</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-runner">--runner</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-0">--verbosity</a>, <a href="commands/run.html#cmdoption-run-v">[1]</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-0">-v</a>, <a href="commands/run.html#cmdoption-run-v">[1]</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-x">-x</a>
-</li>
-        <li><a href="commands/run.html#cmdoption-run-arg-PATH">PATH</a>
-</li>
-      </ul></li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/runner.html#silverback.runner.BaseRunner.run">run() (silverback.runner.BaseRunner method)</a>
 
@@ -391,6 +763,409 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    silverback-cluster-bots-errors command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-errors-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-health command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-health-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-info command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-info-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-list command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-list-p">-p</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-logs command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-new command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-a">--account</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-g">--group</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-i">--image</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">--network</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-a">-a</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-g">-g</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-i">-i</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">-n</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-arg-NAME">NAME</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-remove command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-start command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-start-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-stop command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-stop-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-bots-update command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-a">--account</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-g">--group</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-i">--image</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-n">--network</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-new-name">--new-name</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-a">-a</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-g">-g</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-i">-i</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-n">-n</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-arg-BOT">BOT</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-health command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-health-p">-p</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-info command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-info-p">-p</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-list command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-list-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-list-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-list-arg-WORKSPACE">WORKSPACE</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-new command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-c">--config</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-n">--name</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-s">--slug</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-t">--tier</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-n">-n</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-s">-s</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-t">-t</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-arg-WORKSPACE">WORKSPACE</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    silverback-cluster-vars-info command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-info-arg-NAME">NAME</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-vars-list command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-list-p">-p</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-vars-new command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-e">--env</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-e">-e</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-new-arg-NAME">NAME</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-vars-remove command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-remove-arg-NAME">NAME</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-vars-update command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-d">--del</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-e">--env</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-new-name">--new-name</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-c">-c</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-d">-d</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-e">-e</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-arg-NAME">NAME</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-workspaces command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">-p</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-login command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-login-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-login-p">-p</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-run command line option
+
+      <ul>
+        <li><a href="commands/run.html#cmdoption-silverback-run-account">--account</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-x">--max-exceptions</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-network">--network</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-recorder">--recorder</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-runner">--runner</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-v">--verbosity</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-v">-v</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-x">-x</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-run-arg-PATH">PATH</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-worker command line option
+
+      <ul>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-account">--account</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-x">--max-exceptions</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-network">--network</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-s">--shutdown_timeout</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-v">--verbosity</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-w">--workers</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-s">-s</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-v">-v</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-w">-w</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-x">-x</a>
+</li>
+        <li><a href="commands/run.html#cmdoption-silverback-worker-arg-PATH">PATH</a>
+</li>
+      </ul></li>
       <li>
     silverback.application
 
@@ -426,8 +1201,6 @@
         <li><a href="methoddocs/subscriptions.html#module-silverback.subscriptions">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     silverback.utils
 
@@ -463,6 +1236,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="methoddocs/runner.html#silverback.runner.WebsocketRunner">WebsocketRunner (class in silverback.runner)</a>
 </li>
+      <li>
+    WORKSPACE
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-list-arg-WORKSPACE">silverback-cluster-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-arg-WORKSPACE">silverback-cluster-new command line option</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
