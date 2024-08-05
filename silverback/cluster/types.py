@@ -12,6 +12,7 @@ class WorkspaceInfo(BaseModel):
     owner_id: uuid.UUID
     name: str
     slug: str
+    created: datetime
 
 
 class ClusterConfiguration(BaseModel):
