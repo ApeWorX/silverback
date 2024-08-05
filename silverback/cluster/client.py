@@ -276,7 +276,7 @@ class Workspace(WorkspaceInfo):
     @property
     @cache
     def clusters(self) -> dict[str, ClusterInfo]:
-        response = self.client.get("/clusters", params=dict(org=str(self.id)))
+        response = self.client.get("/clusters", params=dict(workspace=str(self.id)))
         handle_error_with_response(response)
         clusters = response.json()
         # TODO: Support paging
@@ -290,7 +290,7 @@ class Workspace(WorkspaceInfo):
     ) -> ClusterInfo:
         response = self.client.post(
             "/clusters/",
-            params=dict(org=str(self.id)),
+            params=dict(workspace=str(self.id)),
             json=dict(
                 name=cluster_name,
                 slug=cluster_slug,
@@ -331,7 +331,7 @@ class PlatformClient(httpx.Client):
     @property
     @cache
     def workspaces(self) -> dict[str, Workspace]:
-        response = self.get("/organizations")
+        response = self.get("/workspaces")
         handle_error_with_response(response)
         workspaces = response.json()
         # TODO: Support paging
@@ -345,7 +345,7 @@ class PlatformClient(httpx.Client):
         workspace_name: str = "",
     ) -> Workspace:
         response = self.post(
-            "/organizations",
+            "/workspaces",
             json=dict(slug=workspace_slug, name=workspace_name),
         )
         handle_error_with_response(response)
