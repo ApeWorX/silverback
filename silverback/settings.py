@@ -2,6 +2,7 @@ from typing import Any
 
 from ape.api import AccountAPI, ProviderContextManager
 from ape.utils import ManagerAccessMixin
+from ape_accounts import KeyfileAccount
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from taskiq import (
     AsyncBroker,
@@ -122,4 +123,10 @@ class Settings(BaseSettings, ManagerAccessMixin):
             return self.account_manager.test_accounts[acct_idx]
 
         # NOTE: Will only have a signer if assigned one here (or in app)
-        return self.account_manager.load(alias)
+        signer = self.account_manager.load(alias)
+
+        # NOTE: Set autosign if it's a keyfile account (for local testing)
+        if isinstance(signer, KeyfileAccount):
+            signer.set_autosign(True)
+
+        return signer
