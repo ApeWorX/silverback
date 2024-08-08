@@ -47,7 +47,7 @@ python3 setup.py install
 
 ## Quick Usage
 
-Checkout [the example](./example.py) to see how to use the library.
+Checkout [the example](https://github.com/ApeWorX/silverback/blob/main/example.py) to see how to use the library.
 
 ```{note}
 The example makes use of the [Ape Tokens](https://github.com/ApeWorX/ape-tokens) plugin.
