@@ -34,10 +34,10 @@ jobs:
           tags: |
             type=ref,event=pr
             type=ref,event=branch,branch=main,latest=true
-            type=ref,event=branch,branch=main
+            type=ref,event=branch,branch=main,tag=latest
             type=ref,event=branch,branch!=main
-            type=semver,pattern={{version}},branch=main,latest=false
-            type=ref,event=tag
+            type=semver,pattern={{version}},branch=main,latest=false,tag=stable
+            type=ref,event=tag,tag={{ tag }}
 
       - name: Show tags
         run: |
@@ -65,4 +65,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            APE_VERSION=main
+            APE_VERSION=latest-slim
