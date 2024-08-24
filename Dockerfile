@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------------------------
 
 # Build with builder image to reduce image size
-ARG APE_VERSION
+ARG BASE_APE_IMAGE_TAG
 FROM python:3.11 as builder
 USER root
 WORKDIR /wheels
@@ -14,7 +14,7 @@ RUN pip install --upgrade pip && pip install wheel
 RUN pip wheel . --wheel-dir=/wheels
 
 # Install from wheels
-FROM ghcr.io/apeworx/ape:${APE_VERSION:-latest-slim}
+FROM ghcr.io/apeworx/ape:${BASE_APE_IMAGE_TAG:-latest-slim}
 USER root
 COPY --from=builder /wheels /wheels
 RUN pip install --upgrade pip \

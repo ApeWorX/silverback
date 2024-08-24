@@ -65,4 +65,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            APE_VERSION=latest-slim
+            BASE_APE_IMAGE_TAG=latest-slim
