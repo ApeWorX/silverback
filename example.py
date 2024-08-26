@@ -42,6 +42,7 @@ class MyDB:
 
 
 @app.on_worker_startup()
+# NOTE: This event is triggered internally, do not use unless you know what you're doing
 def worker_startup(worker_state: TaskiqState):  # NOTE: You need the type hint to load worker state
     # NOTE: Worker state is per-worker, not shared with other workers
     # NOTE: Can put anything here, any python object works
