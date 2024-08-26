@@ -208,6 +208,7 @@ def update_table(log):
 @app.on_(chain.blocks)
 def use_table(blk):
     if app.state.table[...].mean() > app.state.table[...].sum():
+        # Trigger your app to send a transaction from `app.signer`
         contract.myMethod(..., sender=app.signer)
     ...
 ```
