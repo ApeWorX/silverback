@@ -253,7 +253,7 @@ class BaseRunner(ABC):
         )
 
         if shutdown_taskdata_result.is_err:
-            raise StartupFailure(shutdown_taskdata_result.error)
+            logger.error(f"Error when collecting shutdown tasks:\n{shutdown_taskdata_result.error}")
 
         else:
             shutdown_task_handlers = map(
