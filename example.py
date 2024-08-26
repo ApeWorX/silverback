@@ -83,15 +83,19 @@ def exec_event1(log):
 @app.on_(YFI.Approval)
 # Any handler function can be async too
 async def exec_event2(log: ContractLog):
-    if log.log_index % 7 == 6:
-        # If you ever want the app to immediately shutdown under some scenario, raise this exception
-        raise CircuitBreaker("Oopsie!")
-
     # All `app.state` values are updated across all workers at the same time
     app.state.logs_processed += 1
     # Do any other long running tasks...
     await asyncio.sleep(5)
     return log.amount
+
+
+@app.on_(chain.blocks)
+# NOTE: You can have multiple handlers for any trigger we support
+def check_logs(log):
+    if app.state.logs_processed > 20:
+        # If you ever want the app to immediately shutdown under some scenario, raise this exception
+        raise CircuitBreaker("Oopsie!")
 
 
 # A final job to execute on Silverback shutdown
