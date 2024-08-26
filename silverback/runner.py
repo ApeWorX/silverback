@@ -14,7 +14,7 @@ from taskiq.kicker import AsyncKicker
 from .application import SilverbackApp, SystemConfig, TaskData
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
 from .recorder import BaseRecorder, TaskResult
-from .state import StateSnapshot
+from .state import AppDatastore, StateSnapshot
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import TaskType
 from .utils import (
@@ -36,6 +36,10 @@ class BaseRunner(ABC):
         **kwargs,
     ):
         self.app = app
+
+        # TODO: Make datastore optional and settings-driven
+        # TODO: Allow configuring datastore class
+        self.datastore = AppDatastore()
         self.recorder = recorder
 
         self.max_exceptions = max_exceptions
@@ -74,12 +78,14 @@ class BaseRunner(ABC):
         last_block_processed: int | None = None,
     ):
         """Set latest checkpoint block number"""
-        if not self.save_snapshot_supported:
+        if not self._snapshotting_supported:
             return  # Can't support this feature
 
-        task = await self.app._save_snapshot.kiq(last_block_seen, last_block_processed)
+        task = await self.app._create_snapshot.kiq(last_block_seen, last_block_processed)
         if (result := await task.wait_result()).is_err:
             logger.error(f"Error saving snapshot: {result.error}")
+        else:
+            await self.datastore.save(result.return_value)
 
     @abstractmethod
     async def _block_task(self, task_data: TaskData):
@@ -133,31 +139,38 @@ class BaseRunner(ABC):
         )
 
         # NOTE: Bypass snapshotting if unsupported
-        self.save_snapshot_supported = TaskType.SYSTEM_SAVE_SNAPSHOT in system_tasks
+        self._snapshotting_supported = TaskType.SYSTEM_CREATE_SNAPSHOT in system_tasks
 
         # Load the snapshot (if available)
         # NOTE: Add some additional handling to see if this feature is available in bot
         if TaskType.SYSTEM_LOAD_SNAPSHOT not in system_tasks:
             logger.warning(
                 "Silverback no longer supports runner-based snapshotting, "
-                "please upgrade your bot SDK version to latest."
+                "please upgrade your bot SDK version to latest to use snapshots."
             )
             startup_state = StateSnapshot(
                 last_block_seen=-1,
                 last_block_processed=-1,
             )  # Use empty snapshot
 
-        elif (
+        elif not (startup_state := await self.datastore.init(app_id=self.app.identifier)):
+            logger.warning("No state snapshot detected, using empty snapshot")
+            startup_state = StateSnapshot(
+                # TODO: Migrate these to parameters (remove explicitly from state)
+                last_block_seen=-1,
+                last_block_processed=-1,
+            )  # Use empty snapshot
+
+        logger.debug(f"Startup state: {startup_state}")
+        # NOTE: State snapshot is immediately out of date after init
+
+        # Send startup state to app
+        if (
             result := await run_taskiq_task_wait_result(
-                self._create_system_task_kicker(TaskType.SYSTEM_LOAD_SNAPSHOT)
+                self._create_system_task_kicker(TaskType.SYSTEM_LOAD_SNAPSHOT), startup_state
             )
         ).is_err:
             raise StartupFailure(result.error)
-
-        else:
-            startup_state = result.return_value
-            logger.debug(f"Startup state: {startup_state}")
-        # NOTE: State snapshot is immediately out of date after init
 
         # NOTE: Do this for other system tasks because they may not be in older SDK versions
         #       `if TaskType.<SYSTEM_TASK_NAME> not in system_tasks: raise StartupFailure(...)`
@@ -276,7 +289,11 @@ class BaseRunner(ABC):
 
             # NOTE: No need to handle results otherwise
 
-        await self.app.broker.shutdown()
+        if self._snapshotting_supported:
+            # Do one last checkpoint to save a snapshot of final state
+            await self._checkpoint()
+
+        await self.app.broker.shutdown()  # Release broker
 
 
 class WebsocketRunner(BaseRunner, ManagerAccessMixin):

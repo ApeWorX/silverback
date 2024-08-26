@@ -14,7 +14,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
-from .state import AppDatastore, StateSnapshot
+from .state import StateSnapshot
 from .types import SilverbackID, TaskType
 
 
@@ -161,15 +161,11 @@ class SilverbackApp(ManagerAccessMixin):
         self._get_user_all_taskdata = self.__register_system_task(
             TaskType.SYSTEM_USER_ALL_TASKDATA, self.__get_user_all_taskdata_handler
         )
-
-        # TODO: Make backup optional and settings-driven
-        # TODO: Allow configuring backup class
-        self.datastore = AppDatastore()
         self._load_snapshot = self.__register_system_task(
             TaskType.SYSTEM_LOAD_SNAPSHOT, self.__load_snapshot_handler
         )
-        self._save_snapshot = self.__register_system_task(
-            TaskType.SYSTEM_SAVE_SNAPSHOT, self.__save_snapshot_handler
+        self._create_snapshot = self.__register_system_task(
+            TaskType.SYSTEM_CREATE_SNAPSHOT, self.__create_snapshot_handler
         )
 
     def __register_system_task(
@@ -201,44 +197,33 @@ class SilverbackApp(ManagerAccessMixin):
     def __get_user_all_taskdata_handler(self) -> list[TaskData]:
         return [v for k, l in self.tasks.items() if str(k).startswith("user:") for v in l]
 
-    async def __load_snapshot_handler(self) -> StateSnapshot:
+    async def __load_snapshot_handler(self, startup_state: StateSnapshot):
         # NOTE: *DO NOT USE* in Runner, as it will not be updated by the app
         self.state = SharedState()
         # NOTE: attribute does not exist before this task is executed,
         #       ensuring no one uses it during worker startup
 
-        if not (startup_state := await self.datastore.init(app_id=self.identifier)):
-            logger.warning("No state snapshot detected, using empty snapshot")
-            # TODO: Refactor to `None` by removing
-            self.state["system:last_block_seen"] = -1
-            self.state["system:last_block_processed"] = -1
-            startup_state = StateSnapshot(
-                # TODO: Migrate these to parameters (remove explicitly from state)
-                last_block_seen=-1,
-                last_block_processed=-1,
-            )  # Use empty snapshot
+        self.state["system:last_block_seen"] = startup_state.last_block_seen
+        self.state["system:last_block_processed"] = startup_state.last_block_processed
+        # TODO: Load user custom state (should not start with `system:`)
 
-        return startup_state
-
-    async def __save_snapshot_handler(
+    async def __create_snapshot_handler(
         self,
         last_block_seen: int | None = None,
         last_block_processed: int | None = None,
     ):
-        # Task that backups state before/after every non-system runtime task and at shutdown
+        # Task that updates state checkpoints before/after every non-system runtime task/at shutdown
         if last_block_seen is not None:
             self.state["system:last_block_seen"] = last_block_seen
 
         if last_block_processed is not None:
             self.state["system:last_block_processed"] = last_block_processed
 
-        snapshot = StateSnapshot(
+        return StateSnapshot(
             # TODO: Migrate these to parameters (remove explicitly from state)
-            last_block_processed=self.state["system:last_block_seen"] or -1,
-            last_block_seen=self.state["system:last_block_processed"] or -1,
+            last_block_seen=self.state.get("system:last_block_seen", -1),
+            last_block_processed=self.state.get("system:last_block_processed", -1),
         )
-
-        return await self.datastore.save(snapshot)
 
     def broker_task_decorator(
         self,
