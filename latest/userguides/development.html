@@ -50,6 +50,7 @@
               <option value="">Select version...</option>
               <option value="latest">latest</option>
               <option value="stable">stable</option>
+                <option value="v0.5.8">v0.5.8</option>
                 <option value="v0.5.7">v0.5.7</option>
                 <option value="v0.5.6">v0.5.6</option>
                 <option value="v0.5.5">v0.5.5</option>
@@ -93,6 +94,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#application-events">Application Events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#signing-transactions">Signing Transactions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#running-your-application">Running your Application</a><ul>
@@ -250,6 +252,16 @@ Any errors you raise during this function will get captured by the client, and r
 </div>
 <p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;app.on_startup()</span></code> decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;app.on_worker_startup()</span></code>.</p>
 </section>
+<section id="signing-transactions">
+<h3>Signing Transactions<a class="headerlink" href="#signing-transactions" title="Permalink to this heading"></a></h3>
+<p>If configured, your bot with have <code class="docutils literal notranslate"><span class="pre">app.signer</span></code> which is an Ape account that can sign arbitrary transactions you ask it to.
+To learn more about signing transactions with Ape, see the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/transactions.html">documentation</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>While not recommended, you can use keyfile accounts for automated signing.
+See <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/accounts.html#automation">this guide</a> to learn more about how to do that.</p>
+</div>
+</section>
 </section>
 <section id="running-your-application">
 <h2>Running your Application<a class="headerlink" href="#running-your-application" title="Permalink to this heading"></a></h2>
@@ -268,10 +280,15 @@ You can use this in your application to enable a “test execution” mode, some
     <span class="c1"># Log what the transaction *would* have done, had a signer been enabled</span>
 </pre></div>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
+Always test your applications throughly before deploying, and always use a dedicated key for production signing with your application in a remote setting.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
-Always test your applications throughly before deploying.</p>
+<p>It is highly suggested to use a dedicated cloud signer plugin, such as <a class="reference external" href="https://github.com/ApeWorX/ape-aws"><code class="docutils literal notranslate"><span class="pre">ape-aws</span></code></a> for signing transactions in a cloud environment.
+Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.</p>
 </div>
 <section id="distributed-execution">
 <h3>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Permalink to this heading"></a></h3>

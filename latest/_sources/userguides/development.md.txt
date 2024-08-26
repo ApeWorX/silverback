@@ -120,6 +120,16 @@ def handle_on_shutdown():
 
 *Changed in 0.2.0*: The behavior of the `@app.on_startup()` decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on `@app.on_worker_startup()`.
 
+### Signing Transactions
+
+If configured, your bot with have `app.signer` which is an Ape account that can sign arbitrary transactions you ask it to.
+To learn more about signing transactions with Ape, see the [documentation](https://docs.apeworx.io/ape/stable/userguides/transactions.html).
+
+```{warning}
+While not recommended, you can use keyfile accounts for automated signing.
+See [this guide](https://docs.apeworx.io/ape/stable/userguides/accounts.html#automation) to learn more about how to do that.
+```
+
 ## Running your Application
 
 Once you have programmed your bot, it's really useful to be able to run it locally and validate that it does what you expect it to do.
@@ -141,9 +151,14 @@ else:
     # Log what the transaction *would* have done, had a signer been enabled
 ```
 
-```{note}
+```{warning}
 If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
-Always test your applications throughly before deploying.
+Always test your applications throughly before deploying, and always use a dedicated key for production signing with your application in a remote setting.
+```
+
+```{note}
+It is highly suggested to use a dedicated cloud signer plugin, such as [`ape-aws`](https://github.com/ApeWorX/ape-aws) for signing transactions in a cloud environment.
+Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.
 ```
 
 ### Distributed Execution
