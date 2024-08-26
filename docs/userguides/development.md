@@ -1,4 +1,4 @@
-# Developing a Silverback Application
+# Developing Applications
 
 In this guide, we are going to show you more details on how to build an application with Silverback.
 
@@ -197,12 +197,12 @@ export SILVERBACK_RESULT_BACKEND_URI="redis://127.0.0.1:6379"
 silverback worker -w 2 "example:app"
 ```
 
-This will run one client and 2 workers and all queue data will be go through Redis.
+The client will send tasks to the 2 worker subprocesses, and all task queue and results data will be go through Redis.
 
 ## Testing your Application
 
 TODO: Add backtesting mode w/ `silverback test`
 
-## Deploying to the Silverback Platform
+## Deploying your Application
 
-TODO: Add packaging and deployment to the Silverback platform, once available.
+Check out the [Platform Deployment Userguide](./platform.html) for more information on how to deploy your application to the [Silverback Platform](https://silverback.apeworx.io).

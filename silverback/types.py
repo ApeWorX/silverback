@@ -80,7 +80,12 @@ class Datapoints(RootModel):
         names_to_remove: dict[str, ValidationError] = {}
         # Automatically convert raw scalar types
         for name in datapoints:
-            if not isinstance(datapoints[name], Datapoint):
+            if isinstance(datapoints[name], dict) and "type" in datapoints[name]:
+                try:
+                    datapoints[name] = ScalarDatapoint.model_validate(datapoints[name])
+                except ValidationError as e:
+                    names_to_remove[name] = e
+            elif not isinstance(datapoints[name], Datapoint):
                 try:
                     datapoints[name] = ScalarDatapoint(data=datapoints[name])
                 except ValidationError as e:

@@ -36,7 +36,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     RESULT_BACKEND_CLASS: str = ""
     RESULT_BACKEND_URI: str = ""  # To be deprecated in 0.6
-    RESULT_BACKEND_KWARGS: str = ""
+    RESULT_BACKEND_KWARGS: dict[str, Any] = dict()
 
     NETWORK_CHOICE: str = ""
     SIGNER_ALIAS: str = ""
