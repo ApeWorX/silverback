@@ -14,7 +14,7 @@ RUN pip install --upgrade pip && pip install wheel
 RUN pip wheel . --wheel-dir=/wheels
 
 # Install from wheels
-FROM ghcr.io/apeworx/ape:${BASE_APE_IMAGE_TAG:-latest-slim}
+FROM ghcr.io/apeworx/ape:${BASE_APE_IMAGE_TAG:-stable-slim}
 USER root
 COPY --from=builder /wheels /wheels
 RUN pip install --upgrade pip \
