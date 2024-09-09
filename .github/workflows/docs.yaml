@@ -25,8 +25,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # NOTE: This also serves as a test for the action.
-    - name: Docs
-      uses: ./
+    - name: Ape Docs
+      uses: apeworx/sphinx-ape@main
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
