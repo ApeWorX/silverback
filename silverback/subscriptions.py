@@ -148,7 +148,7 @@ class Web3SubscriptionsManager:
                     try:
                         await self._receive(timeout=timeout)
                     except TimeoutError:
-                        logger.warning("Receive call timed out.")
+                        logger.warning(f"Receive call timed out ({sub_id}).")
                         return
             else:
                 try:
