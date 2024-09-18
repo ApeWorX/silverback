@@ -14,8 +14,8 @@ from silverback.types import Datapoints
         ({"a": 1}, {"a": {"type": "scalar", "data": 1}}),
         # max INT96 value
         (
-            {"a": 2**96 - 1},
-            {"a": {"type": "scalar", "data": 79228162514264337593543950335}},
+            {"a": 2**95 - 1},
+            {"a": {"type": "scalar", "data": 39614081257132168796771975167}},
         ),
         # int over INT96 max parses as Decimal
         (
