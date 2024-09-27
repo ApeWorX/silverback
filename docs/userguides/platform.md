@@ -175,6 +175,7 @@ TODO: Downloading metrics from your Bot
 [silverback-cluster-bots-start]: ../commands/cluster.html#silverback-cluster-bots-start
 [silverback-cluster-bots-stop]: ../commands/cluster.html#silverback-cluster-bots-stop
 [silverback-cluster-bots-update]: ../commands/cluster.html#silverback-cluster-bots-update
+[silverback-cluster-docker-auth-new]: ../commands/cluster.html#silverback-cluster-docker-auth-new
 [silverback-cluster-health]: ../commands/cluster.html#silverback-cluster-health
 [silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
 [silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
@@ -183,5 +184,4 @@ TODO: Downloading metrics from your Bot
 [silverback-cluster-vars-list]: ../commands/cluster.html#silverback-cluster-vars-list
 [silverback-cluster-vars-new]: ../commands/cluster.html#silverback-cluster-vars-new
 [silverback-cluster-vars-remove]: ../commands/cluster.html#silverback-cluster-vars-remove
-[silverback-cluster-docker-auth-new]: ../commands/cluster.html#silverback-cluster-docker-auth-new
 [silverback-login]: ../commands/cluster.html#silverback-login
