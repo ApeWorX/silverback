@@ -313,7 +313,7 @@ class ClusterHealth(BaseModel):
 
 class DockerCredentialsInfo(BaseModel):
     id: str
-    name: str | None = None
+    name: str
     hostname: str
     created: datetime
     updated: datetime

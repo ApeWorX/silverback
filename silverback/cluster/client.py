@@ -167,7 +167,7 @@ class Bot(BotInfo):
         response = self.cluster.put(f"/bots/{self.id}", json=dict(name=self.name))
         handle_error_with_response(response)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def docker_credentials(self) -> DockerCredentials | None:
         if self.docker_credentials_id:
