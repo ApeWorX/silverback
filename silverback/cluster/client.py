@@ -2,6 +2,7 @@ from functools import cache
 from typing import ClassVar, Literal
 
 import httpx
+from pydantic import computed_field
 
 from silverback.version import version
 
@@ -12,6 +13,7 @@ from .types import (
     ClusterHealth,
     ClusterInfo,
     ClusterState,
+    DockerCredentialsInfo,
     VariableGroupInfo,
     WorkspaceInfo,
 )
@@ -51,6 +53,33 @@ def handle_error_with_response(response: httpx.Response):
     response.raise_for_status()
 
     assert response.status_code < 300, "Should follow redirects, so not sure what the issue is"
+
+
+class DockerCredentials(DockerCredentialsInfo):
+    # NOTE: Client used only for this SDK
+    # NOTE: DI happens in `ClusterClient.__init__`
+    cluster: ClassVar["ClusterClient"]
+
+    def __hash__(self) -> int:
+        return int(self.id)
+
+    def update(
+        self,
+        name: str | None = None,
+        hostname: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+    ) -> "DockerCredentials":
+        response = self.cluster.put(
+            f"/credentials/{self.id}",
+            json=dict(name=name, hostname=hostname, username=username, password=password),
+        )
+        handle_error_with_response(response)
+        return self
+
+    def remove(self):
+        response = self.cluster.delete(f"/credentials/{self.id}")
+        handle_error_with_response(response)
 
 
 class VariableGroup(VariableGroupInfo):
@@ -138,6 +167,15 @@ class Bot(BotInfo):
         response = self.cluster.put(f"/bots/{self.id}", json=dict(name=self.name))
         handle_error_with_response(response)
 
+    @computed_field
+    @property
+    def docker_credentials(self) -> DockerCredentials | None:
+        if self.docker_credentials_id:
+            for v in self.cluster.docker_credentials.values():
+                if v.id == self.docker_credentials_id:
+                    return v
+        return None
+
     @property
     def errors(self) -> list[str]:
         response = self.cluster.get(f"/bots/{self.id}/errors")
@@ -164,6 +202,7 @@ class ClusterClient(httpx.Client):
         super().__init__(*args, **kwargs)
 
         # DI for other client classes
+        DockerCredentials.cluster = self  # Connect to cluster client
         VariableGroup.cluster = self  # Connect to cluster client
         Bot.cluster = self  # Connect to cluster client
 
@@ -199,6 +238,24 @@ class ClusterClient(httpx.Client):
         return ClusterHealth.model_validate(response.json())
 
     @property
+    def docker_credentials(self) -> dict[str, DockerCredentials]:
+        response = self.get("/credentials")
+        handle_error_with_response(response)
+        return {
+            creds.name: creds for creds in map(DockerCredentials.model_validate, response.json())
+        }
+
+    def new_credentials(
+        self, name: str, hostname: str, username: str, password: str
+    ) -> DockerCredentials:
+        response = self.post(
+            "/credentials",
+            json=dict(name=name, hostname=hostname, username=username, password=password),
+        )
+        handle_error_with_response(response)
+        return DockerCredentials.model_validate(response.json())
+
+    @property
     def variable_groups(self) -> dict[str, VariableGroup]:
         response = self.get("/variables")
         handle_error_with_response(response)
@@ -222,6 +279,7 @@ class ClusterClient(httpx.Client):
         network: str,
         account: str | None = None,
         environment: list[VariableGroupInfo] | None = None,
+        docker_credentials_id: str | None = None,
     ) -> Bot:
         form: dict = dict(
             name=name,
@@ -234,6 +292,9 @@ class ClusterClient(httpx.Client):
             form["environment"] = [
                 dict(id=str(env.id), revision=env.revision) for env in environment
             ]
+
+        if docker_credentials_id:
+            form["docker_credentials_id"] = docker_credentials_id
 
         response = self.post("/bots", json=form)
         handle_error_with_response(response)

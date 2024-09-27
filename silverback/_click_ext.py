@@ -65,6 +65,18 @@ class SectionedHelpGroup(OrderedCommands):
 
         return new_decorator
 
+    def group(self, *args, **kwargs):
+        section = kwargs.pop("section", "Commands")
+        decorator = super().command(*args, **kwargs)
+
+        def new_decorator(f):
+            cmd = decorator(f)
+            cmd.section = section
+            self.sections.setdefault(section, []).append(cmd)
+            return cmd
+
+        return new_decorator
+
     def format_commands(self, ctx, formatter):
         for section, cmds in self.sections.items():
             rows = []

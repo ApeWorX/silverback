@@ -311,6 +311,14 @@ class ClusterHealth(BaseModel):
         return ServiceHealth(healthy=self.ars.healthy and self.ccs.healthy)
 
 
+class DockerCredentialsInfo(BaseModel):
+    id: str
+    name: str | None = None
+    hostname: str
+    created: datetime
+    updated: datetime
+
+
 class VariableGroupInfo(BaseModel):
     id: uuid.UUID
     name: str
@@ -350,5 +358,6 @@ class BotInfo(BaseModel):
     network: str
     account: str | None
     revision: int
+    docker_credentials_id: str | None
 
     environment: list[EnvironmentVariable] = []
