@@ -319,7 +319,9 @@ def credentials_info(cluster: ClusterClient, name: str):
 @click.argument("registry")
 @cluster_client
 def credentials_new(cluster: ClusterClient, name: str, registry: str):
-    """Add Docker private registry credentials"""
+    """Add Docker private registry credentials. This command will prompt you for a username and
+    password.
+    """
 
     username = click.prompt("Username")
     password = click.prompt("Password", hide_input=True)
