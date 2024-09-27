@@ -281,45 +281,45 @@ def cluster_health(cluster: ClusterClient):
 
 
 @cluster.group(cls=SectionedHelpGroup)
-def docker():
-    """Manage Docker configuration"""
+def registry():
+    """Manage container registry configuration"""
 
 
-@docker.group(cls=SectionedHelpGroup, name="auth")
-def docker_auth():
-    """Manage Docker private registry credentials"""
+@registry.group(cls=SectionedHelpGroup, name="auth")
+def registry_auth():
+    """Manage private container registry credentials"""
 
 
-@docker_auth.command(name="list")
+@registry_auth.command(name="list")
 @cluster_client
 def credentials_list(cluster: ClusterClient):
-    """List Docker registry credentials"""
+    """List container registry credentials"""
 
-    if creds := list(cluster.docker_credentials):
+    if creds := list(cluster.registry_credentials):
         click.echo(yaml.safe_dump(creds))
 
     else:
-        click.secho("No Docker credentials present in this cluster", bold=True, fg="red")
+        click.secho("No registry credentials present in this cluster", bold=True, fg="red")
 
 
-@docker_auth.command(name="info")
+@registry_auth.command(name="info")
 @click.argument("name")
 @cluster_client
 def credentials_info(cluster: ClusterClient, name: str):
-    """Show info about Docker credentials"""
+    """Show info about registry credentials"""
 
-    if not (creds := cluster.docker_credentials.get(name)):
+    if not (creds := cluster.registry_credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
 
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id", "name"})))
 
 
-@docker_auth.command(name="new")
+@registry_auth.command(name="new")
 @click.argument("name")
 @click.argument("registry")
 @cluster_client
 def credentials_new(cluster: ClusterClient, name: str, registry: str):
-    """Add Docker private registry credentials. This command will prompt you for a username and
+    """Add registry private registry credentials. This command will prompt you for a username and
     password.
     """
 
@@ -332,13 +332,13 @@ def credentials_new(cluster: ClusterClient, name: str, registry: str):
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
 
 
-@docker_auth.command(name="update")
+@registry_auth.command(name="update")
 @click.argument("name")
 @click.option("-r", "--registry")
 @cluster_client
 def credentials_update(cluster: ClusterClient, name: str, registry: str | None = None):
-    """Update Docker registry credentials"""
-    if not (creds := cluster.docker_credentials.get(name)):
+    """Update registry registry credentials"""
+    if not (creds := cluster.registry_credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
 
     username = click.prompt("Username")
@@ -348,16 +348,16 @@ def credentials_update(cluster: ClusterClient, name: str, registry: str | None =
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
 
 
-@docker_auth.command(name="remove")
+@registry_auth.command(name="remove")
 @click.argument("name")
 @cluster_client
 def credentials_remove(cluster: ClusterClient, name: str):
-    """Remove a set of Docker credentials"""
-    if not (creds := cluster.docker_credentials.get(name)):
+    """Remove a set of registry credentials"""
+    if not (creds := cluster.registry_credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
 
     creds.remove()  # NOTE: No confirmation because can only delete if no references exist
-    click.secho(f"Docker credentials '{creds.name}' removed.", fg="green", bold=True)
+    click.secho(f"registry credentials '{creds.name}' removed.", fg="green", bold=True)
 
 
 @cluster.group(cls=SectionedHelpGroup)
@@ -506,10 +506,10 @@ def bots():
 @click.option("-a", "--account")
 @click.option("-g", "--group", "vargroups", multiple=True)
 @click.option(
-    "-d",
-    "--docker-credentials",
-    "docker_credentials_name",
-    help="Docker credentials to use to pull the image",
+    "-r",
+    "--registry-credentials",
+    "registry_credentials_name",
+    help="registry credentials to use to pull the image",
 )
 @click.argument("name")
 @cluster_client
@@ -519,7 +519,7 @@ def new_bot(
     network: str,
     account: str | None,
     vargroups: list[str],
-    docker_credentials_name: str | None,
+    registry_credentials_name: str | None,
     name: str,
 ):
     """Create a new bot in a CLUSTER with the given configuration"""
@@ -529,13 +529,13 @@ def new_bot(
 
     environment = [cluster.variable_groups[vg_name].get_revision("latest") for vg_name in vargroups]
 
-    docker_credentials_id = None
-    if docker_credentials_name:
+    registry_credentials_id = None
+    if registry_credentials_name:
         if not (
-            creds := cluster.docker_credentials.get(docker_credentials_name)
+            creds := cluster.registry_credentials.get(registry_credentials_name)
         ):  # NOTE: Check if credentials exist
-            raise click.UsageError(f"Unknown docker credentials '{docker_credentials_name}'")
-        docker_credentials_id = creds.id
+            raise click.UsageError(f"Unknown registry credentials '{registry_credentials_name}'")
+        registry_credentials_id = creds.id
 
     click.echo(f"Name: {name}")
     click.echo(f"Image: {image}")
@@ -543,8 +543,8 @@ def new_bot(
     if environment:
         click.echo("Environment:")
         click.echo(yaml.safe_dump([var for vg in environment for var in vg.variables]))
-    if docker_credentials_id:
-        click.echo(f"Docker Credentials: {docker_credentials_name}")
+    if registry_credentials_id:
+        click.echo(f"registry credentials: {registry_credentials_name}")
 
     if not click.confirm("Do you want to create and start running this bot?"):
         return
@@ -555,7 +555,7 @@ def new_bot(
         network,
         account=account,
         environment=environment,
-        docker_credentials_id=docker_credentials_id,
+        registry_credentials_id=registry_credentials_id,
     )
     click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
 
@@ -587,12 +587,14 @@ def bot_info(cluster: ClusterClient, bot_name: str):
             "id",
             "name",
             "environment",
-            "docker_credentials_id",
-            "docker_credentials",
+            "registry_credentials_id",
+            "registry_credentials",
         }
     )
-    if bot.docker_credentials:
-        bot_dump["docker_credentials"] = bot.docker_credentials.model_dump(exclude={"id", "name"})
+    if bot.registry_credentials:
+        bot_dump["registry_credentials"] = bot.registry_credentials.model_dump(
+            exclude={"id", "name"}
+        )
 
     click.echo(yaml.safe_dump(bot_dump))
     if bot.environment:

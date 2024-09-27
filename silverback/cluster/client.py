@@ -13,7 +13,7 @@ from .types import (
     ClusterHealth,
     ClusterInfo,
     ClusterState,
-    DockerCredentialsInfo,
+    RegistryCredentialsInfo,
     VariableGroupInfo,
     WorkspaceInfo,
 )
@@ -55,7 +55,7 @@ def handle_error_with_response(response: httpx.Response):
     assert response.status_code < 300, "Should follow redirects, so not sure what the issue is"
 
 
-class DockerCredentials(DockerCredentialsInfo):
+class RegistryCredentials(RegistryCredentialsInfo):
     # NOTE: Client used only for this SDK
     # NOTE: DI happens in `ClusterClient.__init__`
     cluster: ClassVar["ClusterClient"]
@@ -69,7 +69,7 @@ class DockerCredentials(DockerCredentialsInfo):
         hostname: str | None = None,
         username: str | None = None,
         password: str | None = None,
-    ) -> "DockerCredentials":
+    ) -> "RegistryCredentials":
         response = self.cluster.put(
             f"/credentials/{self.id}",
             json=dict(name=name, hostname=hostname, username=username, password=password),
@@ -169,10 +169,10 @@ class Bot(BotInfo):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def docker_credentials(self) -> DockerCredentials | None:
-        if self.docker_credentials_id:
-            for v in self.cluster.docker_credentials.values():
-                if v.id == self.docker_credentials_id:
+    def registry_credentials(self) -> RegistryCredentials | None:
+        if self.registry_credentials_id:
+            for v in self.cluster.registry_credentials.values():
+                if v.id == self.registry_credentials_id:
                     return v
         return None
 
@@ -202,7 +202,7 @@ class ClusterClient(httpx.Client):
         super().__init__(*args, **kwargs)
 
         # DI for other client classes
-        DockerCredentials.cluster = self  # Connect to cluster client
+        RegistryCredentials.cluster = self  # Connect to cluster client
         VariableGroup.cluster = self  # Connect to cluster client
         Bot.cluster = self  # Connect to cluster client
 
@@ -238,22 +238,22 @@ class ClusterClient(httpx.Client):
         return ClusterHealth.model_validate(response.json())
 
     @property
-    def docker_credentials(self) -> dict[str, DockerCredentials]:
+    def registry_credentials(self) -> dict[str, RegistryCredentials]:
         response = self.get("/credentials")
         handle_error_with_response(response)
         return {
-            creds.name: creds for creds in map(DockerCredentials.model_validate, response.json())
+            creds.name: creds for creds in map(RegistryCredentials.model_validate, response.json())
         }
 
     def new_credentials(
         self, name: str, hostname: str, username: str, password: str
-    ) -> DockerCredentials:
+    ) -> RegistryCredentials:
         response = self.post(
             "/credentials",
             json=dict(name=name, hostname=hostname, username=username, password=password),
         )
         handle_error_with_response(response)
-        return DockerCredentials.model_validate(response.json())
+        return RegistryCredentials.model_validate(response.json())
 
     @property
     def variable_groups(self) -> dict[str, VariableGroup]:
@@ -279,7 +279,7 @@ class ClusterClient(httpx.Client):
         network: str,
         account: str | None = None,
         environment: list[VariableGroupInfo] | None = None,
-        docker_credentials_id: str | None = None,
+        registry_credentials_id: str | None = None,
     ) -> Bot:
         form: dict = dict(
             name=name,
@@ -293,8 +293,8 @@ class ClusterClient(httpx.Client):
                 dict(id=str(env.id), revision=env.revision) for env in environment
             ]
 
-        if docker_credentials_id:
-            form["docker_credentials_id"] = docker_credentials_id
+        if registry_credentials_id:
+            form["registry_credentials_id"] = registry_credentials_id
 
         response = self.post("/bots", json=form)
         handle_error_with_response(response)

@@ -311,7 +311,7 @@ class ClusterHealth(BaseModel):
         return ServiceHealth(healthy=self.ars.healthy and self.ccs.healthy)
 
 
-class DockerCredentialsInfo(BaseModel):
+class RegistryCredentialsInfo(BaseModel):
     id: str
     name: str
     hostname: str
@@ -358,6 +358,6 @@ class BotInfo(BaseModel):
     network: str
     account: str | None
     revision: int
-    docker_credentials_id: str | None
+    registry_credentials_id: str | None
 
     environment: list[EnvironmentVariable] = []
