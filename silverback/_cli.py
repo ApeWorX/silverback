@@ -519,7 +519,7 @@ def new_bot(
     network: str,
     account: str | None,
     vargroups: list[str],
-    docker_credentials_name: str,
+    docker_credentials_name: str | None,
     name: str,
 ):
     """Create a new bot in a CLUSTER with the given configuration"""
