@@ -32,6 +32,34 @@ pre-commit install
 
 Committing will now automatically run the local hooks and ensure that your commit passes all lint checks.
 
+## Running the docs locally
+
+First, make sure you have the docs-related tooling installed:
+
+```bash
+pip install -e .'[doc]'
+```
+
+Then, run the following from the root project directory:
+
+```bash
+sphinx-ape build .
+```
+
+For the best viewing experience, use a local server:
+
+```bash
+sphinx-ape serve .
+```
+
+Then, open your browser to `127.0.0.1:1337` and click the `ape` directory link.
+
+You can also use the `--open` flag to automatically open the docs:
+
+```bash
+sphinx-ape serve . --open
+```
+
 ## Pull Requests
 
 Pull requests are welcomed! Please adhere to the following:
