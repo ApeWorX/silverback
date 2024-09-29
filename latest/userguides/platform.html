@@ -1,145 +1,134 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html lang="en" data-accent-color="lime" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deploying Applications &mdash; silverback  documentation</title>
-      <link rel="stylesheet" href="/silverback/latest/_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="/silverback/latest/_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="/silverback/latest/_static/custom.css" type="text/css" />
-    <link rel="shortcut icon" href="../_static/favicon.ico"/>
-    <link rel="canonical" href="/silverback/userguides/platform.html" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
-        <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-    <script src="../_static/js/theme.js"></script>
-    <script src="../_static/custom.js"></script>
-  <script>
-      var PROJECT = "silverback";
-  </script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Local Development" href="../commands/run.html" />
-    <link rel="prev" title="Developing Applications" href="development.html" /> 
-</head>
-
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            silverback
-              <img src="../_static/logo.gif" class="logo" alt="Logo"/>
-          </a>
-
-          <div class="version">
-            <label for="version-picker" id="version-picker-label">Version:</label>
-            <select id="version-picker">
-              <option value="">Select version...</option>
-              <option value="latest">latest</option>
-              <option value="stable">stable</option>
-                <option value="v0.5.8">v0.5.8</option>
-                <option value="v0.5.7">v0.5.7</option>
-                <option value="v0.5.6">v0.5.6</option>
-                <option value="v0.5.5">v0.5.5</option>
-                <option value="v0.5.4">v0.5.4</option>
-                <option value="v0.5.3">v0.5.3</option>
-                <option value="v0.5.2">v0.5.2</option>
-                <option value="v0.5.1">v0.5.1</option>
-                <option value="v0.5.0">v0.5.0</option>
-                <option value="v0.4.2">v0.4.2</option>
-                <option value="v0.4.1">v0.4.1</option>
-                <option value="v0.4.0">v0.4.0</option>
-                <option value="v0.3.3">v0.3.3</option>
-                <option value="v0.3.2">v0.3.2</option>
-                <option value="v0.3.1">v0.3.1</option>
-                <option value="v0.3.0">v0.3.0</option>
-                <option value="v0.2.1">v0.2.1</option>
-                <option value="v0.2.0">v0.2.0</option>
-                <option value="v0.1.1">v0.1.1</option>
-                <option value="v0.1.0">v0.1.0</option>
-            </select>
-          </div>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Deploying Applications - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Start" href="quickstart.html" /><link rel="prev" title="Developing Applications" href="development.html" />
+      <link rel="canonical" href="silverback/userguides/platform.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=36d120a7" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+<meta property="og:url" content="silverback/userguides/platform.html"/>
+<meta property="og:title" content="Deploying Applications"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="silverback" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="silverback" height="28" loading="lazy" />
+      <strong>silverback</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
 </div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development.html">Developing Applications</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Deploying Applications</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#creating-a-cluster">Creating a Cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#connecting-to-your-cluster">Connecting to your Cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#building-your-bot">Building your Bot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#adding-environment-variables">Adding Environment Variables</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#deploying-your-bot">Deploying your Bot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#monitoring-your-bot">Monitoring your Bot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#controlling-your-bot">Controlling your Bot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#viewing-measured-metrics">Viewing Measured Metrics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deploying Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 </ul>
-</li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">CLI Reference</span></p>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Python Reference</span></p>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/application.html">silverback.application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
 </ul>
 
         </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">silverback</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Deploying Applications</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/userguides/platform.md.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="deploying-applications">
-<h1>Deploying Applications<a class="headerlink" href="#deploying-applications" title="Permalink to this heading"></a></h1>
+      </div></div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#creating-a-cluster">Creating a Cluster</a></li>
+<li><a class="reference internal" href="#connecting-to-your-cluster">Connecting to your Cluster</a></li>
+<li><a class="reference internal" href="#building-your-bot">Building your Bot</a></li>
+<li><a class="reference internal" href="#adding-environment-variables">Adding Environment Variables</a></li>
+<li><a class="reference internal" href="#deploying-your-bot">Deploying your Bot</a></li>
+<li><a class="reference internal" href="#monitoring-your-bot">Monitoring your Bot</a></li>
+<li><a class="reference internal" href="#controlling-your-bot">Controlling your Bot</a></li>
+<li><a class="reference internal" href="#viewing-measured-metrics">Viewing Measured Metrics</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">silverback</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Deploying Applications</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="deploying-applications">
+<h1>Deploying Applications<a class="headerlink" href="#deploying-applications" title="Link to this heading"></a></h1>
 <p>In this guide, we are going to show you more details on how to deploy your application to the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
 <section id="creating-a-cluster">
-<h2>Creating a Cluster<a class="headerlink" href="#creating-a-cluster" title="Permalink to this heading"></a></h2>
+<h2>Creating a Cluster<a class="headerlink" href="#creating-a-cluster" title="Link to this heading"></a></h2>
 <p>The Silverback Platform runs your Applications (or “Bots”) on dedicated managed application Clusters.
 These Clusters will take care to orchestrate infrastructure, monitor, run your triggers, and collect metrics for your applications.
 Each Cluster is bespoke for an individual or organization, and isolates your applications from others on different infrastructure.</p>
@@ -155,7 +144,7 @@ The CLI experience is for those working locally who don’t want to visit the we
 </div>
 </section>
 <section id="connecting-to-your-cluster">
-<h2>Connecting to your Cluster<a class="headerlink" href="#connecting-to-your-cluster" title="Permalink to this heading"></a></h2>
+<h2>Connecting to your Cluster<a class="headerlink" href="#connecting-to-your-cluster" title="Link to this heading"></a></h2>
 <p>To connect to a cluster, you can use commands from the <a class="reference external" href="../commands/cluster.html#silverback-cluster"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span></code></a> subcommand group.
 For instance, to list all your available bots on your cluster, use <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-list"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">list</span></code></a>.
 To obtain general information about your cluster, just use <a class="reference external" href="../commands/cluster.html#silverback-cluster-info"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">info</span></code></a>,
@@ -167,12 +156,12 @@ or <a class="reference external" href="../commands/cluster.html#silverback-clust
 </div>
 </section>
 <section id="building-your-bot">
-<h2>Building your Bot<a class="headerlink" href="#building-your-bot" title="Permalink to this heading"></a></h2>
+<h2>Building your Bot<a class="headerlink" href="#building-your-bot" title="Link to this heading"></a></h2>
 <p>TODO: Add build process and describe <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span> <span class="pre">--autogen</span></code> and <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span> <span class="pre">--upgrade</span></code></p>
 <p>TODO: Add how to debug containers using <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span></code> w/ <code class="docutils literal notranslate"><span class="pre">taskiq-redis</span></code> broker</p>
 </section>
 <section id="adding-environment-variables">
-<h2>Adding Environment Variables<a class="headerlink" href="#adding-environment-variables" title="Permalink to this heading"></a></h2>
+<h2>Adding Environment Variables<a class="headerlink" href="#adding-environment-variables" title="Link to this heading"></a></h2>
 <p>Once you have created your bot application container image, you might know of some environment variables the image requires to run properly.
 Thanks to it’s flexible plugin system, ape plugins may also require specific environment variables to load as well.
 Silverback Clusters include an environment variable management system for exactly this purpose,
@@ -205,7 +194,7 @@ To remove a variable group, use <a class="reference external" href="../commands/
 <p>Once you have created all the Variable Group(s) that you need to operate your Bot, you can reference these groups by name when adding your Bot to the cluster.</p>
 </section>
 <section id="deploying-your-bot">
-<h2>Deploying your Bot<a class="headerlink" href="#deploying-your-bot" title="Permalink to this heading"></a></h2>
+<h2>Deploying your Bot<a class="headerlink" href="#deploying-your-bot" title="Link to this heading"></a></h2>
 <p>You are finally ready to deploy your bot on the Cluster and get it running!</p>
 <p>To deploy your Bot, use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">new</span></code></a> command and give your bot a name,
 container image, network to run on, an account alias (if you want to sign transactions w/ <code class="docutils literal notranslate"><span class="pre">app.signer</span></code>),
@@ -235,7 +224,7 @@ Lastly, if you want to shutdown and delete your bot, you can do so using the <a 
 </div>
 </section>
 <section id="monitoring-your-bot">
-<h2>Monitoring your Bot<a class="headerlink" href="#monitoring-your-bot" title="Permalink to this heading"></a></h2>
+<h2>Monitoring your Bot<a class="headerlink" href="#monitoring-your-bot" title="Link to this heading"></a></h2>
 <p>Once your bot is successfully running in the RUNNING state, you can monitor your bot with a series of commands
 under the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span></code></a> subcommand group.
 We already saw how you can use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-list"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">list</span></code></a> command to see all bots managed by your Cluster (running or not).</p>
@@ -258,7 +247,7 @@ and to take corrective or preventative action if it is determined that it should
 </div>
 </section>
 <section id="controlling-your-bot">
-<h2>Controlling your Bot<a class="headerlink" href="#controlling-your-bot" title="Permalink to this heading"></a></h2>
+<h2>Controlling your Bot<a class="headerlink" href="#controlling-your-bot" title="Link to this heading"></a></h2>
 <p>As we already saw, once a Bot is configured in a Cluster, we can control it using commands from the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span></code></a> subcommand group.
 For example, we can attempt to start a Bot that is not currently running (after making configuration or code changes)
 using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-start"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">start</span></code></a> command.
@@ -270,40 +259,56 @@ We can also stop a bot using <a class="reference external" href="../commands/clu
 <p>TODO: Updating runtime parameters</p>
 </section>
 <section id="viewing-measured-metrics">
-<h2>Viewing Measured Metrics<a class="headerlink" href="#viewing-measured-metrics" title="Permalink to this heading"></a></h2>
+<h2>Viewing Measured Metrics<a class="headerlink" href="#viewing-measured-metrics" title="Link to this heading"></a></h2>
 <p>TODO: Downloading metrics from your Bot</p>
 </section>
 </section>
 
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="development.html" class="btn btn-neutral float-left" title="Developing Applications" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../commands/run.html" class="btn btn-neutral float-right" title="Local Development" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2023, ApeWorX LTD.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="development.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Developing Applications</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="quickstart.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Quick Start</div>
       </div>
-    </section>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
   </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=c5fc9e80"></script></body>
 </html>
