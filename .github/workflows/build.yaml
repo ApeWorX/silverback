@@ -86,12 +86,12 @@ jobs:
           echo "$all_tags"
 
           # Extract the minor versions (X.Y) from tags in the format vX.X.X
-          latest_two_minors=$(echo "$all_tags" | tr ' ' '\n' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -E 's/^v([0-9]+\.[0-9]+)\.[0-9]+$/\1/' | uniq | tail -n 2)
-          echo "Last two minor versions:"
-          echo "$latest_two_minors"
+          latest_minor=$(echo "$all_tags" | tr ' ' '\n' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -E 's/^v([0-9]+\.[0-9]+)\.[0-9]+$/\1/' | uniq | tail -n 1)
+          echo "Last minor version:"
+          echo "$latest_minor"
 
           keep_tags=""
-          for minor in $latest_two_minors; do
+          for minor in $latest_minor; do
             echo "Processing minor version: $minor"
             patches=$(echo "$all_tags" | tr ' ' '\n' | grep "^v$minor\.")
             echo "Latest patch for $minor: $patches"
