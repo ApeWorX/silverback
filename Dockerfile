@@ -17,6 +17,7 @@ RUN pip wheel . --wheel-dir=/wheels
 FROM ghcr.io/apeworx/ape:${BASE_APE_IMAGE_TAG:-latest-slim}
 USER root
 COPY --from=builder /wheels /wheels
+RUN pip install asyncer 'taskiq-sqs>=0.0.11' ape-alchemy ape-etherscan
 RUN pip install --upgrade pip \
     && pip install silverback --no-cache-dir --find-links=/wheels 
 USER harambe
