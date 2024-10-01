@@ -57,7 +57,7 @@ Be sure to properly configure your environment for the USDC and YFI tokens on Et
 To run your bot against a live network, this SDK includes a simple runner command you can use via:
 
 ```sh
-$ silverback run "example:app" --network :mainnet:alchemy
+$ silverback run "example:bot" --network :mainnet:alchemy
 ```
 
 ```{note}
@@ -65,10 +65,22 @@ This runner uses an in-memory task broker by default.
 If you want to learn more about what that means, please visit the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html).
 ```
 
+```{note}
+It is suggested that you create a bots/ folder in the root of your project. All project files that 
+are going to be ran will reside in this folder.
+
+It is also suggested that you treat this as a scripts folder, and do not include an __init__.py
+If you have a complicated project, follow the previous example to ensure you run the application correctly.
+
+A final suggestion would be to name your `SilverbackApp` object `bot`. Silverback automatically searches 
+for this object name when running. If you do not do so, once again, ensure you replace `example:bot` with 
+`example:<name-of-object>` the previous example.
+```
+
 ## Docker Usage
 
 ```sh
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:bot" --network :mainnet
 ```
 
 ```{note}
@@ -85,7 +97,7 @@ If you want to use a hosted provider with websocket support like Alchemy to run 
 If you attempt to run the `Docker Usage` command without supplying this key, you will get the following error:
 
 ```bash
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:bot" --network :mainnet:alchemy
 Traceback (most recent call last):
   ...
 ape_alchemy.exceptions.MissingProjectKeyError: Must set one of $WEB3_ALCHEMY_PROJECT_ID, $WEB3_ALCHEMY_API_KEY, $WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID, $WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY.
