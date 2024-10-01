@@ -124,9 +124,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
                 f"You should have a `bots/` folder in the root of your project."
             )
         elif not path.exists():
-            raise FileNotFoundError(
-                f"The bot.py file does not exist in the bots directory."
-            )
+            raise FileNotFoundError(f"The bot.py file does not exist in the bots directory.")
         path = f"{path.parent.name}.{path.name.replace('.py', '')}:bot"
 
     app = import_from_string(path)
@@ -144,7 +142,7 @@ def generate_dockerfiles():
     files = {file for file in path.iterdir() if file.is_file()}
     bots = []
     for file in files:
-        if '__init__' in file.name:
+        if "__init__" in file.name:
             if not click.confirm(
                 "There is an __init__.py file in the bots directory,\n"
                 "making the bots/ directory a python package.\n"
