@@ -116,7 +116,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
                 option_name="network", message="Network choice cannot support running app"
             )
 
-    if not path:
+    if path is None:
         path = Path.cwd() / "bots" / "bot.py"
         if not path.parent.exists():
             raise FileNotFoundError(
