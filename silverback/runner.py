@@ -234,7 +234,7 @@ class BaseRunner(ABC):
         )
         if runtime_errors := "\n".join(str(task.exception()) for task in tasks_with_errors):
             # NOTE: In case we are somehow not displaying the error correctly with task status
-            logger.debug(f"Runtime error(s) detected, shutting down:\n{runtime_errors}")
+            logger.warning(f"Runtime error(s) detected, shutting down:\n{runtime_errors}")
 
         # Cancel any still running
         (task.cancel() for task in tasks_running)
