@@ -1,8 +1,8 @@
 import asyncio
 import os
+from pathlib import Path
 
 import click
-from pathlib import Path
 import yaml  # type: ignore[import-untyped]
 from ape.cli import (
     AccountAliasPromptChoice,
@@ -27,8 +27,7 @@ from silverback.cluster.types import ClusterTier
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
-
-DOCKERFILE_CONTENT = f"""
+DOCKERFILE_CONTENT = """
 FROM ghcr.io/apeworx/silverback:latest-slim
 USER root
 WORKDIR /app
@@ -124,7 +123,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
                 f"You should have a `bots/` folder in the root of your project."
             )
         elif not path.exists():
-            raise FileNotFoundError(f"The bot.py file does not exist in the bots directory.")
+            raise FileNotFoundError("The bot.py file does not exist in the bots directory.")
         path = f"{path.parent.name}.{path.name.replace('.py', '')}:bot"
 
     app = import_from_string(path)
