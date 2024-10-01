@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import click
+from pathlib import Path
 import yaml  # type: ignore[import-untyped]
 from ape.cli import (
     AccountAliasPromptChoice,
@@ -87,7 +88,7 @@ def _network_callback(ctx, param, val):
     callback=cls_import_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
-@click.argument("path")
+@click.option("-p", "--path", type=str, default=None)
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     """Run Silverback application"""
 
@@ -101,6 +102,21 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
             raise click.BadOptionUsage(
                 option_name="network", message="Network choice cannot support running app"
             )
+
+    if not path:
+        path = Path.cwd()
+        path = path / "bots"
+        if not path.exists():
+            raise FileNotFoundError(
+                f"The bots directory '{path}' does not exist."
+                f"You should have a `bots/` folder in the root of your project."
+            )
+        path = path / "bot.py"
+        if not path.exists():
+            raise FileNotFoundError(
+                f"The bot.py file does not exist in the bots directory."
+            )
+        breakpoint()
 
     app = import_from_string(path)
     runner = runner_class(
