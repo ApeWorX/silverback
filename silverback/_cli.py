@@ -28,6 +28,19 @@ from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
 
+DOCKERFILE_CONTENT = f"""
+FROM ghcr.io/apeworx/silverback:latest-slim
+USER root
+WORKDIR /app
+RUN mkdir -p ./bots && chown harambe:harambe /app/bots
+USER harambe
+COPY ape-config.yaml .
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN ape plugins install .
+"""
+
+
 @click.group(cls=SectionedHelpGroup)
 def cli():
     """
@@ -123,6 +136,33 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
         max_exceptions=max_exceptions,
     )
     asyncio.run(runner.run())
+
+
+@cli.command(cls=ConnectedProviderCommand, section="Local Commands")
+def generate_dockerfiles():
+    path = Path.cwd() / "bots"
+    files = {file for file in path.iterdir() if file.is_file()}
+    bots = []
+    for file in files:
+        if '__init__' in file.name:
+            if not click.confirm(
+                "There is an __init__.py file in the bots directory,\n"
+                "making the bots/ directory a python package.\n"
+                "Are you sure you want to generate a Dockerfile for all "
+                "files in this directory?"
+            ):
+                return
+            continue
+        bots.append(file)
+    print(bots)
+    for bot in bots:
+        docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
+        dockerfile_content = DOCKERFILE_CONTENT
+        dockerfile_content += f"COPY bots/{bot.name} bots/"
+        with open(dockerfile_path := Path.cwd() / docker_filename, "w") as df:
+            df.write(dockerfile_content.strip() + "\n")
+        print(f"Generated {dockerfile_path}")
+
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
