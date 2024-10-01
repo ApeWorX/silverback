@@ -164,7 +164,6 @@ def generate_dockerfiles():
         print(f"Generated {dockerfile_path}")
 
 
-
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
 @ape_cli_context()
 @network_option(
