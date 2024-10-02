@@ -132,6 +132,7 @@ class Bot(BotInfo):
         network: str | None = None,
         account: str | None = None,
         environment: list[VariableGroupInfo] | None = None,
+        registry_credentials_id: str | None = None,
     ) -> "Bot":
         form: dict = dict(
             name=name,
@@ -144,6 +145,9 @@ class Bot(BotInfo):
             form["environment"] = [
                 dict(id=str(env.id), revision=env.revision) for env in environment
             ]
+
+        if registry_credentials_id:
+            form["registry_credentials_id"] = registry_credentials_id
 
         response = self.cluster.put(f"/bots/{self.id}", json=form)
         handle_error_with_response(response)

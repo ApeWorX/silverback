@@ -608,6 +608,12 @@ def bot_info(cluster: ClusterClient, bot_name: str):
 @click.option("-n", "--network")
 @click.option("-a", "--account")
 @click.option("-g", "--group", "vargroups", multiple=True)
+@click.option(
+    "-r",
+    "--registry-credentials",
+    "registry_credentials_name",
+    help="registry credentials to use to pull the image",
+)
 @click.argument("name", metavar="BOT")
 @cluster_client
 def update_bot(
@@ -617,6 +623,7 @@ def update_bot(
     network: str | None,
     account: str | None,
     vargroups: list[str],
+    registry_credentials_name: str | None,
     name: str,
 ):
     """Update configuration of BOT in CLUSTER
@@ -634,6 +641,14 @@ def update_bot(
 
     if network:
         click.echo(f"Network:\n  old: {bot.network}\n  new: {network}")
+
+    registry_credentials_id = None
+    if registry_credentials_name:
+        if not (
+            creds := cluster.registry_credentials.get(registry_credentials_name)
+        ):  # NOTE: Check if credentials exist
+            raise click.UsageError(f"Unknown registry credentials '{registry_credentials_name}'")
+        registry_credentials_id = creds.id
 
     redeploy_required = False
     if image:
@@ -668,6 +683,7 @@ def update_bot(
         network=network,
         account=account,
         environment=environment if set_environment else None,
+        registry_credentials_id=registry_credentials_id,
     )
 
     # NOTE: Skip machine `.id`
