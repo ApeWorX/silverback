@@ -85,7 +85,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             message.labels["transaction_hash"] = log.transaction_hash
             message.labels["log_index"] = str(log.log_index)
 
-        logger.debug(f"{self._create_label(message)} - Started")
+        logger.info(f"{self._create_label(message)} - Started")
         return message
 
     def post_execute(self, message: TaskiqMessage, result: TaskiqResult):
