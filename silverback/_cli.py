@@ -148,7 +148,7 @@ def generate_dockerfiles(path):
     for bot in bots:
         docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
         dockerfile_content = DOCKERFILE_CONTENT
-        dockerfile_content += f"COPY {path.name}/{bot.name} bots/"
+        dockerfile_content += f"COPY {path.name}/{bot.name} bots/bot.py"
         with open(dockerfile_path := Path.cwd() / docker_filename, "w") as df:
             df.write(dockerfile_content.strip() + "\n")
         click.echo(f"Generated {dockerfile_path}")
