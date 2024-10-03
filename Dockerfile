@@ -21,8 +21,6 @@ RUN pip install --upgrade pip \
     && pip install silverback \
     asyncer \
     'taskiq-sqs>=0.0.11' \
-    ape-alchemy \
-    ape-etherscan \
     --no-cache-dir --find-links=/wheels
 USER harambe
 

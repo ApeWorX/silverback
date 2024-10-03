@@ -66,7 +66,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BASE_APE_IMAGE_TAG=latest
+            BASE_APE_IMAGE_TAG=stable
 
       - name: Fetch all tags and store them
         run: |
