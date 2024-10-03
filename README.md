@@ -104,6 +104,10 @@ This method will generate 3 Dockerfiles:
 
 These Dockerfiles can be deployed with the `docker run` command documented in the next section.
 
+```{note}
+As an aside, if your bots/ directory is a python package, you will cause conflicts with the dockerfile generation feature. This method will warn you that you are generating runners for a python package, but will not stop you from doing so. If you choose to generate dockerfiles, the user should be aware that it will only copy each individual file into the Dockerfile, and will not include any supporting python functionality. Each python file is expected to run independently. If you require more complex runners, you will have to build a custom docker image.
+```
+
 ## Docker Usage
 
 ```sh
