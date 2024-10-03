@@ -84,7 +84,7 @@ Once you have created all the Variable Group(s) that you need to operate your Bo
 If you are using a private container registry to store your images, you will need to provide your bot with the necessary credentials to access it.
 First you will need to add your credentials to the cluster with the [`silverback cluster registry auth new`][silverback-cluster-registry-auth-new] command.
 
-Then you can provide the name of these credentials when creating your bot with the [`silverback cluster bots new`][silverback-cluster-bots-new] command.
+Then you can provide the name of these credentials when creating your bot with the [`silverback cluster bots new`][silverback-cluster-bots-new] or [`silverback cluster bots update`][silverback-cluster-bots-update] commands.
 
 ## Deploying your Bot
 
