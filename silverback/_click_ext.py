@@ -258,7 +258,7 @@ def cluster_client(f):
     return update_wrapper(get_cluster_client, f)
 
 
-def path_callback(ctx: click.Context, param: click.Parameter, value):
+def bot_path_callback(ctx: click.Context, param: click.Parameter, value):
     path = ctx.params.get("path")
     if not path:
         path = "bot:bot"

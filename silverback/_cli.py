@@ -19,7 +19,7 @@ from silverback._click_ext import (
     cls_import_callback,
     cluster_client,
     display_login_message,
-    path_callback,
+    bot_path_callback,
     platform_client,
 )
 from silverback.cluster.client import ClusterClient, PlatformClient
@@ -101,7 +101,7 @@ def _network_callback(ctx, param, val):
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path", required=False, type=str, default="bot")
-@click.argument("bot", required=False, callback=path_callback)
+@click.argument("bot", required=False, callback=bot_path_callback)
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bot):
     """Run Silverback application"""
 
@@ -165,7 +165,7 @@ def generate_dockerfiles(path):
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
 @click.argument("path", required=False, type=str, default="bot")
-@click.argument("bot", required=False, callback=path_callback)
+@click.argument("bot", required=False, callback=bot_path_callback)
 def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path, bot):
     """Run Silverback task workers (advanced)"""
     asyncio.run(run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
