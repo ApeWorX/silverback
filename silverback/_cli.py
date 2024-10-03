@@ -117,7 +117,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
 
     if not (bots_folder := Path.cwd() / "bots").exists():
         raise FileNotFoundError(
-            f"The bots directory '{path}' does not exist."
+            f"The bots directory '{path}' does not exist. "
             f"You should have a `bots/` folder in the root of your project."
         )
 
@@ -142,8 +142,13 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
-def generate_dockerfiles():
-    path = Path.cwd() / "bots"
+@click.argument("path", required=False, type=str, default="bots")
+def generate_dockerfiles(path):
+    if not (path := Path.cwd() / path).exists():
+        raise FileNotFoundError(
+            f"The bots directory '{path}' does not exist. "
+            "You should have a `{path}/` folder in the root of your project."
+        )
     files = {file for file in path.iterdir() if file.is_file()}
     bots = []
     for file in files:
