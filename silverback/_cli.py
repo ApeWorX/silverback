@@ -100,7 +100,7 @@ def _network_callback(ctx, param, val):
     callback=cls_import_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
-@click.argument("path", required=False, type=str, default=None)
+@click.argument("path", required=False, type=str, default="bot")
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     """Run Silverback application"""
 
