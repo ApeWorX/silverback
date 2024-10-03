@@ -20,6 +20,7 @@ from silverback._click_ext import (
     cluster_client,
     display_login_message,
     platform_client,
+    path_callback,
 )
 from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
@@ -27,7 +28,6 @@ from silverback.cluster.types import ClusterTier
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
-from .exceptions import ImportFromStringError
 
 DOCKERFILE_CONTENT = """
 FROM ghcr.io/apeworx/silverback:stable
@@ -103,22 +103,9 @@ def _network_callback(ctx, param, val):
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("path", required=False, type=str, default="bot")
-def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
+@click.argument("bot", required=False, callback=path_callback)
+def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bot):
     """Run Silverback application"""
-
-    def path_callback(path, calls=0):
-        if not path:
-            path = "bot:bot"
-        elif ":" not in path:
-            path += ":bot"
-
-        try:
-            return import_from_string(path)
-        except ImportFromStringError as e:
-            if calls > 0:
-                raise ImportFromStringError(e)
-            calls += 1
-            return path_callback(f"bots.{path}", calls)
 
     if not runner_class:
         # NOTE: Automatically select runner class
@@ -130,8 +117,6 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
             raise click.BadOptionUsage(
                 option_name="network", message="Network choice cannot support running app"
             )
-
-    bot = path_callback(path)
 
     runner = runner_class(
         bot,

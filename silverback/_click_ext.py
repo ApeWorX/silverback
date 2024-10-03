@@ -14,6 +14,7 @@ from silverback.cluster.settings import (
     PlatformProfile,
     ProfileSettings,
 )
+from .exceptions import ImportFromStringError
 
 # NOTE: only load once
 settings = ProfileSettings.from_config_file()
@@ -254,3 +255,17 @@ def cluster_client(f):
         return ctx.invoke(f, *args, **kwargs)
 
     return update_wrapper(get_cluster_client, f)
+
+
+def path_callback(ctx: click.Context, param: click.Parameter, value):
+    path = ctx.params.get('path')
+    if not path:
+        path = "bot:bot"
+    elif ":" not in path:
+        path += ":bot"
+
+    try:
+        return import_from_string(path)
+    except ImportFromStringError as e:
+        return import_from_string(f"bots.{path}")
+
