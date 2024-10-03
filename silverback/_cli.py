@@ -106,7 +106,7 @@ def _network_callback(ctx, param, val):
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     """Run Silverback application"""
 
-    def path_callback(path):
+    def path_callback(path, calls=0):
         if not path:
             path = "bot:bot"
         elif ":" not in path:
@@ -114,8 +114,11 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
 
         try:
             return import_from_string(path)
-        except ImportFromStringError:
-            return import_from_string(f"bots.{path}")
+        except ImportFromStringError as e:
+            if calls > 0:
+                raise ImportFromStringError(e)
+            calls += 1
+            return path_callback(f"bots.{path}", calls)
 
     if not runner_class:
         # NOTE: Automatically select runner class
