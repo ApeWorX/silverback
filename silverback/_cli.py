@@ -16,10 +16,10 @@ from fief_client.integrations.cli import FiefAuth
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
+    bot_path_callback,
     cls_import_callback,
     cluster_client,
     display_login_message,
-    bot_path_callback,
     platform_client,
 )
 from silverback.cluster.client import ClusterClient, PlatformClient
