@@ -285,6 +285,8 @@ class ClusterInfo(BaseModel):
     name: str  # User-friendly display name
     slug: str  # Shorthand name, for CLI and URI usage
 
+    expiration: datetime | None = None  # NOTE: self-hosted clusters have no expiration
+
     created: datetime  # When the resource was first created
     status: ResourceStatus
     last_updated: datetime  # Last time the resource was changed (upgrade, provisioning, etc.)
