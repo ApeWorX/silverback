@@ -115,28 +115,19 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
                 option_name="network", message="Network choice cannot support running app"
             )
 
-    if path is None:
-        path = Path.cwd() / "bots" / "bot.py"
-        if not path.parent.exists():
-            click.secho(
-                "Warning: the bots/ directory does not exist. "
-                "It is recommended have a `bots/` folder in the root "
-                "of your project.",
-                fg='yellow',
-                bold=True,
-            )
-            path = path.parent.parent / "bot.py"
-        if not path.exists():
-            click.secho(
-                f"Error: the 'bot.py' file could not be found. "
-                "you must apply the `-p` path option in your "
-                "function call to inform this method of where "
-                "your bot exists.",
-                fg='red',
-                bold=True,
-            )
-            raise FileNotFoundError("The bot.py file does not exist in the bots directory.")
-        path = f"{path.parent.name}.{path.name.replace('.py', '')}"
+    if not (bots_folder := Path.cwd() / "bots").exists():
+        raise FileNotFoundError(
+            f"The bots directory '{path}' does not exist."
+            f"You should have a `bots/` folder in the root of your project."
+        )
+
+    elif not (bots_folder / f"{path}.py").exists():
+        raise FileNotFoundError(
+            f"The file '{path}.py' does not exist in the `bots/` directory."
+        )
+
+    else:
+        path = f"bots.{path}:bot"
 
     if ":" not in path:
         path += ":bot"
