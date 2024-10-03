@@ -166,12 +166,11 @@ def generate_dockerfiles(path):
 @click.option("-w", "--workers", type=int, default=2)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
-@click.argument("path")
-def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
+@click.argument("path", required=False, type=str, default="bot")
+@click.argument("bot", required=False, callback=path_callback)
+def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path, bot):
     """Run Silverback task workers (advanced)"""
-
-    app = import_from_string(path)
-    asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
+    asyncio.run(run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
 
 @cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
