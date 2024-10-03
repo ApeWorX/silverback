@@ -118,13 +118,28 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     if path is None:
         path = Path.cwd() / "bots" / "bot.py"
         if not path.parent.exists():
-            raise FileNotFoundError(
-                f"The bots directory '{path}' does not exist."
-                f"You should have a `bots/` folder in the root of your project."
+            click.secho(
+                "Warning: the bots/ directory does not exist. "
+                "It is recommended have a `bots/` folder in the root "
+                "of your project.",
+                fg='yellow',
+                bold=True,
             )
-        elif not path.exists():
+            path = path.parent.parent / "bot.py"
+        if not path.exists():
+            click.secho(
+                f"Error: the 'bot.py' file could not be found. "
+                "you must apply the `-p` path option in your "
+                "function call to inform this method of where "
+                "your bot exists.",
+                fg='red',
+                bold=True,
+            )
             raise FileNotFoundError("The bot.py file does not exist in the bots directory.")
-        path = f"{path.parent.name}.{path.name.replace('.py', '')}:bot"
+        path = f"{path.parent.name}.{path.name.replace('.py', '')}"
+
+    if ":" not in path:
+        path += ":bot"
 
     app = import_from_string(path)
     runner = runner_class(
