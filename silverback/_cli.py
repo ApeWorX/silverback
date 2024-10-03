@@ -122,9 +122,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
         )
 
     elif not (bots_folder / f"{path}.py").exists():
-        raise FileNotFoundError(
-            f"The file '{path}.py' does not exist in the `bots/` directory."
-        )
+        raise FileNotFoundError(f"The file '{path}.py' does not exist in the `bots/` directory.")
 
     else:
         path = f"bots.{path}:bot"
