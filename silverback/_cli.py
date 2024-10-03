@@ -27,6 +27,8 @@ from silverback.cluster.types import ClusterTier
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
+from .exceptions import ImportFromStringError
+
 DOCKERFILE_CONTENT = """
 FROM ghcr.io/apeworx/silverback:latest-slim
 USER root
@@ -115,24 +117,18 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
                 option_name="network", message="Network choice cannot support running app"
             )
 
-    if not (bots_folder := Path.cwd() / "bots").exists():
-        raise FileNotFoundError(
-            f"The bots directory '{path}' does not exist. "
-            f"You should have a `bots/` folder in the root of your project."
-        )
-
-    elif not (bots_folder / f"{path}.py").exists():
-        raise FileNotFoundError(f"The file '{path}.py' does not exist in the `bots/` directory.")
-
-    else:
-        path = f"bots.{path}:bot"
-
-    if ":" not in path:
+    if not path:
+        path = "bot:bot"
+    elif ":" not in path:
         path += ":bot"
 
-    app = import_from_string(path)
+    try:
+        bot = import_from_string(path)
+    except ImportFromStringError:
+        bot = import_from_string(f"bots.{path}")
+
     runner = runner_class(
-        app,
+        bot,
         recorder=recorder_class() if recorder_class else None,
         max_exceptions=max_exceptions,
     )
