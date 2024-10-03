@@ -30,7 +30,7 @@ from silverback.worker import run_worker
 from .exceptions import ImportFromStringError
 
 DOCKERFILE_CONTENT = """
-FROM ghcr.io/apeworx/silverback:latest-slim
+FROM ghcr.io/apeworx/silverback:latest
 USER root
 WORKDIR /app
 RUN mkdir -p ./bots && chown harambe:harambe /app/bots
