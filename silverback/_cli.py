@@ -155,7 +155,7 @@ def generate_dockerfiles(path):
         if "__init__" in file.name:
             if not click.confirm(
                 "There is an __init__.py file in the bots directory,\n"
-                "making the bots/ directory a python package.\n"
+                f"making the {path}/ directory a python package.\n"
                 "Are you sure you want to generate a Dockerfile for all "
                 "files in this directory?"
             ):
@@ -165,7 +165,7 @@ def generate_dockerfiles(path):
     for bot in bots:
         docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
         dockerfile_content = DOCKERFILE_CONTENT
-        dockerfile_content += f"COPY bots/{bot.name} bots/"
+        dockerfile_content += f"COPY {path.name}/{bot.name} bots/"
         with open(dockerfile_path := Path.cwd() / docker_filename, "w") as df:
             df.write(dockerfile_content.strip() + "\n")
         click.echo(f"Generated {dockerfile_path}")
