@@ -57,7 +57,7 @@ Be sure to properly configure your environment for the USDC and YFI tokens on Et
 To run your bot against a live network, this SDK includes a simple runner command you can use via:
 
 ```sh
-$ silverback run "example" --network :mainnet:alchemy
+$ silverback run example --network :mainnet:alchemy
 ```
 
 ```{note}
@@ -80,7 +80,7 @@ for this object name when running. If you do not do so, once again, ensure you r
 ## Docker Usage
 
 ```sh
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example" --network :mainnet
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run example --network :mainnet
 ```
 
 ```{note}
@@ -97,7 +97,7 @@ If you want to use a hosted provider with websocket support like Alchemy to run 
 If you attempt to run the `Docker Usage` command without supplying this key, you will get the following error:
 
 ```bash
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example" --network :mainnet:alchemy
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run example --network :mainnet:alchemy
 Traceback (most recent call last):
   ...
 ape_alchemy.exceptions.MissingProjectKeyError: Must set one of $WEB3_ALCHEMY_PROJECT_ID, $WEB3_ALCHEMY_API_KEY, $WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID, $WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY.
