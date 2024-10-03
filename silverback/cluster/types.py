@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
+from ape.types import AddressType
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
 from eth_pydantic_types import Address, HexBytes
@@ -267,6 +268,12 @@ class ResourceStatus(enum.IntEnum):
 
     def __str__(self) -> str:
         return self.name.capitalize()
+
+
+class StreamInfo(BaseModel):
+    chain_id: int
+    manager: AddressType
+    stream_id: int
 
 
 class ClusterInfo(BaseModel):
