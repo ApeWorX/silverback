@@ -77,6 +77,33 @@ for this object name when running. If you do not do so, once again, ensure you r
 `example:<name-of-object>` the previous example.
 ```
 
+To auto-generate Dockerfiles for your bots, from the root of your project, you can run:
+
+```bash
+silverback generate-dockerfiles
+```
+
+This will place your dockerfiles in the root of your project.
+
+As an example, if you have a bots directory that looks like:
+
+```
+bots/
+├── botA.py
+├── botB.py
+├── botC.py
+```
+
+This method will generate 3 Dockerfiles:
+
+```
+├── Dockerfile.botA
+├── Dockerfile.botB
+├── Dockerfile.botC
+```
+
+These Dockerfiles can be deployed with the `docker run` command documented in the next section.
+
 ## Docker Usage
 
 ```sh
