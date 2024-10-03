@@ -106,6 +106,17 @@ def _network_callback(ctx, param, val):
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
     """Run Silverback application"""
 
+    def path_callback(path):
+        if not path:
+            path = "bot:bot"
+        elif ":" not in path:
+            path += ":bot"
+
+        try:
+            return import_from_string(path)
+        except ImportFromStringError:
+            return import_from_string(f"bots.{path}")
+
     if not runner_class:
         # NOTE: Automatically select runner class
         if cli_ctx.provider.ws_uri:
@@ -117,15 +128,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
                 option_name="network", message="Network choice cannot support running app"
             )
 
-    if not path:
-        path = "bot:bot"
-    elif ":" not in path:
-        path += ":bot"
-
-    try:
-        bot = import_from_string(path)
-    except ImportFromStringError:
-        bot = import_from_string(f"bots.{path}")
+    bot = path_callback(path)
 
     runner = runner_class(
         bot,
