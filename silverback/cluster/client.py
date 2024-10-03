@@ -8,7 +8,6 @@ from silverback.version import version
 from .types import (
     BotHealth,
     BotInfo,
-    ClusterConfiguration,
     ClusterHealth,
     ClusterInfo,
     ClusterState,
