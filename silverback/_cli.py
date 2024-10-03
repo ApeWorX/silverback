@@ -19,15 +19,13 @@ from silverback._click_ext import (
     cls_import_callback,
     cluster_client,
     display_login_message,
-    platform_client,
     path_callback,
+    platform_client,
 )
-from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.types import ClusterTier
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
-
 
 DOCKERFILE_CONTENT = """
 FROM ghcr.io/apeworx/silverback:stable
