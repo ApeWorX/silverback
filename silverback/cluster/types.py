@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, computed_field, field_validator
 
 
 def normalize_bytes(val: bytes, length: int = 16) -> bytes:
-    return b"\x00" * (length - len(val)) + val
+    return val + b"\x00" * (length - len(val))
 
 
 class WorkspaceInfo(BaseModel):
