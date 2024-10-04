@@ -69,8 +69,11 @@ You can then push your image to your registry using:
 docker push your-registry-url/project/botA:latest
 ```
 
-TODO: The ApeWorX team has github actions definitions for building, pushing and deploying. If you are unfamiliar with docker and container registries, you can use the ApeWorX github actions repository to assist in these steps.
+TODO: The ApeWorX team has github actions definitions for building, pushing and deploying.
 
+If you are unfamiliar with docker and container registries, you can use the [github-action](https://github.com/ApeWorX/github-action) github actions repository to assist in these steps.
+
+You do not need to build using this command if you use the github action.
 
 TODO: Add how to debug containers using `silverback run` w/ `taskiq-redis` broker
 
