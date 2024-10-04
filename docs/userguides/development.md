@@ -9,7 +9,10 @@ You can install Silverback via `pip install silverback`
 
 ## Project structure
 
-The `silverback` cli automatically searches for python scripts in the `bots/` directory at the root of your project. It will also automatically search for a `bot.py` module in either the `bots/` directory or at the root directory of the project. It is also suggested that you instantiate your `SilverbackApp()` object by naming the variable `bot`, since `silverback` autodetects that variable name in your bot.
+The `silverback` cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
+It if finds a module named `bot.py` either in the `bots/` directory or at the root directory of the project, then it will use that by default.
+It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
+It is suggested that you create the instance of your `SilverbackApp()` object by naming the variable `bot`, since `silverback` will autodetect that variable name when loading your script file.
 
 If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do. It is still suggested that you name the variable that instantiates the application (`SilverbackApp()`) `bot`. An example is shown in the next section of this page.
 
