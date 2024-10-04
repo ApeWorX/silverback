@@ -14,27 +14,28 @@ It if finds a module named `bot.py` either in the `bots/` directory or at the ro
 It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
 It is suggested that you create the instance of your `SilverbackApp()` object by naming the variable `bot`, since `silverback` will autodetect that variable name when loading your script file.
 
-If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do. It is still suggested that you name the variable that instantiates the application (`SilverbackApp()`) `bot`. An example is shown in the next section of this page.
+If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the `bots/` folder relative to the root of your project.
+This will work fairly seamless with the rest of the examples shown in this guide.
 
-To run the application, as long as your project directory follows the suggestion here, you can run it with:
+To run a bot, as long as your project directory follows the suggestion above by using a `bot.py` script, you can run it easily with:
 
 ```bash
 silverback run --network your:network:of:choice
 ```
 
-If your bot's module name is not `bot.py`:
+However, if your bot's module name is not `bot.py` but `example.py` (for example), you can run it like this:
 
 ```bash
 silverback run example --network your:network:of:choice
 ```
 
-If you instantiate your `SilverbackApp()` object with something other than `bot`:
+If the variable that you call the `SilverbackApp()` object is something other than `bot`, you can specific that by adding `:{variable name}`:
 
 ```bash
 silverback run example:app --network your:network:of:choice
 ```
 
-And if your bot resides in a location other than `bots/` or the root of the project:
+We will automatically detect all scripts under the `bots/` folder automatically, but if your bot resides in a location other than `bots/` then you can use this to run it:
 
 ```bash
 silverback run folder.example:app --network your:network:of:choice
@@ -174,11 +175,11 @@ To run your bot locally, we have included a really useful cli command [`run`](..
 
 ```sh
 # Run your bot on the Ethereum Sepolia testnet, with your own signer:
-$ silverback run my_bot:bot --network :sepolia --account acct-name
+$ silverback run my_bot --network :sepolia --account acct-name
 ```
 
 ```{note}
-`my_bot:bot` is not required for silverback run if you follow the suggested folder structure at the start of this page.
+`my_bot:bot` is not required for silverback run if you follow the suggested folder structure at the start of this page, you can just call it via `my_bot`.
 ```
 
 It's important to note that signers are optional, if not configured in the application then `bot.signer` will be `None`.
