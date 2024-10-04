@@ -7,6 +7,40 @@ In this guide, we are going to show you more details on how to build an applicat
 You should have a python project with Silverback installed.
 You can install Silverback via `pip install silverback`
 
+## Project structure
+
+The `silverback` cli automatically searches for python scripts in the `bots/` directory at the root of your project. It will also automatically search for a `bot.py` module in either the `bots/` directory or at the root directory of the project. It is also suggested that you instantiate your `SilverbackApp()` object by naming the variable `bot`, since `silverback` autodetects that variable name in your bot.
+
+If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do. It is still suggested that you name the variable that instantiates the application (`SilverbackApp()`) `bot`. An example is shown in the next section of this page.
+
+To run the application, as long as your project directory follows the suggestion here, you can run it with:
+
+```bash
+silverback run --network your:network:of:choice
+```
+
+If your bot's module name is not `bot.py`:
+
+```bash
+silverback run example --network your:network:of:choice
+```
+
+If you instantiate your `SilverbackApp()` object with something other than `bot`:
+
+```bash
+silverback run example:app --network your:network:of:choice
+```
+
+And if your bot resides in a location other than `bots/` or the root of the project:
+
+```bash
+silverback run folder.example:app --network your:network:of:choice
+```
+
+```{note}
+It is suggested that you develop your modules as scripts to keep your deployments simple. If you have a deep understanding of containerization, and distributed applications, you can set your bots up however you'd like, and then create your own container definitions for deployments. For a simple deployment ecosystem, develop your bots as scripts, and avoid developing your applications as packages. (Do not include an __init__.py module, and do not use python modules for reusable code). If you follow this simple architecture, your deployments will be nearly entirely hands off.
+```
+
 ## Creating an Application
 
 Creating a Silverback Application is easy, to do so initialize the `silverback.SilverbackApp` class:
@@ -14,7 +48,7 @@ Creating a Silverback Application is easy, to do so initialize the `silverback.S
 ```py
 from silverback import SilverbackApp
 
-app = SilverbackApp()
+bot = SilverbackApp()
 ```
 
 The SilverbackApp class handles state and configuration.
@@ -22,7 +56,7 @@ Through this class, we can hook up event handlers to be executed each time we en
 Initializing the app creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.
 
 However, by default an app has no configured event handlers, so it won't be very useful.
-This is where adding event handlers is useful via the `app.on_` method.
+This is where adding event handlers is useful via the `bot.on_` method.
 This method lets us specify which event will trigger the execution of our handler as well as which handler to execute.
 
 ## New Block Events
@@ -32,7 +66,7 @@ To add a block handler, you will do the following:
 ```py
 from ape import chain
 
-@app.on_(chain.blocks)
+@bot.on_(chain.blocks)
 def handle_new_block(block):
     ...
 ```
@@ -50,7 +84,7 @@ from ape import Contract
 
 TOKEN = Contract(<your token address here>)
 
-@app.on_(TOKEN.Transfer)
+@bot.on_(TOKEN.Transfer)
 def handle_token_transfer_events(transfer):
     ...
 ```
@@ -66,12 +100,12 @@ Any errors you raise during this function will get captured by the client, and r
 If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:
 
 ```py
-@app.on_worker_startup()
+@bot.on_worker_startup()
 def handle_on_worker_startup(state):
     # Connect to DB, set initial state, etc
     ...
 
-@app.on_worker_shutdown()
+@bot.on_worker_shutdown()
 def handle_on_worker_shutdown(state):
     # cleanup resources, close connections cleanly, etc
     ...
@@ -93,7 +127,7 @@ To access the state from a handler, you must annotate `context` as a dependency 
 from typing import Annotated
 from taskiq import Context, TaskiqDepends
 
-@app.on_(chain.blocks)
+@bot.on_(chain.blocks)
 def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
     # Access state via context.state
     ...
@@ -104,7 +138,7 @@ def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
 You can also add an application startup and shutdown handler that will be **executed once upon every application startup**.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.
 
 ```py
-@app.on_startup()
+@bot.on_startup()
 def handle_on_startup(startup_state):
     # Process missed events, etc
     # process_history(start_block=startup_state.last_block_seen)
@@ -112,17 +146,17 @@ def handle_on_startup(startup_state):
     ...
 
 
-@app.on_shutdown()
+@bot.on_shutdown()
 def handle_on_shutdown():
     # Record final state, etc
     ...
 ```
 
-*Changed in 0.2.0*: The behavior of the `@app.on_startup()` decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on `@app.on_worker_startup()`.
+*Changed in 0.2.0*: The behavior of the `@bot.on_startup()` decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on `@bot.on_worker_startup()`.
 
 ### Signing Transactions
 
-If configured, your bot with have `app.signer` which is an Ape account that can sign arbitrary transactions you ask it to.
+If configured, your bot with have `bot.signer` which is an Ape account that can sign arbitrary transactions you ask it to.
 To learn more about signing transactions with Ape, see the [documentation](https://docs.apeworx.io/ape/stable/userguides/transactions.html).
 
 ```{warning}
@@ -137,15 +171,19 @@ To run your bot locally, we have included a really useful cli command [`run`](..
 
 ```sh
 # Run your bot on the Ethereum Sepolia testnet, with your own signer:
-$ silverback run my_bot:app --network :sepolia --account acct-name
+$ silverback run my_bot:bot --network :sepolia --account acct-name
 ```
 
-It's important to note that signers are optional, if not configured in the application then `app.signer` will be `None`.
+```{note}
+`my_bot:bot` is not required for silverback run if you follow the suggested folder structure at the start of this page.
+```
+
+It's important to note that signers are optional, if not configured in the application then `bot.signer` will be `None`.
 You can use this in your application to enable a "test execution" mode, something like this:
 
 ```py
 # Compute some metric that might lead to creating a transaction
-if app.signer:
+if bot.signer:
     # Execute a transaction via `sender=app.signer`
 else:
     # Log what the transaction *would* have done, had a signer been enabled
@@ -183,7 +221,7 @@ export SILVERBACK_BROKER_KWARGS='{"queue_name": "taskiq", "url": "redis://127.0.
 export SILVERBACK_RESULT_BACKEND_CLASS="taskiq_redis:RedisAsyncResultBackend"
 export SILVERBACK_RESULT_BACKEND_URI="redis://127.0.0.1:6379"
 
-silverback run "example:app" --network :mainnet:alchemy
+silverback run --network :mainnet:alchemy
 ```
 
 And then the worker process with 2 worker subprocesses:
@@ -194,7 +232,7 @@ export SILVERBACK_BROKER_KWARGS='{"url": "redis://127.0.0.1:6379"}'
 export SILVERBACK_RESULT_BACKEND_CLASS="taskiq_redis:RedisAsyncResultBackend"
 export SILVERBACK_RESULT_BACKEND_URI="redis://127.0.0.1:6379"
 
-silverback worker -w 2 "example:app"
+silverback worker -w 2
 ```
 
 The client will send tasks to the 2 worker subprocesses, and all task queue and results data will be go through Redis.

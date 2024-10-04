@@ -126,7 +126,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bo
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
 @click.argument("path", required=False, type=str, default="bots")
-def generate_dockerfiles(path):
+def build(path):
     if not (path := Path.cwd() / path).exists():
         raise FileNotFoundError(
             f"The bots directory '{path}' does not exist. "

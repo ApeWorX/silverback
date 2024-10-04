@@ -80,7 +80,7 @@ for this object name when running. If you do not do so, once again, ensure you r
 To auto-generate Dockerfiles for your bots, from the root of your project, you can run:
 
 ```bash
-silverback generate-dockerfiles
+silverback build
 ```
 
 This will place your dockerfiles in the root of your project.
