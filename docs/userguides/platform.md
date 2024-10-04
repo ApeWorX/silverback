@@ -63,7 +63,7 @@ This method will generate 3 Dockerfiles:
 ├── Dockerfile.botC
 ```
 
-You can then build your image using:
+You can retry you builds using the following (assuming you don't modify the structure of your project):
 
 ```bash
 silverback build
