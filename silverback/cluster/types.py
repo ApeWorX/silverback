@@ -4,10 +4,9 @@ import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
-from ape.types import AddressType
+from ape.types import AddressType, HexBytes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
-from eth_pydantic_types import Address, HexBytes
 from eth_utils import to_bytes, to_int
 from pydantic import BaseModel, Field, computed_field, field_validator
 
@@ -171,7 +170,7 @@ class ClusterConfiguration(BaseModel):
             + self._encode_byte(self.duration, 7)
         )
 
-    def get_product_code(self, owner: Address, cluster_id: uuid.UUID) -> HexBytes:
+    def get_product_code(self, owner: AddressType, cluster_id: uuid.UUID) -> HexBytes:
         # returns bytes32 product code `(sig || config)`
         config = normalize_bytes(to_bytes(self.encode()))
 
@@ -189,7 +188,7 @@ class ClusterConfiguration(BaseModel):
         return HexBytes(config + sig)
 
     def validate_product_code(
-        self, owner: Address, signature: bytes, cluster_id: uuid.UUID
+        self, owner: AddressType, signature: bytes, cluster_id: uuid.UUID
     ) -> bool:
         # NOTE: Put `cluster_id` last so it's easy to use with `functools.partial`
         config = normalize_bytes(to_bytes(self.encode()))
