@@ -18,7 +18,6 @@ There are 3 suggested ways to structure your project:
 3. Create a `bot/` folder with a `__init__.py` file that will include the instantiation of your `SilverbackApp()` object.
 
 The `silverback` cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
-If `silverback` finds a module named `bot.py` either in the `bots/` directory or at the root directory of the project, then it will use that by default.
 It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
 `silverback` can also deal with a `bot/` folder with an `__init__.py` file that is defined as the runner.
 
@@ -31,13 +30,7 @@ Another way you can structure your bot is to create a `bot` folder and define a 
 If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the `bots/` folder relative to the root of your project.
 This will work fairly seamless with the rest of the examples shown in this guide.
 
-To run a bot, as long as your project directory follows the suggestion above by using a `bot.py` script, you can run it easily with:
-
-```bash
-silverback run --network your:network:of:choice
-```
-
-However, if your bot's module name is not `bot.py` but `example.py` (for example), you can run it like this:
+If your bot's module name is `example.py` (for example), you can run it like this:
 
 ```bash
 silverback run example --network your:network:of:choice
