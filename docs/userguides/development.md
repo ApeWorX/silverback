@@ -9,11 +9,11 @@ You can install Silverback via `pip install silverback`
 
 ## Project structure
 
-There are 3 suggested ways to structure your project:
+There are 3 suggested ways to structure your project. In the root directory of your project:
 
-1. Create a `bot.py` file in the root directory of your project. This is the simplest way to define your bot project.
+1. Create a `bot.py` file. This is the simplest way to define your bot project.
 
-2. Create a `bots/` folder in the root directory of your project. Then develop bots in this folder as separate scripts (Do not include a __init__.py file).
+2. Create a `bots/` folder. Then develop bots in this folder as separate scripts (Do not include a __init__.py file).
 
 3. Create a `bot/` folder with a `__init__.py` file that will include the instantiation of your `SilverbackApp()` object.
 
