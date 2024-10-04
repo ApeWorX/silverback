@@ -46,7 +46,7 @@ silverback run example --network your:network:of:choice
 If the variable that you call the `SilverbackApp()` object is something other than `bot`, you can specific that by adding `:{variable-name}`:
 
 ```bash
-silverback run example:{variable-name} --network your:network:of:choice
+silverback run example:my_bot --network your:network:of:choice
 ```
 
 We will automatically detect all scripts under the `bots/` folder automatically, but if your bot resides in a location other than `bots/` then you can use this to run it:
