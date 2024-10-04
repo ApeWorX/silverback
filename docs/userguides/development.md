@@ -21,6 +21,8 @@ The `silverback` cli automatically searches for python scripts to run as bots in
 It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
 `silverback` can also deal with a `bot/` folder with an `__init__.py` file that is defined as the runner.
 
+If `silverback` finds a module named `bot` in the root directory of the project, then it will use that by default.
+
 ```{note}
 It is suggested that you create the instance of your `SilverbackApp()` object by naming the variable `bot`, since `silverback` will autodetect that variable name when loading your script file.
 ```
