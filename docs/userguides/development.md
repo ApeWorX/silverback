@@ -55,7 +55,7 @@ We will automatically detect all scripts under the `bots/` folder automatically,
 silverback run folder.example:app --network your:network:of:choice
 ```
 
-With a `bot/__init__.py` setup, you can run with:
+Note that with a `bot/__init__.py` setup, silverback will also autodetect it, and you can run it with:
 
 ```bash
 silverback run --network your:network:of:choice
