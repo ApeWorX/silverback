@@ -79,6 +79,13 @@ You can only remove a Variable Group if it is not referenced by any existing Bot
 
 Once you have created all the Variable Group(s) that you need to operate your Bot, you can reference these groups by name when adding your Bot to the cluster.
 
+## Private Container Registries
+
+If you are using a private container registry to store your images, you will need to provide your bot with the necessary credentials to access it.
+First you will need to add your credentials to the cluster with the [`silverback cluster registry auth new`][silverback-cluster-registry-auth-new] command.
+
+Then you can provide the name of these credentials when creating your bot with the [`silverback cluster bots new`][silverback-cluster-bots-new] or [`silverback cluster bots update`][silverback-cluster-bots-update] commands.
+
 ## Deploying your Bot
 
 You are finally ready to deploy your bot on the Cluster and get it running!
@@ -171,6 +178,7 @@ TODO: Downloading metrics from your Bot
 [silverback-cluster-health]: ../commands/cluster.html#silverback-cluster-health
 [silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
 [silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
+[silverback-cluster-registry-auth-new]: ../commands/cluster.html#silverback-cluster-registry-auth-new
 [silverback-cluster-vars]: ../commands/cluster.html#silverback-cluster-vars
 [silverback-cluster-vars-info]: ../commands/cluster.html#silverback-cluster-vars-info
 [silverback-cluster-vars-list]: ../commands/cluster.html#silverback-cluster-vars-list

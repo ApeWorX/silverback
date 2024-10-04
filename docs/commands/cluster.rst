@@ -15,6 +15,11 @@ Cloud Platform
     :nested: full
     :commands: new, list, info, update, remove
 
+.. click:: silverback._cli:docker_auth
+    :prog: silverback cluster docker auth
+    :nested: full
+    :commands: new, list, info, update, remove
+
 .. click:: silverback._cli:bots
     :prog: silverback cluster bots
     :nested: full
