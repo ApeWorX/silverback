@@ -237,7 +237,9 @@ class BaseRunner(ABC):
             logger.warning(f"Runtime error(s) detected, shutting down:\n{runtime_errors}")
 
         # Cancel any still running
-        (task.cancel() for task in tasks_running)
+        for task in tasks_running:
+            task.cancel()
+
         # NOTE: All listener tasks are shut down now
 
         # Execute Silverback shutdown task(s) before shutting down the broker and app

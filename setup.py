@@ -7,7 +7,8 @@ extras_require = {
         "pytest>=6.0",  # Core testing package
         "pytest-xdist",  # Multi-process runner
         "pytest-cov",  # Coverage analyzer plugin
-        # "hypothesis>=6.2.0,<7.0",  # Strategy-based fuzzer
+        "hypothesis",  # Strategy-based fuzzer
+        "hypothesis-jsonschema",  # Generate strategies for pydantic models
     ],
     "lint": [
         "black>=24",  # Auto-formatter and linter

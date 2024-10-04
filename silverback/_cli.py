@@ -245,7 +245,6 @@ def new_cluster(
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
         cluster_slug=cluster_slug,
-        configuration=configuration,
     )
     click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
     # TODO: Pay for cluster via new stream
