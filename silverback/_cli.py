@@ -125,8 +125,9 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bo
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
+@click.option("--generate", is_flag=True, default=False)
 @click.argument("path", required=False, type=str, default="bots")
-def build(path):
+def build(generate, path):
     """Auto-generate Dockerfiles"""
     if not (path := Path.cwd() / path).exists():
         raise FileNotFoundError(
@@ -135,25 +136,23 @@ def build(path):
         )
     files = {file for file in path.iterdir() if file.is_file()}
     bots = []
-    for file in files:
-        if "__init__" in file.name:
-            if not click.confirm(
-                "There is an __init__.py file in the bots directory,\n"
-                f"making the {path}/ directory a python package.\n"
-                "Are you sure you want to generate a Dockerfile for all "
-                "files in this directory?"
-            ):
-                return
-            continue
-        bots.append(file)
-    for bot in bots:
-        docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
-        dockerfile_content = DOCKERFILE_CONTENT
-        dockerfile_content += f"COPY {path.name}/{bot.name} bots/bot.py"
-        dockerfile_path = Path.cwd() / ".silverback-images" / docker_filename
-        dockerfile_path.parent.mkdir(exist_ok=True)
-        dockerfile_path.write_text(dockerfile_content.strip() + "\n")
-        click.echo(f"Generated {dockerfile_path}")
+    if generate:
+        for file in files:
+            if "__init__" in file.name:
+                bots = [file]
+                break
+            bots.append(file)
+        for bot in bots:
+            if '__init__' in bot.name:
+                docker_filename = f"Dockerfile.{bot.parent.name}"
+            else:
+                docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
+            dockerfile_content = DOCKERFILE_CONTENT
+            dockerfile_content += f"COPY {path.name}/{bot.name} bots/bot.py"
+            dockerfile_path = Path.cwd() / ".silverback-images" / docker_filename
+            dockerfile_path.parent.mkdir(exist_ok=True)
+            dockerfile_path.write_text(dockerfile_content.strip() + "\n")
+            click.echo(f"Generated {dockerfile_path}")
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
