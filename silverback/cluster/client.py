@@ -8,7 +8,6 @@ from silverback.version import version
 from .types import (
     BotHealth,
     BotInfo,
-    ClusterConfiguration,
     ClusterHealth,
     ClusterInfo,
     ClusterState,
@@ -286,16 +285,11 @@ class Workspace(WorkspaceInfo):
         self,
         cluster_slug: str | None = None,
         cluster_name: str | None = None,
-        configuration: ClusterConfiguration = ClusterConfiguration(),
     ) -> ClusterInfo:
         response = self.client.post(
             "/clusters/",
             params=dict(workspace=str(self.id)),
-            json=dict(
-                name=cluster_name,
-                slug=cluster_slug,
-                configuration=configuration.model_dump(),
-            ),
+            json=dict(name=cluster_name, slug=cluster_slug),
         )
 
         handle_error_with_response(response)

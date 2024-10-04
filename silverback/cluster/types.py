@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
+from ape.types import AddressType
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
 from eth_pydantic_types import Address, HexBytes
@@ -12,7 +13,7 @@ from pydantic import BaseModel, Field, computed_field, field_validator
 
 
 def normalize_bytes(val: bytes, length: int = 16) -> bytes:
-    return b"\x00" * (length - len(val)) + val
+    return val + b"\x00" * (length - len(val))
 
 
 class WorkspaceInfo(BaseModel):
@@ -269,6 +270,12 @@ class ResourceStatus(enum.IntEnum):
         return self.name.capitalize()
 
 
+class StreamInfo(BaseModel):
+    chain_id: int
+    manager: AddressType
+    stream_id: int
+
+
 class ClusterInfo(BaseModel):
     # NOTE: Raw API object (gets exported)
     id: uuid.UUID  # NOTE: Keep this private, used as a temporary secret key for payment
@@ -277,6 +284,8 @@ class ClusterInfo(BaseModel):
 
     name: str  # User-friendly display name
     slug: str  # Shorthand name, for CLI and URI usage
+
+    expiration: datetime | None = None  # NOTE: self-hosted clusters have no expiration
 
     created: datetime  # When the resource was first created
     status: ResourceStatus
