@@ -131,7 +131,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bo
 @click.option("--generate", is_flag=True, default=False)
 @click.argument("path", required=False, type=str, default="bots")
 def build(generate, path):
-    """Auto-generate Dockerfiles"""
+    """Generate Dockerfiles and build bot images"""
     if generate:
         if not (path := Path.cwd() / path).exists():
             raise FileNotFoundError(
