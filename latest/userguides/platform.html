@@ -91,6 +91,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#connecting-to-your-cluster">Connecting to your Cluster</a></li>
 <li><a class="reference internal" href="#building-your-bot">Building your Bot</a></li>
 <li><a class="reference internal" href="#adding-environment-variables">Adding Environment Variables</a></li>
+<li><a class="reference internal" href="#private-container-registries">Private Container Registries</a></li>
 <li><a class="reference internal" href="#deploying-your-bot">Deploying your Bot</a></li>
 <li><a class="reference internal" href="#monitoring-your-bot">Monitoring your Bot</a></li>
 <li><a class="reference internal" href="#controlling-your-bot">Controlling your Bot</a></li>
@@ -192,6 +193,12 @@ To remove a variable group, use <a class="reference external" href="../commands/
 <p>You can only remove a Variable Group if it is not referenced by any existing Bot.</p>
 </div>
 <p>Once you have created all the Variable Group(s) that you need to operate your Bot, you can reference these groups by name when adding your Bot to the cluster.</p>
+</section>
+<section id="private-container-registries">
+<h2>Private Container Registries<a class="headerlink" href="#private-container-registries" title="Link to this heading"></a></h2>
+<p>If you are using a private container registry to store your images, you will need to provide your bot with the necessary credentials to access it.
+First you will need to add your credentials to the cluster with the <a class="reference external" href="../commands/cluster.html#silverback-cluster-registry-auth-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">registry</span> <span class="pre">auth</span> <span class="pre">new</span></code></a> command.</p>
+<p>Then you can provide the name of these credentials when creating your bot with the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">new</span></code></a> or <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-update"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">update</span></code></a> commands.</p>
 </section>
 <section id="deploying-your-bot">
 <h2>Deploying your Bot<a class="headerlink" href="#deploying-your-bot" title="Link to this heading"></a></h2>
