@@ -51,6 +51,7 @@ bots/
 This method will generate 3 Dockerfiles:
 
 ```
+.silverback-images/
 ├── Dockerfile.botA
 ├── Dockerfile.botB
 ├── Dockerfile.botC
@@ -59,7 +60,7 @@ This method will generate 3 Dockerfiles:
 You can then build your image using:
 
 ```bash
-docker build -t your-registry-url/project/botA:latest -f Dockerfile.botA .
+docker build -t your-registry-url/project/botA:latest -f .silverback-images/Dockerfile.botA .
 ```
 
 You can then push your image to your registry using:
