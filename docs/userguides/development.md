@@ -62,7 +62,11 @@ silverback run --network your:network:of:choice
 ```
 
 ```{note}
-It is suggested that you develop your modules as scripts to keep your deployments simple. If you have a deep understanding of containerization, and distributed applications, you can set your bots up however you'd like, and then create your own container definitions for deployments. For a simple deployment ecosystem, develop your bots as scripts, and avoid developing your applications as packages. (Do not include an __init__.py module, and do not use python modules for reusable code). If you follow this simple architecture, your deployments will be almost entirely hands off.
+It is suggested that you develop your bots as scripts to keep your deployments simple.
+If you have a deep understanding of containerization, and have specific needs, you can set your bots up however you'd like, and then create your own container definitions for deployments to publish to your reqistry of choice.
+For the most streamlined experience, develop your bots as scripts, and avoid relying on local packages
+(e.g. do not include an `__init__.py` file inside your `bots/` directory, and do not use local modules inside `bots/` for reusable code).
+If you follow these suggestions, your Silverback deployments will be easy to use and require almost no thought.
 ```
 
 ## Creating an Application
