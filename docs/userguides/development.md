@@ -29,7 +29,7 @@ It is suggested that you create the instance of your `SilverbackApp()` object by
 Another way you can structure your bot is to create a `bot` folder and define a runner inside of that folder as `__init__.py`.
 
 If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the `bots/` folder relative to the root of your project.
-This will work fairly seamless with the rest of the examples shown in this guide.
+This will work fairly seamlessly with the rest of the examples shown in this guide.
 
 If your bot's module name is `example.py` (for example), you can run it like this:
 
