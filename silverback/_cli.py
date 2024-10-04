@@ -127,7 +127,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bo
     asyncio.run(runner.run())
 
 
-@cli.command(cls=ConnectedProviderCommand, section="Local Commands")
+@cli.command(section="Local Commands")
 @click.option("--generate", is_flag=True, default=False)
 @click.argument("path", required=False, type=str, default="bots")
 def build(generate, path):
