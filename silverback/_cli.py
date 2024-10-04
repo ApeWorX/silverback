@@ -1,12 +1,11 @@
 import asyncio
 import os
+import shlex
+import subprocess
 from pathlib import Path
 
 import click
-import shlex
-import subprocess
 import yaml  # type: ignore[import-untyped]
-
 from ape.cli import (
     AccountAliasPromptChoice,
     ConnectedProviderCommand,
@@ -146,7 +145,7 @@ def build(generate, path):
                 break
             bots.append(file)
         for bot in bots:
-            if '__init__' in bot.name:
+            if "__init__" in bot.name:
                 docker_filename = f"Dockerfile.{bot.parent.name}"
             else:
                 docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
@@ -167,14 +166,12 @@ def build(generate, path):
     for file in dockerfiles:
         try:
             command = shlex.split(
-                f"docker build -f ./{file.parent.name}/{file.name} -t {file.name.split('.')[1]}:latest ."
+                "docker build -f "
+                f"./{file.parent.name}/{file.name} "
+                f"-t {file.name.split('.')[1]}:latest ."
             )
             result = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                check=True
+                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True
             )
             click.echo(result.stdout)
         except subprocess.CalledProcessError as e:
