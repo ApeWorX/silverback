@@ -58,7 +58,7 @@ silverback run folder.example:app --network your:network:of:choice
 With a `bot/__init__.py` setup, you can run with:
 
 ```bash
-silverback run bot --network your:network:of:choice
+silverback run --network your:network:of:choice
 ```
 
 ```{note}
