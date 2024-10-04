@@ -31,6 +31,12 @@ Another way you can structure your bot is to create a `bot` folder and define a 
 If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the `bots/` folder relative to the root of your project.
 This will work fairly seamlessly with the rest of the examples shown in this guide.
 
+To run a bot, as long as your project directory follows the suggestions above by using a `bot` module, you can run it easily with:
+
+```bash
+silverback run --network your:network:of:choice
+```
+
 If your bot's module name is `example.py` (for example), you can run it like this:
 
 ```bash
