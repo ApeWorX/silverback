@@ -3,7 +3,10 @@ import os
 from pathlib import Path
 
 import click
+import shlex
+import subprocess
 import yaml  # type: ignore[import-untyped]
+
 from ape.cli import (
     AccountAliasPromptChoice,
     ConnectedProviderCommand,
@@ -129,14 +132,14 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bo
 @click.argument("path", required=False, type=str, default="bots")
 def build(generate, path):
     """Auto-generate Dockerfiles"""
-    if not (path := Path.cwd() / path).exists():
-        raise FileNotFoundError(
-            f"The bots directory '{path}' does not exist. "
-            "You should have a `{path}/` folder in the root of your project."
-        )
-    files = {file for file in path.iterdir() if file.is_file()}
-    bots = []
     if generate:
+        if not (path := Path.cwd() / path).exists():
+            raise FileNotFoundError(
+                f"The bots directory '{path}' does not exist. "
+                "You should have a `{path}/` folder in the root of your project."
+            )
+        files = {file for file in path.iterdir() if file.is_file()}
+        bots = []
         for file in files:
             if "__init__" in file.name:
                 bots = [file]
@@ -153,6 +156,31 @@ def build(generate, path):
             dockerfile_path.parent.mkdir(exist_ok=True)
             dockerfile_path.write_text(dockerfile_content.strip() + "\n")
             click.echo(f"Generated {dockerfile_path}")
+        return
+
+    if not (path := Path.cwd() / ".silverback-images").exists():
+        raise FileNotFoundError(
+            f"The dockerfile directory '{path}' does not exist. "
+            "You should have a `{path}/` folder in the root of your project."
+        )
+    dockerfiles = {file for file in path.iterdir() if file.is_file()}
+    for file in dockerfiles:
+        try:
+            command = shlex.split(
+                f"docker build -f ./{file.parent.name}/{file.name} -t {file.name.split('.')[1]}:latest ."
+            )
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True
+            )
+            click.echo(result.stdout)
+        except subprocess.CalledProcessError as e:
+            click.echo("Error during docker build:")
+            click.echo(e.stderr)
+            raise
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
