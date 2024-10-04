@@ -14,6 +14,8 @@ If silverback finds a module named `bot.py` either in the `bots/` directory or a
 It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
 It is suggested that you create the instance of your `SilverbackApp()` object by naming the variable `bot`, since `silverback` will autodetect that variable name when loading your script file.
 
+Another way you can structure your bot is to create a `bot` folder and define a runner inside of that folder as `__init__.py`. This method of setting up your project will not allow you to use `silverback build` currently, and you will have to define your own dockerfile. There is a below example of how to run an app defined in this manner.
+
 If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the `bots/` folder relative to the root of your project.
 This will work fairly seamless with the rest of the examples shown in this guide.
 
@@ -41,8 +43,14 @@ We will automatically detect all scripts under the `bots/` folder automatically,
 silverback run folder.example:app --network your:network:of:choice
 ```
 
+With a `bot/__init__.py` setup, you can run with:
+
+```bash
+silverback run bot --network your:network:of:choice
+```
+
 ```{note}
-It is suggested that you develop your modules as scripts to keep your deployments simple. If you have a deep understanding of containerization, and distributed applications, you can set your bots up however you'd like, and then create your own container definitions for deployments. For a simple deployment ecosystem, develop your bots as scripts, and avoid developing your applications as packages. (Do not include an __init__.py module, and do not use python modules for reusable code). If you follow this simple architecture, your deployments will be nearly entirely hands off.
+It is suggested that you develop your modules as scripts to keep your deployments simple. If you have a deep understanding of containerization, and distributed applications, you can set your bots up however you'd like, and then create your own container definitions for deployments. For a simple deployment ecosystem, develop your bots as scripts, and avoid developing your applications as packages. (Do not include an __init__.py module, and do not use python modules for reusable code). If you follow this simple architecture, your deployments will be almost entirely hands off.
 ```
 
 ## Creating an Application
