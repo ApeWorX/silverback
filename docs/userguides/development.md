@@ -19,7 +19,6 @@ There are 3 suggested ways to structure your project:
 
 The `silverback` cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
 It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
-`silverback` can also deal with a `bot/` folder with an `__init__.py` file that is defined as the runner.
 
 If `silverback` finds a module named `bot` in the root directory of the project, then it will use that by default.
 
