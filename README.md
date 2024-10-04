@@ -54,14 +54,14 @@ The example makes use of the [Ape Tokens](https://github.com/ApeWorX/ape-tokens)
 Be sure to properly configure your environment for the USDC and YFI tokens on Ethereum mainnet.
 ```
 
-To run your bot against a live network, this SDK includes a simple runner command you can use via:
+To run your bot against a live network, this SDK includes a simple bot command you can use via:
 
 ```sh
 $ silverback run example --network :mainnet:alchemy
 ```
 
 ```{note}
-This runner uses an in-memory task broker by default.
+This bot uses an in-memory task broker by default.
 If you want to learn more about what that means, please visit the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html).
 ```
 
@@ -105,7 +105,7 @@ This method will generate 3 Dockerfiles:
 These Dockerfiles can be deployed with the `docker run` command documented in the next section.
 
 ```{note}
-As an aside, if your bots/ directory is a python package, you will cause conflicts with the dockerfile generation feature. This method will warn you that you are generating runners for a python package, but will not stop you from doing so. If you choose to generate dockerfiles, the user should be aware that it will only copy each individual file into the Dockerfile, and will not include any supporting python functionality. Each python file is expected to run independently. If you require more complex runners, you will have to build a custom docker image.
+As an aside, if your bots/ directory is a python package, you will cause conflicts with the dockerfile generation feature. This method will warn you that you are generating bots for a python package, but will not stop you from doing so. If you choose to generate dockerfiles, the user should be aware that it will only copy each individual file into the Dockerfile, and will not include any supporting python functionality. Each python file is expected to run independently. If you require more complex bots, you will have to build a custom docker image.
 ```
 
 ## Docker Usage
