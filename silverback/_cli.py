@@ -102,9 +102,8 @@ def _network_callback(ctx, param, val):
     callback=cls_import_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
-@click.argument("path", required=False, type=str, default="bot")
 @click.argument("bot", required=False, callback=bot_path_callback)
-def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path, bot):
+def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
     """Run Silverback application"""
 
     if not runner_class:
@@ -190,9 +189,8 @@ def build(generate, path):
 @click.option("-w", "--workers", type=int, default=2)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
-@click.argument("path", required=False, type=str, default="bot")
 @click.argument("bot", required=False, callback=bot_path_callback)
-def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path, bot):
+def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, bot):
     """Run Silverback task workers (advanced)"""
     asyncio.run(run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
