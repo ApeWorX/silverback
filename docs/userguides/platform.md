@@ -37,9 +37,13 @@ Building a container for your application can be an advanced topic, we have incl
 
 To build your container definition(s) for your bot(s), you can use the `silverback build` command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
 
-For example, if your directory is structured as suggested in [development](./development), the `silverback build` command would generate:
+For example, if your directory is structured as suggested in [development](./development), the `silverback build --generate` command would generate:
 
 As an example, if you have a bots directory that looks like:
+
+```bash
+silverback build --generate
+```
 
 ```
 bots/
@@ -60,7 +64,7 @@ This method will generate 3 Dockerfiles:
 You can then build your image using:
 
 ```bash
-docker build -t your-registry-url/project/botA:latest -f .silverback-images/Dockerfile.botA .
+silverback build
 ```
 
 You can then push your image to your registry using:
