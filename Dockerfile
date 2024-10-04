@@ -19,7 +19,6 @@ USER root
 COPY --from=builder /wheels /wheels
 RUN pip install --upgrade pip \
     && pip install silverback \
-    asyncer \
     'taskiq-sqs>=0.0.11' \
     --no-cache-dir --find-links=/wheels
 USER harambe
