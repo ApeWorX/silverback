@@ -68,10 +68,14 @@ If you want to learn more about what that means, please visit the [development u
 ```{note}
 It is suggested that you create a bots/ folder in the root of your project.
 Silverback will automatically register files in this folder as separate bots that can be run via the `silverback run` command.
+```
 
+```{note}
 It is also suggested that you treat this as a scripts folder, and do not include an __init__.py
 If you have a complicated project, follow the previous example to ensure you run the application correctly.
+```
 
+```{note}
 A final suggestion would be to name your `SilverbackApp` object `bot`. Silverback automatically searches 
 for this object name when running. If you do not do so, once again, ensure you replace `example` with 
 `example:<name-of-object>` the previous example.
@@ -83,7 +87,7 @@ To auto-generate Dockerfiles for your bots, from the root of your project, you c
 silverback build
 ```
 
-This will place your dockerfiles in the root of your project.
+This will place the generated dockerfiles in a special directory in the root of your project.
 
 As an example, if you have a bots directory that looks like:
 
@@ -97,12 +101,13 @@ bots/
 This method will generate 3 Dockerfiles:
 
 ```
+.silverback-images/
 ├── Dockerfile.botA
 ├── Dockerfile.botB
 ├── Dockerfile.botC
 ```
 
-These Dockerfiles can be deployed with the `docker run` command documented in the next section.
+These Dockerfiles can be deployed with the `docker push` command documented in the next section so you can use it in cloud-based deployments.
 
 ```{note}
 As an aside, if your bots/ directory is a python package, you will cause conflicts with the dockerfile generation feature. This method will warn you that you are generating bots for a python package, but will not stop you from doing so. If you choose to generate dockerfiles, the user should be aware that it will only copy each individual file into the Dockerfile, and will not include any supporting python functionality. Each python file is expected to run independently. If you require more complex bots, you will have to build a custom docker image.
