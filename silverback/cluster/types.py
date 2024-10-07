@@ -284,7 +284,8 @@ class ClusterInfo(BaseModel):
     name: str  # User-friendly display name
     slug: str  # Shorthand name, for CLI and URI usage
 
-    expiration: datetime | None = None  # NOTE: self-hosted clusters have no expiration
+    expiration: datetime | None = None  # NOTE: Self-hosted clusters have no expiration
+    stream_id: uuid.UUID | None = None  # NOTE: If there is an ApePay payment stream for this
 
     created: datetime  # When the resource was first created
     status: ResourceStatus
