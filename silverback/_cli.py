@@ -293,7 +293,7 @@ def create_payment_stream(
     """
     Create a new streaming payment for a given CLUSTER
 
-    NOTE: This action is irreversible!
+    NOTE: This action cannot be cancelled! Streams must exist for at least 1 hour before cancelling.
     """
 
     if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
