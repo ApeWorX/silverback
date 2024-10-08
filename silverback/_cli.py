@@ -33,7 +33,7 @@ DOCKERFILE_CONTENT = """
 FROM ghcr.io/apeworx/silverback:stable
 USER root
 WORKDIR /app
-RUN mkdir -p ./bots && chown harambe:harambe /app/bots
+RUN chown harambe:harambe /app
 USER harambe
 COPY ape-config.yaml .
 COPY requirements.txt .
@@ -144,12 +144,13 @@ def build(generate, path):
                 break
             bots.append(file)
         for bot in bots:
+            dockerfile_content = DOCKERFILE_CONTENT
             if "__init__" in bot.name:
                 docker_filename = f"Dockerfile.{bot.parent.name}"
+                dockerfile_content += f"COPY {path.name}/ /app/bot"
             else:
                 docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
-            dockerfile_content = DOCKERFILE_CONTENT
-            dockerfile_content += f"COPY {path.name}/{bot.name} bots/bot.py"
+                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py"
             dockerfile_path = Path.cwd() / ".silverback-images" / docker_filename
             dockerfile_path.parent.mkdir(exist_ok=True)
             dockerfile_path.write_text(dockerfile_content.strip() + "\n")
