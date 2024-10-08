@@ -180,19 +180,59 @@ The Silverback library leverages the <a class="reference external" href="https:/
 <p>The example makes use of the <a class="reference external" href="https://github.com/ApeWorX/ape-tokens">Ape Tokens</a> plugin.
 Be sure to properly configure your environment for the USDC and YFI tokens on Ethereum mainnet.</p>
 </div>
-<p>To run your bot against a live network, this SDK includes a simple runner command you can use via:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+<p>To run your bot against a live network, this SDK includes a simple bot command you can use via:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
 </span></pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This runner uses an in-memory task broker by default.
+<p>This bot uses an in-memory task broker by default.
 If you want to learn more about what that means, please visit the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development.html">development userguide</a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is suggested that you create a bots/ folder in the root of your project.
+Silverback will automatically register files in this folder as separate bots that can be run via the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span></code> command.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is also suggested that you treat this as a scripts folder, and do not include an <strong>init</strong>.py
+If you have a complicated project, follow the previous example to ensure you run the application correctly.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A final suggestion would be to name your <code class="docutils literal notranslate"><span class="pre">SilverbackApp</span></code> object <code class="docutils literal notranslate"><span class="pre">bot</span></code>. Silverback automatically searches
+for this object name when running. If you do not do so, once again, ensure you replace <code class="docutils literal notranslate"><span class="pre">example</span></code> with
+<code class="docutils literal notranslate"><span class="pre">example:&lt;name-of-object&gt;</span></code> the previous example.</p>
+</div>
+<p>To auto-generate Dockerfiles for your bots, from the root of your project, you can run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>build
+</span></pre></div>
+</div>
+<p>This will place the generated dockerfiles in a special directory in the root of your project.</p>
+<p>As an example, if you have a bots directory that looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">bots/
+</span><span data-line="2">├── botA.py
+</span><span data-line="3">├── botB.py
+</span><span data-line="4">├── botC.py
+</span></pre></div>
+</div>
+<p>This method will generate 3 Dockerfiles:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">.silverback-images/
+</span><span data-line="2">├── Dockerfile.botA
+</span><span data-line="3">├── Dockerfile.botB
+</span><span data-line="4">├── Dockerfile.botC
+</span></pre></div>
+</div>
+<p>These Dockerfiles can be deployed with the <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">push</span></code> command documented in the next section so you can use it in cloud-based deployments.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As an aside, if your bots/ directory is a python package, you will cause conflicts with the dockerfile generation feature. This method will warn you that you are generating bots for a python package, but will not stop you from doing so. If you choose to generate dockerfiles, the user should be aware that it will only copy each individual file into the Dockerfile, and will not include any supporting python functionality. Each python file is expected to run independently. If you require more complex bots, you will have to build a custom docker image.</p>
 </div>
 </section>
 <section id="docker-usage">
 <h2>Docker Usage<a class="headerlink" href="#docker-usage" title="Link to this heading"></a></h2>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>:mainnet
 </span></pre></div>
 </div>
 <div class="admonition note">
@@ -207,7 +247,7 @@ Most common issues when using the SDK stem from the proper configuration of Ape 
 <p>You should use a provider that supports websockets to run silverback.
 If you want to use a hosted provider with websocket support like Alchemy to run this example, you will need a Alchemy API key for Ethereum mainnet.
 If you attempt to run the <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> command without supplying this key, you will get the following error:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
 </span><span data-line="2">Traceback<span class="w"> </span><span class="o">(</span>most<span class="w"> </span>recent<span class="w"> </span>call<span class="w"> </span>last<span class="o">)</span>:
 </span><span data-line="3"><span class="w">  </span>...
 </span><span data-line="4">ape_alchemy.exceptions.MissingProjectKeyError:<span class="w"> </span>Must<span class="w"> </span><span class="nb">set</span><span class="w"> </span>one<span class="w"> </span>of<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_API_KEY</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY</span>.

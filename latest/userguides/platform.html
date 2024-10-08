@@ -158,7 +158,37 @@ or <a class="reference external" href="../commands/cluster.html#silverback-clust
 </section>
 <section id="building-your-bot">
 <h2>Building your Bot<a class="headerlink" href="#building-your-bot" title="Link to this heading"></a></h2>
-<p>TODO: Add build process and describe <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span> <span class="pre">--autogen</span></code> and <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span> <span class="pre">--upgrade</span></code></p>
+<p>To build your container definition(s) for your bot(s), you can use the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span></code> command. This command searches your <code class="docutils literal notranslate"><span class="pre">bots</span></code> directory for python modules, then auto-generates Dockerfiles.</p>
+<p>For example, if your directory is structured as suggested in <a class="reference external" href="./development">development</a>, and your <code class="docutils literal notranslate"><span class="pre">bots/</span></code> directory looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">bots/
+</span><span data-line="2">├── botA.py
+</span><span data-line="3">├── botB.py
+</span><span data-line="4">├── botC.py
+</span></pre></div>
+</div>
+<p>Then you can use <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span> <span class="pre">--generate</span></code> to generate 3 separate Dockerfiles for those bots, and start trying to build them.</p>
+<p>Those Dockerfiles will appear under <code class="docutils literal notranslate"><span class="pre">.silverback-images/</span></code> as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>build<span class="w"> </span>--generate
+</span></pre></div>
+</div>
+<p>This method will generate 3 Dockerfiles:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">.silverback-images/
+</span><span data-line="2">├── Dockerfile.botA
+</span><span data-line="3">├── Dockerfile.botB
+</span><span data-line="4">├── Dockerfile.botC
+</span></pre></div>
+</div>
+<p>You can retry you builds using the following (assuming you don’t modify the structure of your project):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>build
+</span></pre></div>
+</div>
+<p>You can then push your image to your registry using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">docker<span class="w"> </span>push<span class="w"> </span>your-registry-url/project/botA:latest
+</span></pre></div>
+</div>
+<p>TODO: The ApeWorX team has github actions definitions for building, pushing and deploying.</p>
+<p>If you are unfamiliar with docker and container registries, you can use the [[github-action]].</p>
+<p>You do not need to build using this command if you use the github action, but it is there to help you if you are having problems figuring out how to build and run your bot images on the cluster successfully.</p>
 <p>TODO: Add how to debug containers using <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span></code> w/ <code class="docutils literal notranslate"><span class="pre">taskiq-redis</span></code> broker</p>
 </section>
 <section id="adding-environment-variables">

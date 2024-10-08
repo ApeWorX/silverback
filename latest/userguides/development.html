@@ -88,6 +88,7 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#project-structure">Project structure</a></li>
 <li><a class="reference internal" href="#creating-an-application">Creating an Application</a></li>
 <li><a class="reference internal" href="#new-block-events">New Block Events</a></li>
 <li><a class="reference internal" href="#new-event-logs">New Event Logs</a></li>
@@ -143,19 +144,66 @@ data-aria-dark="Switch to auto color mode">
 <p>You should have a python project with Silverback installed.
 You can install Silverback via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">silverback</span></code></p>
 </section>
+<section id="project-structure">
+<h2>Project structure<a class="headerlink" href="#project-structure" title="Link to this heading"></a></h2>
+<p>There are 3 suggested ways to structure your project. In the root directory of your project:</p>
+<ol class="arabic simple">
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot.py</span></code> file. This is the simplest way to define your bot project.</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder. Then develop bots in this folder as separate scripts (Do not include a <strong>init</strong>.py file).</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot/</span></code> folder with a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file that will include the instantiation of your <code class="docutils literal notranslate"><span class="pre">SilverbackApp()</span></code> object.</p></li>
+</ol>
+<p>The <code class="docutils literal notranslate"><span class="pre">silverback</span></code> cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
+It will also be able to detect the scripts inside your <code class="docutils literal notranslate"><span class="pre">bots/</span></code> directory and let you run those by name (in case you have multiple bots in your project).</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">silverback</span></code> finds a module named <code class="docutils literal notranslate"><span class="pre">bot</span></code> in the root directory of the project, then it will use that by default.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is suggested that you create the instance of your <code class="docutils literal notranslate"><span class="pre">SilverbackApp()</span></code> object by naming the variable <code class="docutils literal notranslate"><span class="pre">bot</span></code>, since <code class="docutils literal notranslate"><span class="pre">silverback</span></code> will autodetect that variable name when loading your script file.</p>
+</div>
+<p>Another way you can structure your bot is to create a <code class="docutils literal notranslate"><span class="pre">bot</span></code> folder and define a runner inside of that folder as <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>.</p>
+<p>If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder relative to the root of your project.
+This will work fairly seamlessly with the rest of the examples shown in this guide.</p>
+<p>To run a bot, as long as your project directory follows the suggestions above by using a <code class="docutils literal notranslate"><span class="pre">bot</span></code> module, you can run it easily with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
+</span></pre></div>
+</div>
+<p>If your bot’s module name is <code class="docutils literal notranslate"><span class="pre">example.py</span></code> (for example), you can run it like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
+</span></pre></div>
+</div>
+<p>If the variable that you call the <code class="docutils literal notranslate"><span class="pre">SilverbackApp()</span></code> object is something other than <code class="docutils literal notranslate"><span class="pre">bot</span></code>, you can specific that by adding <code class="docutils literal notranslate"><span class="pre">:{variable-name}</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>example:my_bot<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
+</span></pre></div>
+</div>
+<p>We will automatically detect all scripts under the <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder automatically, but if your bot resides in a location other than <code class="docutils literal notranslate"><span class="pre">bots/</span></code> then you can use this to run it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>folder.example:app<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
+</span></pre></div>
+</div>
+<p>Note that with a <code class="docutils literal notranslate"><span class="pre">bot/__init__.py</span></code> setup, silverback will also autodetect it, and you can run it with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
+</span></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is suggested that you develop your bots as scripts to keep your deployments simple.
+If you have a deep understanding of containerization, and have specific needs, you can set your bots up however you’d like, and then create your own container definitions for deployments to publish to your reqistry of choice.
+For the most streamlined experience, develop your bots as scripts, and avoid relying on local packages
+(e.g. do not include an <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file inside your <code class="docutils literal notranslate"><span class="pre">bots/</span></code> directory, and do not use local modules inside <code class="docutils literal notranslate"><span class="pre">bots/</span></code> for reusable code).
+If you follow these suggestions, your Silverback deployments will be easy to use and require almost no thought.</p>
+</div>
+</section>
 <section id="creating-an-application">
 <h2>Creating an Application<a class="headerlink" href="#creating-an-application" title="Link to this heading"></a></h2>
 <p>Creating a Silverback Application is easy, to do so initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackApp</span></code> class:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackApp</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="n">app</span> <span class="o">=</span> <span class="n">SilverbackApp</span><span class="p">()</span>
+</span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackApp</span><span class="p">()</span>
 </span></pre></div>
 </div>
 <p>The SilverbackApp class handles state and configuration.
 Through this class, we can hook up event handlers to be executed each time we encounter a new block or each time a specific event is emitted.
 Initializing the app creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.</p>
 <p>However, by default an app has no configured event handlers, so it won’t be very useful.
-This is where adding event handlers is useful via the <code class="docutils literal notranslate"><span class="pre">app.on_</span></code> method.
+This is where adding event handlers is useful via the <code class="docutils literal notranslate"><span class="pre">bot.on_</span></code> method.
 This method lets us specify which event will trigger the execution of our handler as well as which handler to execute.</p>
 </section>
 <section id="new-block-events">
@@ -163,7 +211,7 @@ This method lets us specify which event will trigger the execution of our handle
 <p>To add a block handler, you will do the following:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">ape</span> <span class="kn">import</span> <span class="n">chain</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="nd">@app</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="3"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
 </span><span data-line="4"><span class="k">def</span> <span class="nf">handle_new_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
 </span><span data-line="5">    <span class="o">...</span>
 </span></pre></div>
@@ -179,7 +227,7 @@ Any errors you raise during this function will get captured by the client, and r
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">TOKEN</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="o">&lt;</span><span class="n">your</span> <span class="n">token</span> <span class="n">address</span> <span class="n">here</span><span class="o">&gt;</span><span class="p">)</span>
 </span><span data-line="4">
-</span><span data-line="5"><span class="nd">@app</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">TOKEN</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
+</span><span data-line="5"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">TOKEN</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
 </span><span data-line="6"><span class="k">def</span> <span class="nf">handle_token_transfer_events</span><span class="p">(</span><span class="n">transfer</span><span class="p">):</span>
 </span><span data-line="7">    <span class="o">...</span>
 </span></pre></div>
@@ -193,12 +241,12 @@ Any errors you raise during this function will get captured by the client, and r
 <section id="worker-events">
 <h3>Worker Events<a class="headerlink" href="#worker-events" title="Link to this heading"></a></h3>
 <p>If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@app</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span> <span class="nf">handle_on_worker_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Connect to DB, set initial state, etc</span>
 </span><span data-line="4">    <span class="o">...</span>
 </span><span data-line="5">
-</span><span data-line="6"><span class="nd">@app</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
+</span><span data-line="6"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
 </span><span data-line="7"><span class="k">def</span> <span class="nf">handle_on_worker_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
 </span><span data-line="8">    <span class="c1"># cleanup resources, close connections cleanly, etc</span>
 </span><span data-line="9">    <span class="o">...</span>
@@ -214,7 +262,7 @@ Any errors you raise during this function will get captured by the client, and r
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span>
 </span><span data-line="2"><span class="kn">from</span> <span class="nn">taskiq</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span>
 </span><span data-line="3">
-</span><span data-line="4"><span class="nd">@app</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="4"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
 </span><span data-line="5"><span class="k">def</span> <span class="nf">block_handler</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span><span class="p">()]):</span>
 </span><span data-line="6">    <span class="c1"># Access state via context.state</span>
 </span><span data-line="7">    <span class="o">...</span>
@@ -225,7 +273,7 @@ Any errors you raise during this function will get captured by the client, and r
 <section id="application-events">
 <h3>Application Events<a class="headerlink" href="#application-events" title="Link to this heading"></a></h3>
 <p>You can also add an application startup and shutdown handler that will be <strong>executed once upon every application startup</strong>.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@app</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span> <span class="nf">handle_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Process missed events, etc</span>
 </span><span data-line="4">    <span class="c1"># process_history(start_block=startup_state.last_block_seen)</span>
@@ -233,17 +281,17 @@ Any errors you raise during this function will get captured by the client, and r
 </span><span data-line="6">    <span class="o">...</span>
 </span><span data-line="7">
 </span><span data-line="8">
-</span><span data-line="9"><span class="nd">@app</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
+</span><span data-line="9"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
 </span><span data-line="10"><span class="k">def</span> <span class="nf">handle_on_shutdown</span><span class="p">():</span>
 </span><span data-line="11">    <span class="c1"># Record final state, etc</span>
 </span><span data-line="12">    <span class="o">...</span>
 </span></pre></div>
 </div>
-<p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;app.on_startup()</span></code> decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;app.on_worker_startup()</span></code>.</p>
+<p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_startup()</span></code> decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_worker_startup()</span></code>.</p>
 </section>
 <section id="signing-transactions">
 <h3>Signing Transactions<a class="headerlink" href="#signing-transactions" title="Link to this heading"></a></h3>
-<p>If configured, your bot with have <code class="docutils literal notranslate"><span class="pre">app.signer</span></code> which is an Ape account that can sign arbitrary transactions you ask it to.
+<p>If configured, your bot with have <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> which is an Ape account that can sign arbitrary transactions you ask it to.
 To learn more about signing transactions with Ape, see the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/transactions.html">documentation</a>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -257,13 +305,17 @@ See <a class="reference external" href="https://docs.apeworx.io/ape/stable/userg
 <p>Once you have programmed your bot, it’s really useful to be able to run it locally and validate that it does what you expect it to do.
 To run your bot locally, we have included a really useful cli command <a class="reference external" href="../commands/run"><code class="docutils literal notranslate"><span class="pre">run</span></code></a> that takes care of connecting to the proper network, configuring signers (using your local Ape accounts), and starting up the application client and in-memory task queue workers.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Run your bot on the Ethereum Sepolia testnet, with your own signer:</span>
-</span><span data-line="2">$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span>my_bot:app<span class="w"> </span>--network<span class="w"> </span>:sepolia<span class="w"> </span>--account<span class="w"> </span>acct-name
+</span><span data-line="2">$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span>my_bot<span class="w"> </span>--network<span class="w"> </span>:sepolia<span class="w"> </span>--account<span class="w"> </span>acct-name
 </span></pre></div>
 </div>
-<p>It’s important to note that signers are optional, if not configured in the application then <code class="docutils literal notranslate"><span class="pre">app.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">my_bot:bot</span></code> is not required for silverback run if you follow the suggested folder structure at the start of this page, you can just call it via <code class="docutils literal notranslate"><span class="pre">my_bot</span></code>.</p>
+</div>
+<p>It’s important to note that signers are optional, if not configured in the application then <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
 You can use this in your application to enable a “test execution” mode, something like this:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Compute some metric that might lead to creating a transaction</span>
-</span><span data-line="2"><span class="k">if</span> <span class="n">app</span><span class="o">.</span><span class="n">signer</span><span class="p">:</span>
+</span><span data-line="2"><span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">:</span>
 </span><span data-line="3">    <span class="c1"># Execute a transaction via `sender=app.signer`</span>
 </span><span data-line="4"><span class="k">else</span><span class="p">:</span>
 </span><span data-line="5">    <span class="c1"># Log what the transaction *would* have done, had a signer been enabled</span>
@@ -296,7 +348,7 @@ Additonally, it is highly suggested you should also configure a <a class="refere
 </span><span data-line="3"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:RedisAsyncResultBackend&quot;</span>
 </span><span data-line="4"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
 </span><span data-line="5">
-</span><span data-line="6">silverback<span class="w"> </span>run<span class="w"> </span><span class="s2">&quot;example:app&quot;</span><span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+</span><span data-line="6">silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
 </span></pre></div>
 </div>
 <p>And then the worker process with 2 worker subprocesses:</p>
@@ -305,7 +357,7 @@ Additonally, it is highly suggested you should also configure a <a class="refere
 </span><span data-line="3"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:RedisAsyncResultBackend&quot;</span>
 </span><span data-line="4"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
 </span><span data-line="5">
-</span><span data-line="6">silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="s2">&quot;example:app&quot;</span>
+</span><span data-line="6">silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w"> </span><span class="m">2</span>
 </span></pre></div>
 </div>
 <p>The client will send tasks to the 2 worker subprocesses, and all task queue and results data will be go through Redis.</p>
