@@ -381,7 +381,7 @@ def create_payment_stream(
     except ApeException as e:
         raise click.UsageError(str(e)) from e
 
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Stream funded for {stream.time_left}.")
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Cluster funded for {stream.time_left}.")
 
     click.echo(
         f"{click.style('WARNING', fg='yellow')}: Cluster may take up to 1 hour to deploy."
@@ -474,6 +474,8 @@ def fund_payment_stream(
     )
     stream.add_funds(token_amount, sender=account)
 
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Cluster funded for {stream.time_left}.")
+
 
 @pay.command(name="cancel", cls=ConnectedProviderCommand)
 @account_option()
@@ -509,8 +511,12 @@ def cancel_payment_stream(
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
 
-    if click.confirm("This action is irreversible, are you sure?"):
+    if click.confirm(
+        click.style("This action is irreversible, are you sure?", bold=True, bg="red")
+    ):
         stream.cancel(sender=account)
+
+    click.echo(f"{click.style('WARNING', fg='yellow')}: Cluster cannot be used anymore.")
 
 
 @cluster.command(name="info")
