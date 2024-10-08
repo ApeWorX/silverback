@@ -447,7 +447,7 @@ def fund_payment_stream(
     if not token_amount:
         assert stream_time  # mypy happy
         one_token = 10 ** stream.token.decimals()
-        amount = int(
+        token_amount = int(
             one_token
             * (
                 stream_time.total_seconds()
@@ -457,22 +457,22 @@ def fund_payment_stream(
             )
         )
 
-    if not stream.token.balanceOf(account) >= amount:
+    if not stream.token.balanceOf(account) >= token_amount:
         raise click.UsageError("Do not have sufficient funding")
 
-    elif not stream.token.allowance(account, stream.manager.address) >= amount:
+    elif not stream.token.allowance(account, stream.manager.address) >= token_amount:
         click.echo(f"Approving StreamManager({stream.manager.address})")
         stream.token.approve(
             stream.manager.address,
-            2**256 - 1 if click.confirm("Unlimited Approval?") else amount,
+            2**256 - 1 if click.confirm("Unlimited Approval?") else token_amount,
             sender=account,
         )
 
     click.echo(
         f"Funding Stream for Cluster '{cluster_path}' with "
-        f"{amount / 10**stream.token.decimals():0.4f} {stream.token.symbol()}"
+        f"{token_amount / 10**stream.token.decimals():0.4f} {stream.token.symbol()}"
     )
-    stream.add_funds(amount, sender=account)
+    stream.add_funds(token_amount, sender=account)
 
 
 @pay.command(name="cancel", cls=ConnectedProviderCommand)
