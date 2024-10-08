@@ -383,6 +383,11 @@ def create_payment_stream(
 
     click.echo(f"{click.style('SUCCESS', fg='green')}: Stream funded for {stream.time_left}.")
 
+    click.echo(
+        f"{click.style('WARNING', fg='yellow')}: Cluster may take up to 1 hour to deploy."
+        " Check back in 10-15 minutes using `silverback cluster info` to start using your cluster."
+    )
+
 
 @pay.command(name="add-time", cls=ConnectedProviderCommand)
 @account_option()
