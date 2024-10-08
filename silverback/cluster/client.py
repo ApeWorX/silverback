@@ -174,6 +174,7 @@ class Bot(BotInfo):
         response = self.cluster.put(f"/bots/{self.id}", json=dict(name=self.name))
         handle_error_with_response(response)
 
+    @property
     @computed_field
     def registry_credentials(self) -> RegistryCredentials | None:
         if self.registry_credentials_id:
