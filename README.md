@@ -54,21 +54,69 @@ The example makes use of the [Ape Tokens](https://github.com/ApeWorX/ape-tokens)
 Be sure to properly configure your environment for the USDC and YFI tokens on Ethereum mainnet.
 ```
 
-To run your bot against a live network, this SDK includes a simple runner command you can use via:
+To run your bot against a live network, this SDK includes a simple bot command you can use via:
 
 ```sh
-$ silverback run "example:app" --network :mainnet:alchemy
+$ silverback run example --network :mainnet:alchemy
 ```
 
 ```{note}
-This runner uses an in-memory task broker by default.
+This bot uses an in-memory task broker by default.
 If you want to learn more about what that means, please visit the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html).
+```
+
+```{note}
+It is suggested that you create a bots/ folder in the root of your project.
+Silverback will automatically register files in this folder as separate bots that can be run via the `silverback run` command.
+```
+
+```{note}
+It is also suggested that you treat this as a scripts folder, and do not include an __init__.py
+If you have a complicated project, follow the previous example to ensure you run the application correctly.
+```
+
+```{note}
+A final suggestion would be to name your `SilverbackApp` object `bot`. Silverback automatically searches 
+for this object name when running. If you do not do so, once again, ensure you replace `example` with 
+`example:<name-of-object>` the previous example.
+```
+
+To auto-generate Dockerfiles for your bots, from the root of your project, you can run:
+
+```bash
+silverback build
+```
+
+This will place the generated dockerfiles in a special directory in the root of your project.
+
+As an example, if you have a bots directory that looks like:
+
+```
+bots/
+├── botA.py
+├── botB.py
+├── botC.py
+```
+
+This method will generate 3 Dockerfiles:
+
+```
+.silverback-images/
+├── Dockerfile.botA
+├── Dockerfile.botB
+├── Dockerfile.botC
+```
+
+These Dockerfiles can be deployed with the `docker push` command documented in the next section so you can use it in cloud-based deployments.
+
+```{note}
+As an aside, if your bots/ directory is a python package, you will cause conflicts with the dockerfile generation feature. This method will warn you that you are generating bots for a python package, but will not stop you from doing so. If you choose to generate dockerfiles, the user should be aware that it will only copy each individual file into the Dockerfile, and will not include any supporting python functionality. Each python file is expected to run independently. If you require more complex bots, you will have to build a custom docker image.
 ```
 
 ## Docker Usage
 
 ```sh
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run example --network :mainnet
 ```
 
 ```{note}
@@ -85,7 +133,7 @@ If you want to use a hosted provider with websocket support like Alchemy to run 
 If you attempt to run the `Docker Usage` command without supplying this key, you will get the following error:
 
 ```bash
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run "example:app" --network :mainnet:alchemy
+$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run example --network :mainnet:alchemy
 Traceback (most recent call last):
   ...
 ape_alchemy.exceptions.MissingProjectKeyError: Must set one of $WEB3_ALCHEMY_PROJECT_ID, $WEB3_ALCHEMY_API_KEY, $WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID, $WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY.
