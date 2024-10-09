@@ -11,8 +11,8 @@ from packaging.version import Version
 from taskiq import AsyncTaskiqTask
 from taskiq.kicker import AsyncKicker
 
-from .main import SilverbackBot, SystemConfig, TaskData
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
+from .main import SilverbackBot, SystemConfig, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
