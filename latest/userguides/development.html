@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="lime" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Developing Applications - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Deploying Applications" href="platform.html" /><link rel="prev" title="&lt;no title&gt;" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Developing Bots - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Deploying Bots" href="platform.html" /><link rel="prev" title="&lt;no title&gt;" href="../index.html" />
       <link rel="canonical" href="silverback/userguides/development.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
@@ -20,7 +20,7 @@
 </style>
     <meta property="og:type" content="website"/>
 <meta property="og:url" content="silverback/userguides/development.html"/>
-<meta property="og:title" content="Developing Applications"/>
+<meta property="og:title" content="Developing Bots"/>
 <meta name="twitter:card" content="summary"/>
   </head>
 <body><div class="sy-head">
@@ -59,8 +59,8 @@ data-aria-dark="Switch to auto color mode">
       <div class="sy-scrollbar p-6">
         <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Developing Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="platform.html">Deploying Applications</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developing Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="platform.html">Deploying Bots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
@@ -89,7 +89,7 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li><a class="reference internal" href="#project-structure">Project structure</a></li>
-<li><a class="reference internal" href="#creating-an-application">Creating an Application</a></li>
+<li><a class="reference internal" href="#creating-a-bot">Creating a Bot</a></li>
 <li><a class="reference internal" href="#new-block-events">New Block Events</a></li>
 <li><a class="reference internal" href="#new-event-logs">New Event Logs</a></li>
 <li><a class="reference internal" href="#startup-and-shutdown">Startup and Shutdown</a><ul>
@@ -97,16 +97,19 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#worker-state">Worker State</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#application-events">Application Events</a></li>
+<li><a class="reference internal" href="#bot-events">Bot Events</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bot-state">Bot State</a><ul>
 <li><a class="reference internal" href="#signing-transactions">Signing Transactions</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#running-your-application">Running your Application</a><ul>
+<li><a class="reference internal" href="#running-your-bot">Running your Bot</a><ul>
 <li><a class="reference internal" href="#distributed-execution">Distributed Execution</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#testing-your-application">Testing your Application</a></li>
-<li><a class="reference internal" href="#deploying-your-application">Deploying your Application</a></li>
+<li><a class="reference internal" href="#testing-your-bot">Testing your Bot</a></li>
+<li><a class="reference internal" href="#deploying-your-bot">Deploying your Bot</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -123,7 +126,7 @@ data-aria-dark="Switch to auto color mode">
         <span>/</span>
         <meta itemprop="position" content="1" />
       </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-        <strong itemprop="name">Developing Applications</strong>
+        <strong itemprop="name">Developing Bots</strong>
         <meta itemprop="position" content="2" />
       </li></ol>
     <div class="xl:hidden ml-1">
@@ -136,9 +139,9 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="developing-applications">
-<h1>Developing Applications<a class="headerlink" href="#developing-applications" title="Link to this heading"></a></h1>
-<p>In this guide, we are going to show you more details on how to build an application with Silverback.</p>
+          <section id="developing-bots">
+<h1>Developing Bots<a class="headerlink" href="#developing-bots" title="Link to this heading"></a></h1>
+<p>In this guide, we are going to show you more details on how to build an bot with Silverback.</p>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
 <p>You should have a python project with Silverback installed.
@@ -150,14 +153,14 @@ You can install Silverback via <code class="docutils literal notranslate"><span 
 <ol class="arabic simple">
 <li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot.py</span></code> file. This is the simplest way to define your bot project.</p></li>
 <li><p>Create a <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder. Then develop bots in this folder as separate scripts (Do not include a <strong>init</strong>.py file).</p></li>
-<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot/</span></code> folder with a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file that will include the instantiation of your <code class="docutils literal notranslate"><span class="pre">SilverbackApp()</span></code> object.</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot/</span></code> folder with a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file that will include the instantiation of your <code class="docutils literal notranslate"><span class="pre">SilverbackBot()</span></code> object.</p></li>
 </ol>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback</span></code> cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
 It will also be able to detect the scripts inside your <code class="docutils literal notranslate"><span class="pre">bots/</span></code> directory and let you run those by name (in case you have multiple bots in your project).</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">silverback</span></code> finds a module named <code class="docutils literal notranslate"><span class="pre">bot</span></code> in the root directory of the project, then it will use that by default.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It is suggested that you create the instance of your <code class="docutils literal notranslate"><span class="pre">SilverbackApp()</span></code> object by naming the variable <code class="docutils literal notranslate"><span class="pre">bot</span></code>, since <code class="docutils literal notranslate"><span class="pre">silverback</span></code> will autodetect that variable name when loading your script file.</p>
+<p>It is suggested that you create the instance of your <code class="docutils literal notranslate"><span class="pre">SilverbackBot()</span></code> object by naming the variable <code class="docutils literal notranslate"><span class="pre">bot</span></code>, since <code class="docutils literal notranslate"><span class="pre">silverback</span></code> will autodetect that variable name when loading your script file.</p>
 </div>
 <p>Another way you can structure your bot is to create a <code class="docutils literal notranslate"><span class="pre">bot</span></code> folder and define a runner inside of that folder as <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>.</p>
 <p>If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder relative to the root of your project.
@@ -170,12 +173,12 @@ This will work fairly seamlessly with the rest of the examples shown in this gui
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
 </span></pre></div>
 </div>
-<p>If the variable that you call the <code class="docutils literal notranslate"><span class="pre">SilverbackApp()</span></code> object is something other than <code class="docutils literal notranslate"><span class="pre">bot</span></code>, you can specific that by adding <code class="docutils literal notranslate"><span class="pre">:{variable-name}</span></code>:</p>
+<p>If the variable that you call the <code class="docutils literal notranslate"><span class="pre">SilverbackBot()</span></code> object is something other than <code class="docutils literal notranslate"><span class="pre">bot</span></code>, you can specific that by adding <code class="docutils literal notranslate"><span class="pre">:{variable-name}</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>example:my_bot<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
 </span></pre></div>
 </div>
 <p>We will automatically detect all scripts under the <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder automatically, but if your bot resides in a location other than <code class="docutils literal notranslate"><span class="pre">bots/</span></code> then you can use this to run it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>folder.example:app<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>folder.example:bot<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
 </span></pre></div>
 </div>
 <p>Note that with a <code class="docutils literal notranslate"><span class="pre">bot/__init__.py</span></code> setup, silverback will also autodetect it, and you can run it with:</p>
@@ -191,18 +194,18 @@ For the most streamlined experience, develop your bots as scripts, and avoid rel
 If you follow these suggestions, your Silverback deployments will be easy to use and require almost no thought.</p>
 </div>
 </section>
-<section id="creating-an-application">
-<h2>Creating an Application<a class="headerlink" href="#creating-an-application" title="Link to this heading"></a></h2>
-<p>Creating a Silverback Application is easy, to do so initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackApp</span></code> class:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackApp</span>
+<section id="creating-a-bot">
+<h2>Creating a Bot<a class="headerlink" href="#creating-a-bot" title="Link to this heading"></a></h2>
+<p>Creating a Silverback Bot is easy, to do so initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackBot</span></code> class:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackBot</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackApp</span><span class="p">()</span>
+</span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
 </span></pre></div>
 </div>
-<p>The SilverbackApp class handles state and configuration.
+<p>The SilverbackBot class handles state and configuration.
 Through this class, we can hook up event handlers to be executed each time we encounter a new block or each time a specific event is emitted.
-Initializing the app creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.</p>
-<p>However, by default an app has no configured event handlers, so it won’t be very useful.
+Initializing the bot creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.</p>
+<p>However, by default an bot has no configured event handlers, so it won’t be very useful.
 This is where adding event handlers is useful via the <code class="docutils literal notranslate"><span class="pre">bot.on_</span></code> method.
 This method lets us specify which event will trigger the execution of our handler as well as which handler to execute.</p>
 </section>
@@ -270,9 +273,9 @@ Any errors you raise during this function will get captured by the client, and r
 </div>
 </section>
 </section>
-<section id="application-events">
-<h3>Application Events<a class="headerlink" href="#application-events" title="Link to this heading"></a></h3>
-<p>You can also add an application startup and shutdown handler that will be <strong>executed once upon every application startup</strong>.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.</p>
+<section id="bot-events">
+<h3>Bot Events<a class="headerlink" href="#bot-events" title="Link to this heading"></a></h3>
+<p>You can also add an bot startup and shutdown handler that will be <strong>executed once upon every bot startup</strong>.  This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span> <span class="nf">handle_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Process missed events, etc</span>
@@ -287,8 +290,45 @@ Any errors you raise during this function will get captured by the client, and r
 </span><span data-line="12">    <span class="o">...</span>
 </span></pre></div>
 </div>
-<p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_startup()</span></code> decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_worker_startup()</span></code>.</p>
+<p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_startup()</span></code> decorator and handler signature have changed.  It is now executed only once upon bot startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_worker_startup()</span></code>.</p>
 </section>
+</section>
+<section id="bot-state">
+<h2>Bot State<a class="headerlink" href="#bot-state" title="Link to this heading"></a></h2>
+<p>Sometimes it is very useful to have access to values in a shared state across your workers.
+For example you might have a value or complex reference type that you wish to update during one of your tasks, and read during another.
+Silverback provides <code class="docutils literal notranslate"><span class="pre">bot.state</span></code> to help with these use cases.</p>
+<p>For example, you might want to pre-populate a large dataframe into state on startup, keeping that dataframe in sync with the chain through event logs,
+and then use that data to determine a signal under which you want trigger transactions to commit back to the chain.
+Such an bot might look like this:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">def</span> <span class="nf">create_table</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">df</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">start_block</span><span class="o">=</span><span class="n">startup_state</span><span class="o">.</span><span class="n">last_block_processed</span><span class="p">)</span>
+</span><span data-line="4">    <span class="o">...</span>  <span class="c1"># Do some further processing on df</span>
+</span><span data-line="5">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">df</span>
+</span><span data-line="6">
+</span><span data-line="7">
+</span><span data-line="8"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="p">)</span>
+</span><span data-line="9"><span class="k">def</span> <span class="nf">update_table</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="10">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Update using stuff from `log`</span>
+</span><span data-line="11">
+</span><span data-line="12">
+</span><span data-line="13"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="14"><span class="k">def</span> <span class="nf">use_table</span><span class="p">(</span><span class="n">blk</span><span class="p">):</span>
+</span><span data-line="15">    <span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">():</span>
+</span><span data-line="16">        <span class="c1"># Trigger your bot to send a transaction from `bot.signer`</span>
+</span><span data-line="17">        <span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">)</span>
+</span><span data-line="18">    <span class="o">...</span>
+</span></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">bot.state</span></code> to store any python variable type, however note that the item is not networked nor threadsafe so it is not recommended to have multiple tasks write to the same value in state at the same time.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Bot startup and bot runtime event triggers (e.g. block or event container) are handled distinctly and can be trusted not to execute at the same time.</p>
+</div>
 <section id="signing-transactions">
 <h3>Signing Transactions<a class="headerlink" href="#signing-transactions" title="Link to this heading"></a></h3>
 <p>If configured, your bot with have <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> which is an Ape account that can sign arbitrary transactions you ask it to.
@@ -300,10 +340,10 @@ See <a class="reference external" href="https://docs.apeworx.io/ape/stable/userg
 </div>
 </section>
 </section>
-<section id="running-your-application">
-<h2>Running your Application<a class="headerlink" href="#running-your-application" title="Link to this heading"></a></h2>
+<section id="running-your-bot">
+<h2>Running your Bot<a class="headerlink" href="#running-your-bot" title="Link to this heading"></a></h2>
 <p>Once you have programmed your bot, it’s really useful to be able to run it locally and validate that it does what you expect it to do.
-To run your bot locally, we have included a really useful cli command <a class="reference external" href="../commands/run"><code class="docutils literal notranslate"><span class="pre">run</span></code></a> that takes care of connecting to the proper network, configuring signers (using your local Ape accounts), and starting up the application client and in-memory task queue workers.</p>
+To run your bot locally, we have included a really useful cli command <a class="reference external" href="../commands/run"><code class="docutils literal notranslate"><span class="pre">run</span></code></a> that takes care of connecting to the proper network, configuring signers (using your local Ape accounts), and starting up the bot client and in-memory task queue workers.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Run your bot on the Ethereum Sepolia testnet, with your own signer:</span>
 </span><span data-line="2">$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span>my_bot<span class="w"> </span>--network<span class="w"> </span>:sepolia<span class="w"> </span>--account<span class="w"> </span>acct-name
 </span></pre></div>
@@ -312,19 +352,19 @@ To run your bot locally, we have included a really useful cli command <a class="
 <p class="admonition-title">Note</p>
 <p><code class="docutils literal notranslate"><span class="pre">my_bot:bot</span></code> is not required for silverback run if you follow the suggested folder structure at the start of this page, you can just call it via <code class="docutils literal notranslate"><span class="pre">my_bot</span></code>.</p>
 </div>
-<p>It’s important to note that signers are optional, if not configured in the application then <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
-You can use this in your application to enable a “test execution” mode, something like this:</p>
+<p>It’s important to note that signers are optional, if not configured in the bot then <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+You can use this in your bot to enable a “test execution” mode, something like this:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Compute some metric that might lead to creating a transaction</span>
 </span><span data-line="2"><span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">:</span>
-</span><span data-line="3">    <span class="c1"># Execute a transaction via `sender=app.signer`</span>
+</span><span data-line="3">    <span class="c1"># Execute a transaction via `sender=bot.signer`</span>
 </span><span data-line="4"><span class="k">else</span><span class="p">:</span>
 </span><span data-line="5">    <span class="c1"># Log what the transaction *would* have done, had a signer been enabled</span>
 </span></pre></div>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
-Always test your applications throughly before deploying, and always use a dedicated key for production signing with your application in a remote setting.</p>
+<p>If you configure your bot to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
+Always test your bots throughly before deploying, and always use a dedicated key for production signing with your bot in a remote setting.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -334,7 +374,7 @@ Use segregated keys and limit your risk by controlling the amount of funds that 
 <section id="distributed-execution">
 <h3>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Link to this heading"></a></h3>
 <p>Using only the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code> command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.
-In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.</p>
+In some high volume environments, you may want to deploy your Silverback bot in a distributed configuration using multiple processes to handle the messages at a higher rate.</p>
 <p>The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.</p>
 <p>For this to work, you must configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#broker">TaskIQ broker</a> capable of distributed processing.
 Additonally, it is highly suggested you should also configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#result-backend">TaskIQ result backend</a> in order to process and store the results of executing tasks.</p>
@@ -363,13 +403,13 @@ Additonally, it is highly suggested you should also configure a <a class="refere
 <p>The client will send tasks to the 2 worker subprocesses, and all task queue and results data will be go through Redis.</p>
 </section>
 </section>
-<section id="testing-your-application">
-<h2>Testing your Application<a class="headerlink" href="#testing-your-application" title="Link to this heading"></a></h2>
+<section id="testing-your-bot">
+<h2>Testing your Bot<a class="headerlink" href="#testing-your-bot" title="Link to this heading"></a></h2>
 <p>TODO: Add backtesting mode w/ <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">test</span></code></p>
 </section>
-<section id="deploying-your-application">
-<h2>Deploying your Application<a class="headerlink" href="#deploying-your-application" title="Link to this heading"></a></h2>
-<p>Check out the <a class="reference external" href="./platform.html">Platform Deployment Userguide</a> for more information on how to deploy your application to the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
+<section id="deploying-your-bot">
+<h2>Deploying your Bot<a class="headerlink" href="#deploying-your-bot" title="Link to this heading"></a></h2>
+<p>Check out the <a class="reference external" href="./platform.html">Platform Deployment Userguide</a> for more information on how to deploy your bot to the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
 </section>
 </section>
 
@@ -388,7 +428,7 @@ Additonally, it is highly suggested you should also configure a <a class="refere
     <a href="platform.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">Deploying Applications</div>
+        <div class="title">Deploying Bots</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>

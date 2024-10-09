@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="lime" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Quick Start - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Cloud Platform" href="../commands/cluster.html" /><link rel="prev" title="Deploying Applications" href="platform.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Quick Start - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Cloud Platform" href="../commands/cluster.html" /><link rel="prev" title="Deploying Bots" href="platform.html" />
       <link rel="canonical" href="silverback/userguides/quickstart.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
@@ -59,8 +59,8 @@ data-aria-dark="Switch to auto color mode">
       <div class="sy-scrollbar p-6">
         <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="platform.html">Deploying Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="platform.html">Deploying Bots</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
@@ -130,9 +130,9 @@ data-aria-dark="Switch to auto color mode">
           <section id="quick-start">
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h1>
 <p>Silverback lets you create and deploy your own Python bots that respond to on-chain events.
-The Silverback library leverages the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart">Ape</a> development framework as well as it’s ecosystem of plugins and packages to enable you to develop simple-yet-sophisticated automated applications that can listen and respond to live chain data.</p>
-<p>Silverback applications are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.</p>
-<p>Some examples of these types of applications:</p>
+The Silverback library leverages the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart">Ape</a> development framework as well as it’s ecosystem of plugins and packages to enable you to develop simple-yet-sophisticated automated bots that can listen and respond to live chain data.</p>
+<p>Silverback bots are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.</p>
+<p>Some examples of these types of bots:</p>
 <ul class="simple">
 <li><p>Monitoring new pool creations, and depositing liquidity</p></li>
 <li><p>Measuring trading activity of popular pools</p></li>
@@ -140,7 +140,7 @@ The Silverback library leverages the <a class="reference external" href="https:/
 </ul>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
-<p>Please read the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development.html">development userguide</a> for more information on how to develop an application.</p>
+<p>Please read the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development.html">development userguide</a> for more information on how to develop a bot.</p>
 </section>
 <section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
@@ -197,11 +197,11 @@ Silverback will automatically register files in this folder as separate bots tha
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>It is also suggested that you treat this as a scripts folder, and do not include an <strong>init</strong>.py
-If you have a complicated project, follow the previous example to ensure you run the application correctly.</p>
+If you have a complicated project, follow the previous example to ensure you run the bot correctly.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>A final suggestion would be to name your <code class="docutils literal notranslate"><span class="pre">SilverbackApp</span></code> object <code class="docutils literal notranslate"><span class="pre">bot</span></code>. Silverback automatically searches
+<p>A final suggestion would be to name your <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> object <code class="docutils literal notranslate"><span class="pre">bot</span></code>. Silverback automatically searches
 for this object name when running. If you do not do so, once again, ensure you replace <code class="docutils literal notranslate"><span class="pre">example</span></code> with
 <code class="docutils literal notranslate"><span class="pre">example:&lt;name-of-object&gt;</span></code> the previous example.</p>
 </div>
@@ -253,7 +253,7 @@ If you attempt to run the <code class="docutils literal notranslate"><span class
 </span><span data-line="4">ape_alchemy.exceptions.MissingProjectKeyError:<span class="w"> </span>Must<span class="w"> </span><span class="nb">set</span><span class="w"> </span>one<span class="w"> </span>of<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_API_KEY</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY</span>.
 </span></pre></div>
 </div>
-<p>Go to <a class="reference external" href="https://alchemy.com">Alchemy</a>, create an account, then create an application in their dashboard, and copy the API Key.</p>
+<p>Go to <a class="reference external" href="https://alchemy.com">Alchemy</a>, create an account, then create an bot in their dashboard, and copy the API Key.</p>
 <p>Another requirement for the command from <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> to run the given example is that it uses <a class="reference external" href="https://github.com/ApeWorX/ape-tokens">ape-tokens</a> plugin to look up token interfaces by symbol.
 In order for this to work, you should have installed and configured that plugin using a token list that includes both YFI and USDC on Ethereum mainnet.
 Doing this will give you a <code class="docutils literal notranslate"><span class="pre">~/.tokenlists</span></code> hidden folder in your home folder that you must mount into the docker container with the following flag:</p>
@@ -304,7 +304,7 @@ Comments, questions, criticisms and pull requests are welcomed.</p>
     <a href="platform.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">Deploying Applications</div></div>
+        <span>Previous</span><div class="title">Deploying Bots</div></div>
     </a>
   </div><div class="navigation-next">
     <a href="../commands/cluster.html">

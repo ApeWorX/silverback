@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="lime" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Deploying Applications - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Start" href="quickstart.html" /><link rel="prev" title="Developing Applications" href="development.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Deploying Bots - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Start" href="quickstart.html" /><link rel="prev" title="Developing Bots" href="development.html" />
       <link rel="canonical" href="silverback/userguides/platform.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
@@ -20,7 +20,7 @@
 </style>
     <meta property="og:type" content="website"/>
 <meta property="og:url" content="silverback/userguides/platform.html"/>
-<meta property="og:title" content="Deploying Applications"/>
+<meta property="og:title" content="Deploying Bots"/>
 <meta name="twitter:card" content="summary"/>
   </head>
 <body><div class="sy-head">
@@ -59,8 +59,8 @@ data-aria-dark="Switch to auto color mode">
       <div class="sy-scrollbar p-6">
         <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Applications</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Deploying Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Bots</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deploying Bots</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
@@ -112,7 +112,7 @@ data-aria-dark="Switch to auto color mode">
         <span>/</span>
         <meta itemprop="position" content="1" />
       </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-        <strong itemprop="name">Deploying Applications</strong>
+        <strong itemprop="name">Deploying Bots</strong>
         <meta itemprop="position" content="2" />
       </li></ol>
     <div class="xl:hidden ml-1">
@@ -125,15 +125,15 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="deploying-applications">
-<h1>Deploying Applications<a class="headerlink" href="#deploying-applications" title="Link to this heading"></a></h1>
+          <section id="deploying-bots">
+<h1>Deploying Bots<a class="headerlink" href="#deploying-bots" title="Link to this heading"></a></h1>
 <p>In this guide, we are going to show you more details on how to deploy your application to the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
 <section id="creating-a-cluster">
 <h2>Creating a Cluster<a class="headerlink" href="#creating-a-cluster" title="Link to this heading"></a></h2>
-<p>The Silverback Platform runs your Applications (or “Bots”) on dedicated managed application Clusters.
+<p>The Silverback Platform runs your Bots on dedicated managed application Clusters.
 These Clusters will take care to orchestrate infrastructure, monitor, run your triggers, and collect metrics for your applications.
 Each Cluster is bespoke for an individual or organization, and isolates your applications from others on different infrastructure.</p>
-<p>Before we deploy our Application, we have to create a Cluster.
+<p>Before we deploy our Bot, we have to create a Cluster.
 If you haven’t yet, please sign up for Silverback at <a class="reference external" href="https://silverback.apeworx.io">https://silverback.apeworx.io</a>.</p>
 <p>Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
 logging in to the Platform using <a class="reference external" href="../commands/cluster.html#silverback-login"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">login</span></code></a>,
@@ -163,7 +163,7 @@ Only the owner may do this, so if you are not the owner you should contact them 
 For instance, to list all your available bots on your cluster, use <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-list"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">list</span></code></a>.
 To obtain general information about your cluster, just use <a class="reference external" href="../commands/cluster.html#silverback-cluster-info"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">info</span></code></a>,
 or <a class="reference external" href="../commands/cluster.html#silverback-cluster-health"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">health</span></code></a> to see the current status of your Cluster.</p>
-<p>If you have no bots, we will first have to containerize our Applications and upload them to a container registry that our Cluster is configured to access.</p>
+<p>If you have no bots, we will first have to containerize our Bots and upload them to a container registry that our Cluster is configured to access.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Building a container for your application can be an advanced topic, we have included the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span></code> subcommand to help assist in generating Dockerfiles.</p>
@@ -211,7 +211,7 @@ Thanks to it’s flexible plugin system, ape plugins may also require specific e
 Silverback Clusters include an environment variable management system for exactly this purpose,
 which you can manage using <a class="reference external" href="../commands/cluster.html#silverback-cluster-vars"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">vars</span></code></a> subcommand.</p>
 <p>The environment variable management system makes use of a concept called “Variable Groups” which are distinct collections of environment variables meant to be used together.
-These variable groups will help in managing the runtime environment of your Applications by allowing you to segregate different variables depending on each bot’s needs.</p>
+These variable groups will help in managing the runtime environment of your Bots by allowing you to segregate different variables depending on each bot’s needs.</p>
 <p>To create an environment group, use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-vars-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">vars</span> <span class="pre">new</span></code></a> command and give it a name and a set of related variables.
 For instance, it may make sense to make a group of variables for your favorite Ape plugins or services, such as RPC Providers, Blockchain Data Indexers, Etherscan, etc.
 You might have a database connection that you want all your bots to access.</p>
@@ -288,7 +288,7 @@ using the <a class="reference external" href="../commands/cluster.html#silverbac
 Any task execution that experiences an error will abort execution (and therefore not produce any metrics) but the Bot <strong>will not</strong> shutdown.</p>
 <p>All errors encountered during task exeuction are reported to the Cluster for later review by any users with appriopiate access.
 Tasks do not retry (by default), but updates to <code class="docutils literal notranslate"><span class="pre">app.state</span></code> are maintained up until the point an error occurs.</p>
-<p>It is important to keep track of these errors and ensure that none of them are in fact critical to the operation of your Application,
+<p>It is important to keep track of these errors and ensure that none of them are in fact critical to the operation of your Bot,
 and to take corrective or preventative action if it is determined that it should be treated as a more critical failure condition.</p>
 </div>
 <div class="admonition note">
@@ -323,7 +323,7 @@ We can also stop a bot using <a class="reference external" href="../commands/clu
     <a href="development.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">Developing Applications</div></div>
+        <span>Previous</span><div class="title">Developing Bots</div></div>
     </a>
   </div><div class="navigation-next">
     <a href="quickstart.html">
