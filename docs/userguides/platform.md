@@ -20,6 +20,23 @@ The Platform UI will let you create and manage Clusters using a graphical experi
 The CLI experience is for those working locally who don't want to visit the website, or are locally developing their applications.
 ```
 
+Once you have created your Cluster, you have to fund it so it is made available for your use.
+To do that, use the [`silverback cluster pay create`][silverback-cluster-pay-create] command to fund your newly created cluster.
+Please note that provisioning your cluster will take time, and it may take up to an hour for it to be ready.
+Check back after 10-15 minutes using the [`silverback cluster info`][silverback-cluster-info] command to see when it's ready.
+
+At any point after the Cluster is funded, you can fund it with more funds via [`silverback cluster pay add-time`][silverback-cluster-pay-add-time]
+command to extend the timeline that the Cluster is kept around for.
+Note that it is possible for anyone to add more time to the Cluster, at any time and for any amount.
+
+If that timeline expires, the Platform will automatically de-provision your infrastructure, and it is not possible to reverse this!
+The Platform may send you notifications when your Stream is close to expiring, but it is up to you to remember to fill it so it doesn't.
+Note that your data collection will stay available for up to 30 days allowing you the ability to download any data you need.
+
+Lastly, if you ever feel like you no longer need your Cluster, you can cancel the funding for it and get a refund of the remaining funds.
+If you are the owner of the Stream, you can do this via the [`silverback cluster pay cancel`][silverback-cluster-pay-cancel] command.
+Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.
+
 ## Connecting to your Cluster
 
 To connect to a cluster, you can use commands from the [`silverback cluster`][silverback-cluster] subcommand group.
@@ -222,6 +239,9 @@ TODO: Downloading metrics from your Bot
 [silverback-cluster-health]: ../commands/cluster.html#silverback-cluster-health
 [silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
 [silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
+[silverback-cluster-pay-add-time]: ../commands/cluster.html#silverback-cluster-pay-add-time
+[silverback-cluster-pay-cancel]: ../commands/cluster.html#silverback-cluster-pay-cancel
+[silverback-cluster-pay-create]: ../commands/cluster.html#silverback-cluster-pay-create
 [silverback-cluster-registry-auth-new]: ../commands/cluster.html#silverback-cluster-registry-auth-new
 [silverback-cluster-vars]: ../commands/cluster.html#silverback-cluster-vars
 [silverback-cluster-vars-info]: ../commands/cluster.html#silverback-cluster-vars-info

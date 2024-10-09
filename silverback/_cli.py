@@ -2,17 +2,21 @@ import asyncio
 import os
 import shlex
 import subprocess
+from datetime import timedelta
 from pathlib import Path
 
 import click
 import yaml  # type: ignore[import-untyped]
+from ape.api import AccountAPI, NetworkAPI
 from ape.cli import (
     AccountAliasPromptChoice,
     ConnectedProviderCommand,
+    account_option,
     ape_cli_context,
     network_option,
 )
-from ape.exceptions import Abort
+from ape.contracts import ContractInstance
+from ape.exceptions import Abort, ApeException
 from fief_client.integrations.cli import FiefAuth
 
 from silverback._click_ext import (
@@ -23,9 +27,11 @@ from silverback._click_ext import (
     cluster_client,
     display_login_message,
     platform_client,
+    timedelta_callback,
+    token_amount_callback,
 )
 from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.types import ClusterTier
+from silverback.cluster.types import ClusterTier, ResourceStatus
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
@@ -259,21 +265,6 @@ def list_clusters(platform: PlatformClient, workspace: str):
     "cluster_slug",
     help="Slug for new cluster (Defaults to `name.lower()`)",
 )
-@click.option(
-    "-t",
-    "--tier",
-    default=ClusterTier.PERSONAL.name,
-    metavar="NAME",
-    help="Named set of options to use for cluster as a base (Defaults to Personal)",
-)
-@click.option(
-    "-c",
-    "--config",
-    "config_updates",
-    type=(str, str),
-    multiple=True,
-    help="Config options to set for cluster (overrides value of -t/--tier)",
-)
 @click.argument("workspace")
 @platform_client
 def new_cluster(
@@ -281,13 +272,114 @@ def new_cluster(
     workspace: str,
     cluster_name: str | None,
     cluster_slug: str | None,
-    tier: str,
-    config_updates: list[tuple[str, str]],
 ):
     """Create a new cluster in WORKSPACE"""
 
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    if cluster_name:
+        click.echo(f"name: {cluster_name}")
+        click.echo(f"slug: {cluster_slug or cluster_name.lower().replace(' ', '-')}")
+
+    elif cluster_slug:
+        click.echo(f"slug: {cluster_slug}")
+
+    cluster = workspace_client.create_cluster(
+        cluster_name=cluster_name,
+        cluster_slug=cluster_slug,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
+
+    if cluster.status == ResourceStatus.CREATED:
+        click.echo(
+            f"{click.style('WARNING', fg='yellow')}: To use this cluster, "
+            f"please pay via `silverback cluster pay create {workspace}/{cluster_slug}`"
+        )
+
+
+@cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
+def pay():
+    """Pay for CLUSTER with Crypto using ApePay streaming payments"""
+
+
+@pay.command(name="create", cls=ConnectedProviderCommand)
+@account_option()
+@click.argument("cluster_path")
+@click.option(
+    "-t",
+    "--tier",
+    default=ClusterTier.PERSONAL.name.capitalize(),
+    metavar="NAME",
+    type=click.Choice(
+        [
+            ClusterTier.PERSONAL.name.capitalize(),
+            ClusterTier.PROFESSIONAL.name.capitalize(),
+        ]
+    ),
+    help="Named set of options to use for cluster as a base (Defaults to Personal)",
+)
+@click.option(
+    "-c",
+    "--config",
+    "config_updates",
+    metavar="KEY VALUE",
+    type=(str, str),
+    multiple=True,
+    help="Config options to set for cluster (overrides values from -t/--tier selection)",
+)
+@click.option("--token", metavar="ADDRESS", help="Token Symbol or Address to use to fund stream")
+@click.option(
+    "--amount",
+    "token_amount",
+    metavar="VALUE",
+    callback=token_amount_callback,
+    default=None,
+    help="Token amount to use to fund stream",
+)
+@click.option(
+    "--time",
+    "stream_time",
+    metavar="TIMESTAMP or TIMEDELTA",
+    callback=timedelta_callback,
+    default=None,
+    help="Time to fund stream for",
+)
+@platform_client
+def create_payment_stream(
+    platform: PlatformClient,
+    network: NetworkAPI,
+    account: AccountAPI,
+    cluster_path: str,
+    tier: str,
+    config_updates: list[tuple[str, str]],
+    token: ContractInstance | None,
+    token_amount: int | None,
+    stream_time: timedelta | None,
+):
+    """
+    Create a new streaming payment for a given CLUSTER
+
+    NOTE: This action cannot be cancelled! Streams must exist for at least 1 hour before cancelling.
+    """
+
+    if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+        raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
+
+    workspace_name, cluster_name = cluster_path.split("/")
+    if not (workspace_client := platform.workspaces.get(workspace_name)):
+        raise click.BadArgumentUsage(f"Unknown workspace: '{workspace_name}'")
+
+    elif not (cluster := workspace_client.clusters.get(cluster_name)):
+        raise click.BadArgumentUsage(
+            f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
+        )
+
+    elif cluster.status != ResourceStatus.CREATED:
+        raise click.UsageError(f"Cannot fund '{cluster_path}': cluster has existing streams.")
+
+    elif token_amount is None and stream_time is None:
+        raise click.UsageError("Must specify one of '--amount' or '--time'.")
 
     if not hasattr(ClusterTier, tier.upper()):
         raise click.BadOptionUsage("tier", f"Invalid choice: {tier}")
@@ -297,30 +389,201 @@ def new_cluster(
     for k, v in config_updates:
         setattr(configuration, k, int(v) if v.isnumeric() else v)
 
-    if cluster_name:
-        click.echo(f"name: {cluster_name}")
-        click.echo(f"slug: {cluster_slug or cluster_name.lower().replace(' ', '-')}")
+    sm = platform.get_stream_manager(network.chain_id)
+    product = configuration.get_product_code(account.address, cluster.id)
 
-    elif cluster_slug:
-        click.echo(f"slug: {cluster_slug}")
+    if not token:
+        accepted_tokens = platform.get_accepted_tokens(network.chain_id)
+        token = accepted_tokens.get(
+            click.prompt(
+                "Select one of the following tokens to fund your stream with",
+                type=click.Choice(list(accepted_tokens)),
+            )
+        )
+    assert token  # mypy happy
+
+    if not token_amount:
+        assert stream_time  # mypy happy
+        one_token = 10 ** token.decimals()
+        token_amount = int(
+            one_token
+            * (
+                stream_time.total_seconds()
+                / sm.compute_stream_life(
+                    account.address, token, one_token, [product]
+                ).total_seconds()
+            )
+        )
+    else:
+        stream_time = sm.compute_stream_life(account.address, token, token_amount, [product])
+
+    assert token_amount  # mypy happy
 
     click.echo(yaml.safe_dump(dict(configuration=configuration.settings_display_dict())))
+    click.echo(f"duration: {stream_time}\n")
 
-    if not click.confirm("Do you want to make a new cluster with this configuration?"):
+    if not click.confirm(
+        f"Do you want to use this configuration to fund Cluster '{cluster_path}'?"
+    ):
         return
 
-    cluster = workspace_client.create_cluster(
-        cluster_name=cluster_name,
-        cluster_slug=cluster_slug,
+    if not token.balanceOf(account) >= token_amount:
+        raise click.UsageError(
+            f"Do not have sufficient balance of '{token.symbol()}' to fund stream."
+        )
+
+    elif not token.allowance(account, sm.address) >= token_amount:
+        click.echo(f"Approve StreamManager({sm.address}) for '{token.symbol()}'")
+        token.approve(
+            sm.address,
+            2**256 - 1 if click.confirm("Unlimited Approval?") else token_amount,
+            sender=account,
+        )
+
+    # NOTE: will ask for approvals and do additional checks
+    try:
+        stream = sm.create(
+            token, token_amount, [product], min_stream_life=stream_time, sender=account
+        )
+    except ApeException as e:
+        raise click.UsageError(str(e)) from e
+
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Cluster funded for {stream.time_left}.")
+
+    click.echo(
+        f"{click.style('WARNING', fg='yellow')}: Cluster may take up to 1 hour to deploy."
+        " Check back in 10-15 minutes using `silverback cluster info` to start using your cluster."
     )
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
-    # TODO: Pay for cluster via new stream
 
 
-# `silverback cluster pay WORKSPACE/NAME --account ALIAS --time "10 days"`
-# TODO: Create a signature scheme for ClusterInfo
-#         (ClusterInfo configuration as plaintext, .id as nonce?)
-# TODO: Test payment w/ Signature validation of extra data
+@pay.command(name="add-time", cls=ConnectedProviderCommand)
+@account_option()
+@click.argument("cluster_path", metavar="CLUSTER")
+@click.option(
+    "--amount",
+    "token_amount",
+    metavar="VALUE",
+    callback=token_amount_callback,
+    default=None,
+    help="Token amount to use to fund stream",
+)
+@click.option(
+    "--time",
+    "stream_time",
+    metavar="TIMESTAMP or TIMEDELTA",
+    callback=timedelta_callback,
+    default=None,
+    help="Time to fund stream for",
+)
+@platform_client
+def fund_payment_stream(
+    platform: PlatformClient,
+    network: NetworkAPI,
+    account: AccountAPI,
+    cluster_path: str,
+    token_amount: int | None,
+    stream_time: timedelta | None,
+):
+    """
+    Fund an existing streaming payment for the given CLUSTER
+
+    NOTE: You can fund anyone else's Stream!
+    """
+
+    if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+        raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
+
+    workspace_name, cluster_name = cluster_path.split("/")
+    if not (workspace_client := platform.workspaces.get(workspace_name)):
+        raise click.BadArgumentUsage(f"Unknown workspace: '{workspace_name}'")
+
+    elif not (cluster := workspace_client.clusters.get(cluster_name)):
+        raise click.BadArgumentUsage(
+            f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
+        )
+
+    elif cluster.status != ResourceStatus.RUNNING:
+        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
+
+    elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
+        raise click.UsageError("Cluster is not funded via ApePay Stream")
+
+    elif token_amount is None and stream_time is None:
+        raise click.UsageError("Must specify one of '--amount' or '--time'.")
+
+    if not token_amount:
+        assert stream_time  # mypy happy
+        one_token = 10 ** stream.token.decimals()
+        token_amount = int(
+            one_token
+            * (
+                stream_time.total_seconds()
+                / stream.manager.compute_stream_life(
+                    account.address, stream.token, one_token, stream.products
+                ).total_seconds()
+            )
+        )
+
+    if not stream.token.balanceOf(account) >= token_amount:
+        raise click.UsageError("Do not have sufficient funding")
+
+    elif not stream.token.allowance(account, stream.manager.address) >= token_amount:
+        click.echo(f"Approving StreamManager({stream.manager.address})")
+        stream.token.approve(
+            stream.manager.address,
+            2**256 - 1 if click.confirm("Unlimited Approval?") else token_amount,
+            sender=account,
+        )
+
+    click.echo(
+        f"Funding Stream for Cluster '{cluster_path}' with "
+        f"{token_amount / 10**stream.token.decimals():0.4f} {stream.token.symbol()}"
+    )
+    stream.add_funds(token_amount, sender=account)
+
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Cluster funded for {stream.time_left}.")
+
+
+@pay.command(name="cancel", cls=ConnectedProviderCommand)
+@account_option()
+@click.argument("cluster_path", metavar="CLUSTER")
+@platform_client
+def cancel_payment_stream(
+    platform: PlatformClient,
+    network: NetworkAPI,
+    account: AccountAPI,
+    cluster_path: str,
+):
+    """
+    Shutdown CLUSTER and refund all funds to Stream owner
+
+    NOTE: Only the Stream owner can perform this action!
+    """
+
+    if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+        raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
+
+    workspace_name, cluster_name = cluster_path.split("/")
+    if not (workspace_client := platform.workspaces.get(workspace_name)):
+        raise click.BadArgumentUsage(f"Unknown workspace: '{workspace_name}'")
+
+    elif not (cluster := workspace_client.clusters.get(cluster_name)):
+        raise click.BadArgumentUsage(
+            f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
+        )
+
+    elif cluster.status != ResourceStatus.RUNNING:
+        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
+
+    elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
+        raise click.UsageError("Cluster is not funded via ApePay Stream")
+
+    if click.confirm(
+        click.style("This action is irreversible, are you sure?", bold=True, bg="red")
+    ):
+        stream.cancel(sender=account)
+
+    click.echo(f"{click.style('WARNING', fg='yellow')}: Cluster cannot be used anymore.")
 
 
 @cluster.command(name="info")

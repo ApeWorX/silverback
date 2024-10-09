@@ -2,6 +2,9 @@ from functools import cache
 from typing import ClassVar, Literal
 
 import httpx
+from ape import Contract
+from ape.contracts import ContractInstance
+from apepay import Stream, StreamManager
 from pydantic import computed_field
 
 from silverback.version import version
@@ -13,6 +16,7 @@ from .types import (
     ClusterInfo,
     ClusterState,
     RegistryCredentialsInfo,
+    StreamInfo,
     VariableGroupInfo,
     WorkspaceInfo,
 )
@@ -362,6 +366,23 @@ class Workspace(WorkspaceInfo):
         self.clusters.update({new_cluster.slug: new_cluster})  # NOTE: Update cache
         return new_cluster
 
+    def get_payment_stream(self, cluster: ClusterInfo, chain_id: int) -> Stream | None:
+        response = self.client.get(
+            f"/clusters/{cluster.id}/stream",
+            params=dict(workspace=str(self.id)),
+        )
+        handle_error_with_response(response)
+
+        if not (raw_stream_info := response.json()):
+            return None
+
+        stream_info = StreamInfo.model_validate(raw_stream_info)
+
+        if not stream_info.chain_id == chain_id:
+            return None
+
+        return Stream(manager=StreamManager(stream_info.manager), id=stream_info.stream_id)
+
 
 class PlatformClient(httpx.Client):
     def __init__(self, *args, **kwargs):
@@ -411,3 +432,15 @@ class PlatformClient(httpx.Client):
         new_workspace = Workspace.model_validate_json(response.text)
         self.workspaces.update({new_workspace.slug: new_workspace})  # NOTE: Update cache
         return new_workspace
+
+    def get_stream_manager(self, chain_id: int) -> StreamManager:
+        response = self.get(f"/streams/manager/{chain_id}")
+        handle_error_with_response(response)
+        return StreamManager(response.json())
+
+    def get_accepted_tokens(self, chain_id: int) -> dict[str, ContractInstance]:
+        response = self.get(f"/streams/tokens/{chain_id}")
+        handle_error_with_response(response)
+        return {
+            token_info["symbol"]: Contract(token_info["address"]) for token_info in response.json()
+        }
