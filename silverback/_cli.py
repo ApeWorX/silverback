@@ -51,7 +51,7 @@ RUN ape plugins install .
 @click.group(cls=SectionedHelpGroup)
 def cli():
     """
-    Silverback: Build Python apps that react to on-chain events
+    Silverback: Build Python bots that react to on-chain events
 
     To learn more about our cloud offering, please check out https://silverback.apeworx.io
     """
@@ -110,7 +110,7 @@ def _network_callback(ctx, param, val):
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.argument("bot", required=False, callback=bot_path_callback)
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
-    """Run Silverback application"""
+    """Run Silverback bot"""
 
     if not runner_class:
         # NOTE: Automatically select runner class
@@ -120,7 +120,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
             runner_class = PollingRunner
         else:
             raise click.BadOptionUsage(
-                option_name="network", message="Network choice cannot support running app"
+                option_name="network", message="Network choice cannot support running bot"
             )
 
     runner = runner_class(
@@ -213,7 +213,7 @@ def login(auth: FiefAuth):
 
 @cli.group(cls=SectionedHelpGroup, section="Cloud Commands (https://silverback.apeworx.io)")
 def cluster():
-    """Manage a Silverback hosted application cluster
+    """Manage a Silverback hosted bot cluster
 
     For clusters on the Silverback Platform, please provide a name for the cluster to access under
     your platform account via `-c WORKSPACE/NAME`"""

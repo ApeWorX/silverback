@@ -16,6 +16,8 @@ class TaskType(str, Enum):
     SYSTEM_CONFIG = "system:config"
     SYSTEM_USER_TASKDATA = "system:user-taskdata"
     SYSTEM_USER_ALL_TASKDATA = "system:user-all-taskdata"
+    SYSTEM_LOAD_SNAPSHOT = "system:load-snapshot"
+    SYSTEM_CREATE_SNAPSHOT = "system:create-snapshot"
 
     # User-accessible Tasks
     STARTUP = "user:startup"

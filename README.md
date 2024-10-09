@@ -1,11 +1,11 @@
 # Quick Start
 
 Silverback lets you create and deploy your own Python bots that respond to on-chain events.
-The Silverback library leverages the [Ape](https://docs.apeworx.io/ape/stable/userguides/quickstart) development framework as well as it's ecosystem of plugins and packages to enable you to develop simple-yet-sophisticated automated applications that can listen and respond to live chain data.
+The Silverback library leverages the [Ape](https://docs.apeworx.io/ape/stable/userguides/quickstart) development framework as well as it's ecosystem of plugins and packages to enable you to develop simple-yet-sophisticated automated bots that can listen and respond to live chain data.
 
-Silverback applications are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.
+Silverback bots are excellent for use cases that involve continuously monitoring and responding to on-chain events, such as newly confirmed blocks or contract event logs.
 
-Some examples of these types of applications:
+Some examples of these types of bots:
 
 - Monitoring new pool creations, and depositing liquidity
 - Measuring trading activity of popular pools
@@ -13,7 +13,7 @@ Some examples of these types of applications:
 
 ## Documentation
 
-Please read the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html) for more information on how to develop an application.
+Please read the [development userguide](https://docs.apeworx.io/silverback/stable/userguides/development.html) for more information on how to develop a bot.
 
 ## Dependencies
 
@@ -72,11 +72,11 @@ Silverback will automatically register files in this folder as separate bots tha
 
 ```{note}
 It is also suggested that you treat this as a scripts folder, and do not include an __init__.py
-If you have a complicated project, follow the previous example to ensure you run the application correctly.
+If you have a complicated project, follow the previous example to ensure you run the bot correctly.
 ```
 
 ```{note}
-A final suggestion would be to name your `SilverbackApp` object `bot`. Silverback automatically searches 
+A final suggestion would be to name your `SilverbackBot` object `bot`. Silverback automatically searches 
 for this object name when running. If you do not do so, once again, ensure you replace `example` with 
 `example:<name-of-object>` the previous example.
 ```
@@ -139,7 +139,7 @@ Traceback (most recent call last):
 ape_alchemy.exceptions.MissingProjectKeyError: Must set one of $WEB3_ALCHEMY_PROJECT_ID, $WEB3_ALCHEMY_API_KEY, $WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID, $WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY.
 ```
 
-Go to [Alchemy](https://alchemy.com), create an account, then create an application in their dashboard, and copy the API Key.
+Go to [Alchemy](https://alchemy.com), create an account, then create an bot in their dashboard, and copy the API Key.
 
 Another requirement for the command from `Docker Usage` to run the given example is that it uses [ape-tokens](https://github.com/ApeWorX/ape-tokens) plugin to look up token interfaces by symbol.
 In order for this to work, you should have installed and configured that plugin using a token list that includes both YFI and USDC on Ethereum mainnet.

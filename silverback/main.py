@@ -1,4 +1,5 @@
 import atexit
+from collections import defaultdict
 from datetime import timedelta
 from typing import Any, Callable
 
@@ -13,15 +14,16 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
+from .state import StateSnapshot
 from .types import SilverbackID, TaskType
 
 
 class SystemConfig(BaseModel):
     # NOTE: Do not change this datatype unless major breaking
 
-    # NOTE: Useful for determining if Runner can handle this app
+    # NOTE: Useful for determining if Runner can handle this bot
     sdk_version: str
-    # NOTE: Useful for specifying what task types can be specified by app
+    # NOTE: Useful for specifying what task types can be specified by bot
     task_types: list[str]
 
 
@@ -33,22 +35,69 @@ class TaskData(BaseModel):
     # NOTE: Any other items here must have a default value
 
 
-class SilverbackApp(ManagerAccessMixin):
+class SharedState(defaultdict):
     """
-    The application singleton. Must be initialized prior to use.
+    Class containing the bot shared state that all workers can read from and write to.
+
+    ```{warning}
+    This is not networked in any way, nor is it multi-process safe, but will be
+    accessible across multiple thread workers within a single process.
+    ```
 
     Usage example::
 
-        from silverback import SilverbackApp
+        @bot.on_(...)
+        def do_something_with_state(value):
+            # Read from state using `getattr`
+            ... = bot.state.something
 
-        app = SilverbackApp()
+            # Set state using `setattr`
+            bot.state.something = ...
 
-        ...  # Connection has been initialized, can call broker methods e.g. `app.on_(...)`
+            # Read from state using `getitem`
+            ... = bot.state["something"]
+
+            # Set state using setitem
+            bot.state["something"] = ...
+    """
+
+    # TODO: This class does not have thread-safe access control, but should remain safe due to
+    #       it being a memory mapping, and writes are strictly controlled to be handled only by
+    #       one worker at a time. There may be issues with using this in production however.
+
+    def __init__(self):
+        # Any unknown key returns None
+        super().__init__(lambda: None)
+
+    def __getattr__(self, attr):
+        try:
+            return super().__getattr__(attr)
+        except AttributeError:
+            return super().__getitem__(attr)
+
+    def __setattr__(self, attr, val):
+        try:
+            super().__setattr__(attr, val)
+        except AttributeError:
+            super().__setitem__(attr, val)
+
+
+class SilverbackBot(ManagerAccessMixin):
+    """
+    The bot singleton. Must be initialized prior to use.
+
+    Usage example::
+
+        from silverback import SilverbackBot
+
+        bot = SilverbackBot()
+
+        ...  # Connection has been initialized, can call broker methods e.g. `bot.on_(...)`
     """
 
     def __init__(self, settings: Settings | None = None):
         """
-        Create app
+        Create bot
 
         Args:
             settings (~:class:`silverback.settings.Settings` | None): Settings override.
@@ -62,7 +111,7 @@ class SilverbackApp(ManagerAccessMixin):
         provider = provider_context.__enter__()
 
         self.identifier = SilverbackID(
-            name=settings.APP_NAME,
+            name=settings.BOT_NAME,
             network=provider.network.name,
             ecosystem=provider.network.ecosystem.name,
         )
@@ -74,7 +123,7 @@ class SilverbackApp(ManagerAccessMixin):
             settings.NEW_BLOCK_TIMEOUT = int(timedelta(days=1).total_seconds())
 
         settings_str = "\n  ".join(f'{key}="{val}"' for key, val in settings.dict().items() if val)
-        logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
+        logger.info(f"Loading Silverback Bot with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()
         self.tasks: dict[TaskType, list[TaskData]] = {
@@ -97,7 +146,7 @@ class SilverbackApp(ManagerAccessMixin):
 
         network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
         logger.success(
-            f'Loaded Silverback App:\n  NETWORK="{network_choice}"'
+            f'Loaded Silverback Bot:\n  NETWORK="{network_choice}"'
             f"{signer_str}{new_block_timeout_str}"
         )
 
@@ -111,6 +160,12 @@ class SilverbackApp(ManagerAccessMixin):
         )
         self._get_user_all_taskdata = self.__register_system_task(
             TaskType.SYSTEM_USER_ALL_TASKDATA, self.__get_user_all_taskdata_handler
+        )
+        self._load_snapshot = self.__register_system_task(
+            TaskType.SYSTEM_LOAD_SNAPSHOT, self.__load_snapshot_handler
+        )
+        self._create_snapshot = self.__register_system_task(
+            TaskType.SYSTEM_CREATE_SNAPSHOT, self.__create_snapshot_handler
         )
 
     def __register_system_task(
@@ -142,6 +197,34 @@ class SilverbackApp(ManagerAccessMixin):
     def __get_user_all_taskdata_handler(self) -> list[TaskData]:
         return [v for k, l in self.tasks.items() if str(k).startswith("user:") for v in l]
 
+    async def __load_snapshot_handler(self, startup_state: StateSnapshot):
+        # NOTE: *DO NOT USE* in Runner, as it will not be updated by the bot
+        self.state = SharedState()
+        # NOTE: attribute does not exist before this task is executed,
+        #       ensuring no one uses it during worker startup
+
+        self.state["system:last_block_seen"] = startup_state.last_block_seen
+        self.state["system:last_block_processed"] = startup_state.last_block_processed
+        # TODO: Load user custom state (should not start with `system:`)
+
+    async def __create_snapshot_handler(
+        self,
+        last_block_seen: int | None = None,
+        last_block_processed: int | None = None,
+    ):
+        # Task that updates state checkpoints before/after every non-system runtime task/at shutdown
+        if last_block_seen is not None:
+            self.state["system:last_block_seen"] = last_block_seen
+
+        if last_block_processed is not None:
+            self.state["system:last_block_processed"] = last_block_processed
+
+        return StateSnapshot(
+            # TODO: Migrate these to parameters (remove explicitly from state)
+            last_block_seen=self.state.get("system:last_block_seen", -1),
+            last_block_processed=self.state.get("system:last_block_processed", -1),
+        )
+
     def broker_task_decorator(
         self,
         task_type: TaskType,
@@ -149,6 +232,11 @@ class SilverbackApp(ManagerAccessMixin):
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
+
+        ```{warning}
+        Dynamically creating a task does not ensure that the runner will be aware of the task
+        in order to trigger it. Use at your own risk.
+        ```
 
         Args:
             task_type: :class:`~silverback.types.TaskType`: The type of task to create.
@@ -206,47 +294,61 @@ class SilverbackApp(ManagerAccessMixin):
 
     def on_startup(self) -> Callable:
         """
-        Code to execute on one worker upon startup / restart after an error.
+        Code that will be exected by one worker after worker startup, but before the
+        bot is put into the "run" state by the Runner.
 
         Usage example::
 
-            @app.on_startup()
-            def do_something_on_startup(startup_state):
+            @bot.on_startup()
+            def do_something_on_startup(startup_state: StateSnapshot):
                 ...  # Reprocess missed events or blocks
         """
         return self.broker_task_decorator(TaskType.STARTUP)
 
     def on_shutdown(self) -> Callable:
         """
-        Code to execute on one worker at shutdown.
+        Code that will be exected by one worker before worker shutdown, after the
+        Runner has decided to put the bot into the "shutdown" state.
 
         Usage example::
 
-            @app.on_shutdown()
+            @bot.on_shutdown()
             def do_something_on_shutdown():
-                ...  # Record final state of app
+                ...  # Record final state of bot
         """
         return self.broker_task_decorator(TaskType.SHUTDOWN)
 
+    # TODO: Abstract away worker startup into dependency system
     def on_worker_startup(self) -> Callable:
         """
-        Code to execute on every worker at startup / restart after an error.
+        Code to execute on every worker immediately after broker startup.
+
+        ```{note}
+        This is a great place to load heavy dependencies for the workers,
+        such as database connections, ML models, etc.
+        ```
 
         Usage example::
 
-            @app.on_startup()
+            @bot.on_worker_startup()
             def do_something_on_startup(state):
                 ...  # Can provision resources, or add things to `state`.
         """
         return self.broker.on_event(TaskiqEvents.WORKER_STARTUP)
 
+    # TODO: Abstract away worker shutdown into dependency system
     def on_worker_shutdown(self) -> Callable:
         """
-        Code to execute on every worker at shutdown.
+        Code to execute on every worker immediately before broker shutdown.
+
+        ```{note}
+        This is where you should also release any resources you have loaded during
+        worker startup.
+        ```
 
         Usage example::
 
-            @app.on_shutdown()
+            @bot.on_worker_shutdown()
             def do_something_on_shutdown(state):
                 ...  # Update some external service, perhaps using information from `state`.
         """
@@ -255,22 +357,23 @@ class SilverbackApp(ManagerAccessMixin):
     def on_(
         self,
         container: BlockContainer | ContractEvent,
+        # TODO: possibly remove these
         new_block_timeout: int | None = None,
         start_block: int | None = None,
     ):
         """
-        Create task to handle events created by `container`.
+        Create task to handle events created by the `container` trigger.
 
         Args:
             container: (BlockContainer | ContractEvent): The event source to watch.
             new_block_timeout: (int | None): Override for block timeout that is acceptable.
-                Defaults to whatever the app's settings are for default polling timeout are.
+                Defaults to whatever the bot's settings are for default polling timeout are.
             start_block (int | None): block number to start processing events from.
                 Defaults to whatever the latest block is.
 
         Raises:
             :class:`~silverback.exceptions.InvalidContainerTypeError`:
-                If the type of `container` is not configurable for the app.
+                If the type of `container` is not configurable for the bot.
         """
         if isinstance(container, BlockContainer):
             if new_block_timeout is not None:
@@ -307,5 +410,5 @@ class SilverbackApp(ManagerAccessMixin):
             return self.broker_task_decorator(TaskType.EVENT_LOG, container=container)
 
         # TODO: Support account transaction polling
-        # TODO: Support mempool polling
+        # TODO: Support mempool polling?
         raise InvalidContainerTypeError(container)

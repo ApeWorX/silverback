@@ -16,11 +16,14 @@ RUN pip wheel . --wheel-dir=/wheels
 # Install from wheels
 FROM ghcr.io/apeworx/ape:${BASE_APE_IMAGE_TAG:-latest}
 USER root
-COPY --from=builder /wheels /wheels
+COPY --from=builder /wheels/*.whl /wheels
 RUN pip install --upgrade pip \
-    && pip install silverback \
+    && pip install \
+    --no-cache-dir --find-links=/wheels \
     'taskiq-sqs>=0.0.11' \
-    --no-cache-dir --find-links=/wheels
+    'taskiq-redis>=1.0.2,<2' \
+    silverback
+
 USER harambe
 
 ENTRYPOINT ["silverback"]

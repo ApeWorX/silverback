@@ -1,10 +1,10 @@
-from .application import SilverbackApp
 from .exceptions import CircuitBreaker, SilverbackException
-from .state import AppState
+from .main import SilverbackBot
+from .state import StateSnapshot
 
 __all__ = [
-    "AppState",
+    "StateSnapshot",
     "CircuitBreaker",
-    "SilverbackApp",
+    "SilverbackBot",
     "SilverbackException",
 ]

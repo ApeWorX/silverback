@@ -85,7 +85,12 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             message.labels["transaction_hash"] = log.transaction_hash
             message.labels["log_index"] = str(log.log_index)
 
-        logger.info(f"{self._create_label(message)} - Started")
+        msg = f"{self._create_label(message)} - Started"
+        if message.task_name.startswith("system:"):
+            logger.debug(msg)
+        else:
+            logger.info(msg)
+
         return message
 
     def post_execute(self, message: TaskiqMessage, result: TaskiqResult):

@@ -48,11 +48,11 @@ class NoTasksAvailableError(SilverbackException):
 
 class Halt(SilverbackException):
     def __init__(self):
-        super().__init__("App halted, must restart manually")
+        super().__init__("Bot halted, must restart manually")
 
 
 class CircuitBreaker(Halt):
-    """Custom exception (created by user) that will trigger an application shutdown."""
+    """Custom exception (created by user) that will trigger an bot shutdown."""
 
     def __init__(self, message: str):
         super(SilverbackException, self).__init__(message)
