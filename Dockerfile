@@ -19,7 +19,7 @@ USER root
 COPY --from=builder /wheels/*.whl /wheels
 RUN pip install --upgrade pip \
     && pip install \
-    --no-cache-dir --no-index --find-links=/wheels \
+    --no-cache-dir --find-links=/wheels \
     'taskiq-sqs>=0.0.11' \
     silverback
 
