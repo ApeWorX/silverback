@@ -52,7 +52,51 @@ Building a container for your application can be an advanced topic, we have incl
 
 ## Building your Bot
 
-TODO: Add build process and describe `silverback build --autogen` and `silverback build --upgrade`
+To build your container definition(s) for your bot(s), you can use the `silverback build` command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
+
+For example, if your directory is structured as suggested in [development](./development), and your `bots/` directory looks like this:
+
+```
+bots/
+├── botA.py
+├── botB.py
+├── botC.py
+```
+
+Then you can use `silverback build --generate` to generate 3 separate Dockerfiles for those bots, and start trying to build them.
+
+Those Dockerfiles will appear under `.silverback-images/` as follows:
+
+```bash
+silverback build --generate
+```
+
+This method will generate 3 Dockerfiles:
+
+```
+.silverback-images/
+├── Dockerfile.botA
+├── Dockerfile.botB
+├── Dockerfile.botC
+```
+
+You can retry you builds using the following (assuming you don't modify the structure of your project):
+
+```bash
+silverback build
+```
+
+You can then push your image to your registry using:
+
+```bash
+docker push your-registry-url/project/botA:latest
+```
+
+TODO: The ApeWorX team has github actions definitions for building, pushing and deploying.
+
+If you are unfamiliar with docker and container registries, you can use the \[\[github-action\]\].
+
+You do not need to build using this command if you use the github action, but it is there to help you if you are having problems figuring out how to build and run your bot images on the cluster successfully.
 
 TODO: Add how to debug containers using `silverback run` w/ `taskiq-redis` broker
 

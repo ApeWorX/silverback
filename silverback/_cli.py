@@ -2,6 +2,10 @@ import asyncio
 import os
 from datetime import timedelta
 
+import shlex
+import subprocess
+from pathlib import Path
+
 import click
 import yaml  # type: ignore[import-untyped]
 from ape.api import AccountAPI, NetworkAPI
@@ -19,6 +23,7 @@ from fief_client.integrations.cli import FiefAuth
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
+    bot_path_callback,
     cls_import_callback,
     cluster_client,
     display_login_message,
@@ -26,11 +31,22 @@ from silverback._click_ext import (
     timedelta_callback,
     token_amount_callback,
 )
-from silverback._importer import import_from_string
 from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.types import ClusterTier, ResourceStatus
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
+
+DOCKERFILE_CONTENT = """
+FROM ghcr.io/apeworx/silverback:stable
+USER root
+WORKDIR /app
+RUN chown harambe:harambe /app
+USER harambe
+COPY ape-config.yaml .
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN ape plugins install .
+"""
 
 
 @click.group(cls=SectionedHelpGroup)
@@ -93,8 +109,8 @@ def _network_callback(ctx, param, val):
     callback=cls_import_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
-@click.argument("path")
-def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
+@click.argument("bot", required=False, callback=bot_path_callback)
+def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
     """Run Silverback application"""
 
     if not runner_class:
@@ -108,13 +124,67 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
                 option_name="network", message="Network choice cannot support running app"
             )
 
-    app = import_from_string(path)
     runner = runner_class(
-        app,
+        bot,
         recorder=recorder_class() if recorder_class else None,
         max_exceptions=max_exceptions,
     )
     asyncio.run(runner.run())
+
+
+@cli.command(section="Local Commands")
+@click.option("--generate", is_flag=True, default=False)
+@click.argument("path", required=False, type=str, default="bots")
+def build(generate, path):
+    """Generate Dockerfiles and build bot images"""
+    if generate:
+        if not (path := Path.cwd() / path).exists():
+            raise FileNotFoundError(
+                f"The bots directory '{path}' does not exist. "
+                "You should have a `{path}/` folder in the root of your project."
+            )
+        files = {file for file in path.iterdir() if file.is_file()}
+        bots = []
+        for file in files:
+            if "__init__" in file.name:
+                bots = [file]
+                break
+            bots.append(file)
+        for bot in bots:
+            dockerfile_content = DOCKERFILE_CONTENT
+            if "__init__" in bot.name:
+                docker_filename = f"Dockerfile.{bot.parent.name}"
+                dockerfile_content += f"COPY {path.name}/ /app/bot"
+            else:
+                docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
+                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py"
+            dockerfile_path = Path.cwd() / ".silverback-images" / docker_filename
+            dockerfile_path.parent.mkdir(exist_ok=True)
+            dockerfile_path.write_text(dockerfile_content.strip() + "\n")
+            click.echo(f"Generated {dockerfile_path}")
+        return
+
+    if not (path := Path.cwd() / ".silverback-images").exists():
+        raise FileNotFoundError(
+            f"The dockerfile directory '{path}' does not exist. "
+            "You should have a `{path}/` folder in the root of your project."
+        )
+    dockerfiles = {file for file in path.iterdir() if file.is_file()}
+    for file in dockerfiles:
+        try:
+            command = shlex.split(
+                "docker build -f "
+                f"./{file.parent.name}/{file.name} "
+                f"-t {file.name.split('.')[1]}:latest ."
+            )
+            result = subprocess.run(
+                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True
+            )
+            click.echo(result.stdout)
+        except subprocess.CalledProcessError as e:
+            click.echo("Error during docker build:")
+            click.echo(e.stderr)
+            raise
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
@@ -127,12 +197,10 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, path):
 @click.option("-w", "--workers", type=int, default=2)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
-@click.argument("path")
-def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, path):
+@click.argument("bot", required=False, callback=bot_path_callback)
+def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, bot):
     """Run Silverback task workers (advanced)"""
-
-    app = import_from_string(path)
-    asyncio.run(run_worker(app.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
+    asyncio.run(run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
 
 @cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
