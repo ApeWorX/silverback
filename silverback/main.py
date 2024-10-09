@@ -21,9 +21,9 @@ from .types import SilverbackID, TaskType
 class SystemConfig(BaseModel):
     # NOTE: Do not change this datatype unless major breaking
 
-    # NOTE: Useful for determining if Runner can handle this app
+    # NOTE: Useful for determining if Runner can handle this bot
     sdk_version: str
-    # NOTE: Useful for specifying what task types can be specified by app
+    # NOTE: Useful for specifying what task types can be specified by bot
     task_types: list[str]
 
 
@@ -37,7 +37,7 @@ class TaskData(BaseModel):
 
 class SharedState(defaultdict):
     """
-    Class containing the application shared state that all workers can read from and write to.
+    Class containing the bot shared state that all workers can read from and write to.
 
     ```{warning}
     This is not networked in any way, nor is it multi-process safe, but will be
@@ -46,19 +46,19 @@ class SharedState(defaultdict):
 
     Usage example::
 
-        @app.on_(...)
+        @bot.on_(...)
         def do_something_with_state(value):
             # Read from state using `getattr`
-            ... = app.state.something
+            ... = bot.state.something
 
             # Set state using `setattr`
-            app.state.something = ...
+            bot.state.something = ...
 
             # Read from state using `getitem`
-            ... = app.state["something"]
+            ... = bot.state["something"]
 
             # Set state using setitem
-            app.state["something"] = ...
+            bot.state["something"] = ...
     """
 
     # TODO: This class does not have thread-safe access control, but should remain safe due to
@@ -82,22 +82,22 @@ class SharedState(defaultdict):
             super().__setitem__(attr, val)
 
 
-class SilverbackApp(ManagerAccessMixin):
+class SilverbackBot(ManagerAccessMixin):
     """
-    The application singleton. Must be initialized prior to use.
+    The bot singleton. Must be initialized prior to use.
 
     Usage example::
 
-        from silverback import SilverbackApp
+        from silverback import SilverbackBot
 
-        app = SilverbackApp()
+        bot = SilverbackBot()
 
-        ...  # Connection has been initialized, can call broker methods e.g. `app.on_(...)`
+        ...  # Connection has been initialized, can call broker methods e.g. `bot.on_(...)`
     """
 
     def __init__(self, settings: Settings | None = None):
         """
-        Create app
+        Create bot
 
         Args:
             settings (~:class:`silverback.settings.Settings` | None): Settings override.
@@ -111,7 +111,7 @@ class SilverbackApp(ManagerAccessMixin):
         provider = provider_context.__enter__()
 
         self.identifier = SilverbackID(
-            name=settings.APP_NAME,
+            name=settings.BOT_NAME,
             network=provider.network.name,
             ecosystem=provider.network.ecosystem.name,
         )
@@ -123,7 +123,7 @@ class SilverbackApp(ManagerAccessMixin):
             settings.NEW_BLOCK_TIMEOUT = int(timedelta(days=1).total_seconds())
 
         settings_str = "\n  ".join(f'{key}="{val}"' for key, val in settings.dict().items() if val)
-        logger.info(f"Loading Silverback App with settings:\n  {settings_str}")
+        logger.info(f"Loading Silverback Bot with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()
         self.tasks: dict[TaskType, list[TaskData]] = {
@@ -146,7 +146,7 @@ class SilverbackApp(ManagerAccessMixin):
 
         network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
         logger.success(
-            f'Loaded Silverback App:\n  NETWORK="{network_choice}"'
+            f'Loaded Silverback Bot:\n  NETWORK="{network_choice}"'
             f"{signer_str}{new_block_timeout_str}"
         )
 
@@ -198,7 +198,7 @@ class SilverbackApp(ManagerAccessMixin):
         return [v for k, l in self.tasks.items() if str(k).startswith("user:") for v in l]
 
     async def __load_snapshot_handler(self, startup_state: StateSnapshot):
-        # NOTE: *DO NOT USE* in Runner, as it will not be updated by the app
+        # NOTE: *DO NOT USE* in Runner, as it will not be updated by the bot
         self.state = SharedState()
         # NOTE: attribute does not exist before this task is executed,
         #       ensuring no one uses it during worker startup
@@ -295,11 +295,11 @@ class SilverbackApp(ManagerAccessMixin):
     def on_startup(self) -> Callable:
         """
         Code that will be exected by one worker after worker startup, but before the
-        application is put into the "run" state by the Runner.
+        bot is put into the "run" state by the Runner.
 
         Usage example::
 
-            @app.on_startup()
+            @bot.on_startup()
             def do_something_on_startup(startup_state: StateSnapshot):
                 ...  # Reprocess missed events or blocks
         """
@@ -308,13 +308,13 @@ class SilverbackApp(ManagerAccessMixin):
     def on_shutdown(self) -> Callable:
         """
         Code that will be exected by one worker before worker shutdown, after the
-        Runner has decided to put the application into the "shutdown" state.
+        Runner has decided to put the bot into the "shutdown" state.
 
         Usage example::
 
-            @app.on_shutdown()
+            @bot.on_shutdown()
             def do_something_on_shutdown():
-                ...  # Record final state of app
+                ...  # Record final state of bot
         """
         return self.broker_task_decorator(TaskType.SHUTDOWN)
 
@@ -330,7 +330,7 @@ class SilverbackApp(ManagerAccessMixin):
 
         Usage example::
 
-            @app.on_worker_startup()
+            @bot.on_worker_startup()
             def do_something_on_startup(state):
                 ...  # Can provision resources, or add things to `state`.
         """
@@ -348,7 +348,7 @@ class SilverbackApp(ManagerAccessMixin):
 
         Usage example::
 
-            @app.on_worker_shutdown()
+            @bot.on_worker_shutdown()
             def do_something_on_shutdown(state):
                 ...  # Update some external service, perhaps using information from `state`.
         """
@@ -367,13 +367,13 @@ class SilverbackApp(ManagerAccessMixin):
         Args:
             container: (BlockContainer | ContractEvent): The event source to watch.
             new_block_timeout: (int | None): Override for block timeout that is acceptable.
-                Defaults to whatever the app's settings are for default polling timeout are.
+                Defaults to whatever the bot's settings are for default polling timeout are.
             start_block (int | None): block number to start processing events from.
                 Defaults to whatever the latest block is.
 
         Raises:
             :class:`~silverback.exceptions.InvalidContainerTypeError`:
-                If the type of `container` is not configurable for the app.
+                If the type of `container` is not configurable for the bot.
         """
         if isinstance(container, BlockContainer):
             if new_block_timeout is not None:

@@ -11,10 +11,10 @@ from packaging.version import Version
 from taskiq import AsyncTaskiqTask
 from taskiq.kicker import AsyncKicker
 
-from .application import SilverbackApp, SystemConfig, TaskData
+from .main import SilverbackBot, SystemConfig, TaskData
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
 from .recorder import BaseRecorder, TaskResult
-from .state import AppDatastore, StateSnapshot
+from .state import Datastore, StateSnapshot
 from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import TaskType
 from .utils import (
@@ -28,18 +28,18 @@ from .utils import (
 class BaseRunner(ABC):
     def __init__(
         self,
-        # TODO: Make fully stateless by replacing `app` with `broker` and `identifier`
-        app: SilverbackApp,
+        # TODO: Make fully stateless by replacing `bot` with `broker` and `identifier`
+        bot: SilverbackBot,
         *args,
         max_exceptions: int = 3,
         recorder: BaseRecorder | None = None,
         **kwargs,
     ):
-        self.app = app
+        self.bot = bot
 
         # TODO: Make datastore optional and settings-driven
         # TODO: Allow configuring datastore class
-        self.datastore = AppDatastore()
+        self.datastore = Datastore()
         self.recorder = recorder
 
         self.max_exceptions = max_exceptions
@@ -49,7 +49,7 @@ class BaseRunner(ABC):
 
     def _create_task_kicker(self, task_data: TaskData) -> AsyncKicker:
         return AsyncKicker(
-            task_name=task_data.name, broker=self.app.broker, labels=task_data.labels
+            task_name=task_data.name, broker=self.bot.broker, labels=task_data.labels
         )
 
     def _create_system_task_kicker(self, task_type: TaskType) -> AsyncKicker:
@@ -81,7 +81,7 @@ class BaseRunner(ABC):
         if not self._snapshotting_supported:
             return  # Can't support this feature
 
-        task = await self.app._create_snapshot.kiq(last_block_seen, last_block_processed)
+        task = await self.bot._create_snapshot.kiq(last_block_seen, last_block_processed)
         if (result := await task.wait_result()).is_err:
             logger.error(f"Error saving snapshot: {result.error}")
         else:
@@ -101,7 +101,7 @@ class BaseRunner(ABC):
 
     async def run(self):
         """
-        Run the task broker client for the assembled ``SilverbackApp`` application.
+        Run the task broker client for the assembled ``SilverbackBot`` bot.
 
         Will listen for events against the connected provider (using `ManagerAccessMixin` context),
         and process them by kicking events over to the configured broker.
@@ -113,7 +113,7 @@ class BaseRunner(ABC):
                 If there are no configured tasks to execute.
         """
         # Initialize broker (run worker startup events)
-        await self.app.broker.startup()
+        await self.bot.broker.startup()
 
         # Obtain system configuration for worker
         result = await run_taskiq_task_wait_result(
@@ -153,7 +153,7 @@ class BaseRunner(ABC):
                 last_block_processed=-1,
             )  # Use empty snapshot
 
-        elif not (startup_state := await self.datastore.init(app_id=self.app.identifier)):
+        elif not (startup_state := await self.datastore.init(bot_id=self.bot.identifier)):
             logger.warning("No state snapshot detected, using empty snapshot")
             startup_state = StateSnapshot(
                 # TODO: Migrate these to parameters (remove explicitly from state)
@@ -164,7 +164,7 @@ class BaseRunner(ABC):
         logger.debug(f"Startup state: {startup_state}")
         # NOTE: State snapshot is immediately out of date after init
 
-        # Send startup state to app
+        # Send startup state to bot
         if (
             result := await run_taskiq_task_wait_result(
                 self._create_system_task_kicker(TaskType.SYSTEM_LOAD_SNAPSHOT), startup_state
@@ -178,7 +178,7 @@ class BaseRunner(ABC):
 
         # Initialize recorder (if available)
         if self.recorder:
-            await self.recorder.init(app_id=self.app.identifier)
+            await self.recorder.init(bot_id=self.bot.identifier)
 
         # Execute Silverback startup task before we init the rest
         startup_taskdata_result = await run_taskiq_task_wait_result(
@@ -260,7 +260,7 @@ class BaseRunner(ABC):
 
         # NOTE: All listener tasks are shut down now
 
-        # Execute Silverback shutdown task(s) before shutting down the broker and app
+        # Execute Silverback shutdown task(s) before shutting down the broker and bot
         shutdown_taskdata_result = await run_taskiq_task_wait_result(
             self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.SHUTDOWN
         )
@@ -293,16 +293,16 @@ class BaseRunner(ABC):
             # Do one last checkpoint to save a snapshot of final state
             await self._checkpoint()
 
-        await self.app.broker.shutdown()  # Release broker
+        await self.bot.broker.shutdown()  # Release broker
 
 
 class WebsocketRunner(BaseRunner, ManagerAccessMixin):
     """
-    Run a single app against a live network using a basic in-memory queue and websockets.
+    Run a single bot against a live network using a basic in-memory queue and websockets.
     """
 
-    def __init__(self, app: SilverbackApp, *args, **kwargs):
-        super().__init__(app, *args, **kwargs)
+    def __init__(self, bot: SilverbackBot, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
 
         # Check for websocket support
         if not (ws_uri := self.chain_manager.provider.ws_uri):
@@ -357,14 +357,14 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
 class PollingRunner(BaseRunner, ManagerAccessMixin):
     """
-    Run a single app against a live network using a basic in-memory queue.
+    Run a single bot against a live network using a basic in-memory queue.
     """
 
     # TODO: Move block_timeout settings to Ape core config
     # TODO: Merge polling/websocket subscriptions downstream in Ape core
 
-    def __init__(self, app: SilverbackApp, *args, **kwargs):
-        super().__init__(app, *args, **kwargs)
+    def __init__(self, bot: SilverbackBot, *args, **kwargs):
+        super().__init__(bot, *args, **kwargs)
         logger.warning(
             "The polling runner makes a significant amount of requests. "
             "Do not use in production over long time periods unless you know what you're doing."
@@ -373,13 +373,13 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
     async def _block_task(self, task_data: TaskData):
         new_block_task_kicker = self._create_task_kicker(task_data)
 
-        if block_settings := self.app.poll_settings.get("_blocks_"):
+        if block_settings := self.bot.poll_settings.get("_blocks_"):
             new_block_timeout = block_settings.get("new_block_timeout")
         else:
             new_block_timeout = None
 
         new_block_timeout = (
-            new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
+            new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
         async for block in async_wrap_iter(
             chain.blocks.poll_blocks(
@@ -401,13 +401,13 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         event_abi = EventABI.from_signature(event_signature)
 
         event_log_task_kicker = self._create_task_kicker(task_data)
-        if address_settings := self.app.poll_settings.get(contract_address):
+        if address_settings := self.bot.poll_settings.get(contract_address):
             new_block_timeout = address_settings.get("new_block_timeout")
         else:
             new_block_timeout = None
 
         new_block_timeout = (
-            new_block_timeout if new_block_timeout is not None else self.app.new_block_timeout
+            new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
         async for event in async_wrap_iter(
             self.provider.poll_logs(

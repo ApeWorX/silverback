@@ -17,30 +17,30 @@ class StateSnapshot(BaseModel):
     last_updated: UTCTimestamp = Field(default_factory=utc_now)
 
 
-class AppDatastore:
+class Datastore:
     """
-    Very basic implementation used to store application state and handler result data by
+    Very basic implementation used to store bot state and handler result data by
     storing/retreiving state from a JSON-encoded file.
 
-    The file structure that this Recorder uses leverages the value of `SILVERBACK_APP_NAME`
+    The file structure that this Recorder uses leverages the value of `SILVERBACK_BOT_NAME`
     as well as the configured network to determine the location where files get saved:
 
         ./.silverback-sessions/
-          <app-name>/
+          <bot-name>/
             <network choice>/
               state.json  # always write here
 
     Note that this format can be read by basic means (even in a JS frontend):
 
-    You may also want to give your app a unique name so the data does not get overwritten,
-    if you are using multiple apps from the same directory:
+    You may also want to give your bot a unique name so the data does not get overwritten,
+    if you are using multiple bots from the same directory:
 
-    - `SILVERBACK_APP_NAME`: Any alphabetical string valid as a folder name
+    - `SILVERBACK_BOT_NAME`: Any alphabetical string valid as a folder name
     """
 
-    async def init(self, app_id: SilverbackID) -> StateSnapshot | None:
+    async def init(self, bot_id: SilverbackID) -> StateSnapshot | None:
         data_folder = (
-            Path.cwd() / ".silverback-sessions" / app_id.name / app_id.ecosystem / app_id.network
+            Path.cwd() / ".silverback-sessions" / bot_id.name / bot_id.ecosystem / bot_id.network
         )
         data_folder.mkdir(parents=True, exist_ok=True)
         self.state_backup_file = data_folder / "state.json"

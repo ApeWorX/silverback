@@ -19,14 +19,14 @@ from .recorder import BaseRecorder
 
 class Settings(BaseSettings, ManagerAccessMixin):
     """
-    Settings for the Silverback app.
+    Settings for the Silverback bot.
 
     Can override these settings from a default state, typically for advanced
     testing or deployment purposes. Defaults to a working in-memory broker.
     """
 
     # A unique identifier for this silverback instance
-    APP_NAME: str = "bot"
+    BOT_NAME: str = "bot"
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
     BROKER_URI: str = ""  # To be deprecated in 0.6
@@ -122,7 +122,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
             acct_idx = int(alias.replace("TEST::", ""))
             return self.account_manager.test_accounts[acct_idx]
 
-        # NOTE: Will only have a signer if assigned one here (or in app)
+        # NOTE: Will only have a signer if assigned one here (or in bot)
         signer = self.account_manager.load(alias)
 
         # NOTE: Set autosign if it's a keyfile account (for local testing)
