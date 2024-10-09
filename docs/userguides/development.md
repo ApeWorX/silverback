@@ -218,7 +218,7 @@ You can use `bot.state` to store any python variable type, however note that the
 ```
 
 ```{note}
-Bot startup and bot runtime events (e.g. block or event container) are handled distinctly and can be trusted not to execute at the same time.
+Bot startup and bot runtime event triggers (e.g. block or event container) are handled distinctly and can be trusted not to execute at the same time.
 ```
 
 ### Signing Transactions
