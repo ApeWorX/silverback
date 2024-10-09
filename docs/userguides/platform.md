@@ -1,14 +1,14 @@
-# Deploying Applications
+# Deploying Bots
 
 In this guide, we are going to show you more details on how to deploy your application to the [Silverback Platform](https://silverback.apeworx.io).
 
 ## Creating a Cluster
 
-The Silverback Platform runs your Applications (or "Bots") on dedicated managed application Clusters.
+The Silverback Platform runs your Bots on dedicated managed application Clusters.
 These Clusters will take care to orchestrate infrastructure, monitor, run your triggers, and collect metrics for your applications.
 Each Cluster is bespoke for an individual or organization, and isolates your applications from others on different infrastructure.
 
-Before we deploy our Application, we have to create a Cluster.
+Before we deploy our Bot, we have to create a Cluster.
 If you haven't yet, please sign up for Silverback at [https://silverback.apeworx.io](https://silverback.apeworx.io).
 
 Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
@@ -44,7 +44,7 @@ For instance, to list all your available bots on your cluster, use [`silverback 
 To obtain general information about your cluster, just use [`silverback cluster info`][silverback-cluster-info],
 or [`silverback cluster health`][silverback-cluster-health] to see the current status of your Cluster.
 
-If you have no bots, we will first have to containerize our Applications and upload them to a container registry that our Cluster is configured to access.
+If you have no bots, we will first have to containerize our Bots and upload them to a container registry that our Cluster is configured to access.
 
 ```{note}
 Building a container for your application can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
@@ -108,7 +108,7 @@ Silverback Clusters include an environment variable management system for exactl
 which you can manage using [`silverback cluster vars`][silverback-cluster-vars] subcommand.
 
 The environment variable management system makes use of a concept called "Variable Groups" which are distinct collections of environment variables meant to be used together.
-These variable groups will help in managing the runtime environment of your Applications by allowing you to segregate different variables depending on each bot's needs.
+These variable groups will help in managing the runtime environment of your Bots by allowing you to segregate different variables depending on each bot's needs.
 
 To create an environment group, use the [`silverback cluster vars new`][silverback-cluster-vars-new] command and give it a name and a set of related variables.
 For instance, it may make sense to make a group of variables for your favorite Ape plugins or services, such as RPC Providers, Blockchain Data Indexers, Etherscan, etc.
@@ -199,7 +199,7 @@ Any task execution that experiences an error will abort execution (and therefore
 All errors encountered during task exeuction are reported to the Cluster for later review by any users with appriopiate access.
 Tasks do not retry (by default), but updates to `app.state` are maintained up until the point an error occurs.
 
-It is important to keep track of these errors and ensure that none of them are in fact critical to the operation of your Application,
+It is important to keep track of these errors and ensure that none of them are in fact critical to the operation of your Bot,
 and to take corrective or preventative action if it is determined that it should be treated as a more critical failure condition.
 ```
 

@@ -1,6 +1,6 @@
-# Developing Applications
+# Developing Bots
 
-In this guide, we are going to show you more details on how to build an application with Silverback.
+In this guide, we are going to show you more details on how to build an bot with Silverback.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ There are 3 suggested ways to structure your project. In the root directory of y
 
 2. Create a `bots/` folder. Then develop bots in this folder as separate scripts (Do not include a __init__.py file).
 
-3. Create a `bot/` folder with a `__init__.py` file that will include the instantiation of your `SilverbackApp()` object.
+3. Create a `bot/` folder with a `__init__.py` file that will include the instantiation of your `SilverbackBot()` object.
 
 The `silverback` cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
 It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
@@ -23,7 +23,7 @@ It will also be able to detect the scripts inside your `bots/` directory and let
 If `silverback` finds a module named `bot` in the root directory of the project, then it will use that by default.
 
 ```{note}
-It is suggested that you create the instance of your `SilverbackApp()` object by naming the variable `bot`, since `silverback` will autodetect that variable name when loading your script file.
+It is suggested that you create the instance of your `SilverbackBot()` object by naming the variable `bot`, since `silverback` will autodetect that variable name when loading your script file.
 ```
 
 Another way you can structure your bot is to create a `bot` folder and define a runner inside of that folder as `__init__.py`.
@@ -43,7 +43,7 @@ If your bot's module name is `example.py` (for example), you can run it like thi
 silverback run example --network your:network:of:choice
 ```
 
-If the variable that you call the `SilverbackApp()` object is something other than `bot`, you can specific that by adding `:{variable-name}`:
+If the variable that you call the `SilverbackBot()` object is something other than `bot`, you can specific that by adding `:{variable-name}`:
 
 ```bash
 silverback run example:my_bot --network your:network:of:choice
@@ -52,7 +52,7 @@ silverback run example:my_bot --network your:network:of:choice
 We will automatically detect all scripts under the `bots/` folder automatically, but if your bot resides in a location other than `bots/` then you can use this to run it:
 
 ```bash
-silverback run folder.example:app --network your:network:of:choice
+silverback run folder.example:bot --network your:network:of:choice
 ```
 
 Note that with a `bot/__init__.py` setup, silverback will also autodetect it, and you can run it with:
@@ -69,21 +69,21 @@ For the most streamlined experience, develop your bots as scripts, and avoid rel
 If you follow these suggestions, your Silverback deployments will be easy to use and require almost no thought.
 ```
 
-## Creating an Application
+## Creating a Bot
 
-Creating a Silverback Application is easy, to do so initialize the `silverback.SilverbackApp` class:
+Creating a Silverback Bot is easy, to do so initialize the `silverback.SilverbackBot` class:
 
 ```py
-from silverback import SilverbackApp
+from silverback import SilverbackBot
 
-bot = SilverbackApp()
+bot = SilverbackBot()
 ```
 
-The SilverbackApp class handles state and configuration.
+The SilverbackBot class handles state and configuration.
 Through this class, we can hook up event handlers to be executed each time we encounter a new block or each time a specific event is emitted.
-Initializing the app creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.
+Initializing the bot creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.
 
-However, by default an app has no configured event handlers, so it won't be very useful.
+However, by default an bot has no configured event handlers, so it won't be very useful.
 This is where adding event handlers is useful via the `bot.on_` method.
 This method lets us specify which event will trigger the execution of our handler as well as which handler to execute.
 
@@ -161,9 +161,9 @@ def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
     ...
 ```
 
-### Application Events
+### Bot Events
 
-You can also add an application startup and shutdown handler that will be **executed once upon every application startup**.  This may be useful for things like processing historical events since the application was shutdown or other one-time actions to perform at startup.
+You can also add an bot startup and shutdown handler that will be **executed once upon every bot startup**.  This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.
 
 ```py
 @bot.on_startup()
@@ -180,45 +180,45 @@ def handle_on_shutdown():
     ...
 ```
 
-*Changed in 0.2.0*: The behavior of the `@bot.on_startup()` decorator and handler signature have changed.  It is now executed only once upon application startup and worker events have moved on `@bot.on_worker_startup()`.
+*Changed in 0.2.0*: The behavior of the `@bot.on_startup()` decorator and handler signature have changed.  It is now executed only once upon bot startup and worker events have moved on `@bot.on_worker_startup()`.
 
-## Application State
+## Bot State
 
 Sometimes it is very useful to have access to values in a shared state across your workers.
 For example you might have a value or complex reference type that you wish to update during one of your tasks, and read during another.
-Silverback provides `app.state` to help with these use cases.
+Silverback provides `bot.state` to help with these use cases.
 
 For example, you might want to pre-populate a large dataframe into state on startup, keeping that dataframe in sync with the chain through event logs,
 and then use that data to determine a signal under which you want trigger transactions to commit back to the chain.
-Such an application might look like this:
+Such an bot might look like this:
 
 ```py
-@app.on_startup()
+@bot.on_startup()
 def create_table(startup_state):
     df = contract.MyEvent.query(..., start_block=startup_state.last_block_processed)
     ...  # Do some further processing on df
-    app.state.table = df
+    bot.state.table = df
 
 
-@app.on_(contract.MyEvent)
+@bot.on_(contract.MyEvent)
 def update_table(log):
-    app.state.table = ...  # Update using stuff from `log`
+    bot.state.table = ...  # Update using stuff from `log`
 
 
-@app.on_(chain.blocks)
+@bot.on_(chain.blocks)
 def use_table(blk):
-    if app.state.table[...].mean() > app.state.table[...].sum():
-        # Trigger your app to send a transaction from `app.signer`
-        contract.myMethod(..., sender=app.signer)
+    if bot.state.table[...].mean() > bot.state.table[...].sum():
+        # Trigger your bot to send a transaction from `bot.signer`
+        contract.myMethod(..., sender=bot.signer)
     ...
 ```
 
 ```{warning}
-You can use `app.state` to store any python variable type, however note that the item is not networked nor threadsafe so it is not recommended to have multiple tasks write to the same value in state at the same time.
+You can use `bot.state` to store any python variable type, however note that the item is not networked nor threadsafe so it is not recommended to have multiple tasks write to the same value in state at the same time.
 ```
 
 ```{note}
-Application startup and application runtime events (e.g. block or event container) are handled distinctly and can be trusted not to execute at the same time.
+Bot startup and bot runtime events (e.g. block or event container) are handled distinctly and can be trusted not to execute at the same time.
 ```
 
 ### Signing Transactions
@@ -231,10 +231,10 @@ While not recommended, you can use keyfile accounts for automated signing.
 See [this guide](https://docs.apeworx.io/ape/stable/userguides/accounts.html#automation) to learn more about how to do that.
 ```
 
-## Running your Application
+## Running your Bot
 
 Once you have programmed your bot, it's really useful to be able to run it locally and validate that it does what you expect it to do.
-To run your bot locally, we have included a really useful cli command [`run`](../commands/run) that takes care of connecting to the proper network, configuring signers (using your local Ape accounts), and starting up the application client and in-memory task queue workers.
+To run your bot locally, we have included a really useful cli command [`run`](../commands/run) that takes care of connecting to the proper network, configuring signers (using your local Ape accounts), and starting up the bot client and in-memory task queue workers.
 
 ```sh
 # Run your bot on the Ethereum Sepolia testnet, with your own signer:
@@ -245,20 +245,20 @@ $ silverback run my_bot --network :sepolia --account acct-name
 `my_bot:bot` is not required for silverback run if you follow the suggested folder structure at the start of this page, you can just call it via `my_bot`.
 ```
 
-It's important to note that signers are optional, if not configured in the application then `bot.signer` will be `None`.
-You can use this in your application to enable a "test execution" mode, something like this:
+It's important to note that signers are optional, if not configured in the bot then `bot.signer` will be `None`.
+You can use this in your bot to enable a "test execution" mode, something like this:
 
 ```py
 # Compute some metric that might lead to creating a transaction
 if bot.signer:
-    # Execute a transaction via `sender=app.signer`
+    # Execute a transaction via `sender=bot.signer`
 else:
     # Log what the transaction *would* have done, had a signer been enabled
 ```
 
 ```{warning}
-If you configure your application to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
-Always test your applications throughly before deploying, and always use a dedicated key for production signing with your application in a remote setting.
+If you configure your bot to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
+Always test your bots throughly before deploying, and always use a dedicated key for production signing with your bot in a remote setting.
 ```
 
 ```{note}
@@ -269,7 +269,7 @@ Use segregated keys and limit your risk by controlling the amount of funds that 
 ### Distributed Execution
 
 Using only the `silverback run ...` command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.
-In some high volume environments, you may want to deploy your Silverback application in a distributed configuration using multiple processes to handle the messages at a higher rate.
+In some high volume environments, you may want to deploy your Silverback bot in a distributed configuration using multiple processes to handle the messages at a higher rate.
 
 The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.
 
@@ -304,10 +304,10 @@ silverback worker -w 2
 
 The client will send tasks to the 2 worker subprocesses, and all task queue and results data will be go through Redis.
 
-## Testing your Application
+## Testing your Bot
 
 TODO: Add backtesting mode w/ `silverback test`
 
-## Deploying your Application
+## Deploying your Bot
 
-Check out the [Platform Deployment Userguide](./platform.html) for more information on how to deploy your application to the [Silverback Platform](https://silverback.apeworx.io).
+Check out the [Platform Deployment Userguide](./platform.html) for more information on how to deploy your bot to the [Silverback Platform](https://silverback.apeworx.io).
