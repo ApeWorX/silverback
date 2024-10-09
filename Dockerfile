@@ -21,7 +21,7 @@ RUN pip install --upgrade pip \
     && pip install \
     --no-cache-dir --find-links=/wheels \
     'taskiq-sqs>=0.0.11' \
-    'taskiq-redis>=1.0.2,<2'
+    'taskiq-redis>=1.0.2,<2' \
     silverback
 
 USER harambe
