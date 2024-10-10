@@ -15,7 +15,17 @@ Cloud Platform
     :nested: full
     :commands: new, list, info, update, remove
 
+.. click:: silverback._cli:registry
+    :prog: silverback cluster registry auth
+    :nested: full
+    :commands: new, list, info, update, remove
+
 .. click:: silverback._cli:bots
     :prog: silverback cluster bots
     :nested: full
     :commands: new, list, info, update, remove, health, start, stop, logs, errors
+
+.. click:: silverback._cli:pay
+    :prog: silverback cluster pay
+    :nested: full
+    :commands: create, add-time, cancel
