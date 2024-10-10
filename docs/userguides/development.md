@@ -79,7 +79,7 @@ from silverback import SilverbackBot
 bot = SilverbackBot()
 ```
 
-The SilverbackBot class handles state and configuration.
+The `SilverbackBot` class handles state and configuration.
 Through this class, we can hook up event handlers to be executed each time we encounter a new block or each time a specific event is emitted.
 Initializing the bot creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.
 
