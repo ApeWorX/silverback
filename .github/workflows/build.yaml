@@ -58,7 +58,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push latest
-        if: contains(steps.meta.outputs.tag, 'latest') || startsWith(steps.meta.outpus.tag, 'pr-') || startsWith(steps.meta.outpus.tag, 'v')
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -70,12 +69,12 @@ jobs:
             BASE_APE_IMAGE_TAG=stable
 
       - name: Build and push stable
-        if: contains(steps.meta.outputs.tag, 'stable') || startsWith(steps.meta.outpus.tag, 'pr-')
+        if: ${{ github.event_name != 'pull_request' }}
         uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile.stable
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
