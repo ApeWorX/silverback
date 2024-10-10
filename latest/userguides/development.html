@@ -70,8 +70,8 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../methoddocs/application.html">silverback.application</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/main.html">silverback.main</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
@@ -202,7 +202,7 @@ If you follow these suggestions, your Silverback deployments will be easy to use
 </span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
 </span></pre></div>
 </div>
-<p>The SilverbackBot class handles state and configuration.
+<p>The <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> class handles state and configuration.
 Through this class, we can hook up event handlers to be executed each time we encounter a new block or each time a specific event is emitted.
 Initializing the bot creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.</p>
 <p>However, by default an bot has no configured event handlers, so it won’t be very useful.
