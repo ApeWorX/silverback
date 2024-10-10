@@ -26,5 +26,4 @@ RUN pip install --upgrade pip \
 
 USER harambe
 
-# ENTRYPOINT ["silverback"]
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["silverback"]
