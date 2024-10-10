@@ -61,13 +61,13 @@ class ProfileSettings(BaseModel):
         else:  # Write the defaults to disk for next time
             settings_dict = dict(
                 auth={
-                    DEFAULT_PROFILE: AuthenticationConfig().model_dump(),
+                    DEFAULT_PROFILE: AuthenticationConfig().model_dump(by_alias=True),
                 },
                 profile={
                     DEFAULT_PROFILE: PlatformProfile(
                         auth=DEFAULT_PROFILE,
                         host="https://silverback.apeworx.io",
-                    ).model_dump()
+                    ).model_dump(by_alias=True)
                 },
             )
             PROFILE_PATH.parent.mkdir(exist_ok=True)
