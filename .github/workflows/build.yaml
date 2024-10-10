@@ -57,7 +57,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push latest
+      - name: Build and push
         uses: docker/build-push-action@v4
         with:
           context: .
