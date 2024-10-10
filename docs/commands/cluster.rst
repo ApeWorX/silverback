@@ -15,7 +15,7 @@ Cloud Platform
     :nested: full
     :commands: new, list, info, update, remove
 
-.. click:: silverback._cli:registry
+.. click:: silverback._cli:registry_auth
     :prog: silverback cluster registry auth
     :nested: full
     :commands: new, list, info, update, remove
