@@ -152,7 +152,7 @@ Then you can provide the name of these credentials when creating your bot with t
 You are finally ready to deploy your bot on the Cluster and get it running!
 
 To deploy your Bot, use the [`silverback cluster bots new`][silverback-cluster-bots-new] command and give your bot a name,
-container image, network to run on, an account alias (if you want to sign transactions w/ `app.signer`),
+container image, network to run on, an account alias (if you want to sign transactions w/ `bot.signer`),
 and any environment Variable Group(s) the bot needs.
 If everything validates successfully, the Cluster will begin orchestrating your deployment for you.
 
@@ -197,7 +197,7 @@ Once in the RUNNING state, your Bot will not stop running unless it experiences 
 Any task execution that experiences an error will abort execution (and therefore not produce any metrics) but the Bot **will not** shutdown.
 
 All errors encountered during task exeuction are reported to the Cluster for later review by any users with appriopiate access.
-Tasks do not retry (by default), but updates to `app.state` are maintained up until the point an error occurs.
+Tasks do not retry (by default), but updates to `bot.state` are maintained up until the point an error occurs.
 
 It is important to keep track of these errors and ensure that none of them are in fact critical to the operation of your Bot,
 and to take corrective or preventative action if it is determined that it should be treated as a more critical failure condition.
