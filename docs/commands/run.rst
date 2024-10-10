@@ -1,5 +1,5 @@
 Local Development
-*****************
+=================
 
 .. click:: silverback._cli:run
   :prog: silverback run

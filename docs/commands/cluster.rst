@@ -1,5 +1,5 @@
 Cloud Platform
-**************
+==============
 
 .. click:: silverback._cli:login
     :prog: silverback login
@@ -12,11 +12,6 @@ Cloud Platform
 
 .. click:: silverback._cli:vars
     :prog: silverback cluster vars
-    :nested: full
-    :commands: new, list, info, update, remove
-
-.. click:: silverback._cli:docker_auth
-    :prog: silverback cluster docker auth
     :nested: full
     :commands: new, list, info, update, remove
 
