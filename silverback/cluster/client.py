@@ -112,7 +112,7 @@ class VariableGroup(VariableGroupInfo):
     def get_revision(self, revision: int | Literal["latest"] = "latest") -> VariableGroupInfo:
         # TODO: Add `/latest` revision route
         if revision == "latest":
-            revision = ""  # type: ignore[assignment]
+            revision = -1  # NOTE: This works with how cluster does lookup
 
         response = self.cluster.get(f"/variables/{self.id}/{revision}")
         handle_error_with_response(response)
