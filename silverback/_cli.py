@@ -316,7 +316,7 @@ def pay():
             ClusterTier.STANDARD.name.capitalize(),
             ClusterTier.PREMIUM.name.capitalize(),
         ],
-        case_sensitive=False
+        case_sensitive=False,
     ),
     help="Named set of options to use for cluster as a base (Defaults to Standard)",
 )
