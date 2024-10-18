@@ -309,15 +309,15 @@ def pay():
 @click.option(
     "-t",
     "--tier",
-    default=ClusterTier.PERSONAL.name.capitalize(),
+    default=ClusterTier.STANDARD.name.capitalize(),
     metavar="NAME",
     type=click.Choice(
         [
-            ClusterTier.PERSONAL.name.capitalize(),
-            ClusterTier.PROFESSIONAL.name.capitalize(),
+            ClusterTier.STANDARD.name.capitalize(),
+            ClusterTier.PREMIUM.name.capitalize(),
         ]
     ),
-    help="Named set of options to use for cluster as a base (Defaults to Personal)",
+    help="Named set of options to use for cluster as a base (Defaults to Standard)",
 )
 @click.option(
     "-c",
