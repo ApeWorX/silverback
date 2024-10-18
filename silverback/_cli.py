@@ -421,7 +421,8 @@ def create_payment_stream(
     assert token_amount  # mypy happy
 
     click.echo(yaml.safe_dump(dict(configuration=configuration.settings_display_dict())))
-    click.echo(f"duration: {stream_time}\n")
+    click.echo(f"duration: {stream_time}")
+    click.echo(f"payment: {token_amount / 1e18} {token.symbol()}\n")
 
     if not click.confirm(
         f"Do you want to use this configuration to fund Cluster '{cluster_path}'?"
