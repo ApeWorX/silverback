@@ -309,15 +309,16 @@ def pay():
 @click.option(
     "-t",
     "--tier",
-    default=ClusterTier.PERSONAL.name.capitalize(),
+    default=ClusterTier.STANDARD.name.capitalize(),
     metavar="NAME",
     type=click.Choice(
         [
-            ClusterTier.PERSONAL.name.capitalize(),
-            ClusterTier.PROFESSIONAL.name.capitalize(),
-        ]
+            ClusterTier.STANDARD.name.capitalize(),
+            ClusterTier.PREMIUM.name.capitalize(),
+        ],
+        case_sensitive=False,
     ),
-    help="Named set of options to use for cluster as a base (Defaults to Personal)",
+    help="Named set of options to use for cluster as a base (Defaults to Standard)",
 )
 @click.option(
     "-c",
@@ -420,7 +421,8 @@ def create_payment_stream(
     assert token_amount  # mypy happy
 
     click.echo(yaml.safe_dump(dict(configuration=configuration.settings_display_dict())))
-    click.echo(f"duration: {stream_time}\n")
+    click.echo(f"duration: {stream_time}")
+    click.echo(f"payment: {token_amount / (10 ** token.decimals())} {token.symbol()}\n")
 
     if not click.confirm(
         f"Do you want to use this configuration to fund Cluster '{cluster_path}'?"

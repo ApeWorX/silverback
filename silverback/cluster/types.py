@@ -207,7 +207,7 @@ class ClusterConfiguration(BaseModel):
 class ClusterTier(enum.IntEnum):
     """Suggestions for different tier configurations"""
 
-    PERSONAL = ClusterConfiguration(
+    STANDARD = ClusterConfiguration(
         cpu="0.25 vCPU",
         memory="512 MiB",
         networks=3,
@@ -215,7 +215,7 @@ class ClusterTier(enum.IntEnum):
         bandwidth="512 B/sec",  # 1.236 GB/mo
         duration=3,  # months
     ).encode()
-    PROFESSIONAL = ClusterConfiguration(
+    PREMIUM = ClusterConfiguration(
         cpu="1 vCPU",
         memory="2 GB",
         networks=10,
