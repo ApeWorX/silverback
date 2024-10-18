@@ -358,7 +358,7 @@ class Workspace(WorkspaceInfo):
         response = self.client.post(
             "/clusters/",
             params=dict(workspace=str(self.id)),
-            json=dict(name=cluster_name, slug=cluster_slug),
+            data=dict(name=cluster_name, slug=cluster_slug),
         )
 
         handle_error_with_response(response)
@@ -426,7 +426,7 @@ class PlatformClient(httpx.Client):
     ) -> Workspace:
         response = self.post(
             "/workspaces",
-            json=dict(slug=workspace_slug, name=workspace_name),
+            data=dict(slug=workspace_slug, name=workspace_name),
         )
         handle_error_with_response(response)
         new_workspace = Workspace.model_validate_json(response.text)
