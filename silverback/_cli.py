@@ -44,7 +44,7 @@ USER harambe
 COPY ape-config.yaml .
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
-RUN ape plugins install .
+RUN ape plugins install -U .
 """
 
 
