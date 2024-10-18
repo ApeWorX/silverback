@@ -422,7 +422,7 @@ def create_payment_stream(
 
     click.echo(yaml.safe_dump(dict(configuration=configuration.settings_display_dict())))
     click.echo(f"duration: {stream_time}")
-    click.echo(f"payment: {token_amount / 1e18} {token.symbol()}\n")
+    click.echo(f"payment: {token_amount / (10 ** token.decimals())} {token.symbol()}\n")
 
     if not click.confirm(
         f"Do you want to use this configuration to fund Cluster '{cluster_path}'?"
