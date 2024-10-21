@@ -319,7 +319,9 @@ class ClusterHealth(BaseModel):
 
     @computed_field
     def cluster(self) -> ServiceHealth:
-        return ServiceHealth(healthy=self.ars.healthy and self.ccs.healthy)
+        return ServiceHealth(
+            healthy=all(ars.healthy for ars in self.ars.values()) and self.ccs.healthy
+        )
 
 
 class RegistryCredentialsInfo(BaseModel):
