@@ -219,9 +219,14 @@ def cluster():
     your platform account via `-c WORKSPACE/NAME`"""
 
 
-@cluster.command(section="Platform Commands (https://silverback.apeworx.io)")
+@cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
+def workspaces():
+    """Manage a Silverback Workspace"""
+
+
+@workspaces.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @platform_client
-def workspaces(platform: PlatformClient):
+def list_workspaces(platform: PlatformClient):
     """List available workspaces for your account"""
 
     if workspace_names := list(platform.workspaces):
@@ -234,6 +239,42 @@ def workspaces(platform: PlatformClient):
             bold=True,
             fg="red",
         )
+
+
+@workspaces.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "workspace_name",
+    help="Name for new workspace",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "workspace_slug",
+    help="Slug for new workspace",
+)
+@platform_client
+def new_workspace(
+    platform: PlatformClient,
+    workspace_name: str | None,
+    workspace_slug: str | None,
+):
+    """Create a new workspace"""
+
+    if workspace_name:
+        click.echo(f"name: {workspace_name}")
+        click.echo(f"slug: {workspace_slug or workspace_name.lower().replace(' ', '-')}")
+
+    elif workspace_slug:
+        click.echo(f"slug: {workspace_slug}")
+
+    workspace = platform.create_workspace(
+        workspace_name=workspace_name,
+        workspace_slug=workspace_slug,
+    )
+    if workspace.created:
+        click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace.name}'")
 
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
