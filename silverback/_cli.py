@@ -257,8 +257,8 @@ def list_workspaces(platform: PlatformClient):
 @platform_client
 def new_workspace(
     platform: PlatformClient,
-    workspace_name: str | None,
-    workspace_slug: str | None,
+    workspace_name: str,
+    workspace_slug: str,
 ):
     """Create a new workspace"""
 
