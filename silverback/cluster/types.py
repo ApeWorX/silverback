@@ -307,8 +307,10 @@ class ServiceHealth(BaseModel):
 
 
 class ClusterHealth(BaseModel):
-    ars: ServiceHealth = Field(exclude=True)  # TODO: Replace w/ cluster
-    ccs: ServiceHealth = Field(exclude=True)  # TODO: Replace w/ cluster
+    # TODO: Replace w/ cluster
+    ccs: ServiceHealth
+    # NOTE: network => healthy
+    ars: dict[str, ServiceHealth] = {}
     bots: dict[str, ServiceHealth] = {}
 
     @field_validator("bots", mode="before")  # TODO: Fix so this is default
