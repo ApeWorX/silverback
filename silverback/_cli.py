@@ -221,7 +221,7 @@ def cluster():
 
 @cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
 def workspaces():
-    """Manage a Silverback Workspace"""
+    """Manage Workspaces on the Silverback Platform"""
 
 
 @workspaces.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
@@ -268,6 +268,9 @@ def new_workspace(
 
     elif workspace_slug:
         click.echo(f"slug: {workspace_slug}")
+
+    else:
+        raise click.UsageError("Must provide a name or a slug/name combo")
 
     workspace = platform.create_workspace(
         workspace_name=workspace_name,
@@ -325,6 +328,9 @@ def new_cluster(
 
     elif cluster_slug:
         click.echo(f"slug: {cluster_slug}")
+
+    else:
+        raise click.UsageError("Must provide a name or a slug/name combo")
 
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
