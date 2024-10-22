@@ -2,7 +2,7 @@ import asyncio
 import os
 import shlex
 import subprocess
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import click
@@ -1111,7 +1111,7 @@ def show_bot_logs(cluster: ClusterClient, name: str, log_level: str, since: time
 
     start_time = None
     if since:
-        start_time = datetime.now(tz=UTC) - since
+        start_time = datetime.now(tz=timezone.utc) - since
 
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
