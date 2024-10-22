@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import cache
 from typing import ClassVar, Literal
 
@@ -12,9 +13,11 @@ from silverback.version import version
 from .types import (
     BotHealth,
     BotInfo,
+    BotLogEntry,
     ClusterHealth,
     ClusterInfo,
     ClusterState,
+    LogLevel,
     RegistryCredentialsInfo,
     StreamInfo,
     VariableGroupInfo,
@@ -189,11 +192,30 @@ class Bot(BotInfo):
         handle_error_with_response(response)
         return response.json()
 
-    @property
-    def logs(self) -> list[str]:
-        response = self.cluster.get(f"/bots/{self.id}/logs")
+    def filter_logs(
+        self,
+        log_level: LogLevel = LogLevel.INFO,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+    ) -> list[BotLogEntry]:
+        print("filter_logs:", log_level)
+        query = {"log_level": log_level.name}
+
+        if start_time:
+            query["start_time"] = start_time.isoformat()
+
+        if end_time:
+            query["end_time"] = end_time.isoformat()
+
+        response = self.cluster.get(f"/bots/{self.id}/logs", params=query, timeout=120)
+        print("response:", response)
+        breakpoint()
         handle_error_with_response(response)
-        return response.json()
+        return [BotLogEntry.model_validate(log) for log in response.json()]
+
+    @property
+    def logs(self) -> list[BotLogEntry]:
+        return self.filter_logs()
 
     def remove(self):
         response = self.cluster.delete(f"/bots/{self.id}")

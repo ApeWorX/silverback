@@ -2,7 +2,8 @@ import enum
 import math
 import uuid
 from datetime import datetime
-from typing import Annotated, Any
+from enum import IntEnum
+from typing import Annotated, Any, Self
 
 from ape.types import AddressType, HexBytes
 from cryptography.exceptions import InvalidSignature
@@ -374,3 +375,29 @@ class BotInfo(BaseModel):
     registry_credentials_id: str | None
 
     environment: list[EnvironmentVariable] = []
+
+
+class LogLevel(IntEnum):
+    DEBUG = 10
+    INFO = 20
+    WARNING = 30
+    ERROR = 40
+    CRITICAL = 50
+
+    @classmethod
+    def by_name(cls, name: str = "INFO", default: Self | None = None) -> Self:
+        try:
+            return cls.__dict__[name.upper()]
+        except KeyError as err:
+            if default:
+                return default
+            raise err
+
+
+class BotLogEntry(BaseModel):
+    message: str
+    timestamp: datetime | None
+    level: LogLevel
+
+    def __str__(self) -> str:
+        return f"{self.timestamp}: {self.message}"

@@ -2,7 +2,7 @@ import asyncio
 import os
 import shlex
 import subprocess
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import click
@@ -31,7 +31,7 @@ from silverback._click_ext import (
     token_amount_callback,
 )
 from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.types import ClusterTier, ResourceStatus
+from silverback.cluster.types import ClusterTier, LogLevel, ResourceStatus
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
@@ -120,7 +120,8 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
             runner_class = PollingRunner
         else:
             raise click.BadOptionUsage(
-                option_name="network", message="Network choice cannot support running bot"
+                option_name="network",
+                message="Network choice cannot support running bot",
             )
 
     runner = runner_class(
@@ -177,7 +178,11 @@ def build(generate, path):
                 f"-t {file.name.split('.')[1]}:latest ."
             )
             result = subprocess.run(
-                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True,
             )
             click.echo(result.stdout)
         except subprocess.CalledProcessError as e:
@@ -1086,14 +1091,34 @@ def stop_bot(cluster: ClusterClient, name: str):
 
 @bots.command(name="logs", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
+@click.option(
+    "-l",
+    "--log-level",
+    "log_level",
+    help="Minimum log level to display.",
+    default="INFO",
+)
+@click.option(
+    "-s",
+    "--since",
+    "since",
+    help="Return logs since N ago.",
+    callback=timedelta_callback,
+)
 @cluster_client
-def show_bot_logs(cluster: ClusterClient, name: str):
+def show_bot_logs(cluster: ClusterClient, name: str, log_level: str, since: timedelta | None):
     """Show runtime logs for BOT in CLUSTER"""
+
+    start_time = None
+    if since:
+        start_time = datetime.now(tz=UTC) - since
 
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
-    for log in bot.logs:
+    for log in bot.filter_logs(
+        log_level=LogLevel.by_name(log_level, LogLevel.INFO), start_time=start_time
+    ):
         click.echo(log)
 
 
