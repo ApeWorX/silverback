@@ -5,13 +5,14 @@ import math
 import uuid
 from datetime import datetime
 from enum import IntEnum
-from typing import Annotated, Any, Self
+from typing import Annotated, Any
 
 from ape.types import AddressType, HexBytes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
 from eth_utils import to_bytes, to_int
 from pydantic import BaseModel, Field, computed_field, field_validator
+from typing_extensions import Self
 
 
 def normalize_bytes(val: bytes, length: int = 16) -> bytes:
