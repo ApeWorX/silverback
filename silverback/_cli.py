@@ -1116,9 +1116,12 @@ def show_bot_logs(cluster: ClusterClient, name: str, log_level: str, since: time
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
-    for log in bot.filter_logs(
-        log_level=LogLevel.by_name(log_level, LogLevel.INFO), start_time=start_time
-    ):
+    try:
+        level = LogLevel.__dict__[log_level.upper()]
+    except KeyError:
+        level = LogLevel.INFO
+
+    for log in bot.filter_logs(log_level=level, start_time=start_time):
         click.echo(log)
 
 

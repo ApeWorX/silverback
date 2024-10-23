@@ -198,7 +198,6 @@ class Bot(BotInfo):
         start_time: datetime | None = None,
         end_time: datetime | None = None,
     ) -> list[BotLogEntry]:
-        print("filter_logs:", log_level)
         query = {"log_level": log_level.name}
 
         if start_time:
@@ -208,8 +207,6 @@ class Bot(BotInfo):
             query["end_time"] = end_time.isoformat()
 
         response = self.cluster.get(f"/bots/{self.id}/logs", params=query, timeout=120)
-        print("response:", response)
-        breakpoint()
         handle_error_with_response(response)
         return [BotLogEntry.model_validate(log) for log in response.json()]
 
