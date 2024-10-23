@@ -323,7 +323,7 @@ def update_workspace(
 ):
     """Update name and slug for a workspace"""
 
-    if not (workspace_client := platform.workspaces.get(workspace)):
+    if not (platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
     else:
