@@ -433,6 +433,11 @@ class PlatformClient(httpx.Client):
         self.workspaces.update({new_workspace.slug: new_workspace})  # NOTE: Update cache
         return new_workspace
 
+    def remove_workspace(self, workspace_slug):
+        workspace_id = self.workspaces[workspace_slug].id
+        response = self.delete(f"/workspaces/{str(workspace_id)}")
+        handle_error_with_response(response)
+
     def get_stream_manager(self, chain_id: int) -> StreamManager:
         response = self.get(f"/streams/manager/{chain_id}")
         handle_error_with_response(response)

@@ -272,12 +272,28 @@ def new_workspace(
     else:
         raise click.UsageError("Must provide a name or a slug/name combo")
 
-    workspace = platform.create_workspace(
+    platform.create_workspace(
         workspace_name=workspace_name,
         workspace_slug=workspace_slug,
     )
-    if workspace.created:
-        click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace.name}'")
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace_name}'")
+
+
+@workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
+@click.argument("workspace")
+@platform_client
+def delete_workspace(platform: PlatformClient, workspace: str):
+    """Delete an empty Workspace on the Silverback Platform"""
+
+    if not (workspace_client := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    if list(workspace_client.clusters):
+        raise click.ClickException("Clusters found in Workspace")
+
+    else:
+        platform.remove_workspace(workspace)
+        click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace}'")
 
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
