@@ -438,6 +438,22 @@ class PlatformClient(httpx.Client):
         response = self.delete(f"/workspaces/{str(workspace_id)}")
         handle_error_with_response(response)
 
+    def update_workspace(
+        self,
+        workspace: str,
+        update_slug: str,
+        update_name: str,
+    ):
+        workspace_id = self.workspaces[workspace].id
+        response = self.patch(
+            f"/workspaces/{str(workspace_id)}",
+            data=dict(slug=update_slug, name=update_name),
+        )
+        handle_error_with_response(response)
+        update_workspace = Workspace.model_validate_json(response.text)
+        self.workspaces.update({update_workspace.slug: update_workspace})  # NOTE: Update cache
+        return update_workspace
+
     def get_stream_manager(self, chain_id: int) -> StreamManager:
         response = self.get(f"/streams/manager/{chain_id}")
         handle_error_with_response(response)

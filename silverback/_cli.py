@@ -246,12 +246,14 @@ def list_workspaces(platform: PlatformClient):
     "-n",
     "--name",
     "workspace_name",
+    required=True,
     help="Name for new workspace",
 )
 @click.option(
     "-s",
     "--slug",
     "workspace_slug",
+    required=True,
     help="Slug for new workspace",
 )
 @platform_client
@@ -294,6 +296,43 @@ def delete_workspace(platform: PlatformClient, workspace: str):
     else:
         platform.remove_workspace(workspace)
         click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace}'")
+
+
+@workspaces.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "update_name",
+    required=True,
+    help="Update name for workspace",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "update_slug",
+    required=True,
+    help="Update slug for workspace",
+)
+@click.argument("workspace")
+@platform_client
+def update_workspace(
+    platform: PlatformClient,
+    workspace: str,
+    update_name: str,
+    update_slug: str,
+):
+    """Update name and slug for a workspace"""
+
+    if not (workspace_client := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    else:
+        platform.update_workspace(
+            workspace=workspace,
+            update_name=update_name,
+            update_slug=update_slug,
+        )
+        click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{update_name}'")
 
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
