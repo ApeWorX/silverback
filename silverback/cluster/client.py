@@ -5,6 +5,7 @@ from typing import ClassVar, Literal
 import httpx
 from ape import Contract
 from ape.contracts import ContractInstance
+from ape.logging import LogLevel
 from apepay import Stream, StreamManager
 from pydantic import computed_field
 
@@ -17,7 +18,6 @@ from .types import (
     ClusterHealth,
     ClusterInfo,
     ClusterState,
-    LogLevel,
     RegistryCredentialsInfo,
     StreamInfo,
     VariableGroupInfo,
