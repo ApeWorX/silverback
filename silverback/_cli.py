@@ -344,7 +344,7 @@ def update_workspace(
 @click.argument("workspace")
 @platform_client
 def workspace_info(platform: PlatformClient, workspace: str):
-    """Get Configuration information about a CLUSTER"""
+    """Get Configuration information about a WORKSPACE"""
 
     if not (workspace_info := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
