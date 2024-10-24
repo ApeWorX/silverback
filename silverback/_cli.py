@@ -148,7 +148,8 @@ def build(generate, path):
         ):
             raise FileNotFoundError(
                 f"The bots directory '{path}', 'bot/' and 'bot.py' does not exist in your path. "
-                f"You should have a '{path}/' or 'bot/' folder, or a 'bot.py' file in the root of your project."
+                f"You should have a '{path}/' or 'bot/' folder, or a 'bot.py' file in the root "
+                "of your project."
             )
         if path.is_file():
             dockerfile_content = DOCKERFILE_CONTENT
