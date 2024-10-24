@@ -224,9 +224,14 @@ def cluster():
     your platform account via `-c WORKSPACE/NAME`"""
 
 
-@cluster.command(section="Platform Commands (https://silverback.apeworx.io)")
+@cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
+def workspaces():
+    """Manage Workspaces on the Silverback Platform"""
+
+
+@workspaces.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @platform_client
-def workspaces(platform: PlatformClient):
+def list_workspaces(platform: PlatformClient):
     """List available workspaces for your account"""
 
     if workspace_names := list(platform.workspaces):
@@ -239,6 +244,114 @@ def workspaces(platform: PlatformClient):
             bold=True,
             fg="red",
         )
+
+
+@workspaces.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "workspace_name",
+    required=True,
+    help="Name for new workspace",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "workspace_slug",
+    required=True,
+    help="Slug for new workspace",
+)
+@platform_client
+def new_workspace(
+    platform: PlatformClient,
+    workspace_name: str,
+    workspace_slug: str,
+):
+    """Create a new workspace"""
+
+    if workspace_name:
+        click.echo(f"name: {workspace_name}")
+        click.echo(f"slug: {workspace_slug or workspace_name.lower().replace(' ', '-')}")
+
+    elif workspace_slug:
+        click.echo(f"slug: {workspace_slug}")
+
+    else:
+        raise click.UsageError("Must provide a name or a slug/name combo")
+
+    platform.create_workspace(
+        workspace_name=workspace_name,
+        workspace_slug=workspace_slug,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace_name}'")
+
+
+@workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
+@click.argument("workspace")
+@platform_client
+def delete_workspace(platform: PlatformClient, workspace: str):
+    """Delete an empty Workspace on the Silverback Platform"""
+
+    if not (workspace_client := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    if list(workspace_client.clusters):
+        raise click.ClickException("Clusters found in Workspace")
+
+    else:
+        platform.remove_workspace(workspace)
+        click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace}'")
+
+
+@workspaces.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "update_name",
+    required=True,
+    help="Update name for workspace",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "update_slug",
+    required=True,
+    help="Update slug for workspace",
+)
+@click.argument("workspace")
+@platform_client
+def update_workspace(
+    platform: PlatformClient,
+    workspace: str,
+    update_name: str,
+    update_slug: str,
+):
+    """Update name and slug for a workspace"""
+
+    if not (platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    else:
+        platform.update_workspace(
+            workspace=workspace,
+            update_name=update_name,
+            update_slug=update_slug,
+        )
+        click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{update_name}'")
+
+
+@workspaces.command(name="info", section="Platform Commands (https://silverback.apeworx.io)")
+@click.argument("workspace")
+@platform_client
+def workspace_info(platform: PlatformClient, workspace: str):
+    """Get Configuration information about a WORKSPACE"""
+
+    if not (workspace_info := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    click.echo(f"{click.style('Name', fg='green')}: {workspace_info.name}")
+    click.echo(f"{click.style('Slug', fg='green')}: '{workspace_info.slug}'")
+    click.echo(f"{click.style('Date Created', fg='green')}: '{workspace_info.created}'")
 
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
@@ -289,6 +402,9 @@ def new_cluster(
 
     elif cluster_slug:
         click.echo(f"slug: {cluster_slug}")
+
+    else:
+        raise click.UsageError("Must provide a name or a slug/name combo")
 
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
