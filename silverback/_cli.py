@@ -41,10 +41,6 @@ USER root
 WORKDIR /app
 RUN chown harambe:harambe /app
 USER harambe
-COPY ape-config.yaml .
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
-RUN ape plugins install -U .
 """
 
 
@@ -152,12 +148,20 @@ def build(generate, path):
             bots.append(file)
         for bot in bots:
             dockerfile_content = DOCKERFILE_CONTENT
+            if (Path.cwd() / "requirements.txt").exists():
+                dockerfile_content += "COPY requirements.txt .\n"
+                dockerfile_content += "RUN pip install --upgrade pip && pip install -r requirements.txt\n"
+
+            if (Path.cwd() / "ape-config.yaml").exists():
+                dockerfile_content += "COPY ape-config.yaml .\n"
+                dockerfile_content += "RUN ape plugins install -U .\n"
+
             if "__init__" in bot.name:
                 docker_filename = f"Dockerfile.{bot.parent.name}"
-                dockerfile_content += f"COPY {path.name}/ /app/bot"
+                dockerfile_content += f"COPY {path.name}/ /app/bot\n"
             else:
                 docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
-                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py"
+                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py\n"
             dockerfile_path = Path.cwd() / ".silverback-images" / docker_filename
             dockerfile_path.parent.mkdir(exist_ok=True)
             dockerfile_path.write_text(dockerfile_content.strip() + "\n")
