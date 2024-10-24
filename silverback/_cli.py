@@ -135,14 +135,17 @@ def build_helper(docker_fn: str, dockerfile_c: str):
     click.echo(f"Generated {dockerfile_path}")
 
 
-
 @cli.command(section="Local Commands")
 @click.option("--generate", is_flag=True, default=False)
 @click.argument("path", required=False, type=str, default="bots")
 def build(generate, path):
     """Generate Dockerfiles and build bot images"""
     if generate:
-        if not (path := Path.cwd() / path).exists() and not (path := Path.cwd() / "bot").exists() and not (path := Path.cwd() / "bot.py").exists():
+        if (
+            not (path := Path.cwd() / path).exists()
+            and not (path := Path.cwd() / "bot").exists()
+            and not (path := Path.cwd() / "bot.py").exists()
+        ):
             raise FileNotFoundError(
                 f"The bots directory '{path}', 'bot/' and 'bot.py' does not exist in your path. "
                 f"You should have a '{path}/' or 'bot/' folder, or a 'bot.py' file in the root of your project."
