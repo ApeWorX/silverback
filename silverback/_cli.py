@@ -335,6 +335,20 @@ def update_workspace(
         click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{update_name}'")
 
 
+@workspaces.command(name="info", section="Platform Commands (https://silverback.apeworx.io)")
+@click.argument("workspace")
+@platform_client
+def workspace_info(platform: PlatformClient, workspace: str):
+    """Get Configuration information about a CLUSTER"""
+
+    if not (workspace_info := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    click.echo(f"{click.style('Name', fg='green')}: {workspace_info.name}")
+    click.echo(f"{click.style('Slug', fg='green')}: '{workspace_info.slug}'")
+    click.echo(f"{click.style('Date Created', fg='green')}: '{workspace_info.created}'")
+
+
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
 @platform_client
