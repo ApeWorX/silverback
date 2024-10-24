@@ -65,8 +65,8 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
 <ul class="current">
@@ -87,7 +87,21 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#silverback.main.SharedState"><code class="docutils literal notranslate"><span class="pre">SharedState</span></code></a></li>
+<li><a class="reference internal" href="#silverback.main.SilverbackBot"><code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code></a><ul>
+<li><a class="reference internal" href="#silverback.main.SilverbackBot.broker_task_decorator"><code class="docutils literal notranslate">broker_task_decorator()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.main.SilverbackBot.on_"><code class="docutils literal notranslate">on_()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.main.SilverbackBot.on_shutdown"><code class="docutils literal notranslate">on_shutdown()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.main.SilverbackBot.on_startup"><code class="docutils literal notranslate">on_startup()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.main.SilverbackBot.on_worker_shutdown"><code class="docutils literal notranslate">on_worker_shutdown()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.main.SilverbackBot.on_worker_startup"><code class="docutils literal notranslate">on_worker_startup()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#silverback.main.SystemConfig"><code class="docutils literal notranslate"><span class="pre">SystemConfig</span></code></a></li>
+<li><a class="reference internal" href="#silverback.main.TaskData"><code class="docutils literal notranslate"><span class="pre">TaskData</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
@@ -119,6 +133,166 @@ data-aria-dark="Switch to auto color mode">
 <h1>silverback.main<a class="headerlink" href="#silverback-main" title="Link to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback.main</span></code> module contains the high-level implementation of the the user’s
 Silverback application, meant to be used to expose method handlers and other functionality.</p>
+<dl class="py class" id="module-silverback.main">
+<dt class="sig sig-object py" id="silverback.main.SharedState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.main.</span></span><span class="sig-name descname"><span class="pre">SharedState</span></span><a class="headerlink" href="#silverback.main.SharedState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">defaultdict</span></code></p>
+<p>Class containing the bot shared state that all workers can read from and write to.</p>
+<p><code class="docutils literal notranslate"><span class="pre">`{warning}</span>
+<span class="pre">This</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">networked</span> <span class="pre">in</span> <span class="pre">any</span> <span class="pre">way,</span> <span class="pre">nor</span> <span class="pre">is</span> <span class="pre">it</span> <span class="pre">multi-process</span> <span class="pre">safe,</span> <span class="pre">but</span> <span class="pre">will</span> <span class="pre">be</span>
+<span class="pre">accessible</span> <span class="pre">across</span> <span class="pre">multiple</span> <span class="pre">thread</span> <span class="pre">workers</span> <span class="pre">within</span> <span class="pre">a</span> <span class="pre">single</span> <span class="pre">process.</span>
+<span class="pre">`</span></code></p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_with_state</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+</span><span data-line="3">    <span class="c1"># Read from state using `getattr`</span>
+</span><span data-line="4">    <span class="o">...</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">something</span>
+</span><span data-line="5">
+</span><span data-line="6">    <span class="c1"># Set state using `setattr`</span>
+</span><span data-line="7">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">something</span> <span class="o">=</span> <span class="o">...</span>
+</span><span data-line="8">
+</span><span data-line="9">    <span class="c1"># Read from state using `getitem`</span>
+</span><span data-line="10">    <span class="o">...</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;something&quot;</span><span class="p">]</span>
+</span><span data-line="11">
+</span><span data-line="12">    <span class="c1"># Set state using setitem</span>
+</span><span data-line="13">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;something&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="o">...</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="silverback.main.SilverbackBot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.main.</span></span><span class="sig-name descname"><span class="pre">SilverbackBot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Settings</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.main.SilverbackBot" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
+<p>The bot singleton. Must be initialized prior to use.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackBot</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="o">...</span>  <span class="c1"># Connection has been initialized, can call broker methods e.g. `bot.on_(...)`</span>
+</span></pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.main.SilverbackBot.broker_task_decorator">
+<span class="sig-name descname"><span class="pre">broker_task_decorator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BlockContainer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ContractEvent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">AsyncTaskiqDecoratedTask</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#silverback.main.SilverbackBot.broker_task_decorator" title="Link to this definition"></a></dt>
+<dd><p>Dynamically create a new broker task that handles tasks of <code class="docutils literal notranslate"><span class="pre">task_type</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">`{warning}</span>
+<span class="pre">Dynamically</span> <span class="pre">creating</span> <span class="pre">a</span> <span class="pre">task</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">ensure</span> <span class="pre">that</span> <span class="pre">the</span> <span class="pre">runner</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">aware</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">task</span>
+<span class="pre">in</span> <span class="pre">order</span> <span class="pre">to</span> <span class="pre">trigger</span> <span class="pre">it.</span> <span class="pre">Use</span> <span class="pre">at</span> <span class="pre">your</span> <span class="pre">own</span> <span class="pre">risk.</span>
+<span class="pre">`</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task_type</strong> – <code class="xref py py-class docutils literal notranslate"><span class="pre">TaskType</span></code>: The type of task to create.</p></li>
+<li><p><strong>container</strong> – (BlockContainer | ContractEvent): The event source to watch.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A function wrapper that will register the task handler.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable[[Callable], <code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTaskiqDecoratedTask</span></code>]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.ContainerTypeMismatchError" title="silverback.exceptions.ContainerTypeMismatchError"><strong>ContainerTypeMismatchError</strong></a> – If there is a mismatch between <cite>task_type</cite> and the <cite>container</cite>
+    type it should handle.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.main.SilverbackBot.on_">
+<span class="sig-name descname"><span class="pre">on_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BlockContainer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ContractEvent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_block_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.main.SilverbackBot.on_" title="Link to this definition"></a></dt>
+<dd><p>Create task to handle events created by the <cite>container</cite> trigger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>container</strong> – (BlockContainer | ContractEvent): The event source to watch.</p></li>
+<li><p><strong>new_block_timeout</strong> – (int | None): Override for block timeout that is acceptable.
+Defaults to whatever the bot’s settings are for default polling timeout are.</p></li>
+<li><p><strong>start_block</strong> (<em>int</em><em> | </em><em>None</em>) – block number to start processing events from.
+Defaults to whatever the latest block is.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.InvalidContainerTypeError" title="silverback.exceptions.InvalidContainerTypeError"><strong>InvalidContainerTypeError</strong></a> – If the type of <cite>container</cite> is not configurable for the bot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.main.SilverbackBot.on_shutdown">
+<span class="sig-name descname"><span class="pre">on_shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.main.SilverbackBot.on_shutdown" title="Link to this definition"></a></dt>
+<dd><p>Code that will be exected by one worker before worker shutdown, after the
+Runner has decided to put the bot into the “shutdown” state.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_shutdown</span><span class="p">():</span>
+</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Record final state of bot</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.main.SilverbackBot.on_startup">
+<span class="sig-name descname"><span class="pre">on_startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.main.SilverbackBot.on_startup" title="Link to this definition"></a></dt>
+<dd><p>Code that will be exected by one worker after worker startup, but before the
+bot is put into the “run” state by the Runner.</p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">:</span> <span class="n">StateSnapshot</span><span class="p">):</span>
+</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Reprocess missed events or blocks</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.main.SilverbackBot.on_worker_shutdown">
+<span class="sig-name descname"><span class="pre">on_worker_shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.main.SilverbackBot.on_worker_shutdown" title="Link to this definition"></a></dt>
+<dd><p>Code to execute on every worker immediately before broker shutdown.</p>
+<p><code class="docutils literal notranslate"><span class="pre">`{note}</span>
+<span class="pre">This</span> <span class="pre">is</span> <span class="pre">where</span> <span class="pre">you</span> <span class="pre">should</span> <span class="pre">also</span> <span class="pre">release</span> <span class="pre">any</span> <span class="pre">resources</span> <span class="pre">you</span> <span class="pre">have</span> <span class="pre">loaded</span> <span class="pre">during</span>
+<span class="pre">worker</span> <span class="pre">startup.</span>
+<span class="pre">`</span></code></p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Update some external service, perhaps using information from `state`.</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.main.SilverbackBot.on_worker_startup">
+<span class="sig-name descname"><span class="pre">on_worker_startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="headerlink" href="#silverback.main.SilverbackBot.on_worker_startup" title="Link to this definition"></a></dt>
+<dd><p>Code to execute on every worker immediately after broker startup.</p>
+<p><code class="docutils literal notranslate"><span class="pre">`{note}</span>
+<span class="pre">This</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">great</span> <span class="pre">place</span> <span class="pre">to</span> <span class="pre">load</span> <span class="pre">heavy</span> <span class="pre">dependencies</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">workers,</span>
+<span class="pre">such</span> <span class="pre">as</span> <span class="pre">database</span> <span class="pre">connections,</span> <span class="pre">ML</span> <span class="pre">models,</span> <span class="pre">etc.</span>
+<span class="pre">`</span></code></p>
+<p>Usage example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Can provision resources, or add things to `state`.</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="silverback.main.SystemConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.main.</span></span><span class="sig-name descname"><span class="pre">SystemConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdk_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.main.SystemConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="silverback.main.TaskData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.main.</span></span><span class="sig-name descname"><span class="pre">TaskData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.main.TaskData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">

@@ -65,8 +65,8 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
 <ul class="current">
@@ -87,7 +87,18 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#silverback.runner.BaseRunner"><code class="docutils literal notranslate"><span class="pre">BaseRunner</span></code></a><ul>
+<li><a class="reference internal" href="#silverback.runner.BaseRunner.run"><code class="docutils literal notranslate">run()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#silverback.runner.PollingRunner"><code class="docutils literal notranslate"><span class="pre">PollingRunner</span></code></a></li>
+<li><a class="reference internal" href="#silverback.runner.WebsocketRunner"><code class="docutils literal notranslate"><span class="pre">WebsocketRunner</span></code></a><ul>
+<li><a class="reference internal" href="#silverback.runner.WebsocketRunner.run"><code class="docutils literal notranslate">run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
@@ -119,6 +130,58 @@ data-aria-dark="Switch to auto color mode">
 <h1>silverback.runner<a class="headerlink" href="#silverback-runner" title="Link to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback.runner</span></code> module contains implementations for running Silverback apps in a variety
 of different scenarios and trigger methods.</p>
+<dl class="py class" id="module-silverback.runner">
+<dt class="sig sig-object py" id="silverback.runner.BaseRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">BaseRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="main.html#silverback.main.SilverbackBot" title="silverback.main.SilverbackBot"><span class="pre">SilverbackBot</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_exceptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recorder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseRecorder</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.runner.BaseRunner.run">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner.run" title="Link to this definition"></a></dt>
+<dd><p>Run the task broker client for the assembled <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> bot.</p>
+<p>Will listen for events against the connected provider (using <cite>ManagerAccessMixin</cite> context),
+and process them by kicking events over to the configured broker.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.StartupFailure" title="silverback.exceptions.StartupFailure"><strong>StartupFailure</strong></a> – If there was an exception during startup.</p></li>
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.NoTasksAvailableError" title="silverback.exceptions.NoTasksAvailableError"><strong>NoTasksAvailableError</strong></a> – If there are no configured tasks to execute.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="silverback.runner.PollingRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">PollingRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="main.html#silverback.main.SilverbackBot" title="silverback.main.SilverbackBot"><span class="pre">SilverbackBot</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.PollingRunner" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.runner.BaseRunner" title="silverback.runner.BaseRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRunner</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
+<p>Run a single bot against a live network using a basic in-memory queue.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="silverback.runner.WebsocketRunner">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.runner.</span></span><span class="sig-name descname"><span class="pre">WebsocketRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="main.html#silverback.main.SilverbackBot" title="silverback.main.SilverbackBot"><span class="pre">SilverbackBot</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.WebsocketRunner" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.runner.BaseRunner" title="silverback.runner.BaseRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRunner</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
+<p>Run a single bot against a live network using a basic in-memory queue and websockets.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.runner.WebsocketRunner.run">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.WebsocketRunner.run" title="Link to this definition"></a></dt>
+<dd><p>Run the task broker client for the assembled <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> bot.</p>
+<p>Will listen for events against the connected provider (using <cite>ManagerAccessMixin</cite> context),
+and process them by kicking events over to the configured broker.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.StartupFailure" title="silverback.exceptions.StartupFailure"><strong>StartupFailure</strong></a> – If there was an exception during startup.</p></li>
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.NoTasksAvailableError" title="silverback.exceptions.NoTasksAvailableError"><strong>NoTasksAvailableError</strong></a> – If there are no configured tasks to execute.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">
