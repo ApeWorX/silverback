@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import enum
 import math
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
+from ape.logging import LogLevel
 from ape.types import AddressType, HexBytes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
@@ -374,3 +377,12 @@ class BotInfo(BaseModel):
     registry_credentials_id: str | None
 
     environment: list[EnvironmentVariable] = []
+
+
+class BotLogEntry(BaseModel):
+    message: str
+    timestamp: datetime | None
+    level: LogLevel
+
+    def __str__(self) -> str:
+        return f"{self.timestamp}: {self.message}"

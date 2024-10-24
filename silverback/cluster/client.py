@@ -1,9 +1,11 @@
+from datetime import datetime
 from functools import cache
 from typing import ClassVar, Literal
 
 import httpx
 from ape import Contract
 from ape.contracts import ContractInstance
+from ape.logging import LogLevel
 from apepay import Stream, StreamManager
 from pydantic import computed_field
 
@@ -12,6 +14,7 @@ from silverback.version import version
 from .types import (
     BotHealth,
     BotInfo,
+    BotLogEntry,
     ClusterHealth,
     ClusterInfo,
     ClusterState,
@@ -189,11 +192,27 @@ class Bot(BotInfo):
         handle_error_with_response(response)
         return response.json()
 
-    @property
-    def logs(self) -> list[str]:
-        response = self.cluster.get(f"/bots/{self.id}/logs")
+    def filter_logs(
+        self,
+        log_level: LogLevel = LogLevel.INFO,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+    ) -> list[BotLogEntry]:
+        query = {"log_level": log_level.name}
+
+        if start_time:
+            query["start_time"] = start_time.isoformat()
+
+        if end_time:
+            query["end_time"] = end_time.isoformat()
+
+        response = self.cluster.get(f"/bots/{self.id}/logs", params=query, timeout=120)
         handle_error_with_response(response)
-        return response.json()
+        return [BotLogEntry.model_validate(log) for log in response.json()]
+
+    @property
+    def logs(self) -> list[BotLogEntry]:
+        return self.filter_logs()
 
     def remove(self):
         response = self.cluster.delete(f"/bots/{self.id}")
