@@ -150,7 +150,9 @@ def build(generate, path):
             dockerfile_content = DOCKERFILE_CONTENT
             if (Path.cwd() / "requirements.txt").exists():
                 dockerfile_content += "COPY requirements.txt .\n"
-                dockerfile_content += "RUN pip install --upgrade pip && pip install -r requirements.txt\n"
+                dockerfile_content += (
+                    "RUN pip install --upgrade pip && pip install -r requirements.txt\n"
+                )
 
             if (Path.cwd() / "ape-config.yaml").exists():
                 dockerfile_content += "COPY ape-config.yaml .\n"
