@@ -1,5 +1,6 @@
 Cloud Platform
 ==============
+CLI commands for interacting with the Silverback Platform.
 
 .. click:: silverback._cli:login
     :prog: silverback login
