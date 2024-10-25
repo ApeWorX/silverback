@@ -226,7 +226,7 @@ def cluster():
 
 @cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
 def workspaces():
-    """Manage Workspaces on the Silverback Platform"""
+    """View and Manage Workspaces on the Silverback Platform"""
 
 
 @workspaces.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
@@ -296,7 +296,7 @@ def delete_workspace(platform: PlatformClient, workspace: str):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
     if list(workspace_client.clusters):
-        raise click.ClickException("Clusters found in Workspace")
+        raise click.UsageError("Running Clusters found in Workspace. Shut them down first.")
 
     else:
         platform.remove_workspace(workspace)
@@ -308,14 +308,12 @@ def delete_workspace(platform: PlatformClient, workspace: str):
     "-n",
     "--name",
     "update_name",
-    required=True,
     help="Update name for workspace",
 )
 @click.option(
     "-s",
     "--slug",
     "update_slug",
-    required=True,
     help="Update slug for workspace",
 )
 @click.argument("workspace")
@@ -323,8 +321,8 @@ def delete_workspace(platform: PlatformClient, workspace: str):
 def update_workspace(
     platform: PlatformClient,
     workspace: str,
-    update_name: str,
-    update_slug: str,
+    update_name: str | None,
+    update_slug: str | None,
 ):
     """Update name and slug for a workspace"""
 
