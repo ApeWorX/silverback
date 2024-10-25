@@ -406,7 +406,7 @@ class Workspace(WorkspaceInfo):
         self,
         name: str | None = None,
         slug: str | None = None,
-    ) -> "Workspace":
+    ) -> WorkspaceInfo:
         data = dict()
         if name:
             data["name"] = name

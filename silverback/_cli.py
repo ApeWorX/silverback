@@ -346,14 +346,14 @@ def update_workspace(
 def delete_workspace(platform: PlatformClient, workspace: str):
     """Delete an empty Workspace on the Silverback Platform"""
 
-    if not (workspace := platform.workspaces.get(workspace)):
+    if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if len(workspace.clusters) > 0:
+    if len(workspace_client.clusters) > 0:
         raise click.UsageError("Running Clusters found in Workspace. Shut them down first.")
 
-    workspace.remove()
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace.name}'")
+    workspace_client.remove()
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace_client.name}'")
 
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
