@@ -454,7 +454,7 @@ class PlatformClient(httpx.Client):
 
     def remove_workspace(self, workspace_slug):
         workspace_id = self.workspaces[workspace_slug].id
-        response = self.delete(f"/workspaces/{str(workspace_id)}")
+        response = self.delete(f"/workspaces/{workspace_id}")
         handle_error_with_response(response)
 
     def update_workspace(
@@ -465,7 +465,7 @@ class PlatformClient(httpx.Client):
     ):
         workspace_id = self.workspaces[workspace].id
         response = self.patch(
-            f"/workspaces/{str(workspace_id)}",
+            f"/workspaces/{workspace_id}",
             data=dict(slug=update_slug, name=update_name),
         )
         handle_error_with_response(response)

@@ -246,6 +246,20 @@ def list_workspaces(platform: PlatformClient):
         )
 
 
+@workspaces.command(name="info", section="Platform Commands (https://silverback.apeworx.io)")
+@click.argument("workspace")
+@platform_client
+def workspace_info(platform: PlatformClient, workspace: str):
+    """Get Configuration information about a WORKSPACE"""
+
+    if not (workspace_info := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    click.echo(f"{click.style('Name', fg='green')}: {workspace_info.name}")
+    click.echo(f"{click.style('Slug', fg='green')}: '{workspace_info.slug}'")
+    click.echo(f"{click.style('Date Created', fg='green')}: '{workspace_info.created}'")
+
+
 @workspaces.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
 @click.option(
     "-n",
@@ -286,23 +300,6 @@ def new_workspace(
     click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace_name}'")
 
 
-@workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
-@click.argument("workspace")
-@platform_client
-def delete_workspace(platform: PlatformClient, workspace: str):
-    """Delete an empty Workspace on the Silverback Platform"""
-
-    if not (workspace_client := platform.workspaces.get(workspace)):
-        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
-
-    if list(workspace_client.clusters):
-        raise click.UsageError("Running Clusters found in Workspace. Shut them down first.")
-
-    else:
-        platform.remove_workspace(workspace)
-        click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace}'")
-
-
 @workspaces.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
 @click.option(
     "-n",
@@ -334,27 +331,28 @@ def update_workspace(
             "No update name or slug found. Please enter a name or slug to update."
         )
 
-    else:
-        platform.update_workspace(
-            workspace=workspace,
-            update_name=update_name,
-            update_slug=update_slug,
-        )
-        click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{update_name}'")
+    platform.update_workspace(
+        workspace=workspace,
+        update_name=update_name,
+        update_slug=update_slug,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{update_name}'")
 
 
-@workspaces.command(name="info", section="Platform Commands (https://silverback.apeworx.io)")
+@workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
 @platform_client
-def workspace_info(platform: PlatformClient, workspace: str):
-    """Get Configuration information about a WORKSPACE"""
+def delete_workspace(platform: PlatformClient, workspace: str):
+    """Delete an empty Workspace on the Silverback Platform"""
 
-    if not (workspace_info := platform.workspaces.get(workspace)):
+    if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    click.echo(f"{click.style('Name', fg='green')}: {workspace_info.name}")
-    click.echo(f"{click.style('Slug', fg='green')}: '{workspace_info.slug}'")
-    click.echo(f"{click.style('Date Created', fg='green')}: '{workspace_info.created}'")
+    if len(workspace_client.clusters) > 0:
+        raise click.UsageError("Running Clusters found in Workspace. Shut them down first.")
+
+    platform.remove_workspace(workspace)
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace}'")
 
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
