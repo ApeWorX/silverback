@@ -460,10 +460,14 @@ class PlatformClient(httpx.Client):
     def update_workspace(
         self,
         workspace: str,
-        update_slug: str,
-        update_name: str,
+        update_slug: str | None,
+        update_name: str | None,
     ):
         workspace_id = self.workspaces[workspace].id
+        if update_slug == None: 
+            update_slug = self.workspaces[workspace].slug
+        if update_name == None:
+            update_name = self.workspaces[workspace].name
         response = self.patch(
             f"/workspaces/{str(workspace_id)}",
             data=dict(slug=update_slug, name=update_name),
