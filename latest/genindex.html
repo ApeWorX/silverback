@@ -215,6 +215,10 @@ data-aria-dark="Switch to auto color mode">
       <ul>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-n">silverback-cluster-new command line option</a>
 </li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-n">silverback-cluster-workspaces-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-n">silverback-cluster-workspaces-update command line option</a>
+</li>
       </ul></li>
       <li>
     --network
@@ -296,7 +300,15 @@ data-aria-dark="Switch to auto color mode">
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-p">silverback-cluster-vars-update command line option</a>
 </li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">silverback-cluster-workspaces command line option</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-delete-p">silverback-cluster-workspaces-delete command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-info-p">silverback-cluster-workspaces-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-list-p">silverback-cluster-workspaces-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-p">silverback-cluster-workspaces-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-p">silverback-cluster-workspaces-update command line option</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-login-p">silverback-login command line option</a>
 </li>
@@ -345,15 +357,19 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-s">silverback-cluster-bots-logs command line option</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     --slug
 
       <ul>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-s">silverback-cluster-new command line option</a>
 </li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-s">silverback-cluster-workspaces-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-s">silverback-cluster-workspaces-update command line option</a>
+</li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     --tier
 
@@ -504,6 +520,10 @@ data-aria-dark="Switch to auto color mode">
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-n">silverback-cluster-new command line option</a>
 </li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-n">silverback-cluster-workspaces-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-n">silverback-cluster-workspaces-update command line option</a>
+</li>
       </ul></li>
       <li>
     -p
@@ -563,7 +583,15 @@ data-aria-dark="Switch to auto color mode">
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-p">silverback-cluster-vars-update command line option</a>
 </li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">silverback-cluster-workspaces command line option</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-delete-p">silverback-cluster-workspaces-delete command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-info-p">silverback-cluster-workspaces-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-list-p">silverback-cluster-workspaces-list command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-p">silverback-cluster-workspaces-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-p">silverback-cluster-workspaces-update command line option</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-login-p">silverback-login command line option</a>
 </li>
@@ -586,6 +614,10 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-logs-s">silverback-cluster-bots-logs command line option</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-s">silverback-cluster-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-s">silverback-cluster-workspaces-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-s">silverback-cluster-workspaces-update command line option</a>
 </li>
         <li><a href="commands/run.html#cmdoption-silverback-worker-s">silverback-worker command line option</a>
 </li>
@@ -1151,8 +1183,6 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-pay-create-arg-CLUSTER_PATH">CLUSTER_PATH</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     silverback-cluster-registry-auth-info command line option
 
@@ -1168,6 +1198,8 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-registry-auth-info-arg-NAME">NAME</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     silverback-cluster-registry-auth-list command line option
 
@@ -1320,12 +1352,70 @@ data-aria-dark="Switch to auto color mode">
 </li>
       </ul></li>
       <li>
-    silverback-cluster-workspaces command line option
+    silverback-cluster-workspaces-delete command line option
 
       <ul>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">--profile</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-delete-p">--profile</a>
 </li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-p">-p</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-delete-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-delete-arg-WORKSPACE">WORKSPACE</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-workspaces-info command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-info-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-info-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-info-arg-WORKSPACE">WORKSPACE</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-workspaces-list command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-list-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-list-p">-p</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-workspaces-new command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-n">--name</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-s">--slug</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-n">-n</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-new-s">-s</a>
+</li>
+      </ul></li>
+      <li>
+    silverback-cluster-workspaces-update command line option
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-n">--name</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-p">--profile</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-s">--slug</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-n">-n</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-p">-p</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-s">-s</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-arg-WORKSPACE">WORKSPACE</a>
 </li>
       </ul></li>
       <li>
@@ -1464,6 +1554,12 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-list-arg-WORKSPACE">silverback-cluster-list command line option</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-arg-WORKSPACE">silverback-cluster-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-delete-arg-WORKSPACE">silverback-cluster-workspaces-delete command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-info-arg-WORKSPACE">silverback-cluster-workspaces-info command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-workspaces-update-arg-WORKSPACE">silverback-cluster-workspaces-update command line option</a>
 </li>
       </ul></li>
   </ul></td>
