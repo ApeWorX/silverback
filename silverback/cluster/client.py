@@ -464,9 +464,9 @@ class PlatformClient(httpx.Client):
         update_name: str | None,
     ):
         workspace_id = self.workspaces[workspace].id
-        if update_slug == None: 
+        if update_slug is None:
             update_slug = self.workspaces[workspace].slug
-        if update_name == None:
+        if update_name is None:
             update_name = self.workspaces[workspace].name
         response = self.patch(
             f"/workspaces/{str(workspace_id)}",
