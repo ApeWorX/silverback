@@ -63,6 +63,16 @@ def _account_callback(ctx, param, val):
     return val
 
 
+def _build_helper(docker_fn: str, dockerfile_c: str):
+    """
+    Used in multiple places in build.
+    """
+    dockerfile_path = Path.cwd() / ".silverback-images" / docker_fn
+    dockerfile_path.parent.mkdir(exist_ok=True)
+    dockerfile_path.write_text(dockerfile_c.strip() + "\n")
+    click.echo(f"Generated {dockerfile_path}")
+
+
 # TODO: Make `silverback.settings.Settings` (to remove having to set envvars)
 # TODO: Use `envvar=...` to be able to set the value of options from correct envvar
 def _network_callback(ctx, param, val):
@@ -128,13 +138,6 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
     asyncio.run(runner.run())
 
 
-def build_helper(docker_fn: str, dockerfile_c: str):
-    dockerfile_path = Path.cwd() / ".silverback-images" / docker_fn
-    dockerfile_path.parent.mkdir(exist_ok=True)
-    dockerfile_path.write_text(dockerfile_c.strip() + "\n")
-    click.echo(f"Generated {dockerfile_path}")
-
-
 @cli.command(section="Local Commands")
 @click.option("--generate", is_flag=True, default=False)
 @click.argument("path", required=False, type=str, default="bots")
@@ -155,7 +158,7 @@ def build(generate, path):
             dockerfile_content = DOCKERFILE_CONTENT
             docker_filename = f"Dockerfile.{path.parent.name}-bot"
             dockerfile_content += f"COPY {path.name}/ /app/bot\n"
-            build_helper(docker_filename, dockerfile_content)
+            _build_helper(docker_filename, dockerfile_content)
             return
 
         files = sorted({file for file in path.iterdir() if file.is_file()}, reverse=True)
@@ -183,7 +186,7 @@ def build(generate, path):
             else:
                 docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}-bot"
                 dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py\n"
-            build_helper(docker_filename, dockerfile_content)
+            _build_helper(docker_filename, dockerfile_content)
         return
 
     if not (path := Path.cwd() / ".silverback-images").exists():
