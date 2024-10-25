@@ -305,12 +305,14 @@ def new_workspace(
     "-n",
     "--name",
     "name",
+    default=None,
     help="Update name for workspace",
 )
 @click.option(
     "-s",
     "--slug",
     "slug",
+    default=None,
     help="Update slug for workspace",
 )
 @click.argument("workspace")
