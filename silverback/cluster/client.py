@@ -464,9 +464,14 @@ class PlatformClient(httpx.Client):
         update_name: str | None,
     ):
         workspace_id = self.workspaces[workspace].id
+        form_data = dict()
+        if update_slug:
+            form_data["slug"] = update_slug
+        if update_name:
+            form_data["name"] = update_name
         response = self.patch(
             f"/workspaces/{workspace_id}",
-            data=dict(slug=update_slug, name=update_name),
+            data=form_data,
         )
         handle_error_with_response(response)
         update_workspace = Workspace.model_validate_json(response.text)

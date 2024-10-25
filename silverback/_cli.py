@@ -330,13 +330,15 @@ def update_workspace(
         raise click.UsageError(
             "No update name or slug found. Please enter a name or slug to update."
         )
+    elif update_name == "" or update_slug == "":
+        raise click.UsageError("Empty string value found for name or slug.")
 
     platform.update_workspace(
         workspace=workspace,
         update_name=update_name,
         update_slug=update_slug,
     )
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{update_name}'")
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{workspace}'")
 
 
 @workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
