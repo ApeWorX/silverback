@@ -329,6 +329,11 @@ def update_workspace(
     if not (platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
+    elif update_name is None and update_slug is None:
+        raise click.UsageError(
+            "No update name or slug found. Please enter a name or slug to update."
+        )
+
     else:
         platform.update_workspace(
             workspace=workspace,
