@@ -406,7 +406,7 @@ class Workspace(WorkspaceInfo):
         self,
         name: str | None = None,
         slug: str | None = None,
-    ) -> WorkspaceInfo:
+    ) -> "Workspace":
         data = dict()
         if name:
             data["name"] = name
@@ -417,7 +417,7 @@ class Workspace(WorkspaceInfo):
             data=data,
         )
         handle_error_with_response(response)
-        return Workspace.model_validate_json(response.text)
+        return Workspace.model_validate(response.json())
 
     def remove(self):
         response = self.client.delete(f"/workspaces/{self.id}")
