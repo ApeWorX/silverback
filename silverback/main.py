@@ -1,6 +1,8 @@
 import atexit
+import inspect
 from collections import defaultdict
 from datetime import timedelta
+from functools import wraps
 from typing import Any, Callable
 
 from ape.api.networks import LOCAL_NETWORK_NAME
@@ -138,6 +140,7 @@ class SilverbackBot(ManagerAccessMixin):
 
         self.signer = settings.get_signer()
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
+        self.use_fork = settings.FORK_MODE
 
         signer_str = f"\n  SIGNER={repr(self.signer)}"
         new_block_timeout_str = (
@@ -146,7 +149,7 @@ class SilverbackBot(ManagerAccessMixin):
 
         network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
         logger.success(
-            f'Loaded Silverback Bot:\n  NETWORK="{network_choice}"'
+            f'Loaded Silverback Bot:\n  NETWORK="{network_choice}"\n  FORK_MODE={self.use_fork}'
             f"{signer_str}{new_block_timeout_str}"
         )
 
@@ -283,6 +286,22 @@ class SilverbackBot(ManagerAccessMixin):
                 labels["event_signature"] = container.abi.signature
 
             self.tasks[task_type].append(TaskData(name=handler.__name__, labels=labels))
+
+            if self.use_fork:
+                from ape import networks  # NOTE: Defer import for load speed
+
+                # Trigger worker-side handling using fork network by wrapping handler
+                is_awaitable = inspect.isawaitable(handler)
+
+                @wraps(handler)
+                async def fork_handler(*args, **kwargs):
+                    with networks.fork():
+                        if is_awaitable:
+                            return await handler(*args, **kwargs)
+                        else:
+                            return handler(*args, **kwargs)
+
+                handler = fork_handler
 
             return self.broker.register_task(
                 handler,

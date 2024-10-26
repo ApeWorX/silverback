@@ -28,6 +28,10 @@ class Settings(BaseSettings, ManagerAccessMixin):
     # A unique identifier for this silverback instance
     BOT_NAME: str = "bot"
 
+    # Execute every handler using an independent fork context
+    # NOTE: Requires fork-able provider installed and configured for network
+    FORK_MODE: bool = False
+
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
     BROKER_URI: str = ""  # To be deprecated in 0.6
     BROKER_KWARGS: dict[str, Any] = dict()
