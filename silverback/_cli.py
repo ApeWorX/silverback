@@ -159,35 +159,34 @@ def build(generate, path):
             docker_filename = f"Dockerfile.{path.parent.name}-bot"
             dockerfile_content += f"COPY {path.name}/ /app/bot\n"
             _build_helper(docker_filename, dockerfile_content)
-            return
 
-        files = sorted({file for file in path.iterdir() if file.is_file()}, reverse=True)
-        bots = []
-        for file in files:
-            if file.name == "__init__.py" or file.name == "bot.py":
-                bots = [file]
-                break
-            bots.append(file)
-        for bot in bots:
-            dockerfile_content = DOCKERFILE_CONTENT
-            if (Path.cwd() / "requirements.txt").exists():
-                dockerfile_content += "COPY requirements.txt .\n"
-                dockerfile_content += (
-                    "RUN pip install --upgrade pip && pip install -r requirements.txt\n"
-                )
+        else:
+            files = sorted({file for file in path.iterdir() if file.is_file()}, reverse=True)
+            bots = []
+            for file in files:
+                if file.name == "__init__.py" or file.name == "bot.py":
+                    bots = [file]
+                    break
+                bots.append(file)
+            for bot in bots:
+                dockerfile_content = DOCKERFILE_CONTENT
+                if (Path.cwd() / "requirements.txt").exists():
+                    dockerfile_content += "COPY requirements.txt .\n"
+                    dockerfile_content += (
+                        "RUN pip install --upgrade pip && pip install -r requirements.txt\n"
+                    )
 
-            if (Path.cwd() / "ape-config.yaml").exists():
-                dockerfile_content += "COPY ape-config.yaml .\n"
-                dockerfile_content += "RUN ape plugins install -U .\n"
+                if (Path.cwd() / "ape-config.yaml").exists():
+                    dockerfile_content += "COPY ape-config.yaml .\n"
+                    dockerfile_content += "RUN ape plugins install -U .\n"
 
-            if bot.name == "__init__.py" or bot.name == "bot.py":
-                docker_filename = f"Dockerfile.{bot.parent.parent.name}-bot"
-                dockerfile_content += f"COPY {path.name}/ /app/bot\n"
-            else:
-                docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}-bot"
-                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py\n"
-            _build_helper(docker_filename, dockerfile_content)
-        return
+                if bot.name == "__init__.py" or bot.name == "bot.py":
+                    docker_filename = f"Dockerfile.{bot.parent.parent.name}-bot"
+                    dockerfile_content += f"COPY {path.name}/ /app/bot\n"
+                else:
+                    docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
+                    dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py\n"
+                _build_helper(docker_filename, dockerfile_content)
 
     if not (path := Path.cwd() / ".silverback-images").exists():
         raise FileNotFoundError(
