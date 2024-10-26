@@ -19,6 +19,7 @@ from ape.contracts import ContractInstance
 from ape.exceptions import Abort, ApeException
 from fief_client.integrations.cli import FiefAuth
 
+from silverback._build_utils import generate_dockerfiles
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
@@ -34,14 +35,6 @@ from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.types import ClusterTier, LogLevel, ResourceStatus
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
-
-DOCKERFILE_CONTENT = """
-FROM ghcr.io/apeworx/silverback:stable
-USER root
-WORKDIR /app
-RUN chown harambe:harambe /app
-USER harambe
-"""
 
 
 @click.group(cls=SectionedHelpGroup)
@@ -61,16 +54,6 @@ def _account_callback(ctx, param, val):
         os.environ["SILVERBACK_SIGNER_ALIAS"] = val
 
     return val
-
-
-def _build_helper(docker_fn: str, dockerfile_c: str):
-    """
-    Used in multiple places in build.
-    """
-    dockerfile_path = Path.cwd() / ".silverback-images" / docker_fn
-    dockerfile_path.parent.mkdir(exist_ok=True)
-    dockerfile_path.write_text(dockerfile_c.strip() + "\n")
-    click.echo(f"Generated {dockerfile_path}")
 
 
 # TODO: Make `silverback.settings.Settings` (to remove having to set envvars)
@@ -154,39 +137,7 @@ def build(generate, path):
                 f"You should have a '{path}/' or 'bot/' folder, or a 'bot.py' file in the root "
                 "of your project."
             )
-        if path.is_file():
-            dockerfile_content = DOCKERFILE_CONTENT
-            docker_filename = f"Dockerfile.{path.parent.name}-bot"
-            dockerfile_content += f"COPY {path.name}/ /app/bot\n"
-            _build_helper(docker_filename, dockerfile_content)
-
-        else:
-            files = sorted({file for file in path.iterdir() if file.is_file()}, reverse=True)
-            bots = []
-            for file in files:
-                if file.name == "__init__.py" or file.name == "bot.py":
-                    bots = [file]
-                    break
-                bots.append(file)
-            for bot in bots:
-                dockerfile_content = DOCKERFILE_CONTENT
-                if (Path.cwd() / "requirements.txt").exists():
-                    dockerfile_content += "COPY requirements.txt .\n"
-                    dockerfile_content += (
-                        "RUN pip install --upgrade pip && pip install -r requirements.txt\n"
-                    )
-
-                if (Path.cwd() / "ape-config.yaml").exists():
-                    dockerfile_content += "COPY ape-config.yaml .\n"
-                    dockerfile_content += "RUN ape plugins install -U .\n"
-
-                if bot.name == "__init__.py" or bot.name == "bot.py":
-                    docker_filename = f"Dockerfile.{bot.parent.parent.name}-bot"
-                    dockerfile_content += f"COPY {path.name}/ /app/bot\n"
-                else:
-                    docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
-                    dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py\n"
-                _build_helper(docker_filename, dockerfile_content)
+        generate_dockerfiles(path)
 
     if not (path := Path.cwd() / ".silverback-images").exists():
         raise FileNotFoundError(
