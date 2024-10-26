@@ -402,6 +402,27 @@ class Workspace(WorkspaceInfo):
 
         return Stream(manager=StreamManager(stream_info.manager), id=stream_info.stream_id)
 
+    def update(
+        self,
+        name: str | None = None,
+        slug: str | None = None,
+    ) -> "Workspace":
+        data = dict()
+        if name:
+            data["name"] = name
+        if slug:
+            data["slug"] = slug
+        response = self.client.patch(
+            f"/workspaces/{self.id}",
+            data=data,
+        )
+        handle_error_with_response(response)
+        return Workspace.model_validate(response.json())
+
+    def remove(self):
+        response = self.client.delete(f"/workspaces/{self.id}")
+        handle_error_with_response(response)
+
 
 class PlatformClient(httpx.Client):
     def __init__(self, *args, **kwargs):
@@ -451,27 +472,6 @@ class PlatformClient(httpx.Client):
         new_workspace = Workspace.model_validate_json(response.text)
         self.workspaces.update({new_workspace.slug: new_workspace})  # NOTE: Update cache
         return new_workspace
-
-    def remove_workspace(self, workspace_slug):
-        workspace_id = self.workspaces[workspace_slug].id
-        response = self.delete(f"/workspaces/{workspace_id}")
-        handle_error_with_response(response)
-
-    def update_workspace(
-        self,
-        workspace: str,
-        update_slug: str | None,
-        update_name: str | None,
-    ):
-        workspace_id = self.workspaces[workspace].id
-        response = self.patch(
-            f"/workspaces/{workspace_id}",
-            data=dict(slug=update_slug, name=update_name),
-        )
-        handle_error_with_response(response)
-        update_workspace = Workspace.model_validate_json(response.text)
-        self.workspaces.update({update_workspace.slug: update_workspace})  # NOTE: Update cache
-        return update_workspace
 
     def get_stream_manager(self, chain_id: int) -> StreamManager:
         response = self.get(f"/streams/manager/{chain_id}")
