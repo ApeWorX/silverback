@@ -17,7 +17,7 @@ USER harambe
 
 # Note: Python3.12 supports subclassing pathlib.Path
 class BasePath(Path):
-    _flavour = type(Path())._flavour
+    _flavour = type(Path())._flavour  # type: ignore
 
 
 class FilePath(BasePath):
