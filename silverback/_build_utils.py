@@ -1,12 +1,10 @@
+import shlex
+import subprocess
+from functools import singledispatchmethod
+from pathlib import Path
 from typing import Union
 
 import click
-import shlex
-import subprocess
-
-from functools import singledispatchmethod
-from pathlib import Path
-
 
 DOCKERFILE_CONTENT = """
 FROM ghcr.io/apeworx/silverback:stable
@@ -37,15 +35,11 @@ def generate_path(path: Path):
     elif path.is_dir():
         return DirPath(str(path))
     else:
-        raise ValueError(
-            f"{path} is neither a file nor a directory"
-        )
+        raise ValueError(f"{path} is neither a file nor a directory")
 
 
-PathType = Union[
-    "FilePath",
-    "DirPath"
-]
+PathType = Union["FilePath", "DirPath"]
+
 
 def generate_dockerfiles(path: Path):
     path = generate_path(path)

@@ -19,7 +19,7 @@ from ape.contracts import ContractInstance
 from ape.exceptions import Abort, ApeException
 from fief_client.integrations.cli import FiefAuth
 
-from silverback._build_utils import generate_dockerfiles, generate_docker_images
+from silverback._build_utils import generate_docker_images, generate_dockerfiles
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
