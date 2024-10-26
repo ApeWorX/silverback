@@ -1,6 +1,8 @@
 from typing import Union
 
 import click
+import shlex
+import subprocess
 
 from functools import singledispatchmethod
 from pathlib import Path
@@ -48,8 +50,12 @@ PathType = Union[
 def generate_dockerfiles(path: Path):
     path = generate_path(path)
     dg = DockerfileGenerator()
-    breakpoint()
     dg.generate_dockerfiles(path)
+
+
+def generate_docker_images(path: Path):
+    DockerfileGenerator.generate_images(path)
+
 
 class DockerfileGenerator:
 
@@ -118,3 +124,26 @@ class DockerfileGenerator:
                 break
             bots.append(file)
         return bots
+
+    @staticmethod
+    def generate_images(path: Path):
+        dockerfiles = {file for file in path.iterdir() if file.is_file()}
+        for file in dockerfiles:
+            try:
+                command = shlex.split(
+                    "docker build -f "
+                    f"./{file.parent.name}/{file.name} "
+                    f"-t {file.name.split('.')[1]}:latest ."
+                )
+                result = subprocess.run(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    check=True,
+                )
+                click.echo(result.stdout)
+            except subprocess.CalledProcessError as e:
+                click.echo("Error during docker build:")
+                click.echo(e.stderr)
+                raise

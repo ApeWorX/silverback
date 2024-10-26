@@ -19,7 +19,7 @@ from ape.contracts import ContractInstance
 from ape.exceptions import Abort, ApeException
 from fief_client.integrations.cli import FiefAuth
 
-from silverback._build_utils import generate_dockerfiles
+from silverback._build_utils import generate_dockerfiles, generate_docker_images
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
@@ -144,26 +144,8 @@ def build(generate, path):
             f"The dockerfile directory '{path}' does not exist. "
             "You should have a `{path}/` folder in the root of your project."
         )
-    dockerfiles = {file for file in path.iterdir() if file.is_file()}
-    for file in dockerfiles:
-        try:
-            command = shlex.split(
-                "docker build -f "
-                f"./{file.parent.name}/{file.name} "
-                f"-t {file.name.split('.')[1]}:latest ."
-            )
-            result = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                check=True,
-            )
-            click.echo(result.stdout)
-        except subprocess.CalledProcessError as e:
-            click.echo("Error during docker build:")
-            click.echo(e.stderr)
-            raise
+
+    generate_docker_images(path)
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
