@@ -15,6 +15,7 @@ USER harambe
 """
 
 
+# Note: Python3.12 supports subclassing pathlib.Path
 class BasePath(Path):
     _flavour = type(Path())._flavour
     _parse_args = type(Path())._parse_args
