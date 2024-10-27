@@ -1,3 +1,4 @@
+import asyncio
 import atexit
 import inspect
 from collections import defaultdict
@@ -231,19 +232,25 @@ class SilverbackBot(ManagerAccessMixin):
             last_block_processed=self.state.get("system:last_block_processed", -1),
         )
 
+    # To ensure we don't have too many forks at once
+    # HACK: Until `NetworkManager.fork` (and `ProviderContextManager`) allows concurrency
+
+    fork_lock: asyncio.Lock = asyncio.Lock()
+
     def _with_fork_decorator(self, handler: Callable) -> Callable:
         # Trigger worker-side handling using fork network by wrapping handler
         fork_context = self.provider.network_manager.fork
 
         @wraps(handler)
         async def fork_handler(*args, **kwargs):
-            with fork_context():
-                result = handler(*args, **kwargs)
+            async with self.fork_lock:
+                with fork_context():
+                    result = handler(*args, **kwargs)
 
-                if inspect.isawaitable(result):
-                    return await result
+                    if inspect.isawaitable(result):
+                        return await result
 
-                return result
+                    return result
 
         return fork_handler
 
