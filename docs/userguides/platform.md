@@ -2,7 +2,25 @@
 
 In this guide, we are going to show you more details on how to deploy your application to the [Silverback Platform](https://silverback.apeworx.io).
 
-## Creating a Cluster
+
+
+## Quick Commands
+
+Below are commonly used Silverback commands that may be helpful in quickly setting up and managing your cluster. These commands were used frequently in practice and are provided for easy reference.
+
+Create a new cluster: `silverback cluster new ApeWorX -p staging -n Demo -s demo`
+
+Adds time to a cluster: `silverback cluster pay create -p staging echodemo/demo --time "1 hour" --account testnet`
+
+`silverback cluster new playground -p staging -n Demo -s demo` doesnt work, 
+
+List available clusters: `silverback cluster list playground -p staging` list cluster.
+
+Note: `foundryup` make sure it is up to date
+
+View bot logs: `silverback cluster bots logs erc4626 -p staging -c ApeWorX/staging`: get the log of the bot
+
+Start a bot: `silverback cluster bots new erc4626 -i ghcr.io/apeacademy/silverback_yield:latest -c ApeWorX/staging -n ethereum:mainnet:alchemy -p staging -g erc4626`
 
 The Silverback Platform runs your Bots on dedicated managed application Clusters.
 These Clusters will take care to orchestrate infrastructure, monitor, run your triggers, and collect metrics for your applications.
