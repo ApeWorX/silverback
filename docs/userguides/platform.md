@@ -3,7 +3,6 @@
 In this guide, we are going to show you more details on how to deploy your application to the [Silverback Platform](https://silverback.apeworx.io).
 
 
-
 ## Quick Commands
 
 Below are commonly used Silverback commands that may be helpful in quickly setting up and managing your cluster. These commands were used frequently in practice and are provided for easy reference.
