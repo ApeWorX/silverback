@@ -1,4 +1,4 @@
-# Managing Workspaces and Clusters
+# Silverback Platform
 
 In this guide, we are going to show you more details on how to manage get set up locally with the [Silverback Platform](https://silverback.apeworx.io) to get your bots to production.
 
