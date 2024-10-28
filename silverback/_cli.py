@@ -17,7 +17,7 @@ from ape.contracts import ContractInstance
 from ape.exceptions import Abort, ApeException
 from fief_client.integrations.cli import FiefAuth
 
-from silverback._build_utils import generate_docker_images, generate_dockerfiles
+from silverback._build_utils import build_docker_images, generate_dockerfiles
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
@@ -143,7 +143,7 @@ def build(generate, path):
             "You should have a `{path}/` folder in the root of your project."
         )
 
-    generate_docker_images(path)
+    build_docker_images(path)
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
