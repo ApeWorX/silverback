@@ -1,7 +1,5 @@
 import asyncio
 import os
-import shlex
-import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -19,6 +17,7 @@ from ape.contracts import ContractInstance
 from ape.exceptions import Abort, ApeException
 from fief_client.integrations.cli import FiefAuth
 
+from silverback._build_utils import build_docker_images, generate_dockerfiles
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
@@ -34,18 +33,6 @@ from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.types import ClusterTier, LogLevel, ResourceStatus
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
-
-DOCKERFILE_CONTENT = """
-FROM ghcr.io/apeworx/silverback:stable
-USER root
-WORKDIR /app
-RUN chown harambe:harambe /app
-USER harambe
-COPY ape-config.yaml .
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
-RUN ape plugins install -U .
-"""
 
 
 @click.group(cls=SectionedHelpGroup)
@@ -138,57 +125,25 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
 def build(generate, path):
     """Generate Dockerfiles and build bot images"""
     if generate:
-        if not (path := Path.cwd() / path).exists():
+        if (
+            not (path := Path.cwd() / path).exists()
+            and not (path := Path.cwd() / "bot").exists()
+            and not (path := Path.cwd() / "bot.py").exists()
+        ):
             raise FileNotFoundError(
-                f"The bots directory '{path}' does not exist. "
-                "You should have a `{path}/` folder in the root of your project."
+                f"The bots directory '{path}', 'bot/' and 'bot.py' does not exist in your path. "
+                f"You should have a '{path}/' or 'bot/' folder, or a 'bot.py' file in the root "
+                "of your project."
             )
-        files = {file for file in path.iterdir() if file.is_file()}
-        bots = []
-        for file in files:
-            if "__init__" in file.name:
-                bots = [file]
-                break
-            bots.append(file)
-        for bot in bots:
-            dockerfile_content = DOCKERFILE_CONTENT
-            if "__init__" in bot.name:
-                docker_filename = f"Dockerfile.{bot.parent.name}"
-                dockerfile_content += f"COPY {path.name}/ /app/bot"
-            else:
-                docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
-                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py"
-            dockerfile_path = Path.cwd() / ".silverback-images" / docker_filename
-            dockerfile_path.parent.mkdir(exist_ok=True)
-            dockerfile_path.write_text(dockerfile_content.strip() + "\n")
-            click.echo(f"Generated {dockerfile_path}")
-        return
+        generate_dockerfiles(path)
 
     if not (path := Path.cwd() / ".silverback-images").exists():
         raise FileNotFoundError(
             f"The dockerfile directory '{path}' does not exist. "
             "You should have a `{path}/` folder in the root of your project."
         )
-    dockerfiles = {file for file in path.iterdir() if file.is_file()}
-    for file in dockerfiles:
-        try:
-            command = shlex.split(
-                "docker build -f "
-                f"./{file.parent.name}/{file.name} "
-                f"-t {file.name.split('.')[1]}:latest ."
-            )
-            result = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                check=True,
-            )
-            click.echo(result.stdout)
-        except subprocess.CalledProcessError as e:
-            click.echo("Error during docker build:")
-            click.echo(e.stderr)
-            raise
+
+    build_docker_images(path)
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
