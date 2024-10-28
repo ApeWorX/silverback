@@ -1,5 +1,6 @@
 Cloud Platform
 ==============
+CLI commands for interacting with the Silverback Platform.
 
 .. click:: silverback._cli:login
     :prog: silverback login
@@ -8,7 +9,12 @@ Cloud Platform
 .. click:: silverback._cli:cluster
     :prog: silverback cluster
     :nested: full
-    :commands: workspaces, new, list, info, health
+    :commands: new, update, list, info, health
+
+.. click:: silverback._cli:workspaces
+    :prog: silverback cluster workspaces
+    :nested: full
+    :commands: new, list, info, update, delete
 
 .. click:: silverback._cli:vars
     :prog: silverback cluster vars

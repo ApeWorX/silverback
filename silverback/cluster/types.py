@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import enum
 import math
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
+from ape.logging import LogLevel
 from ape.types import AddressType, HexBytes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
@@ -207,7 +210,7 @@ class ClusterConfiguration(BaseModel):
 class ClusterTier(enum.IntEnum):
     """Suggestions for different tier configurations"""
 
-    PERSONAL = ClusterConfiguration(
+    STANDARD = ClusterConfiguration(
         cpu="0.25 vCPU",
         memory="512 MiB",
         networks=3,
@@ -215,7 +218,7 @@ class ClusterTier(enum.IntEnum):
         bandwidth="512 B/sec",  # 1.236 GB/mo
         duration=3,  # months
     ).encode()
-    PROFESSIONAL = ClusterConfiguration(
+    PREMIUM = ClusterConfiguration(
         cpu="1 vCPU",
         memory="2 GB",
         networks=10,
@@ -307,8 +310,10 @@ class ServiceHealth(BaseModel):
 
 
 class ClusterHealth(BaseModel):
-    ars: ServiceHealth = Field(exclude=True)  # TODO: Replace w/ cluster
-    ccs: ServiceHealth = Field(exclude=True)  # TODO: Replace w/ cluster
+    # TODO: Replace w/ cluster
+    ccs: ServiceHealth
+    # NOTE: network => healthy
+    ars: dict[str, ServiceHealth] = {}
     bots: dict[str, ServiceHealth] = {}
 
     @field_validator("bots", mode="before")  # TODO: Fix so this is default
@@ -317,7 +322,9 @@ class ClusterHealth(BaseModel):
 
     @computed_field
     def cluster(self) -> ServiceHealth:
-        return ServiceHealth(healthy=self.ars.healthy and self.ccs.healthy)
+        return ServiceHealth(
+            healthy=all(ars.healthy for ars in self.ars.values()) and self.ccs.healthy
+        )
 
 
 class RegistryCredentialsInfo(BaseModel):
@@ -370,3 +377,12 @@ class BotInfo(BaseModel):
     registry_credentials_id: str | None
 
     environment: list[EnvironmentVariable] = []
+
+
+class BotLogEntry(BaseModel):
+    message: str
+    timestamp: datetime | None
+    level: LogLevel
+
+    def __str__(self) -> str:
+        return f"{self.timestamp}: {self.message}"

@@ -1,8 +1,6 @@
 import asyncio
 import os
-import shlex
-import subprocess
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import click
@@ -19,6 +17,7 @@ from ape.contracts import ContractInstance
 from ape.exceptions import Abort, ApeException
 from fief_client.integrations.cli import FiefAuth
 
+from silverback._build_utils import build_docker_images, generate_dockerfiles
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
@@ -31,21 +30,9 @@ from silverback._click_ext import (
     token_amount_callback,
 )
 from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.types import ClusterTier, ResourceStatus
+from silverback.cluster.types import ClusterTier, LogLevel, ResourceStatus
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
-
-DOCKERFILE_CONTENT = """
-FROM ghcr.io/apeworx/silverback:stable
-USER root
-WORKDIR /app
-RUN chown harambe:harambe /app
-USER harambe
-COPY ape-config.yaml .
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
-RUN ape plugins install .
-"""
 
 
 @click.group(cls=SectionedHelpGroup)
@@ -120,7 +107,8 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
             runner_class = PollingRunner
         else:
             raise click.BadOptionUsage(
-                option_name="network", message="Network choice cannot support running bot"
+                option_name="network",
+                message="Network choice cannot support running bot",
             )
 
     runner = runner_class(
@@ -137,53 +125,25 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
 def build(generate, path):
     """Generate Dockerfiles and build bot images"""
     if generate:
-        if not (path := Path.cwd() / path).exists():
+        if (
+            not (path := Path.cwd() / path).exists()
+            and not (path := Path.cwd() / "bot").exists()
+            and not (path := Path.cwd() / "bot.py").exists()
+        ):
             raise FileNotFoundError(
-                f"The bots directory '{path}' does not exist. "
-                "You should have a `{path}/` folder in the root of your project."
+                f"The bots directory '{path}', 'bot/' and 'bot.py' does not exist in your path. "
+                f"You should have a '{path}/' or 'bot/' folder, or a 'bot.py' file in the root "
+                "of your project."
             )
-        files = {file for file in path.iterdir() if file.is_file()}
-        bots = []
-        for file in files:
-            if "__init__" in file.name:
-                bots = [file]
-                break
-            bots.append(file)
-        for bot in bots:
-            dockerfile_content = DOCKERFILE_CONTENT
-            if "__init__" in bot.name:
-                docker_filename = f"Dockerfile.{bot.parent.name}"
-                dockerfile_content += f"COPY {path.name}/ /app/bot"
-            else:
-                docker_filename = f"Dockerfile.{bot.name.replace('.py', '')}"
-                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py"
-            dockerfile_path = Path.cwd() / ".silverback-images" / docker_filename
-            dockerfile_path.parent.mkdir(exist_ok=True)
-            dockerfile_path.write_text(dockerfile_content.strip() + "\n")
-            click.echo(f"Generated {dockerfile_path}")
-        return
+        generate_dockerfiles(path)
 
     if not (path := Path.cwd() / ".silverback-images").exists():
         raise FileNotFoundError(
             f"The dockerfile directory '{path}' does not exist. "
             "You should have a `{path}/` folder in the root of your project."
         )
-    dockerfiles = {file for file in path.iterdir() if file.is_file()}
-    for file in dockerfiles:
-        try:
-            command = shlex.split(
-                "docker build -f "
-                f"./{file.parent.name}/{file.name} "
-                f"-t {file.name.split('.')[1]}:latest ."
-            )
-            result = subprocess.run(
-                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True
-            )
-            click.echo(result.stdout)
-        except subprocess.CalledProcessError as e:
-            click.echo("Error during docker build:")
-            click.echo(e.stderr)
-            raise
+
+    build_docker_images(path)
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
@@ -219,9 +179,14 @@ def cluster():
     your platform account via `-c WORKSPACE/NAME`"""
 
 
-@cluster.command(section="Platform Commands (https://silverback.apeworx.io)")
+@cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
+def workspaces():
+    """View and Manage Workspaces on the Silverback Platform"""
+
+
+@workspaces.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @platform_client
-def workspaces(platform: PlatformClient):
+def list_workspaces(platform: PlatformClient):
     """List available workspaces for your account"""
 
     if workspace_names := list(platform.workspaces):
@@ -234,6 +199,118 @@ def workspaces(platform: PlatformClient):
             bold=True,
             fg="red",
         )
+
+
+@workspaces.command(name="info", section="Platform Commands (https://silverback.apeworx.io)")
+@click.argument("workspace")
+@platform_client
+def workspace_info(platform: PlatformClient, workspace: str):
+    """Get Configuration information about a WORKSPACE"""
+
+    if not (workspace_info := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    click.echo(f"{click.style('Name', fg='green')}: {workspace_info.name}")
+    click.echo(f"{click.style('Slug', fg='green')}: '{workspace_info.slug}'")
+    click.echo(f"{click.style('Date Created', fg='green')}: '{workspace_info.created}'")
+
+
+@workspaces.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "workspace_name",
+    required=True,
+    help="Name for new workspace",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "workspace_slug",
+    required=True,
+    help="Slug for new workspace",
+)
+@platform_client
+def new_workspace(
+    platform: PlatformClient,
+    workspace_name: str,
+    workspace_slug: str,
+):
+    """Create a new workspace"""
+
+    if workspace_name:
+        click.echo(f"name: {workspace_name}")
+        click.echo(f"slug: {workspace_slug or workspace_name.lower().replace(' ', '-')}")
+
+    elif workspace_slug:
+        click.echo(f"slug: {workspace_slug}")
+
+    else:
+        raise click.UsageError("Must provide a name or a slug/name combo")
+
+    platform.create_workspace(
+        workspace_name=workspace_name,
+        workspace_slug=workspace_slug,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace_name}'")
+
+
+@workspaces.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "name",
+    default=None,
+    help="Update name for workspace",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "slug",
+    default=None,
+    help="Update slug for workspace",
+)
+@click.argument("workspace")
+@platform_client
+def update_workspace(
+    platform: PlatformClient,
+    workspace: str,
+    name: str | None,
+    slug: str | None,
+):
+    """Update name and slug for a workspace"""
+
+    if not (workspace_client := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    elif name is None and slug is None:
+        raise click.UsageError(
+            "No update name or slug found. Please enter a name or slug to update."
+        )
+    elif name == "" or slug == "":
+        raise click.UsageError("Empty string value found for name or slug.")
+
+    updated_workspace = workspace_client.update(
+        name=name,
+        slug=slug,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{updated_workspace.name}'")
+
+
+@workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
+@click.argument("workspace")
+@platform_client
+def delete_workspace(platform: PlatformClient, workspace: str):
+    """Delete an empty Workspace on the Silverback Platform"""
+
+    if not (workspace_client := platform.workspaces.get(workspace)):
+        raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
+
+    if len(workspace_client.clusters) > 0:
+        raise click.UsageError("Running Clusters found in Workspace. Shut them down first.")
+
+    workspace_client.remove()
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Deleted '{workspace_client.name}'")
 
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
@@ -285,6 +362,9 @@ def new_cluster(
     elif cluster_slug:
         click.echo(f"slug: {cluster_slug}")
 
+    else:
+        raise click.UsageError("Must provide a name or a slug/name combo")
+
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
         cluster_slug=cluster_slug,
@@ -298,6 +378,58 @@ def new_cluster(
         )
 
 
+@cluster.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "name",
+    default=None,
+    help="Update name for cluster",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "slug",
+    default=None,
+    help="Update slug for cluster",
+)
+@click.argument("cluster_path")
+@platform_client
+def update_cluster(
+    platform: PlatformClient,
+    cluster_path: str,
+    name: str | None,
+    slug: str | None,
+):
+    """Update name and slug for a CLUSTER"""
+
+    if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+        raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
+
+    workspace_name, cluster_name = cluster_path.split("/")
+    if not (workspace_client := platform.workspaces.get(workspace_name)):
+        raise click.BadArgumentUsage(f"Unknown workspace: '{workspace_name}'")
+
+    elif not (cluster := workspace_client.clusters.get(cluster_name)):
+        raise click.BadArgumentUsage(
+            f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
+        )
+
+    elif name is None and slug is None:
+        raise click.UsageError(
+            "No update name or slug found. Please enter a name or slug to update."
+        )
+    elif name == "" or slug == "":
+        raise click.UsageError("Empty string value found for name or slug.")
+
+    updated_cluster = workspace_client.update_cluster(
+        cluster_id=str(cluster.id),
+        name=name,
+        slug=slug,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{updated_cluster.name}'")
+
+
 @cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
 def pay():
     """Pay for CLUSTER with Crypto using ApePay streaming payments"""
@@ -309,15 +441,16 @@ def pay():
 @click.option(
     "-t",
     "--tier",
-    default=ClusterTier.PERSONAL.name.capitalize(),
+    default=ClusterTier.STANDARD.name.capitalize(),
     metavar="NAME",
     type=click.Choice(
         [
-            ClusterTier.PERSONAL.name.capitalize(),
-            ClusterTier.PROFESSIONAL.name.capitalize(),
-        ]
+            ClusterTier.STANDARD.name.capitalize(),
+            ClusterTier.PREMIUM.name.capitalize(),
+        ],
+        case_sensitive=False,
     ),
-    help="Named set of options to use for cluster as a base (Defaults to Personal)",
+    help="Named set of options to use for cluster as a base (Defaults to Standard)",
 )
 @click.option(
     "-c",
@@ -420,7 +553,8 @@ def create_payment_stream(
     assert token_amount  # mypy happy
 
     click.echo(yaml.safe_dump(dict(configuration=configuration.settings_display_dict())))
-    click.echo(f"duration: {stream_time}\n")
+    click.echo(f"duration: {stream_time}")
+    click.echo(f"payment: {token_amount / (10 ** token.decimals())} {token.symbol()}\n")
 
     if not click.confirm(
         f"Do you want to use this configuration to fund Cluster '{cluster_path}'?"
@@ -1084,14 +1218,37 @@ def stop_bot(cluster: ClusterClient, name: str):
 
 @bots.command(name="logs", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
+@click.option(
+    "-l",
+    "--log-level",
+    "log_level",
+    help="Minimum log level to display.",
+    default="INFO",
+)
+@click.option(
+    "-s",
+    "--since",
+    "since",
+    help="Return logs since N ago.",
+    callback=timedelta_callback,
+)
 @cluster_client
-def show_bot_logs(cluster: ClusterClient, name: str):
+def show_bot_logs(cluster: ClusterClient, name: str, log_level: str, since: timedelta | None):
     """Show runtime logs for BOT in CLUSTER"""
+
+    start_time = None
+    if since:
+        start_time = datetime.now(tz=timezone.utc) - since
 
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
-    for log in bot.logs:
+    try:
+        level = LogLevel.__dict__[log_level.upper()]
+    except KeyError:
+        level = LogLevel.INFO
+
+    for log in bot.filter_logs(log_level=level, start_time=start_time):
         click.echo(log)
 
 
