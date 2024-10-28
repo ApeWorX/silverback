@@ -378,6 +378,58 @@ def new_cluster(
         )
 
 
+@cluster.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option(
+    "-n",
+    "--name",
+    "name",
+    default=None,
+    help="Update name for cluster",
+)
+@click.option(
+    "-s",
+    "--slug",
+    "slug",
+    default=None,
+    help="Update slug for cluster",
+)
+@click.argument("cluster_path")
+@platform_client
+def update_cluster(
+    platform: PlatformClient,
+    cluster_path: str,
+    name: str | None,
+    slug: str | None,
+):
+    """Update name and slug for a CLUSTER"""
+
+    if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+        raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
+
+    workspace_name, cluster_name = cluster_path.split("/")
+    if not (workspace_client := platform.workspaces.get(workspace_name)):
+        raise click.BadArgumentUsage(f"Unknown workspace: '{workspace_name}'")
+
+    elif not (cluster := workspace_client.clusters.get(cluster_name)):
+        raise click.BadArgumentUsage(
+            f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
+        )
+
+    elif name is None and slug is None:
+        raise click.UsageError(
+            "No update name or slug found. Please enter a name or slug to update."
+        )
+    elif name == "" or slug == "":
+        raise click.UsageError("Empty string value found for name or slug.")
+
+    updated_cluster = workspace_client.update_cluster(
+        cluster_id=str(cluster.id),
+        name=name,
+        slug=slug,
+    )
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{updated_cluster.name}'")
+
+
 @cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
 def pay():
     """Pay for CLUSTER with Crypto using ApePay streaming payments"""

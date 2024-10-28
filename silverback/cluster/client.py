@@ -385,6 +385,25 @@ class Workspace(WorkspaceInfo):
         self.clusters.update({new_cluster.slug: new_cluster})  # NOTE: Update cache
         return new_cluster
 
+    def update_cluster(
+        self,
+        cluster_id: str,
+        name: str | None = None,
+        slug: str | None = None,
+    ) -> ClusterInfo:
+        data = dict()
+        if name:
+            data["name"] = name
+        if slug:
+            data["slug"] = slug
+        response = self.client.patch(
+            f"/clusters/{cluster_id}",
+            params=dict(workspace=str(self.id), cluster_id=cluster_id),
+            data=data,
+        )
+        handle_error_with_response(response)
+        return ClusterInfo.model_validate(response.json())
+
     def get_payment_stream(self, cluster: ClusterInfo, chain_id: int) -> Stream | None:
         response = self.client.get(
             f"/clusters/{cluster.id}/stream",
