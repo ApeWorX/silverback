@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union
 
 import click
+from ape.utils.os import clean_path
 
 DOCKERFILE_CONTENT = """
 FROM ghcr.io/apeworx/silverback:stable
@@ -65,6 +66,7 @@ class DockerfileGenerator:
         """
         Will generate a file based on path type
         """
+        raise NotImplementedError(f"Path type {type(path)} not supported")
 
     @generate_dockerfiles.register
     def _(self, path: FilePath):
@@ -93,7 +95,7 @@ class DockerfileGenerator:
         dockerfile_path = Path.cwd() / ".silverback-images" / self.dockerfile_name
         dockerfile_path.parent.mkdir(exist_ok=True)
         dockerfile_path.write_text(dockerfile_c.strip() + "\n")
-        click.echo(f"Generated {dockerfile_path}")
+        click.echo(f"Generated {clean_path(dockerfile_path)}")
 
     def _check_for_requirements(self, dockerfile_content):
         if (Path.cwd() / "requirements.txt").exists():
