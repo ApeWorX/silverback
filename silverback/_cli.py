@@ -1,10 +1,12 @@
 import asyncio
 import os
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 import click
+import pytest
 import yaml  # type: ignore[import-untyped]
 from ape.cli import (
     AccountAliasPromptChoice,
@@ -13,6 +15,7 @@ from ape.cli import (
     account_option,
     ape_cli_context,
     network_option,
+    verbosity_option,
 )
 from ape.exceptions import Abort, ApeException
 from ape.logging import LogLevel
@@ -169,6 +172,30 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, bot):
     from silverback.worker import run_worker
 
     asyncio.run(run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
+
+
+@cli.command(
+    section="Local Commands",
+    add_help_option=False,  # NOTE: This allows pass-through to pytest's help
+    short_help="Run bot backtests (`tests/backtest_*.yaml`)",
+    context_settings=dict(ignore_unknown_options=True),
+)
+@ape_cli_context()
+@verbosity_option()
+@network_option(
+    default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
+    callback=_network_callback,
+)
+@click.option("--bot", "bots", multiple=True)
+@click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
+def test(cli_ctx, network, bots, pytest_args):
+    os.environ["SILVERBACK_FORK_MODE"] = "1"
+
+    return_code = pytest.main([*pytest_args], ["silverback.pytest"])
+
+    if return_code:
+        # only exit with non-zero status to make testing easier
+        sys.exit(return_code)
 
 
 @cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
