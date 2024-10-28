@@ -6,6 +6,12 @@ In this guide, we are going to show you more details on how to deploy your appli
 You will need to have created a cluster in your workspace first. More information can be found in the [Managing Your Platform](./managing.md).
 ```
 
+If you have no bots, we will first have to containerize our Bots and upload them to a container registry that our Cluster is configured to access.
+
+```{note}
+Building a container for your application can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
+```
+
 ## Building your Bot
 
 To build your container definition(s) for your bot(s), you can use the `silverback build` command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
@@ -180,7 +186,6 @@ TODO: Updating runtime parameters
 
 TODO: Downloading metrics from your Bot
 
-[silverback-cluster]: ../commands/cluster.html#silverback-cluster
 [silverback-cluster-bots]: ../commands/cluster.html#silverback-cluster-bots
 [silverback-cluster-bots-errors]: ../commands/cluster.html#silverback-cluster-bots-errors
 [silverback-cluster-bots-health]: ../commands/cluster.html#silverback-cluster-bots-health
@@ -192,16 +197,9 @@ TODO: Downloading metrics from your Bot
 [silverback-cluster-bots-start]: ../commands/cluster.html#silverback-cluster-bots-start
 [silverback-cluster-bots-stop]: ../commands/cluster.html#silverback-cluster-bots-stop
 [silverback-cluster-bots-update]: ../commands/cluster.html#silverback-cluster-bots-update
-[silverback-cluster-health]: ../commands/cluster.html#silverback-cluster-health
-[silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
-[silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
-[silverback-cluster-pay-add-time]: ../commands/cluster.html#silverback-cluster-pay-add-time
-[silverback-cluster-pay-cancel]: ../commands/cluster.html#silverback-cluster-pay-cancel
-[silverback-cluster-pay-create]: ../commands/cluster.html#silverback-cluster-pay-create
 [silverback-cluster-registry-auth-new]: ../commands/cluster.html#silverback-cluster-registry-auth-new
 [silverback-cluster-vars]: ../commands/cluster.html#silverback-cluster-vars
 [silverback-cluster-vars-info]: ../commands/cluster.html#silverback-cluster-vars-info
 [silverback-cluster-vars-list]: ../commands/cluster.html#silverback-cluster-vars-list
 [silverback-cluster-vars-new]: ../commands/cluster.html#silverback-cluster-vars-new
 [silverback-cluster-vars-remove]: ../commands/cluster.html#silverback-cluster-vars-remove
-[silverback-login]: ../commands/cluster.html#silverback-login

@@ -1,26 +1,32 @@
-# Managing Your Platform
+# Managing Workspaces and Clusters
 
-In this guide, we are going to show you more details on how to manage your [Silverback Platform](https://silverback.apeworx.io).
+In this guide, we are going to show you more details on how to manage get set up locally with the [Silverback Platform](https://silverback.apeworx.io) to get your bots to production.
 
-## Managing Workspaces 
+You can signup for Silverback to get full access for free at [https://silverback.apeworx.io](https://silverback.apeworx.io).
 
-## Creating a Cluster
+```{note}
+The Platform UI will let you create and manage Workspaces and Clusters using a graphical experience, which may be preferred.
+The CLI experience is for those working locally who don't want to visit the website, or are locally developing their applications.
+```
+
+Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
+logging in to the Platform using [`silverback login`][silverback-login].
+
+## Managing a Workspace
+
+A Workspace is an area for one or more people to co-manage a set of clusters together. You can manage workspaces from the Silverback CLI using [`silverback cluster workspaces`][silverback-cluster-workspaces].
+
+Using the Silverback CLI you can [list][silverback-cluster-workspaces-list], [make new][silverback-cluster-workspaces-new], [view the configuration information][silverback-cluster-workspaces-info], [update][silverback-cluster-workspaces-update], and [delete][silverback-cluster-workspaces-delete] workspaces.
+
+## Managing a Cluster
 
 The Silverback Platform runs your Bots on dedicated managed application Clusters.
 These Clusters will take care to orchestrate infrastructure, monitor, run your triggers, and collect metrics for your applications.
 Each Cluster is bespoke for an individual or organization, and isolates your applications from others on different infrastructure.
 
-Before we deploy our Bot, we have to create a Cluster.
-If you haven't yet, please sign up for Silverback at [https://silverback.apeworx.io](https://silverback.apeworx.io).
+Once you have a workspace, you can create (and pay for) your Clusters from the Silverback CLI using [`silverback cluster new`][silverback-cluster-new] to follow the steps necessary to deploy it. You can also use the Silverback CLI to [list][silverback-cluster-list] and [update][silverback-cluster-update] existing clusters.
 
-Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
-logging in to the Platform using [`silverback login`][silverback-login],
-and then using [`silverback cluster new`][silverback-cluster-new] to follow the steps necessary to deploy it.
-
-```{note}
-The Platform UI will let you create and manage Clusters using a graphical experience, which may be preferred.
-The CLI experience is for those working locally who don't want to visit the website, or are locally developing their applications.
-```
+### Deploying a Cluster
 
 Once you have created your Cluster, you have to fund it so it is made available for your use.
 To do that, use the [`silverback cluster pay create`][silverback-cluster-pay-create] command to fund your newly created cluster.
@@ -35,19 +41,21 @@ If that timeline expires, the Platform will automatically de-provision your infr
 The Platform may send you notifications when your Stream is close to expiring, but it is up to you to remember to fill it so it doesn't.
 Note that your data collection will stay available for up to 30 days allowing you the ability to download any data you need.
 
-Lastly, if you ever feel like you no longer need your Cluster, you can cancel the funding for it and get a refund of the remaining funds.
+Lastly, if you ever feel like you want to delete your Cluster, you can cancel the funding for it and get a refund of the remaining funds.
 If you are the owner of the Stream, you can do this via the [`silverback cluster pay cancel`][silverback-cluster-pay-cancel] command.
 Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.
 
-## Connecting to your Cluster
-
-To connect to a cluster, you can use commands from the [`silverback cluster`][silverback-cluster] subcommand group.
-For instance, to list all your available bots on your cluster, use [`silverback cluster bots list`][silverback-cluster-bots-list].
-To obtain general information about your cluster, just use [`silverback cluster info`][silverback-cluster-info],
-or [`silverback cluster health`][silverback-cluster-health] to see the current status of your Cluster.
-
-If you have no bots, we will first have to containerize our Bots and upload them to a container registry that our Cluster is configured to access.
-
-```{note}
-Building a container for your application can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
-```
+[silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
+[silverback-cluster-list]: ../commands/cluster.html#silverback-cluster-list
+[silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
+[silverback-cluster-pay-add-time]: ../commands/cluster.html#silverback-cluster-pay-add-time
+[silverback-cluster-pay-cancel]: ../commands/cluster.html#silverback-cluster-pay-cancel
+[silverback-cluster-pay-create]: ../commands/cluster.html#silverback-cluster-pay-create
+[silverback-cluster-update]: ../commands/cluster.html#silverback-cluster-update
+[silverback-cluster-workspaces]: ../commands/cluster.html#silverback-cluster-workspaces
+[silverback-cluster-workspaces-delete]: ../commands/cluster.html#silverback-cluster-workspaces-delete
+[silverback-cluster-workspaces-info]: ../commands/cluster.html#silverback-cluster-workspaces-info
+[silverback-cluster-workspaces-list]: ../commands/cluster.html#silverback-cluster-workspaces-list
+[silverback-cluster-workspaces-new]: ../commands/cluster.html#silverback-cluster-workspaces-new
+[silverback-cluster-workspaces-update]: ../commands/cluster.html#silverback-cluster-workspaces-update
+[silverback-login]: ../commands/cluster.html#silverback-login

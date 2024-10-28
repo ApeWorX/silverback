@@ -13,9 +13,9 @@ There are 3 suggested ways to structure your project. In the root directory of y
 
 1. Create a `bot.py` file. This is the simplest way to define your bot project.
 
-2. Create a `bots/` folder. Then develop bots in this folder as separate scripts (Do not include a __init__.py file).
+1. Create a `bots/` folder. Then develop bots in this folder as separate scripts (Do not include a __init__.py file).
 
-3. Create a `bot/` folder with a `__init__.py` file that will include the instantiation of your `SilverbackBot()` object.
+1. Create a `bot/` folder with a `__init__.py` file that will include the instantiation of your `SilverbackBot()` object.
 
 The `silverback` cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
 It will also be able to detect the scripts inside your `bots/` directory and let you run those by name (in case you have multiple bots in your project).
