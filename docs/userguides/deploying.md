@@ -6,19 +6,6 @@ In this guide, we are going to show you more details on how to deploy your appli
 You will need to have created a cluster in your workspace first. More information can be found in the [Managing Your Platform](./managing.md).
 ```
 
-## Connecting to your Cluster
-
-To connect to a cluster, you can use commands from the [`silverback cluster`][silverback-cluster] subcommand group.
-For instance, to list all your available bots on your cluster, use [`silverback cluster bots list`][silverback-cluster-bots-list].
-To obtain general information about your cluster, just use [`silverback cluster info`][silverback-cluster-info],
-or [`silverback cluster health`][silverback-cluster-health] to see the current status of your Cluster.
-
-If you have no bots, we will first have to containerize our Bots and upload them to a container registry that our Cluster is configured to access.
-
-```{note}
-Building a container for your application can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
-```
-
 ## Building your Bot
 
 To build your container definition(s) for your bot(s), you can use the `silverback build` command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
