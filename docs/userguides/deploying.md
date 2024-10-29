@@ -1,20 +1,20 @@
 # Deploying Bots
 
-In this guide, we are going to show you more details on how to deploy your application to the [Silverback Platform](https://silverback.apeworx.io).
+In this guide, we are going to show you more details on how to deploy your bot to the [Silverback Platform](https://silverback.apeworx.io).
 
 ```{note}
 You will need to have created a cluster in your workspace first. More information can be found in the [Managing Your Platform](./managing.md).
 ```
 
-If you have no bots, we will first have to containerize our Bots and upload them to a container registry that our Cluster is configured to access.
+In order to deploy your bots to the Cluster, we will first have to containerize our Bots and upload them to a container registry that our Cluster can access.
 
 ```{note}
-Building a container for your application can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
+Building a container for your bot can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
 ```
 
 ## Building your Bot
 
-To build your container definition(s) for your bot(s), you can use the `silverback build` command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
+To build your container definition(s) for your bot(s), you can use the [`silverback build`][silverback-build] command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
 
 For example, if your directory is structured as suggested in [development](./development), and your `bots/` directory looks like this:
 
@@ -64,7 +64,7 @@ TODO: Add how to debug containers using `silverback run` w/ `taskiq-redis` broke
 
 ## Adding Environment Variables
 
-Once you have created your bot application container image, you might know of some environment variables the image requires to run properly.
+Once you have created your bot container image, you might know of some environment variables the image requires to run properly.
 Thanks to it's flexible plugin system, ape plugins may also require specific environment variables to load as well.
 Silverback Clusters include an environment variable management system for exactly this purpose,
 which you can manage using [`silverback cluster vars`][silverback-cluster-vars] subcommand.
@@ -89,7 +89,7 @@ Use _Ape Account Plugins_ such as [`ape-aws`](https://github.com/ApeWorX/ape-aws
 
 ```{note}
 The Etherscan plugin _will not function_ without an API key in the cloud environment.
-This will likely create errors running your applications if you use Ape's `Contract` class.
+This will likely create errors running your bots if you use Ape's `Contract` class.
 ```
 
 To list your Variable Groups, use [`silverback cluster vars list`][silverback-cluster-vars-list].
@@ -123,7 +123,7 @@ You can do this using the [`silverback cluster bots health`][silverback-cluster-
 
 ```{note}
 It usually takes a minute or so for your bot to transition from PROVISIONING to STARTUP to the RUNNING state.
-If there are any difficulties in downloading your container image, provisioning your desired infrastructure, or if your application encounters an error during the STARTUP phase,
+If there are any difficulties in downloading your container image, provisioning your desired infrastructure, or if your bot encounters an error during the STARTUP phase,
 the Bot will not enter into the RUNNING state and will be shut down gracefully into the STOPPED state.
 
 Once in the STOPPED state, you can make any adjustments to the environment Variable Group(s) or other runtime parameters in the Bot config;
@@ -186,6 +186,7 @@ TODO: Updating runtime parameters
 
 TODO: Downloading metrics from your Bot
 
+[silverback-build]: ../commands/run.html#silverback-build
 [silverback-cluster-bots]: ../commands/cluster.html#silverback-cluster-bots
 [silverback-cluster-bots-errors]: ../commands/cluster.html#silverback-cluster-bots-errors
 [silverback-cluster-bots-health]: ../commands/cluster.html#silverback-cluster-bots-health

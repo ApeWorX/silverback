@@ -6,7 +6,7 @@ You can signup for Silverback to get full access for free at [https://silverback
 
 ```{note}
 The Platform UI will let you create and manage Workspaces and Clusters using a graphical experience, which may be preferred.
-The CLI experience is for those working locally who don't want to visit the website, or are locally developing their applications.
+The CLI experience is for those working locally who don't want to visit the website, or are locally developing their bots.
 ```
 
 Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
@@ -16,13 +16,13 @@ logging in to the Platform using [`silverback login`][silverback-login].
 
 A Workspace is an area for one or more people to co-manage a set of clusters together. You can manage workspaces from the Silverback CLI using [`silverback cluster workspaces`][silverback-cluster-workspaces].
 
-Using the Silverback CLI you can [list][silverback-cluster-workspaces-list], [make new][silverback-cluster-workspaces-new], [view the configuration information][silverback-cluster-workspaces-info], [update][silverback-cluster-workspaces-update], and [delete][silverback-cluster-workspaces-delete] workspaces.
+Using the Silverback CLI you can [list workspaces][silverback-cluster-workspaces-list], [make new ones][silverback-cluster-workspaces-new], [view their configuration information][silverback-cluster-workspaces-info], [update their metadata][silverback-cluster-workspaces-update], as well as [delete them][silverback-cluster-workspaces-delete] workspaces.
 
 ## Managing a Cluster
 
-The Silverback Platform runs your Bots on dedicated managed application Clusters.
-These Clusters will take care to orchestrate infrastructure, monitor, run your triggers, and collect metrics for your applications.
-Each Cluster is bespoke for an individual or organization, and isolates your applications from others on different infrastructure.
+The Silverback Platform runs your Bots on dedicated managed Clusters.
+These Clusters will take care to orchestrate infrastructure, monitor, run triggers, and collect metrics for all of your bots you have added to them.
+Each Cluster is bespoke for an individual or organization, and isolates your bots from other users by virtual of running on different infrastructure.
 
 Once you have a workspace, you can create (and pay for) your Clusters from the Silverback CLI using [`silverback cluster new`][silverback-cluster-new] to follow the steps necessary to deploy it. You can also use the Silverback CLI to [list][silverback-cluster-list] and [update][silverback-cluster-update] existing clusters.
 
