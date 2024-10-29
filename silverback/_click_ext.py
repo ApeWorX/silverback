@@ -1,16 +1,12 @@
 from datetime import datetime, timedelta
 from functools import update_wrapper
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
-from ape import Contract, convert
-from ape.contracts import ContractInstance
-from ape.types import AddressType
 from fief_client import Fief
 from fief_client.integrations.cli import FiefAuth, FiefAuthNotAuthenticatedError
 
-from silverback._importer import import_from_string
-from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.settings import (
     PROFILE_PATH,
     BaseProfile,
@@ -18,14 +14,21 @@ from silverback.cluster.settings import (
     PlatformProfile,
     ProfileSettings,
 )
+from silverback.exceptions import ImportFromStringError
 
-from .exceptions import ImportFromStringError
+if TYPE_CHECKING:
+    from ape.contracts import ContractInstance
+
+    from silverback.cluster.client import PlatformClient
+
 
 # NOTE: only load once
 settings = ProfileSettings.from_config_file()
 
 
 def cls_import_callback(ctx, param, cls_name):
+    from silverback._importer import import_from_string
+
     if cls_name is None:
         return None  # User explicitly provided None
 
@@ -38,7 +41,10 @@ def cls_import_callback(ctx, param, cls_name):
 
 def contract_callback(
     ctx: click.Context, param: click.Parameter, contract_address: str
-) -> ContractInstance:
+) -> "ContractInstance":
+    from ape import Contract, convert
+    from ape.types import AddressType
+
     return Contract(convert(contract_address, AddressType))
 
 
@@ -49,6 +55,8 @@ def token_amount_callback(
 ) -> int | None:
     if token_amount is None:
         return None
+
+    from ape import convert
 
     return convert(token_amount, int)
 
@@ -239,6 +247,8 @@ def platform_client(f):
         except FiefAuthNotAuthenticatedError as e:
             raise click.UsageError("Not authenticated, please use `silverback login` first.") from e
 
+        from silverback.cluster.client import PlatformClient
+
         ctx.obj["platform"] = PlatformClient(
             base_url=profile.host,
             cookies=dict(session=auth.access_token_info()["access_token"]),
@@ -305,13 +315,15 @@ def cluster_client(f):
     def get_cluster_client(ctx: click.Context, *args, **kwargs):
         ctx.obj = ctx.obj or {}
         if isinstance(profile := ctx.obj.get("profile"), ClusterProfile):
+            from silverback.cluster.client import ClusterClient
+
             kwargs["cluster"] = ClusterClient(
                 base_url=profile.host,
                 headers={"X-API-Key": profile.api_key},
             )
 
         elif isinstance(profile, PlatformProfile):
-            platform: PlatformClient = ctx.obj["platform"]
+            platform: "PlatformClient" = ctx.obj["platform"]
             kwargs["cluster"] = platform.get_cluster_client(*ctx.obj["cluster_path"])
 
         else:
@@ -327,6 +339,8 @@ def bot_path_callback(ctx: click.Context, param: click.Parameter, path: str | No
         path = "bot:bot"
     elif ":" not in path:
         path += ":bot"
+
+    from silverback._importer import import_from_string
 
     try:
         return import_from_string(path)
