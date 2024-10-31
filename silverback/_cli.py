@@ -728,9 +728,9 @@ def cluster_info(cluster: ClusterClient):
     # NOTE: This actually doesn't query the cluster's routes, which are protected
     click.echo(f"Cluster Version: v{cluster.version}")
     # TODO: Add way to fetch config and display it (this doesn't work)
-    #if config := cluster.state.configuration:
+    # if config := cluster.state.configuration:
     #    click.echo(yaml.safe_dump(config.settings_display_dict()))
-    #else:
+    # else:
     #    click.secho("No Cluster Configuration detected", fg="yellow", bold=True)
 
 
