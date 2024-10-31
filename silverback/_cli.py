@@ -637,7 +637,7 @@ def fund_payment_stream(
         )
 
     elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
+        raise click.UsageError(f"Cannot fund '{cluster.name}': cluster is not running.")
 
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
@@ -707,7 +707,7 @@ def cancel_payment_stream(
         )
 
     elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
+        raise click.UsageError(f"Cannot fund '{cluster.name}': cluster is not running.")
 
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
