@@ -16,7 +16,7 @@ logging in to the Platform using [`silverback login`][silverback-login].
 
 A Workspace is an area for one or more people to co-manage a set of clusters together. You can manage workspaces from the Silverback CLI using [`silverback cluster workspaces`][silverback-cluster-workspaces].
 
-Using the Silverback CLI you can [list workspaces][silverback-cluster-workspaces-list], [make new ones][silverback-cluster-workspaces-new], [view their configuration information][silverback-cluster-workspaces-info], [update their metadata][silverback-cluster-workspaces-update], as well as [delete them][silverback-cluster-workspaces-delete] workspaces.
+Using the Silverback CLI you can [list workspaces][silverback-cluster-workspaces-list], [make new ones][silverback-cluster-workspaces-new], [view their configuration information][silverback-cluster-workspaces-info], [update their metadata][silverback-cluster-workspaces-update], as well as [delete them][silverback-cluster-workspaces-delete].
 
 ## Managing a Cluster
 
