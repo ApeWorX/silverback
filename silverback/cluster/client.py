@@ -2,6 +2,7 @@ from datetime import datetime
 from functools import cache
 from typing import ClassVar, Literal
 
+import click
 import httpx
 from ape import Contract
 from ape.contracts import ContractInstance
@@ -54,7 +55,7 @@ def handle_error_with_response(response: httpx.Response):
             else:
                 message = response.text
 
-        raise RuntimeError(message)
+        raise click.UsageError(message)
 
     response.raise_for_status()
 
