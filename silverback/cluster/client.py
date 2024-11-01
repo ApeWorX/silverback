@@ -480,8 +480,8 @@ class PlatformClient(httpx.Client):
 
     def create_workspace(
         self,
-        workspace_slug: str = "",
-        workspace_name: str = "",
+        workspace_slug: str | None = None,
+        workspace_name: str | None = None,
     ) -> Workspace:
         response = self.post(
             "/workspaces",
