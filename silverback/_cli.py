@@ -31,7 +31,6 @@ from silverback._click_ext import (
 )
 from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.types import ClusterTier, LogLevel, ResourceStatus
-from silverback.exceptions import ClientError
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
@@ -243,7 +242,7 @@ def new_workspace(
     )
 
     if not workspace_name:
-        raise ClientError("Must provide a name or a slug/name combo")
+        raise click.UsageError("Must provide a name or a slug/name combo")
 
     platform.create_workspace(
         workspace_name=workspace_name,
@@ -361,7 +360,7 @@ def new_cluster(
     )
 
     if not cluster_name:
-        raise ClientError("Must provide a name or a slug/name combo")
+        raise click.UsageError("Must provide a name or a slug/name combo")
 
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
