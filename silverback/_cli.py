@@ -322,10 +322,13 @@ def list_clusters(platform: PlatformClient, workspace: str):
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_names := list(workspace_client.clusters):
-        for name in cluster_names:
-            cluster = workspace_client.clusters.get(name)
-            click.echo(f"- {name} ({cluster.status})")
+    if cluster_names := workspace_client.clusters:
+        cluster_info = [
+            f"- {name} ({cluster.status})"
+            for name in cluster_names
+            if (cluster := workspace_client.clusters.get(name)) is not None
+        ]
+        click.echo("\n".join(cluster_info))
 
     else:
         click.secho("No clusters for this account", bold=True, fg="red")
