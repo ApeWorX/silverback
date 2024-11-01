@@ -710,9 +710,6 @@ def cancel_payment_stream(
             f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
         )
 
-    elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot find '{cluster.name}': cluster is not running.")
-
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
 
