@@ -42,6 +42,7 @@ class StartupFailure(SilverbackException):
             super().__init__("Startup failure(s) detected. See logs for details.")
 
 
+# NOTE: Subclass `click.UsageError` here so bad requests in CLI don't show stack trace
 class ClientError(SilverbackException, click.UsageError):
     """Exception for client errors in the HTTP request."""
 
