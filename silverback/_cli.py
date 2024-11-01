@@ -322,8 +322,9 @@ def list_clusters(platform: PlatformClient, workspace: str):
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_names := list(workspace_client.clusters):
-        click.echo(yaml.safe_dump(cluster_names))
+    if clusters := workspace_client.clusters.values():
+        cluster_info = [f"- {cluster.name} ({cluster.status})" for cluster in clusters]
+        click.echo("\n".join(cluster_info))
 
     else:
         click.secho("No clusters for this account", bold=True, fg="red")
@@ -637,7 +638,7 @@ def fund_payment_stream(
         )
 
     elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
+        raise click.UsageError(f"Cannot fund '{cluster.name}': cluster is not running.")
 
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
@@ -705,9 +706,6 @@ def cancel_payment_stream(
         raise click.BadArgumentUsage(
             f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
         )
-
-    elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
 
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
