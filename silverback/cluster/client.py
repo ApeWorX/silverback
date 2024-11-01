@@ -2,7 +2,6 @@ from datetime import datetime
 from functools import cache
 from typing import ClassVar, Literal
 
-import click
 import httpx
 from ape import Contract
 from ape.contracts import ContractInstance
@@ -12,6 +11,7 @@ from pydantic import computed_field
 
 from silverback.version import version
 
+from .exceptions import ClientError
 from .types import (
     BotHealth,
     BotInfo,
@@ -55,7 +55,7 @@ def handle_error_with_response(response: httpx.Response):
             else:
                 message = response.text
 
-        raise click.UsageError(message)
+        raise ClientError(message)
 
     response.raise_for_status()
 

@@ -1,5 +1,6 @@
 from typing import Any
 
+import click
 from ape.exceptions import ApeException
 
 from .types import TaskType
@@ -39,6 +40,10 @@ class StartupFailure(SilverbackException):
             super().__init__(f"Startup failure(s):\n{error_str}")
         else:
             super().__init__("Startup failure(s) detected. See logs for details.")
+
+
+class ClientError(SilverbackException, click.UsageError):
+    """Exception for client errors in the HTTP request."""
 
 
 class NoTasksAvailableError(SilverbackException):
