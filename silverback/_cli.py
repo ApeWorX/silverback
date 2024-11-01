@@ -323,10 +323,7 @@ def list_clusters(platform: PlatformClient, workspace: str):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
     if clusters := workspace_client.clusters.values():
-        cluster_info = [
-            f"- {cluster.name} ({cluster.status})"
-            for cluster in clusters
-        ]
+        cluster_info = [f"- {cluster.name} ({cluster.status})" for cluster in clusters]
         click.echo("\n".join(cluster_info))
 
     else:
