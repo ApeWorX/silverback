@@ -31,6 +31,7 @@ from silverback._click_ext import (
 )
 from silverback.cluster.client import ClusterClient, PlatformClient
 from silverback.cluster.types import ClusterTier, LogLevel, ResourceStatus
+from silverback.exceptions import ClientError
 from silverback.runner import PollingRunner, WebsocketRunner
 from silverback.worker import run_worker
 
@@ -220,39 +221,37 @@ def workspace_info(platform: PlatformClient, workspace: str):
     "-n",
     "--name",
     "workspace_name",
-    required=True,
     help="Name for new workspace",
 )
 @click.option(
     "-s",
     "--slug",
     "workspace_slug",
-    required=True,
     help="Slug for new workspace",
 )
 @platform_client
 def new_workspace(
     platform: PlatformClient,
-    workspace_name: str,
-    workspace_slug: str,
+    workspace_name: str | None,
+    workspace_slug: str | None,
 ):
     """Create a new workspace"""
 
-    if workspace_name:
-        click.echo(f"name: {workspace_name}")
-        click.echo(f"slug: {workspace_slug or workspace_name.lower().replace(' ', '-')}")
+    workspace_name = workspace_name or workspace_slug
+    workspace_slug = workspace_slug or (
+        workspace_name.lower().replace(" ", "-") if workspace_name else None
+    )
 
-    elif workspace_slug:
-        click.echo(f"slug: {workspace_slug}")
-
-    else:
-        raise click.UsageError("Must provide a name or a slug/name combo")
+    if not workspace_name:
+        raise ClientError("Must provide a name or a slug/name combo")
 
     platform.create_workspace(
         workspace_name=workspace_name,
         workspace_slug=workspace_slug,
     )
     click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace_name}'")
+    click.echo(f"name: {workspace_name}")
+    click.echo(f"slug: {workspace_slug}")
 
 
 @workspaces.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
@@ -356,21 +355,21 @@ def new_cluster(
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_name:
-        click.echo(f"name: {cluster_name}")
-        click.echo(f"slug: {cluster_slug or cluster_name.lower().replace(' ', '-')}")
+    cluster_name = cluster_name or cluster_slug
+    cluster_slug = cluster_slug or (
+        cluster_name.lower().replace(" ", "-") if cluster_name else None
+    )
 
-    elif cluster_slug:
-        click.echo(f"slug: {cluster_slug}")
-
-    else:
-        raise click.UsageError("Must provide a name or a slug/name combo")
+    if not cluster_name:
+        raise ClientError("Must provide a name or a slug/name combo")
 
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
         cluster_slug=cluster_slug,
     )
     click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
+    click.echo(f"name: {cluster_name}")
+    click.echo(f"slug: {cluster_slug}")
 
     if cluster.status == ResourceStatus.CREATED:
         click.echo(
