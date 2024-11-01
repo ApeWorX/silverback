@@ -9,9 +9,9 @@ from ape.logging import LogLevel
 from apepay import Stream, StreamManager
 from pydantic import computed_field
 
+from silverback.exceptions import ClientError
 from silverback.version import version
 
-from .exceptions import ClientError
 from .types import (
     BotHealth,
     BotInfo,
