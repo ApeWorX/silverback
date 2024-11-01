@@ -90,6 +90,7 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#silverback.exceptions.CircuitBreaker"><code class="docutils literal notranslate"><span class="pre">CircuitBreaker</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.ClientError"><code class="docutils literal notranslate"><span class="pre">ClientError</span></code></a></li>
 <li><a class="reference internal" href="#silverback.exceptions.ContainerTypeMismatchError"><code class="docutils literal notranslate"><span class="pre">ContainerTypeMismatchError</span></code></a></li>
 <li><a class="reference internal" href="#silverback.exceptions.Halt"><code class="docutils literal notranslate"><span class="pre">Halt</span></code></a></li>
 <li><a class="reference internal" href="#silverback.exceptions.ImportFromStringError"><code class="docutils literal notranslate"><span class="pre">ImportFromStringError</span></code></a></li>
@@ -134,6 +135,13 @@ data-aria-dark="Switch to auto color mode">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">CircuitBreaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.CircuitBreaker" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.Halt" title="silverback.exceptions.Halt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Halt</span></code></a></p>
 <p>Custom exception (created by user) that will trigger an bot shutdown.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.ClientError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">ClientError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Context</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.ClientError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.SilverbackException" title="silverback.exceptions.SilverbackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">SilverbackException</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UsageError</span></code></p>
+<p>Exception for client errors in the HTTP request.</p>
 </dd></dl>
 
 <dl class="py exception">
