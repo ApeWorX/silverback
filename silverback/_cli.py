@@ -323,7 +323,9 @@ def list_clusters(platform: PlatformClient, workspace: str):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
     if cluster_names := list(workspace_client.clusters):
-        click.echo(yaml.safe_dump(cluster_names))
+        for name in cluster_names:
+            cluster = workspace_client.clusters.get(name)
+            click.echo(f"- {name} ({cluster.status})")
 
     else:
         click.secho("No clusters for this account", bold=True, fg="red")
