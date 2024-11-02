@@ -9,6 +9,7 @@ from ape.logging import LogLevel
 from apepay import Stream, StreamManager
 from pydantic import computed_field
 
+from silverback.exceptions import ClientError
 from silverback.version import version
 
 from .types import (
@@ -54,7 +55,7 @@ def handle_error_with_response(response: httpx.Response):
             else:
                 message = response.text
 
-        raise RuntimeError(message)
+        raise ClientError(message)
 
     response.raise_for_status()
 
@@ -480,8 +481,8 @@ class PlatformClient(httpx.Client):
 
     def create_workspace(
         self,
-        workspace_slug: str = "",
-        workspace_name: str = "",
+        workspace_slug: str | None = None,
+        workspace_name: str | None = None,
     ) -> Workspace:
         response = self.post(
             "/workspaces",

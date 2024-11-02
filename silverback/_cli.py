@@ -228,39 +228,38 @@ def workspace_info(platform: "PlatformClient", workspace: str):
     "-n",
     "--name",
     "workspace_name",
-    required=True,
     help="Name for new workspace",
 )
 @click.option(
     "-s",
     "--slug",
     "workspace_slug",
-    required=True,
     help="Slug for new workspace",
 )
 @platform_client
 def new_workspace(
     platform: "PlatformClient",
-    workspace_name: str,
-    workspace_slug: str,
+    workspace_name: str | None,
+    workspace_slug: str | None,
 ):
     """Create a new workspace"""
 
-    if workspace_name:
-        click.echo(f"name: {workspace_name}")
-        click.echo(f"slug: {workspace_slug or workspace_name.lower().replace(' ', '-')}")
+    workspace_name = workspace_name or workspace_slug
+    workspace_slug = workspace_slug or (
+        workspace_name.lower().replace(" ", "-") if workspace_name else None
+    )
 
-    elif workspace_slug:
-        click.echo(f"slug: {workspace_slug}")
-
-    else:
+    if not workspace_name:
         raise click.UsageError("Must provide a name or a slug/name combo")
 
-    platform.create_workspace(
+    workspace = platform.create_workspace(
         workspace_name=workspace_name,
         workspace_slug=workspace_slug,
     )
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace_name}'")
+    click.echo(
+        f"{click.style('SUCCESS', fg='green')}: "
+        f"Created '{workspace.name}' (slug: '{workspace.slug}')"
+    )
 
 
 @workspaces.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
@@ -330,8 +329,9 @@ def list_clusters(platform: "PlatformClient", workspace: str):
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_names := list(workspace_client.clusters):
-        click.echo(yaml.safe_dump(cluster_names))
+    if clusters := workspace_client.clusters.values():
+        cluster_info = [f"- {cluster.name} ({cluster.status})" for cluster in clusters]
+        click.echo("\n".join(cluster_info))
 
     else:
         click.secho("No clusters for this account", bold=True, fg="red")
@@ -363,14 +363,12 @@ def new_cluster(
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_name:
-        click.echo(f"name: {cluster_name}")
-        click.echo(f"slug: {cluster_slug or cluster_name.lower().replace(' ', '-')}")
+    cluster_name = cluster_name or cluster_slug
+    cluster_slug = cluster_slug or (
+        cluster_name.lower().replace(" ", "-") if cluster_name else None
+    )
 
-    elif cluster_slug:
-        click.echo(f"slug: {cluster_slug}")
-
-    else:
+    if not cluster_name:
         raise click.UsageError("Must provide a name or a slug/name combo")
 
     from silverback.cluster.types import ResourceStatus
@@ -379,7 +377,9 @@ def new_cluster(
         cluster_name=cluster_name,
         cluster_slug=cluster_slug,
     )
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
+    click.echo(
+        f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}' (slug: '{cluster.slug}')"
+    )
 
     if cluster.status == ResourceStatus.CREATED:
         click.echo(
@@ -658,7 +658,7 @@ def fund_payment_stream(
         )
 
     elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
+        raise click.UsageError(f"Cannot fund '{cluster.name}': cluster is not running.")
 
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
@@ -728,9 +728,6 @@ def cancel_payment_stream(
             f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
         )
 
-    elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
-
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
 
@@ -749,12 +746,11 @@ def cluster_info(cluster: "ClusterClient"):
 
     # NOTE: This actually doesn't query the cluster's routes, which are protected
     click.echo(f"Cluster Version: v{cluster.version}")
-
-    if config := cluster.state.configuration:
-        click.echo(yaml.safe_dump(config.settings_display_dict()))
-
-    else:
-        click.secho("No Cluster Configuration detected", fg="yellow", bold=True)
+    # TODO: Add way to fetch config and display it (this doesn't work)
+    # if config := cluster.state.configuration:
+    #    click.echo(yaml.safe_dump(config.settings_display_dict()))
+    # else:
+    #    click.secho("No Cluster Configuration detected", fg="yellow", bold=True)
 
 
 @cluster.command(name="health")
