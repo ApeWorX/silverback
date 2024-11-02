@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Deploying Bots - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Local Development" href="../commands/run.html" /><link rel="prev" title="Silverback Platform" href="managing.html" />
+      <link rel="canonical" href="silverback/userguides/deploying.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=83eaa723" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+<meta property="og:url" content="silverback/userguides/deploying.html"/>
+<meta property="og:title" content="Deploying Bots"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="silverback" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="silverback" height="28" loading="lazy" />
+      <strong>silverback</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing.html">Silverback Platform</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deploying Bots</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/main.html">silverback.main</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#building-your-bot">Building your Bot</a></li>
+<li><a class="reference internal" href="#adding-environment-variables">Adding Environment Variables</a></li>
+<li><a class="reference internal" href="#private-container-registries">Private Container Registries</a></li>
+<li><a class="reference internal" href="#deploying-your-bot">Deploying your Bot</a></li>
+<li><a class="reference internal" href="#monitoring-your-bot">Monitoring your Bot</a></li>
+<li><a class="reference internal" href="#controlling-your-bot">Controlling your Bot</a></li>
+<li><a class="reference internal" href="#viewing-measured-metrics">Viewing Measured Metrics</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">silverback</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Deploying Bots</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="deploying-bots">
+<h1>Deploying Bots<a class="headerlink" href="#deploying-bots" title="Link to this heading"></a></h1>
+<p>In this guide, we are going to show you more details on how to deploy your bot to the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You will need to have created a cluster in your workspace first. More information can be found in the <a class="reference external" href="./managing.md">Managing Your Platform</a>.</p>
+</div>
+<p>In order to deploy your bots to the Cluster, we will first have to containerize our Bots and upload them to a container registry that our Cluster can access.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Building a container for your bot can be an advanced topic, we have included the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span></code> subcommand to help assist in generating Dockerfiles.</p>
+</div>
+<section id="building-your-bot">
+<h2>Building your Bot<a class="headerlink" href="#building-your-bot" title="Link to this heading"></a></h2>
+<p>To build your container definition(s) for your bot(s), you can use the <a class="reference external" href="../commands/run.html#silverback-build"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span></code></a> command. This command searches your <code class="docutils literal notranslate"><span class="pre">bots</span></code> directory for python modules, then auto-generates Dockerfiles.</p>
+<p>For example, if your directory is structured as suggested in <a class="reference external" href="./development">development</a>, and your <code class="docutils literal notranslate"><span class="pre">bots/</span></code> directory looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">bots/
+</span><span data-line="2">├── botA.py
+</span><span data-line="3">├── botB.py
+</span><span data-line="4">├── botC.py
+</span></pre></div>
+</div>
+<p>Then you can use <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">build</span> <span class="pre">--generate</span></code> to generate 3 separate Dockerfiles for those bots, and start trying to build them.</p>
+<p>Those Dockerfiles will appear under <code class="docutils literal notranslate"><span class="pre">.silverback-images/</span></code> as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>build<span class="w"> </span>--generate
+</span></pre></div>
+</div>
+<p>This method will generate 3 Dockerfiles:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">.silverback-images/
+</span><span data-line="2">├── Dockerfile.botA
+</span><span data-line="3">├── Dockerfile.botB
+</span><span data-line="4">├── Dockerfile.botC
+</span></pre></div>
+</div>
+<p>You can retry you builds using the following (assuming you don’t modify the structure of your project):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>build
+</span></pre></div>
+</div>
+<p>You can then push your image to your registry using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">docker<span class="w"> </span>push<span class="w"> </span>your-registry-url/project/botA:latest
+</span></pre></div>
+</div>
+<p>TODO: The ApeWorX team has github actions definitions for building, pushing and deploying.</p>
+<p>If you are unfamiliar with docker and container registries, you can use the [[github-action]].</p>
+<p>You do not need to build using this command if you use the github action, but it is there to help you if you are having problems figuring out how to build and run your bot images on the cluster successfully.</p>
+<p>TODO: Add how to debug containers using <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span></code> w/ <code class="docutils literal notranslate"><span class="pre">taskiq-redis</span></code> broker</p>
+</section>
+<section id="adding-environment-variables">
+<h2>Adding Environment Variables<a class="headerlink" href="#adding-environment-variables" title="Link to this heading"></a></h2>
+<p>Once you have created your bot container image, you might know of some environment variables the image requires to run properly.
+Thanks to it’s flexible plugin system, ape plugins may also require specific environment variables to load as well.
+Silverback Clusters include an environment variable management system for exactly this purpose,
+which you can manage using <a class="reference external" href="../commands/cluster.html#silverback-cluster-vars"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">vars</span></code></a> subcommand.</p>
+<p>The environment variable management system makes use of a concept called “Variable Groups” which are distinct collections of environment variables meant to be used together.
+These variable groups will help in managing the runtime environment of your Bots by allowing you to segregate different variables depending on each bot’s needs.</p>
+<p>To create an environment group, use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-vars-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">vars</span> <span class="pre">new</span></code></a> command and give it a name and a set of related variables.
+For instance, it may make sense to make a group of variables for your favorite Ape plugins or services, such as RPC Providers, Blockchain Data Indexers, Etherscan, etc.
+You might have a database connection that you want all your bots to access.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>All environment variables in Silverback Clusters are private, meaning they cannot be viewed after they are uploaded.
+However, your Bots will have full access to their values from within their runtime environment, so be careful that you fully understand what you are sharing with your bots.</p>
+<p>Also, understand your build dependencies within your container and make sure you are not using any vulnerable or malicious packages.</p>
+<p><strong>NEVER</strong> upload your private key in a plaintext format!</p>
+<p>Use <em>Ape Account Plugins</em> such as <a class="reference external" href="https://github.com/ApeWorX/ape-aws"><code class="docutils literal notranslate"><span class="pre">ape-aws</span></code></a> to safely manage access to your hosted keys.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Etherscan plugin <em>will not function</em> without an API key in the cloud environment.
+This will likely create errors running your bots if you use Ape’s <code class="docutils literal notranslate"><span class="pre">Contract</span></code> class.</p>
+</div>
+<p>To list your Variable Groups, use <a class="reference external" href="../commands/cluster.html#silverback-cluster-vars-list"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">vars</span> <span class="pre">list</span></code></a>.
+To see information about a specific Variable Group, including the Environment Variables it includes, use <a class="reference external" href="../commands/cluster.html#silverback-cluster-vars-info"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">vars</span> <span class="pre">info</span></code></a>
+To remove a variable group, use <a class="reference external" href="../commands/cluster.html#silverback-cluster-vars-remove"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">vars</span> <span class="pre">remove</span></code></a>,</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can only remove a Variable Group if it is not referenced by any existing Bot.</p>
+</div>
+<p>Once you have created all the Variable Group(s) that you need to operate your Bot, you can reference these groups by name when adding your Bot to the cluster.</p>
+</section>
+<section id="private-container-registries">
+<h2>Private Container Registries<a class="headerlink" href="#private-container-registries" title="Link to this heading"></a></h2>
+<p>If you are using a private container registry to store your images, you will need to provide your bot with the necessary credentials to access it.
+First you will need to add your credentials to the cluster with the <a class="reference external" href="../commands/cluster.html#silverback-cluster-registry-auth-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">registry</span> <span class="pre">auth</span> <span class="pre">new</span></code></a> command.</p>
+<p>Then you can provide the name of these credentials when creating your bot with the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">new</span></code></a> or <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-update"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">update</span></code></a> commands.</p>
+</section>
+<section id="deploying-your-bot">
+<h2>Deploying your Bot<a class="headerlink" href="#deploying-your-bot" title="Link to this heading"></a></h2>
+<p>You are finally ready to deploy your bot on the Cluster and get it running!</p>
+<p>To deploy your Bot, use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">new</span></code></a> command and give your bot a name,
+container image, network to run on, an account alias (if you want to sign transactions w/ <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code>),
+and any environment Variable Group(s) the bot needs.
+If everything validates successfully, the Cluster will begin orchestrating your deployment for you.</p>
+<p>You should monitor the deployment and startup of your bot to make sure it enters the RUNNING state successfully.
+You can do this using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-health"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">health</span></code></a> command.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It usually takes a minute or so for your bot to transition from PROVISIONING to STARTUP to the RUNNING state.
+If there are any difficulties in downloading your container image, provisioning your desired infrastructure, or if your bot encounters an error during the STARTUP phase,
+the Bot will not enter into the RUNNING state and will be shut down gracefully into the STOPPED state.</p>
+<p>Once in the STOPPED state, you can make any adjustments to the environment Variable Group(s) or other runtime parameters in the Bot config;
+or, you can make code changes and deploy a new image for the Bot to use.
+Once ready, you can use the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">start</span></code> command to re-start your Bot.</p>
+</div>
+<p>If at any time you want to view the configuration of your bot, you can do so using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-info"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">info</span></code></a> command.
+You can also update metadata or configuration of your bot using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-update"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">update</span></code></a> command.
+Lastly, if you want to shutdown and delete your bot, you can do so using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-remove"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">remove</span></code></a> command.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Configuration updates do not redeploy your Bots automatically, you must manually stop and restart your bots for changes to take effect.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Removing a Bot will immediately trigger a SHUTDOWN if the Bot is not already STOPPED.</p>
+</div>
+</section>
+<section id="monitoring-your-bot">
+<h2>Monitoring your Bot<a class="headerlink" href="#monitoring-your-bot" title="Link to this heading"></a></h2>
+<p>Once your bot is successfully running in the RUNNING state, you can monitor your bot with a series of commands
+under the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span></code></a> subcommand group.
+We already saw how you can use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-list"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">list</span></code></a> command to see all bots managed by your Cluster (running or not).</p>
+<p>To see runtime health information about a specific bot, again use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-health"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">health</span></code></a> command.
+You can view the logs that a specific bot is generating using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-logs"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">logs</span></code></a> command.
+Lastly, you can view unacknowledged errors that your bot has experienced while in the RUNNING state
+using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-errors"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">errors</span></code></a> command.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Once in the RUNNING state, your Bot will not stop running unless it experiences a certain amount of errors in quick succession.
+Any task execution that experiences an error will abort execution (and therefore not produce any metrics) but the Bot <strong>will not</strong> shutdown.</p>
+<p>All errors encountered during task exeuction are reported to the Cluster for later review by any users with appriopiate access.
+Tasks do not retry (by default), but updates to <code class="docutils literal notranslate"><span class="pre">bot.state</span></code> are maintained up until the point an error occurs.</p>
+<p>It is important to keep track of these errors and ensure that none of them are in fact critical to the operation of your Bot,
+and to take corrective or preventative action if it is determined that it should be treated as a more critical failure condition.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Your Bots can also be monitored from the Platform UI at <a class="reference external" href="https://silverback.apeworx.io">https://silverback.apeworx.io</a>.</p>
+</div>
+</section>
+<section id="controlling-your-bot">
+<h2>Controlling your Bot<a class="headerlink" href="#controlling-your-bot" title="Link to this heading"></a></h2>
+<p>As we already saw, once a Bot is configured in a Cluster, we can control it using commands from the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span></code></a> subcommand group.
+For example, we can attempt to start a Bot that is not currently running (after making configuration or code changes)
+using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-start"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">start</span></code></a> command.
+We can also stop a bot using <a class="reference external" href="../commands/cluster.html#silverback-cluster-bots-stop"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">stop</span></code></a> that is currently in the RUNNING state if we desire.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Controlling your bots can be done from the Platform UI at <a class="reference external" href="https://silverback.apeworx.io">https://silverback.apeworx.io</a>, if you have the right permissions to do so.</p>
+</div>
+<p>TODO: Updating runtime parameters</p>
+</section>
+<section id="viewing-measured-metrics">
+<h2>Viewing Measured Metrics<a class="headerlink" href="#viewing-measured-metrics" title="Link to this heading"></a></h2>
+<p>TODO: Downloading metrics from your Bot</p>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="managing.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Silverback Platform</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../commands/run.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Local Development</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=e2e99575"></script></body>
+</html>
