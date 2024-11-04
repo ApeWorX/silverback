@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
 
 @click.group(cls=SectionedHelpGroup)
+@click.version_option(message="%(version)s", package_name="silverback")
 def cli():
     """
     Silverback: Build Python bots that react to on-chain events
