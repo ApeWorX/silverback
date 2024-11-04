@@ -1,4 +1,4 @@
-def test_run(cli, runner):
+def test_run_no_bots(cli, runner):
     result = runner.invoke(cli, "run")
     assert result.exit_code != 0
     expected = (
