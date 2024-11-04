@@ -714,8 +714,6 @@ def cancel_payment_stream(
 
     NOTE: Only the Stream owner can perform this action!
     """
-    from silverback.cluster.types import ResourceStatus
-
     if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
         raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
 
