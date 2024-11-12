@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional
 
 import click
 import yaml  # type: ignore[import-untyped]
+from ape import Contract
 from ape.cli import (
     AccountAliasPromptChoice,
     ConnectedProviderCommand,
@@ -545,6 +546,15 @@ def create_payment_stream(
 
     sm = platform.get_stream_manager(network.chain_id)
     product = configuration.get_product_code(account.address, cluster.id)
+
+    if token:
+        try:
+            token = Contract(token).symbol()
+            accepted_tokens = platform.get_accepted_tokens(network.chain_id)
+            if token not in accepted_tokens:
+                raise click.UsageError(f"Token symbol '{token}' not found in token list.")
+        except ValueError:
+            raise click.UsageError(f"Token address '{token}' not found.")
 
     if not token:
         accepted_tokens = platform.get_accepted_tokens(network.chain_id)
