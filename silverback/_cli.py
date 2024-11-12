@@ -547,17 +547,18 @@ def create_payment_stream(
     sm = platform.get_stream_manager(network.chain_id)
     product = configuration.get_product_code(account.address, cluster.id)
 
+    accepted_tokens = platform.get_accepted_tokens(network.chain_id)
     if token:
         try:
-            token = Contract(token).symbol()
-            accepted_tokens = platform.get_accepted_tokens(network.chain_id)
-            if token not in accepted_tokens:
-                raise click.UsageError(f"Token symbol '{token}' not found in token list.")
+            token_symbol = Contract(token).symbol()
+            token = accepted_tokens.get(token_symbol)
         except ValueError:
-            raise click.UsageError(f"Token address '{token}' not found.")
+            token = accepted_tokens.get(token)
+
+        if token is None:
+            raise click.UsageError("Token not found in accepted tokens.")
 
     if not token:
-        accepted_tokens = platform.get_accepted_tokens(network.chain_id)
         token = accepted_tokens.get(
             click.prompt(
                 "Select one of the following tokens to fund your stream with",
