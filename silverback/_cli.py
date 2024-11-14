@@ -558,7 +558,7 @@ def create_payment_stream(
             token = accepted_tokens.get(token)
 
         if token is None:
-            raise click.UsageError(f"Token not found in {accepted_tokens}.")
+            raise click.UsageError(f"Token not found in accepted tokens: {accepted_tokens}.")
 
     if not token:
         token = accepted_tokens.get(
