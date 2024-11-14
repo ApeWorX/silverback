@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 
 import click
 import yaml  # type: ignore[import-untyped]
-from ape import Contract
+from ape import Contract, convert
 from ape.cli import (
     AccountAliasPromptChoice,
     ConnectedProviderCommand,
@@ -15,8 +15,9 @@ from ape.cli import (
     ape_cli_context,
     network_option,
 )
-from ape.exceptions import Abort, ApeException
+from ape.exceptions import Abort, ApeException, ConversionError
 from ape.logging import LogLevel
+from ape.types import AddressType
 
 from silverback._click_ext import (
     SectionedHelpGroup,
@@ -550,13 +551,14 @@ def create_payment_stream(
     accepted_tokens = platform.get_accepted_tokens(network.chain_id)
     if token:
         try:
+            convert(token, AddressType)
             token_symbol = Contract(token).symbol()
             token = accepted_tokens.get(token_symbol)
-        except ValueError:
+        except ConversionError:
             token = accepted_tokens.get(token)
 
         if token is None:
-            raise click.UsageError("Token not found in accepted tokens.")
+            raise click.UsageError(f"Token not found in {accepted_tokens}.")
 
     if not token:
         token = accepted_tokens.get(
