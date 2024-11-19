@@ -553,9 +553,10 @@ def create_payment_stream(
         try:
             convert(token, AddressType)
             token_symbol = Contract(token).symbol()
-            token = accepted_tokens.get(token_symbol)
         except ConversionError:
-            token = accepted_tokens.get(token)
+            token_symbol = token
+        finally:
+            token = accepted_tokens.get(token_symbol)
 
         if token is None:
             raise click.UsageError(f"Token not found in accepted tokens: {accepted_tokens}.")
