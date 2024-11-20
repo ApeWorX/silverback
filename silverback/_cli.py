@@ -561,7 +561,7 @@ def create_payment_stream(
         if token is None:
             raise click.UsageError(f"Token not found in accepted tokens: {accepted_tokens}.")
 
-    if not token:
+    else:
         token = accepted_tokens.get(
             click.prompt(
                 "Select one of the following tokens to fund your stream with",
