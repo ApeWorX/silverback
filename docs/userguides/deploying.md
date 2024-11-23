@@ -1,58 +1,20 @@
 # Deploying Bots
 
-In this guide, we are going to show you more details on how to deploy your application to the [Silverback Platform](https://silverback.apeworx.io).
-
-## Creating a Cluster
-
-The Silverback Platform runs your Bots on dedicated managed application Clusters.
-These Clusters will take care to orchestrate infrastructure, monitor, run your triggers, and collect metrics for your applications.
-Each Cluster is bespoke for an individual or organization, and isolates your applications from others on different infrastructure.
-
-Before we deploy our Bot, we have to create a Cluster.
-If you haven't yet, please sign up for Silverback at [https://silverback.apeworx.io](https://silverback.apeworx.io).
-
-Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
-logging in to the Platform using [`silverback login`][silverback-login],
-and then using [`silverback cluster new`][silverback-cluster-new] to follow the steps necessary to deploy it.
+In this guide, we are going to show you more details on how to deploy your bot to the [Silverback Platform](https://silverback.apeworx.io).
 
 ```{note}
-The Platform UI will let you create and manage Clusters using a graphical experience, which may be preferred.
-The CLI experience is for those working locally who don't want to visit the website, or are locally developing their applications.
+You will need to have created a cluster in your workspace first. More information can be found in the [Managing Your Platform](./managing.md).
 ```
 
-Once you have created your Cluster, you have to fund it so it is made available for your use.
-To do that, use the [`silverback cluster pay create`][silverback-cluster-pay-create] command to fund your newly created cluster.
-Please note that provisioning your cluster will take time, and it may take up to an hour for it to be ready.
-Check back after 10-15 minutes using the [`silverback cluster info`][silverback-cluster-info] command to see when it's ready.
-
-At any point after the Cluster is funded, you can fund it with more funds via [`silverback cluster pay add-time`][silverback-cluster-pay-add-time]
-command to extend the timeline that the Cluster is kept around for.
-Note that it is possible for anyone to add more time to the Cluster, at any time and for any amount.
-
-If that timeline expires, the Platform will automatically de-provision your infrastructure, and it is not possible to reverse this!
-The Platform may send you notifications when your Stream is close to expiring, but it is up to you to remember to fill it so it doesn't.
-Note that your data collection will stay available for up to 30 days allowing you the ability to download any data you need.
-
-Lastly, if you ever feel like you no longer need your Cluster, you can cancel the funding for it and get a refund of the remaining funds.
-If you are the owner of the Stream, you can do this via the [`silverback cluster pay cancel`][silverback-cluster-pay-cancel] command.
-Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.
-
-## Connecting to your Cluster
-
-To connect to a cluster, you can use commands from the [`silverback cluster`][silverback-cluster] subcommand group.
-For instance, to list all your available bots on your cluster, use [`silverback cluster bots list`][silverback-cluster-bots-list].
-To obtain general information about your cluster, just use [`silverback cluster info`][silverback-cluster-info],
-or [`silverback cluster health`][silverback-cluster-health] to see the current status of your Cluster.
-
-If you have no bots, we will first have to containerize our Bots and upload them to a container registry that our Cluster is configured to access.
+In order to deploy your bots to the Cluster, we will first have to containerize our Bots and upload them to a container registry that our Cluster can access.
 
 ```{note}
-Building a container for your application can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
+Building a container for your bot can be an advanced topic, we have included the `silverback build` subcommand to help assist in generating Dockerfiles.
 ```
 
 ## Building your Bot
 
-To build your container definition(s) for your bot(s), you can use the `silverback build` command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
+To build your container definition(s) for your bot(s), you can use the [`silverback build`][silverback-build] command. This command searches your `bots` directory for python modules, then auto-generates Dockerfiles.
 
 For example, if your directory is structured as suggested in [development](./development), and your `bots/` directory looks like this:
 
@@ -102,7 +64,7 @@ TODO: Add how to debug containers using `silverback run` w/ `taskiq-redis` broke
 
 ## Adding Environment Variables
 
-Once you have created your bot application container image, you might know of some environment variables the image requires to run properly.
+Once you have created your bot container image, you might know of some environment variables the image requires to run properly.
 Thanks to it's flexible plugin system, ape plugins may also require specific environment variables to load as well.
 Silverback Clusters include an environment variable management system for exactly this purpose,
 which you can manage using [`silverback cluster vars`][silverback-cluster-vars] subcommand.
@@ -127,7 +89,7 @@ Use _Ape Account Plugins_ such as [`ape-aws`](https://github.com/ApeWorX/ape-aws
 
 ```{note}
 The Etherscan plugin _will not function_ without an API key in the cloud environment.
-This will likely create errors running your applications if you use Ape's `Contract` class.
+This will likely create errors running your bots if you use Ape's `Contract` class.
 ```
 
 To list your Variable Groups, use [`silverback cluster vars list`][silverback-cluster-vars-list].
@@ -161,7 +123,7 @@ You can do this using the [`silverback cluster bots health`][silverback-cluster-
 
 ```{note}
 It usually takes a minute or so for your bot to transition from PROVISIONING to STARTUP to the RUNNING state.
-If there are any difficulties in downloading your container image, provisioning your desired infrastructure, or if your application encounters an error during the STARTUP phase,
+If there are any difficulties in downloading your container image, provisioning your desired infrastructure, or if your bot encounters an error during the STARTUP phase,
 the Bot will not enter into the RUNNING state and will be shut down gracefully into the STOPPED state.
 
 Once in the STOPPED state, you can make any adjustments to the environment Variable Group(s) or other runtime parameters in the Bot config;
@@ -224,7 +186,7 @@ TODO: Updating runtime parameters
 
 TODO: Downloading metrics from your Bot
 
-[silverback-cluster]: ../commands/cluster.html#silverback-cluster
+[silverback-build]: ../commands/run.html#silverback-build
 [silverback-cluster-bots]: ../commands/cluster.html#silverback-cluster-bots
 [silverback-cluster-bots-errors]: ../commands/cluster.html#silverback-cluster-bots-errors
 [silverback-cluster-bots-health]: ../commands/cluster.html#silverback-cluster-bots-health
@@ -236,16 +198,9 @@ TODO: Downloading metrics from your Bot
 [silverback-cluster-bots-start]: ../commands/cluster.html#silverback-cluster-bots-start
 [silverback-cluster-bots-stop]: ../commands/cluster.html#silverback-cluster-bots-stop
 [silverback-cluster-bots-update]: ../commands/cluster.html#silverback-cluster-bots-update
-[silverback-cluster-health]: ../commands/cluster.html#silverback-cluster-health
-[silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
-[silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
-[silverback-cluster-pay-add-time]: ../commands/cluster.html#silverback-cluster-pay-add-time
-[silverback-cluster-pay-cancel]: ../commands/cluster.html#silverback-cluster-pay-cancel
-[silverback-cluster-pay-create]: ../commands/cluster.html#silverback-cluster-pay-create
 [silverback-cluster-registry-auth-new]: ../commands/cluster.html#silverback-cluster-registry-auth-new
 [silverback-cluster-vars]: ../commands/cluster.html#silverback-cluster-vars
 [silverback-cluster-vars-info]: ../commands/cluster.html#silverback-cluster-vars-info
 [silverback-cluster-vars-list]: ../commands/cluster.html#silverback-cluster-vars-list
 [silverback-cluster-vars-new]: ../commands/cluster.html#silverback-cluster-vars-new
 [silverback-cluster-vars-remove]: ../commands/cluster.html#silverback-cluster-vars-remove
-[silverback-login]: ../commands/cluster.html#silverback-login

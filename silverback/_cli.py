@@ -2,22 +2,21 @@ import asyncio
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional
 
 import click
 import yaml  # type: ignore[import-untyped]
-from ape.api import AccountAPI, NetworkAPI
 from ape.cli import (
     AccountAliasPromptChoice,
     ConnectedProviderCommand,
+    LazyChoice,
     account_option,
     ape_cli_context,
     network_option,
 )
-from ape.contracts import ContractInstance
 from ape.exceptions import Abort, ApeException
-from fief_client.integrations.cli import FiefAuth
+from ape.logging import LogLevel
 
-from silverback._build_utils import build_docker_images, generate_dockerfiles
 from silverback._click_ext import (
     SectionedHelpGroup,
     auth_required,
@@ -29,13 +28,18 @@ from silverback._click_ext import (
     timedelta_callback,
     token_amount_callback,
 )
-from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.types import ClusterTier, LogLevel, ResourceStatus
-from silverback.runner import PollingRunner, WebsocketRunner
-from silverback.worker import run_worker
+
+if TYPE_CHECKING:
+    from ape.api.accounts import AccountAPI
+    from ape.api.networks import NetworkAPI
+    from ape.contracts import ContractInstance
+    from fief_client.integrations.cli import FiefAuth
+
+    from silverback.cluster.client import ClusterClient, PlatformClient
 
 
 @click.group(cls=SectionedHelpGroup)
+@click.version_option(message="%(version)s", package_name="silverback")
 def cli():
     """
     Silverback: Build Python bots that react to on-chain events
@@ -98,6 +102,7 @@ def _network_callback(ctx, param, val):
 @click.argument("bot", required=False, callback=bot_path_callback)
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
     """Run Silverback bot"""
+    from silverback.runner import PollingRunner, WebsocketRunner
 
     if not runner_class:
         # NOTE: Automatically select runner class
@@ -124,6 +129,8 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
 @click.argument("path", required=False, type=str, default="bots")
 def build(generate, path):
     """Generate Dockerfiles and build bot images"""
+    from silverback._build_utils import build_docker_images, generate_dockerfiles
+
     if generate:
         if (
             not (path := Path.cwd() / path).exists()
@@ -159,12 +166,14 @@ def build(generate, path):
 @click.argument("bot", required=False, callback=bot_path_callback)
 def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, bot):
     """Run Silverback task workers (advanced)"""
+    from silverback.worker import run_worker
+
     asyncio.run(run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
 
 
 @cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
 @auth_required
-def login(auth: FiefAuth):
+def login(auth: "FiefAuth"):
     """Login to ApeWorX Authorization Service (https://account.apeworx.io)"""
 
     auth.authorize()
@@ -186,7 +195,7 @@ def workspaces():
 
 @workspaces.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @platform_client
-def list_workspaces(platform: PlatformClient):
+def list_workspaces(platform: "PlatformClient"):
     """List available workspaces for your account"""
 
     if workspace_names := list(platform.workspaces):
@@ -204,7 +213,7 @@ def list_workspaces(platform: PlatformClient):
 @workspaces.command(name="info", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
 @platform_client
-def workspace_info(platform: PlatformClient, workspace: str):
+def workspace_info(platform: "PlatformClient", workspace: str):
     """Get Configuration information about a WORKSPACE"""
 
     if not (workspace_info := platform.workspaces.get(workspace)):
@@ -220,39 +229,38 @@ def workspace_info(platform: PlatformClient, workspace: str):
     "-n",
     "--name",
     "workspace_name",
-    required=True,
     help="Name for new workspace",
 )
 @click.option(
     "-s",
     "--slug",
     "workspace_slug",
-    required=True,
     help="Slug for new workspace",
 )
 @platform_client
 def new_workspace(
-    platform: PlatformClient,
-    workspace_name: str,
-    workspace_slug: str,
+    platform: "PlatformClient",
+    workspace_name: str | None,
+    workspace_slug: str | None,
 ):
     """Create a new workspace"""
 
-    if workspace_name:
-        click.echo(f"name: {workspace_name}")
-        click.echo(f"slug: {workspace_slug or workspace_name.lower().replace(' ', '-')}")
+    workspace_name = workspace_name or workspace_slug
+    workspace_slug = workspace_slug or (
+        workspace_name.lower().replace(" ", "-") if workspace_name else None
+    )
 
-    elif workspace_slug:
-        click.echo(f"slug: {workspace_slug}")
-
-    else:
+    if not workspace_name:
         raise click.UsageError("Must provide a name or a slug/name combo")
 
-    platform.create_workspace(
+    workspace = platform.create_workspace(
         workspace_name=workspace_name,
         workspace_slug=workspace_slug,
     )
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{workspace_name}'")
+    click.echo(
+        f"{click.style('SUCCESS', fg='green')}: "
+        f"Created '{workspace.name}' (slug: '{workspace.slug}')"
+    )
 
 
 @workspaces.command(name="update", section="Platform Commands (https://silverback.apeworx.io)")
@@ -273,7 +281,7 @@ def new_workspace(
 @click.argument("workspace")
 @platform_client
 def update_workspace(
-    platform: PlatformClient,
+    platform: "PlatformClient",
     workspace: str,
     name: str | None,
     slug: str | None,
@@ -300,7 +308,7 @@ def update_workspace(
 @workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
 @platform_client
-def delete_workspace(platform: PlatformClient, workspace: str):
+def delete_workspace(platform: "PlatformClient", workspace: str):
     """Delete an empty Workspace on the Silverback Platform"""
 
     if not (workspace_client := platform.workspaces.get(workspace)):
@@ -316,14 +324,15 @@ def delete_workspace(platform: PlatformClient, workspace: str):
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
 @platform_client
-def list_clusters(platform: PlatformClient, workspace: str):
+def list_clusters(platform: "PlatformClient", workspace: str):
     """List available clusters in a WORKSPACE"""
 
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_names := list(workspace_client.clusters):
-        click.echo(yaml.safe_dump(cluster_names))
+    if clusters := workspace_client.clusters.values():
+        cluster_info = [f"- {cluster.name} ({cluster.status})" for cluster in clusters]
+        click.echo("\n".join(cluster_info))
 
     else:
         click.secho("No clusters for this account", bold=True, fg="red")
@@ -345,7 +354,7 @@ def list_clusters(platform: PlatformClient, workspace: str):
 @click.argument("workspace")
 @platform_client
 def new_cluster(
-    platform: PlatformClient,
+    platform: "PlatformClient",
     workspace: str,
     cluster_name: str | None,
     cluster_slug: str | None,
@@ -355,21 +364,23 @@ def new_cluster(
     if not (workspace_client := platform.workspaces.get(workspace)):
         raise click.BadOptionUsage("workspace", f"Unknown workspace '{workspace}'")
 
-    if cluster_name:
-        click.echo(f"name: {cluster_name}")
-        click.echo(f"slug: {cluster_slug or cluster_name.lower().replace(' ', '-')}")
+    cluster_name = cluster_name or cluster_slug
+    cluster_slug = cluster_slug or (
+        cluster_name.lower().replace(" ", "-") if cluster_name else None
+    )
 
-    elif cluster_slug:
-        click.echo(f"slug: {cluster_slug}")
-
-    else:
+    if not cluster_name:
         raise click.UsageError("Must provide a name or a slug/name combo")
+
+    from silverback.cluster.types import ResourceStatus
 
     cluster = workspace_client.create_cluster(
         cluster_name=cluster_name,
         cluster_slug=cluster_slug,
     )
-    click.echo(f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}'")
+    click.echo(
+        f"{click.style('SUCCESS', fg='green')}: Created '{cluster.name}' (slug: '{cluster.slug}')"
+    )
 
     if cluster.status == ResourceStatus.CREATED:
         click.echo(
@@ -396,7 +407,7 @@ def new_cluster(
 @click.argument("cluster_path")
 @platform_client
 def update_cluster(
-    platform: PlatformClient,
+    platform: "PlatformClient",
     cluster_path: str,
     name: str | None,
     slug: str | None,
@@ -435,21 +446,30 @@ def pay():
     """Pay for CLUSTER with Crypto using ApePay streaming payments"""
 
 
+def _default_tier():
+    from silverback.cluster.types import ClusterTier
+
+    return ClusterTier.STANDARD.name.capitalize()
+
+
+def _tier_choices():
+    from silverback.cluster.types import ClusterTier
+
+    return [
+        ClusterTier.STANDARD.name.capitalize(),
+        ClusterTier.PREMIUM.name.capitalize(),
+    ]
+
+
 @pay.command(name="create", cls=ConnectedProviderCommand)
 @account_option()
 @click.argument("cluster_path")
 @click.option(
     "-t",
     "--tier",
-    default=ClusterTier.STANDARD.name.capitalize(),
+    default=_default_tier,
     metavar="NAME",
-    type=click.Choice(
-        [
-            ClusterTier.STANDARD.name.capitalize(),
-            ClusterTier.PREMIUM.name.capitalize(),
-        ],
-        case_sensitive=False,
-    ),
+    type=LazyChoice(_tier_choices, case_sensitive=False),
     help="Named set of options to use for cluster as a base (Defaults to Standard)",
 )
 @click.option(
@@ -480,13 +500,13 @@ def pay():
 )
 @platform_client
 def create_payment_stream(
-    platform: PlatformClient,
-    network: NetworkAPI,
-    account: AccountAPI,
+    platform: "PlatformClient",
+    network: "NetworkAPI",
+    account: "AccountAPI",
     cluster_path: str,
     tier: str,
     config_updates: list[tuple[str, str]],
-    token: ContractInstance | None,
+    token: Optional["ContractInstance"],
     token_amount: int | None,
     stream_time: timedelta | None,
 ):
@@ -495,6 +515,7 @@ def create_payment_stream(
 
     NOTE: This action cannot be cancelled! Streams must exist for at least 1 hour before cancelling.
     """
+    from silverback.cluster.types import ClusterTier, ResourceStatus
 
     if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
         raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
@@ -611,9 +632,9 @@ def create_payment_stream(
 )
 @platform_client
 def fund_payment_stream(
-    platform: PlatformClient,
-    network: NetworkAPI,
-    account: AccountAPI,
+    platform: "PlatformClient",
+    network: "NetworkAPI",
+    account: "AccountAPI",
     cluster_path: str,
     token_amount: int | None,
     stream_time: timedelta | None,
@@ -623,6 +644,7 @@ def fund_payment_stream(
 
     NOTE: You can fund anyone else's Stream!
     """
+    from silverback.cluster.types import ResourceStatus
 
     if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
         raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
@@ -637,7 +659,7 @@ def fund_payment_stream(
         )
 
     elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
+        raise click.UsageError(f"Cannot fund '{cluster.name}': cluster is not running.")
 
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
@@ -683,9 +705,9 @@ def fund_payment_stream(
 @click.argument("cluster_path", metavar="CLUSTER")
 @platform_client
 def cancel_payment_stream(
-    platform: PlatformClient,
-    network: NetworkAPI,
-    account: AccountAPI,
+    platform: "PlatformClient",
+    network: "NetworkAPI",
+    account: "AccountAPI",
     cluster_path: str,
 ):
     """
@@ -693,7 +715,6 @@ def cancel_payment_stream(
 
     NOTE: Only the Stream owner can perform this action!
     """
-
     if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
         raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
 
@@ -705,9 +726,6 @@ def cancel_payment_stream(
         raise click.BadArgumentUsage(
             f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
         )
-
-    elif cluster.status != ResourceStatus.RUNNING:
-        raise click.UsageError(f"Cannot fund '{cluster_info.name}': cluster is not running.")
 
     elif not (stream := workspace_client.get_payment_stream(cluster, network.chain_id)):
         raise click.UsageError("Cluster is not funded via ApePay Stream")
@@ -722,22 +740,21 @@ def cancel_payment_stream(
 
 @cluster.command(name="info")
 @cluster_client
-def cluster_info(cluster: ClusterClient):
+def cluster_info(cluster: "ClusterClient"):
     """Get Configuration information about a CLUSTER"""
 
     # NOTE: This actually doesn't query the cluster's routes, which are protected
     click.echo(f"Cluster Version: v{cluster.version}")
-
-    if config := cluster.state.configuration:
-        click.echo(yaml.safe_dump(config.settings_display_dict()))
-
-    else:
-        click.secho("No Cluster Configuration detected", fg="yellow", bold=True)
+    # TODO: Add way to fetch config and display it (this doesn't work)
+    # if config := cluster.state.configuration:
+    #    click.echo(yaml.safe_dump(config.settings_display_dict()))
+    # else:
+    #    click.secho("No Cluster Configuration detected", fg="yellow", bold=True)
 
 
 @cluster.command(name="health")
 @cluster_client
-def cluster_health(cluster: ClusterClient):
+def cluster_health(cluster: "ClusterClient"):
     """Get Health information about a CLUSTER"""
 
     click.echo(yaml.safe_dump(cluster.health.model_dump()))
@@ -755,7 +772,7 @@ def registry_auth():
 
 @registry_auth.command(name="list")
 @cluster_client
-def credentials_list(cluster: ClusterClient):
+def credentials_list(cluster: "ClusterClient"):
     """List container registry credentials"""
 
     if creds := list(cluster.registry_credentials):
@@ -768,7 +785,7 @@ def credentials_list(cluster: ClusterClient):
 @registry_auth.command(name="info")
 @click.argument("name")
 @cluster_client
-def credentials_info(cluster: ClusterClient, name: str):
+def credentials_info(cluster: "ClusterClient", name: str):
     """Show info about registry credentials"""
 
     if not (creds := cluster.registry_credentials.get(name)):
@@ -781,7 +798,7 @@ def credentials_info(cluster: ClusterClient, name: str):
 @click.argument("name")
 @click.argument("registry")
 @cluster_client
-def credentials_new(cluster: ClusterClient, name: str, registry: str):
+def credentials_new(cluster: "ClusterClient", name: str, registry: str):
     """Add registry private registry credentials. This command will prompt you for a username and
     password.
     """
@@ -799,7 +816,7 @@ def credentials_new(cluster: ClusterClient, name: str, registry: str):
 @click.argument("name")
 @click.option("-r", "--registry")
 @cluster_client
-def credentials_update(cluster: ClusterClient, name: str, registry: str | None = None):
+def credentials_update(cluster: "ClusterClient", name: str, registry: str | None = None):
     """Update registry registry credentials"""
     if not (creds := cluster.registry_credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
@@ -814,7 +831,7 @@ def credentials_update(cluster: ClusterClient, name: str, registry: str | None =
 @registry_auth.command(name="remove")
 @click.argument("name")
 @cluster_client
-def credentials_remove(cluster: ClusterClient, name: str):
+def credentials_remove(cluster: "ClusterClient", name: str):
     """Remove a set of registry credentials"""
     if not (creds := cluster.registry_credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
@@ -851,7 +868,7 @@ def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
 )
 @click.argument("name")
 @cluster_client
-def new_vargroup(cluster: ClusterClient, variables: dict, name: str):
+def new_vargroup(cluster: "ClusterClient", variables: dict, name: str):
     """Create a new group of environment variables in a CLUSTER"""
 
     if len(variables) == 0:
@@ -863,7 +880,7 @@ def new_vargroup(cluster: ClusterClient, variables: dict, name: str):
 
 @vars.command(name="list")
 @cluster_client
-def list_vargroups(cluster: ClusterClient):
+def list_vargroups(cluster: "ClusterClient"):
     """List latest revisions of all variable groups in a CLUSTER"""
 
     if group_names := list(cluster.variable_groups):
@@ -876,7 +893,7 @@ def list_vargroups(cluster: ClusterClient):
 @vars.command(name="info")
 @click.argument("name")
 @cluster_client
-def vargroup_info(cluster: ClusterClient, name: str):
+def vargroup_info(cluster: "ClusterClient", name: str):
     """Show latest revision of a variable GROUP in a CLUSTER"""
 
     if not (vg := cluster.variable_groups.get(name)):
@@ -909,7 +926,7 @@ def vargroup_info(cluster: ClusterClient, name: str):
 @click.argument("name")
 @cluster_client
 def update_vargroup(
-    cluster: ClusterClient,
+    cluster: "ClusterClient",
     name: str,
     new_name: str,
     updated_vars: dict[str, str],
@@ -945,7 +962,7 @@ def update_vargroup(
 @vars.command(name="remove")
 @click.argument("name")
 @cluster_client
-def remove_vargroup(cluster: ClusterClient, name: str):
+def remove_vargroup(cluster: "ClusterClient", name: str):
     """
     Remove a variable GROUP from a CLUSTER
 
@@ -977,7 +994,7 @@ def bots():
 @click.argument("name")
 @cluster_client
 def new_bot(
-    cluster: ClusterClient,
+    cluster: "ClusterClient",
     image: str,
     network: str,
     account: str | None,
@@ -1025,7 +1042,7 @@ def new_bot(
 
 @bots.command(name="list", section="Configuration Commands")
 @cluster_client
-def list_bots(cluster: ClusterClient):
+def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER (Regardless of status)"""
 
     if bot_names := list(cluster.bots):
@@ -1038,7 +1055,7 @@ def list_bots(cluster: ClusterClient):
 @bots.command(name="info", section="Configuration Commands")
 @click.argument("bot_name", metavar="BOT")
 @cluster_client
-def bot_info(cluster: ClusterClient, bot_name: str):
+def bot_info(cluster: "ClusterClient", bot_name: str):
     """Get configuration information of a BOT in a CLUSTER"""
 
     if not (bot := cluster.bots.get(bot_name)):
@@ -1080,7 +1097,7 @@ def bot_info(cluster: ClusterClient, bot_name: str):
 @click.argument("name", metavar="BOT")
 @cluster_client
 def update_bot(
-    cluster: ClusterClient,
+    cluster: "ClusterClient",
     new_name: str | None,
     image: str | None,
     network: str | None,
@@ -1159,7 +1176,7 @@ def update_bot(
 @bots.command(name="remove", section="Configuration Commands")
 @click.argument("name", metavar="BOT")
 @cluster_client
-def remove_bot(cluster: ClusterClient, name: str):
+def remove_bot(cluster: "ClusterClient", name: str):
     """Remove BOT from CLUSTER (Shutdown if running)"""
 
     if not (bot := cluster.bots.get(name)):
@@ -1175,7 +1192,7 @@ def remove_bot(cluster: ClusterClient, name: str):
 @bots.command(name="health", section="Bot Operation Commands")
 @click.argument("bot_name", metavar="BOT")
 @cluster_client
-def bot_health(cluster: ClusterClient, bot_name: str):
+def bot_health(cluster: "ClusterClient", bot_name: str):
     """Show current health of BOT in a CLUSTER"""
 
     if not (bot := cluster.bots.get(bot_name)):
@@ -1187,7 +1204,7 @@ def bot_health(cluster: ClusterClient, bot_name: str):
 @bots.command(name="start", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
 @cluster_client
-def start_bot(cluster: ClusterClient, name: str):
+def start_bot(cluster: "ClusterClient", name: str):
     """Start BOT running in CLUSTER (if stopped or terminated)"""
 
     if not (bot := cluster.bots.get(name)):
@@ -1203,7 +1220,7 @@ def start_bot(cluster: ClusterClient, name: str):
 @bots.command(name="stop", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
 @cluster_client
-def stop_bot(cluster: ClusterClient, name: str):
+def stop_bot(cluster: "ClusterClient", name: str):
     """Stop BOT from running in CLUSTER (if running)"""
 
     if not (bot := cluster.bots.get(name)):
@@ -1233,7 +1250,7 @@ def stop_bot(cluster: ClusterClient, name: str):
     callback=timedelta_callback,
 )
 @cluster_client
-def show_bot_logs(cluster: ClusterClient, name: str, log_level: str, since: timedelta | None):
+def show_bot_logs(cluster: "ClusterClient", name: str, log_level: str, since: timedelta | None):
     """Show runtime logs for BOT in CLUSTER"""
 
     start_time = None
@@ -1255,7 +1272,7 @@ def show_bot_logs(cluster: ClusterClient, name: str, log_level: str, since: time
 @bots.command(name="errors", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT")
 @cluster_client
-def show_bot_errors(cluster: ClusterClient, name: str):
+def show_bot_errors(cluster: "ClusterClient", name: str):
     """Show unacknowledged errors for BOT in CLUSTER"""
 
     if not (bot := cluster.bots.get(name)):
