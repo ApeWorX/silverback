@@ -258,11 +258,11 @@ Any errors you raise during this function will get captured by the client, and r
 </span></pre></div>
 </div>
 <p>This function comes a parameter <code class="docutils literal notranslate"><span class="pre">state</span></code> that you can use for storing the results of your startup computation or resources that you have provisioned.</p>
-<p>It’s import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.  <strong>This function will run on every worker process</strong>.</p>
+<p>It’s import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else. <strong>This function will run on every worker process</strong>.</p>
 <p><em>New in 0.2.0</em>: These events moved from <code class="docutils literal notranslate"><span class="pre">on_startup()</span></code> and <code class="docutils literal notranslate"><span class="pre">on_shutdown()</span></code> for clarity.</p>
 <section id="worker-state">
 <h4>Worker State<a class="headerlink" href="#worker-state" title="Link to this heading"></a></h4>
-<p>The <code class="docutils literal notranslate"><span class="pre">state</span></code> variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses.  Each distributed worker has its own instance of state.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">state</span></code> variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses. Each distributed worker has its own instance of state.</p>
 <p>To access the state from a handler, you must annotate <code class="docutils literal notranslate"><span class="pre">context</span></code> as a dependency like so:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span>
 </span><span data-line="2"><span class="kn">from</span> <span class="nn">taskiq</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span>
@@ -277,7 +277,7 @@ Any errors you raise during this function will get captured by the client, and r
 </section>
 <section id="bot-events">
 <h3>Bot Events<a class="headerlink" href="#bot-events" title="Link to this heading"></a></h3>
-<p>You can also add an bot startup and shutdown handler that will be <strong>executed once upon every bot startup</strong>.  This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.</p>
+<p>You can also add an bot startup and shutdown handler that will be <strong>executed once upon every bot startup</strong>. This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span> <span class="nf">handle_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Process missed events, etc</span>
@@ -292,7 +292,7 @@ Any errors you raise during this function will get captured by the client, and r
 </span><span data-line="12">    <span class="o">...</span>
 </span></pre></div>
 </div>
-<p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_startup()</span></code> decorator and handler signature have changed.  It is now executed only once upon bot startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_worker_startup()</span></code>.</p>
+<p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_startup()</span></code> decorator and handler signature have changed. It is now executed only once upon bot startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_worker_startup()</span></code>.</p>
 </section>
 </section>
 <section id="bot-state">
@@ -377,7 +377,7 @@ Use segregated keys and limit your risk by controlling the amount of funds that 
 <h3>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Link to this heading"></a></h3>
 <p>Using only the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code> command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.
 In some high volume environments, you may want to deploy your Silverback bot in a distributed configuration using multiple processes to handle the messages at a higher rate.</p>
-<p>The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.</p>
+<p>The primary components are the client and workers. The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.</p>
 <p>For this to work, you must configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#broker">TaskIQ broker</a> capable of distributed processing.
 Additonally, it is highly suggested you should also configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#result-backend">TaskIQ result backend</a> in order to process and store the results of executing tasks.</p>
 <div class="admonition note">
