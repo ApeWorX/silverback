@@ -24,7 +24,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         self.block_time = self.chain_manager.provider.network.block_time or compute_block_time()
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
-        # TODO: Necessary because bytes/HexBytes doesn't encode/deocde well for some reason
+        # TODO: Necessary because bytes/HexBytes doesn't encode/decode well for some reason
         def fix_dict(data: dict, recurse_count: int = 0) -> dict:
             fixed_data: dict[str, Any] = {}
             for name, value in data.items():
