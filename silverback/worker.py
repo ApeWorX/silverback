@@ -7,6 +7,7 @@ from taskiq.receiver import Receiver
 
 
 async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
+    shutdown_event = asyncio.Event()
     try:
         tasks = []
         with ThreadPoolExecutor(max_workers=worker_count) as pool:
@@ -19,7 +20,7 @@ async def run_worker(broker: AsyncBroker, worker_count=2, shutdown_timeout=90):
                     max_prefetch=0,
                 )
                 broker.is_worker_process = True
-                tasks.append(receiver.listen())
+                tasks.append(receiver.listen(shutdown_event))
 
             await asyncio.gather(*tasks)
     finally:
