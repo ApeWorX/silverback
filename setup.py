@@ -11,15 +11,15 @@ extras_require = {
         "hypothesis-jsonschema",  # Generate strategies for pydantic models
     ],
     "lint": [
-        "black>=24",  # Auto-formatter and linter
-        "mypy>=1.10",  # Static type analyzer
+        "black>=24.10.0,<25",  # Auto-formatter and linter
+        "mypy>=1.13.0,<2",  # Static type analyzer
         "types-setuptools",  # Needed for mypy type shed
-        "flake8>=7",  # Style linter
-        "isort>=5.13",  # Import sorting linter
-        "mdformat>=0.7",  # Auto-formatter for markdown
+        "flake8>=7.1.1,<8",  # Style linter
+        "isort>=5.13.2,<6",  # Import sorting linter
+        "mdformat>=0.7.19",  # Auto-formatter for markdown
         "mdformat-gfm>=0.3.6",  # Needed for formatting GitHub-flavored markdown
         "mdformat-frontmatter>=2.0",  # Needed for frontmatters-style headers in issue templates
-        "mdformat-pyproject>=0.0.1",  # Allows configuring in pyproject.toml
+        "mdformat-pyproject>=0.0.2",  # Allows configuring in pyproject.toml
     ],
     "doc": ["sphinx-ape"],
     "release": [  # `release` GitHub Action job uses this
@@ -63,14 +63,15 @@ setup(
     install_requires=[
         "apepay>=0.3.2,<1",
         "click",  # Use same version as eth-ape
-        "eth-ape>=0.7,<1.0",
+        "eth-ape>=0.8.19,<1.0",
         "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
         "eth-pydantic-types",  # Use same version as eth-ape
         "packaging",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
-        "taskiq[metrics]>=0.11.3,<0.12",
+        "taskiq[metrics]>=0.11.9,<0.12",
         "tomlkit>=0.12,<1",  # For reading/writing global platform profile
         "fief-client[cli]>=0.19,<1",  # for platform auth/cluster login
+        "websockets>=14.1,<15",  # For subscriptions
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],

@@ -5,7 +5,7 @@ from typing import AsyncGenerator, Optional
 
 from ape.logging import logger
 from websockets import ConnectionClosedError
-from websockets import client as ws_client
+from websockets.asyncio import client as ws_client
 
 
 class SubscriptionType(Enum):
@@ -26,7 +26,7 @@ class Web3SubscriptionsManager:
         self._ws_provider_uri = ws_provider_uri
 
         # Stateful
-        self._connection: ws_client.WebSocketClientProtocol | None = None
+        self._connection: ws_client.ClientConnection | None = None
         self._last_request: int = 0
         self._subscriptions: dict[str, asyncio.Queue] = {}
         self._rpc_msg_buffer: list[dict] = []
