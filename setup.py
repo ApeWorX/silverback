@@ -71,6 +71,7 @@ setup(
         "taskiq[metrics]>=0.11.9,<0.12",
         "tomlkit>=0.12,<1",  # For reading/writing global platform profile
         "fief-client[cli]>=0.19,<1",  # for platform auth/cluster login
+        "websockets>=14.1,<15",  # For subscriptions
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],
