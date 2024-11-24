@@ -1,0 +1,4 @@
+# Ensure we are configured for fork mode correct for example
+ethereum:
+  mainnet-fork:
+    default_provider: foundry
