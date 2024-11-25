@@ -141,13 +141,13 @@ def handle_on_worker_shutdown(state):
 
 This function comes a parameter `state` that you can use for storing the results of your startup computation or resources that you have provisioned.
 
-It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.  **This function will run on every worker process**.
+It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else. **This function will run on every worker process**.
 
 *New in 0.2.0*: These events moved from `on_startup()` and `on_shutdown()` for clarity.
 
 #### Worker State
 
-The `state` variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses.  Each distributed worker has its own instance of state.
+The `state` variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses. Each distributed worker has its own instance of state.
 
 To access the state from a handler, you must annotate `context` as a dependency like so:
 
@@ -163,7 +163,7 @@ def block_handler(block, context: Annotated[Context, TaskiqDepends()]):
 
 ### Bot Events
 
-You can also add an bot startup and shutdown handler that will be **executed once upon every bot startup**.  This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.
+You can also add an bot startup and shutdown handler that will be **executed once upon every bot startup**. This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.
 
 ```py
 @bot.on_startup()
@@ -180,7 +180,7 @@ def handle_on_shutdown():
     ...
 ```
 
-*Changed in 0.2.0*: The behavior of the `@bot.on_startup()` decorator and handler signature have changed.  It is now executed only once upon bot startup and worker events have moved on `@bot.on_worker_startup()`.
+*Changed in 0.2.0*: The behavior of the `@bot.on_startup()` decorator and handler signature have changed. It is now executed only once upon bot startup and worker events have moved on `@bot.on_worker_startup()`.
 
 ## Bot State
 
@@ -271,7 +271,7 @@ Use segregated keys and limit your risk by controlling the amount of funds that 
 Using only the `silverback run ...` command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.
 In some high volume environments, you may want to deploy your Silverback bot in a distributed configuration using multiple processes to handle the messages at a higher rate.
 
-The primary components are the client and workers.  The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.
+The primary components are the client and workers. The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.
 
 For this to work, you must configure a [TaskIQ broker](https://taskiq-python.github.io/guide/architecture-overview.html#broker) capable of distributed processing.
 Additonally, it is highly suggested you should also configure a [TaskIQ result backend](https://taskiq-python.github.io/guide/architecture-overview.html#result-backend) in order to process and store the results of executing tasks.
