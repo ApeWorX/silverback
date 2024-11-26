@@ -125,7 +125,9 @@ class SilverbackBot(ManagerAccessMixin):
         ):
             settings.NEW_BLOCK_TIMEOUT = int(timedelta(days=1).total_seconds())
 
-        settings_str = "\n  ".join(f'{key}="{val}"' for key, val in settings.dict().items() if val)
+        settings_str = "\n  ".join(
+            f'{key}="{val}"' for key, val in settings.model_dump().items() if val
+        )
         logger.info(f"Loading Silverback Bot with settings:\n  {settings_str}")
 
         self.broker = settings.get_broker()

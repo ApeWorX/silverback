@@ -24,12 +24,15 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         self.block_time = self.chain_manager.provider.network.block_time or compute_block_time()
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
-        # TODO: Necessary because bytes/HexBytes doesn't encode/deocde well for some reason
+        # TODO: Necessary because bytes/HexBytes doesn't encode/decode well for some reason
         def fix_dict(data: dict, recurse_count: int = 0) -> dict:
             fixed_data: dict[str, Any] = {}
             for name, value in data.items():
                 if isinstance(value, bytes):
                     fixed_data[name] = to_hex(value)
+                elif name == "transaction_hash" and isinstance(value, list):
+                    # TODO: Why is it a list now? (as of Ape v0.8.19ish)
+                    fixed_data[name] = to_hex(bytearray(value))
                 elif isinstance(value, dict):
                     if recurse_count > 3:
                         raise RecursionError("Event object is too deep")
