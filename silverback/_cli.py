@@ -39,6 +39,8 @@ if TYPE_CHECKING:
 
     from silverback.cluster.client import ClusterClient, PlatformClient
 
+LOCAL_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
+
 
 @click.group(cls=SectionedHelpGroup)
 @click.version_option(message="%(version)s", package_name="silverback")
@@ -223,7 +225,10 @@ def workspace_info(platform: "PlatformClient", workspace: str):
 
     click.echo(f"{click.style('Name', fg='green')}: {workspace_info.name}")
     click.echo(f"{click.style('Slug', fg='green')}: '{workspace_info.slug}'")
-    click.echo(f"{click.style('Date Created', fg='green')}: '{workspace_info.created}'")
+    click.echo(
+        f"{click.style('Date Created', fg='green')}: "
+        f"{workspace_info.created.astimezone().strftime(LOCAL_DATETIME)}"
+    )
 
 
 @workspaces.command(name="new", section="Platform Commands (https://silverback.apeworx.io)")
