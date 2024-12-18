@@ -102,12 +102,12 @@ class VariableGroup(VariableGroupInfo):
     ) -> "VariableGroup":
         if name is not None:
             # Update metadata
-            response = self.cluster.put(f"/variables/{self.id}", json=dict(name=name))
+            response = self.cluster.put(f"/vars/{self.id}", json=dict(name=name))
             handle_error_with_response(response)
 
         if variables is not None:
             # Create a new revision
-            response = self.cluster.post(f"/variables/{self.id}", json=dict(variables=variables))
+            response = self.cluster.post(f"/vars/{self.id}", json=dict(variables=variables))
             handle_error_with_response(response)
             return VariableGroup.model_validate(response.json())
 
@@ -118,12 +118,12 @@ class VariableGroup(VariableGroupInfo):
         if revision == "latest":
             revision = -1  # NOTE: This works with how cluster does lookup
 
-        response = self.cluster.get(f"/variables/{self.id}/{revision}")
+        response = self.cluster.get(f"/vars/{self.id}/{revision}")
         handle_error_with_response(response)
         return VariableGroupInfo.model_validate(response.json())
 
     def remove(self):
-        response = self.cluster.delete(f"/variables/{self.id}")
+        response = self.cluster.delete(f"/vars/{self.id}")
         handle_error_with_response(response)
 
 
@@ -284,12 +284,12 @@ class ClusterClient(httpx.Client):
 
     @property
     def variable_groups(self) -> dict[str, VariableGroup]:
-        response = self.get("/variables")
+        response = self.get("/vars")
         handle_error_with_response(response)
         return {vg.name: vg for vg in map(VariableGroup.model_validate, response.json())}
 
     def new_variable_group(self, name: str, variables: dict[str, str]) -> VariableGroup:
-        response = self.post("/variables", json=dict(name=name, variables=variables))
+        response = self.post("/vars", json=dict(name=name, variables=variables))
         handle_error_with_response(response)
         return VariableGroup.model_validate(response.json())
 
