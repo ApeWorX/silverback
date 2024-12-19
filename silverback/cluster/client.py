@@ -289,7 +289,7 @@ class ClusterClient(httpx.Client):
         return {vg.name: vg for vg in map(VariableGroup.model_validate, response.json())}
 
     def new_variable_group(self, name: str, variables: dict[str, str]) -> VariableGroup:
-        response = self.post("/vars",  params={"name": name}, json=variables)
+        response = self.post("/vars", params={"name": name}, json=variables)
         handle_error_with_response(response)
         return VariableGroup.model_validate(response.json())
 
