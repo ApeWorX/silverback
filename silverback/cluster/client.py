@@ -100,7 +100,7 @@ class VariableGroup(VariableGroupInfo):
     def update(
         self, name: str | None = None, variables: dict[str, str | None] | None = None
     ) -> "VariableGroup":
-        
+
         if name is not None:
             # Update metadata
             response = self.cluster.put(f"/vars/{self.name}", json=dict(name="testname"))
