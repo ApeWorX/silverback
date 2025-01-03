@@ -103,12 +103,12 @@ class VariableGroup(VariableGroupInfo):
         
         if name is not None:
             # Update metadata
-            response = self.cluster.put(f"/vars/{self.name}", json=dict(name=name))
+            response = self.cluster.put(f"/vars/{self.name}", json=dict(name="testname"))
             handle_error_with_response(response)
         if variables is not None:
             # Create a new revision
-            variable_list = [f"{k}={v}" for k, v in variables.items() if v is not None]
-            response = self.cluster.put(f"/vars/{self.name}", json=dict(variables=variable_list))
+            data = {k: v for k, v in variables.items() if v is not None}
+            response = self.cluster.put(f"/vars/{self.name}", json=data)
             handle_error_with_response(response)
             return VariableGroup.model_validate(response.json())
         return self
