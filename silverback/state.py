@@ -46,7 +46,7 @@ class Datastore:
         self.state_backup_file = data_folder / "state.json"
 
         return (
-            StateSnapshot.parse_file(self.state_backup_file)
+            StateSnapshot.model_validate_json(self.state_backup_file.read_text())
             if self.state_backup_file.exists()
             else None
         )
