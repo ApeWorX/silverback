@@ -21,8 +21,8 @@ CLI commands for interacting with the Silverback Platform.
     :nested: full
     :commands: new, list, info, update, remove
 
-.. click:: silverback._cli:registry_auth
-    :prog: silverback cluster registry auth
+.. click:: silverback._cli:registry
+    :prog: silverback cluster registry
     :nested: full
     :commands: new, list, info, update, remove
 
