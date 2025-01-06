@@ -268,9 +268,8 @@ class ClusterClient(httpx.Client):
     def registry_credentials(self) -> dict[str, RegistryCredentials]:
         response = self.get("/credentials")
         handle_error_with_response(response)
-        return {
-            creds.name: creds for creds in map(RegistryCredentials.model_validate, response.json())
-        }
+        
+        return response.json()
 
     def new_credentials(
         self, name: str, docker_server: str, docker_username: str, docker_password: str, docker_email: str

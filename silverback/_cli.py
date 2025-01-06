@@ -793,8 +793,8 @@ def registry_auth():
 @cluster_client
 def credentials_list(cluster: "ClusterClient"):
     """List container registry credentials"""
-
-    if creds := list(cluster.registry_credentials):
+    
+    if creds := cluster.registry_credentials:
         click.echo(yaml.safe_dump(creds))
 
     else:
