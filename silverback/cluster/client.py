@@ -273,12 +273,16 @@ class ClusterClient(httpx.Client):
         }
 
     def new_credentials(
-        self, name: str, hostname: str, username: str, password: str
+        self, name: str, docker_server: str, docker_username: str, docker_password: str, docker_email: str
     ) -> RegistryCredentials:
-        response = self.post(
-            "/credentials",
-            json=dict(name=name, hostname=hostname, username=username, password=password),
-        )
+        form = dict(
+                name=name,
+                docker_server=docker_server,
+                docker_username=docker_username,
+                docker_password=docker_password,
+                docker_email=docker_email
+            )
+        response = self.post("/credentials", json=form)
         handle_error_with_response(response)
         return RegistryCredentials.model_validate(response.json())
 
