@@ -1194,8 +1194,9 @@ def update_bot(
 
 @bots.command(name="remove", section="Configuration Commands")
 @click.argument("name", metavar="BOT")
+@click.option("-n", "--network")
 @cluster_client
-def remove_bot(cluster: "ClusterClient", name: str):
+def remove_bot(cluster: "ClusterClient", name: str, network: str):
     """Remove BOT from CLUSTER (Shutdown if running)"""
 
     if not (bot := cluster.bots.get(name)):
@@ -1204,7 +1205,7 @@ def remove_bot(cluster: "ClusterClient", name: str):
     elif not click.confirm(f"Do you want to shutdown and delete '{name}'?"):
         return
 
-    bot.remove()
+    bot.remove(network)
     click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
 
 

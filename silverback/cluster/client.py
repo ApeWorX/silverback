@@ -215,8 +215,8 @@ class Bot(BotInfo):
     def logs(self) -> list[BotLogEntry]:
         return self.filter_logs()
 
-    def remove(self):
-        response = self.cluster.delete(f"/bots/{self.id}")
+    def remove(self, network: str):
+        response = self.cluster.delete(f"/bots/{self.name}", params={"network": network})
         handle_error_with_response(response)
 
 
