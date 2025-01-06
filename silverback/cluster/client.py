@@ -138,7 +138,7 @@ class Bot(BotInfo):
         image: str | None = None,
         network: str | None = None,
         account: str | None = None,
-        environment: list[VariableGroupInfo] | None = None,
+        vargroup: list[VariableGroupInfo] | None = None,
         registry_credentials_id: str | None = None,
     ) -> "Bot":
         form: dict = dict(
@@ -148,10 +148,8 @@ class Bot(BotInfo):
             network=network,
         )
 
-        if environment:
-            form["environment"] = [
-                dict(id=str(env.id), revision=env.revision) for env in environment
-            ]
+        if vargroup:
+            form["vargroup"] = vargroup
 
         if registry_credentials_id:
             form["registry_credentials_id"] = registry_credentials_id
@@ -305,7 +303,7 @@ class ClusterClient(httpx.Client):
         image: str,
         network: str,
         account: str | None = None,
-        environment: list[VariableGroupInfo] | None = None,
+        vargroup: list[VariableGroupInfo] | None = None,
         registry_credentials_id: str | None = None,
     ) -> Bot:
         form: dict = dict(
@@ -315,10 +313,8 @@ class ClusterClient(httpx.Client):
             account=account,
         )
 
-        if environment is not None:
-            form["environment"] = [
-                dict(id=str(env.id), revision=env.revision) for env in environment
-            ]
+        if vargroup is not None:
+            form["vargroup"] = vargroup
 
         if registry_credentials_id:
             form["registry_credentials_id"] = registry_credentials_id
