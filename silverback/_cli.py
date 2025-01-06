@@ -784,12 +784,7 @@ def registry():
     """Manage container registry configuration"""
 
 
-@registry.group(cls=SectionedHelpGroup, name="auth")
-def registry_auth():
-    """Manage private container registry credentials"""
-
-
-@registry_auth.command(name="list")
+@registry.command(name="list")
 @cluster_client
 def credentials_list(cluster: "ClusterClient"):
     """List container registry credentials"""
@@ -801,7 +796,7 @@ def credentials_list(cluster: "ClusterClient"):
         click.secho("No registry credentials present in this cluster", bold=True, fg="red")
 
 
-@registry_auth.command(name="info")
+@registry.command(name="info")
 @click.argument("name")
 @cluster_client
 def credentials_info(cluster: "ClusterClient", name: str):
@@ -813,7 +808,7 @@ def credentials_info(cluster: "ClusterClient", name: str):
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id", "name"})))
 
 
-@registry_auth.command(name="new")
+@registry.command(name="new")
 @click.argument("name")
 @click.argument("registry")
 @cluster_client
@@ -831,7 +826,7 @@ def credentials_new(cluster: "ClusterClient", name: str, registry: str):
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
 
 
-@registry_auth.command(name="update")
+@registry.command(name="update")
 @click.argument("name")
 @click.option("-r", "--registry")
 @cluster_client
@@ -847,7 +842,7 @@ def credentials_update(cluster: "ClusterClient", name: str, registry: str | None
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
 
 
-@registry_auth.command(name="remove")
+@registry.command(name="remove")
 @click.argument("name")
 @cluster_client
 def credentials_remove(cluster: "ClusterClient", name: str):
