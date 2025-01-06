@@ -199,7 +199,7 @@ If you follow these suggestions, your Silverback deployments will be easy to use
 <section id="creating-a-bot">
 <h2>Creating a Bot<a class="headerlink" href="#creating-a-bot" title="Link to this heading"></a></h2>
 <p>Creating a Silverback Bot is easy, to do so initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackBot</span></code> class:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackBot</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">silverback</span><span class="w"> </span><span class="kn">import</span> <span class="n">SilverbackBot</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
 </span></pre></div>
@@ -214,10 +214,10 @@ This method lets us specify which event will trigger the execution of our handle
 <section id="new-block-events">
 <h2>New Block Events<a class="headerlink" href="#new-block-events" title="Link to this heading"></a></h2>
 <p>To add a block handler, you will do the following:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">ape</span> <span class="kn">import</span> <span class="n">chain</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
-</span><span data-line="4"><span class="k">def</span> <span class="nf">handle_new_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+</span><span data-line="4"><span class="k">def</span><span class="w"> </span><span class="nf">handle_new_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
 </span><span data-line="5">    <span class="o">...</span>
 </span></pre></div>
 </div>
@@ -228,12 +228,12 @@ Any errors you raise during this function will get captured by the client, and r
 <section id="new-event-logs">
 <h2>New Event Logs<a class="headerlink" href="#new-event-logs" title="Link to this heading"></a></h2>
 <p>Similarly to blocks, you can handle events emitted by a contract by adding an event handler:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">ape</span> <span class="kn">import</span> <span class="n">Contract</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">Contract</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">TOKEN</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="o">&lt;</span><span class="n">your</span> <span class="n">token</span> <span class="n">address</span> <span class="n">here</span><span class="o">&gt;</span><span class="p">)</span>
 </span><span data-line="4">
 </span><span data-line="5"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">TOKEN</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
-</span><span data-line="6"><span class="k">def</span> <span class="nf">handle_token_transfer_events</span><span class="p">(</span><span class="n">transfer</span><span class="p">):</span>
+</span><span data-line="6"><span class="k">def</span><span class="w"> </span><span class="nf">handle_token_transfer_events</span><span class="p">(</span><span class="n">transfer</span><span class="p">):</span>
 </span><span data-line="7">    <span class="o">...</span>
 </span></pre></div>
 </div>
@@ -247,12 +247,12 @@ Any errors you raise during this function will get captured by the client, and r
 <h3>Worker Events<a class="headerlink" href="#worker-events" title="Link to this heading"></a></h3>
 <p>If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">handle_on_worker_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Connect to DB, set initial state, etc</span>
 </span><span data-line="4">    <span class="o">...</span>
 </span><span data-line="5">
 </span><span data-line="6"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
-</span><span data-line="7"><span class="k">def</span> <span class="nf">handle_on_worker_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="7"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
 </span><span data-line="8">    <span class="c1"># cleanup resources, close connections cleanly, etc</span>
 </span><span data-line="9">    <span class="o">...</span>
 </span></pre></div>
@@ -264,11 +264,11 @@ Any errors you raise during this function will get captured by the client, and r
 <h4>Worker State<a class="headerlink" href="#worker-state" title="Link to this heading"></a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">state</span></code> variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses. Each distributed worker has its own instance of state.</p>
 <p>To access the state from a handler, you must annotate <code class="docutils literal notranslate"><span class="pre">context</span></code> as a dependency like so:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span>
-</span><span data-line="2"><span class="kn">from</span> <span class="nn">taskiq</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">taskiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
-</span><span data-line="5"><span class="k">def</span> <span class="nf">block_handler</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span><span class="p">()]):</span>
+</span><span data-line="5"><span class="k">def</span><span class="w"> </span><span class="nf">block_handler</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span><span class="p">()]):</span>
 </span><span data-line="6">    <span class="c1"># Access state via context.state</span>
 </span><span data-line="7">    <span class="o">...</span>
 </span></pre></div>
@@ -279,7 +279,7 @@ Any errors you raise during this function will get captured by the client, and r
 <h3>Bot Events<a class="headerlink" href="#bot-events" title="Link to this heading"></a></h3>
 <p>You can also add an bot startup and shutdown handler that will be <strong>executed once upon every bot startup</strong>. This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">handle_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Process missed events, etc</span>
 </span><span data-line="4">    <span class="c1"># process_history(start_block=startup_state.last_block_seen)</span>
 </span><span data-line="5">    <span class="c1"># ...or startup_state.last_block_processed</span>
@@ -287,7 +287,7 @@ Any errors you raise during this function will get captured by the client, and r
 </span><span data-line="7">
 </span><span data-line="8">
 </span><span data-line="9"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
-</span><span data-line="10"><span class="k">def</span> <span class="nf">handle_on_shutdown</span><span class="p">():</span>
+</span><span data-line="10"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_shutdown</span><span class="p">():</span>
 </span><span data-line="11">    <span class="c1"># Record final state, etc</span>
 </span><span data-line="12">    <span class="o">...</span>
 </span></pre></div>
@@ -304,19 +304,19 @@ Silverback provides <code class="docutils literal notranslate"><span class="pre"
 and then use that data to determine a signal under which you want trigger transactions to commit back to the chain.
 Such an bot might look like this:</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">create_table</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">create_table</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="n">df</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">start_block</span><span class="o">=</span><span class="n">startup_state</span><span class="o">.</span><span class="n">last_block_processed</span><span class="p">)</span>
 </span><span data-line="4">    <span class="o">...</span>  <span class="c1"># Do some further processing on df</span>
 </span><span data-line="5">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">df</span>
 </span><span data-line="6">
 </span><span data-line="7">
 </span><span data-line="8"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="p">)</span>
-</span><span data-line="9"><span class="k">def</span> <span class="nf">update_table</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="9"><span class="k">def</span><span class="w"> </span><span class="nf">update_table</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
 </span><span data-line="10">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Update using stuff from `log`</span>
 </span><span data-line="11">
 </span><span data-line="12">
 </span><span data-line="13"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
-</span><span data-line="14"><span class="k">def</span> <span class="nf">use_table</span><span class="p">(</span><span class="n">blk</span><span class="p">):</span>
+</span><span data-line="14"><span class="k">def</span><span class="w"> </span><span class="nf">use_table</span><span class="p">(</span><span class="n">blk</span><span class="p">):</span>
 </span><span data-line="15">    <span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">():</span>
 </span><span data-line="16">        <span class="c1"># Trigger your bot to send a transaction from `bot.signer`</span>
 </span><span data-line="17">        <span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">)</span>

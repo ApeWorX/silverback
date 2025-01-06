@@ -145,7 +145,7 @@ Silverback application, meant to be used to expose method handlers and other fun
 <span class="pre">`</span></code></p>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_with_state</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_with_state</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Read from state using `getattr`</span>
 </span><span data-line="4">    <span class="o">...</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">something</span>
 </span><span data-line="5">
@@ -167,7 +167,7 @@ Silverback application, meant to be used to expose method handlers and other fun
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
 <p>The bot singleton. Must be initialized prior to use.</p>
 <p>Usage example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span> <span class="nn">silverback</span> <span class="kn">import</span> <span class="n">SilverbackBot</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">silverback</span><span class="w"> </span><span class="kn">import</span> <span class="n">SilverbackBot</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
 </span><span data-line="4">
@@ -229,7 +229,7 @@ Defaults to whatever the latest block is.</p></li>
 Runner has decided to put the bot into the “shutdown” state.</p>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_shutdown</span><span class="p">():</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_shutdown</span><span class="p">():</span>
 </span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Record final state of bot</span>
 </span></pre></div>
 </div>
@@ -242,7 +242,7 @@ Runner has decided to put the bot into the “shutdown” state.</p>
 bot is put into the “run” state by the Runner.</p>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">:</span> <span class="n">StateSnapshot</span><span class="p">):</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">:</span> <span class="n">StateSnapshot</span><span class="p">):</span>
 </span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Reprocess missed events or blocks</span>
 </span></pre></div>
 </div>
@@ -258,7 +258,7 @@ bot is put into the “run” state by the Runner.</p>
 <span class="pre">`</span></code></p>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Update some external service, perhaps using information from `state`.</span>
 </span></pre></div>
 </div>
@@ -274,7 +274,7 @@ bot is put into the “run” state by the Runner.</p>
 <span class="pre">`</span></code></p>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span> <span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Can provision resources, or add things to `state`.</span>
 </span></pre></div>
 </div>
