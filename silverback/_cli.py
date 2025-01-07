@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from fief_client.integrations.cli import FiefAuth
 
     from silverback.cluster.client import ClusterClient, PlatformClient
+    from silverback.cluster.types import VariableGroupInfo
 
 LOCAL_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
 
@@ -1012,7 +1013,7 @@ def new_bot(
     image: str,
     network: str,
     account: str | None,
-    vargroups: list[str],
+    vargroups: list["VariableGroupInfo"],
     registry_credentials_name: str | None,
     name: str,
 ):
@@ -1085,6 +1086,7 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
             "registry_credentials",
         }
     )
+    breakpoint()
     if bot.registry_credentials:
         bot_dump["registry_credentials"] = bot.registry_credentials.model_dump(
             exclude={"id", "name"}
@@ -1116,7 +1118,7 @@ def update_bot(
     image: str | None,
     network: str | None,
     account: str | None,
-    vargroups: list[str],
+    vargroups: list["VariableGroupInfo"],
     registry_credentials_name: str | None,
     name: str,
 ):

@@ -343,12 +343,6 @@ class VariableGroupInfo(BaseModel):
     created: datetime
 
 
-class VariableInfo(BaseModel):
-    name: str
-    group_id: uuid.UUID
-    group_revision: int
-
-
 class BotTaskStatus(BaseModel):
     last_status: str
     exit_code: int | None
