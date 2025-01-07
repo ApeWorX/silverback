@@ -7,7 +7,7 @@ from ape import Contract
 from ape.contracts import ContractInstance
 from ape.logging import LogLevel
 from apepay import Stream, StreamManager
-from pydantic import computed_field
+from pydantic import computed_field, ValidationError
 
 from silverback.exceptions import ClientError
 from silverback.version import version
@@ -73,19 +73,20 @@ class RegistryCredentials(RegistryCredentialsInfo):
     def update(
         self,
         name: str | None = None,
-        hostname: str | None = None,
-        username: str | None = None,
-        password: str | None = None,
+        docker_server: str | None = None,
+        docker_username: str | None = None,
+        docker_password: str | None = None,
+        docker_email: str | None = None,
     ) -> "RegistryCredentials":
         response = self.cluster.put(
-            f"/credentials/{self.id}",
-            json=dict(name=name, hostname=hostname, username=username, password=password),
+            f"/credentials/{self.name}",
+            json=dict(name=name, docker_server=docker_server, docker_username=docker_username, docker_password=docker_password, docker_email=docker_email),
         )
         handle_error_with_response(response)
         return self
 
     def remove(self):
-        response = self.cluster.delete(f"/credentials/{self.id}")
+        response = self.cluster.delete(f"/credentials/{self.name}")
         handle_error_with_response(response)
 
 
@@ -279,11 +280,15 @@ class ClusterClient(httpx.Client):
                 docker_server=docker_server,
                 docker_username=docker_username,
                 docker_password=docker_password,
-                docker_email=docker_email
+                docker_email=docker_email,
             )
         response = self.post("/credentials", json=form)
         handle_error_with_response(response)
-        return RegistryCredentials.model_validate(response.json())
+        try:
+            return RegistryCredentials.model_validate(response.json())
+        except ValidationError as e:
+            raise ClientError(f"Invalid response format: {e}")
+        
 
     @property
     def variable_groups(self) -> dict[str, VariableGroup]:
