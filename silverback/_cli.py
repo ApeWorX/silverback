@@ -1086,7 +1086,6 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
             "registry_credentials",
         }
     )
-    breakpoint()
     if bot.registry_credentials:
         bot_dump["registry_credentials"] = bot.registry_credentials.model_dump(
             exclude={"id", "name"}
