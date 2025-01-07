@@ -153,7 +153,7 @@ class Bot(BotInfo):
         if registry_credentials_id:
             form["registry_credentials_id"] = registry_credentials_id
 
-        response = self.cluster.put(f"/bots/{self.id}", json=form)
+        response = self.cluster.put(f"/bots/{self.name}", json=form)
         handle_error_with_response(response)
         return Bot.model_validate(response.json())
 
@@ -166,13 +166,13 @@ class Bot(BotInfo):
         return BotHealth.model_validate(raw_health)  # response.json())  TODO: Migrate this endpoint
 
     def stop(self):
-        response = self.cluster.post(f"/bots/{self.id}/stop")
+        response = self.cluster.post(f"/bots/{self.name}/stop")
         handle_error_with_response(response)
 
     def start(self):
         # response = self.cluster.post(f"/bots/{self.id}/start") TODO: Add `/start`
         # NOTE: Currently, a noop PUT request will trigger a start
-        response = self.cluster.put(f"/bots/{self.id}", json=dict(name=self.name))
+        response = self.cluster.put(f"/bots/{self.name}", json=dict(name=self.name))
         handle_error_with_response(response)
 
     @computed_field  # type: ignore[prop-decorator]
@@ -186,7 +186,7 @@ class Bot(BotInfo):
 
     @property
     def errors(self) -> list[str]:
-        response = self.cluster.get(f"/bots/{self.id}/errors")
+        response = self.cluster.get(f"/bots/{self.name}/errors")
         handle_error_with_response(response)
         return response.json()
 
@@ -204,7 +204,7 @@ class Bot(BotInfo):
         if end_time:
             query["end_time"] = end_time.isoformat()
 
-        response = self.cluster.get(f"/bots/{self.id}/logs", params=query, timeout=120)
+        response = self.cluster.get(f"/bots/{self.name}/logs", params=query, timeout=120)
         handle_error_with_response(response)
         return [BotLogEntry.model_validate(log) for log in response.json()]
 

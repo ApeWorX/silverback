@@ -1022,6 +1022,7 @@ def new_bot(
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
 
     vargroup = [group for group in vargroups]
+
     registry_credentials_id = None
     if registry_credentials_name:
         if not (
@@ -1079,7 +1080,7 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
         exclude={
             "id",
             "name",
-            "environment",
+            "vargroup",
             "registry_credentials_id",
             "registry_credentials",
         }
@@ -1090,9 +1091,9 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
         )
 
     click.echo(yaml.safe_dump(bot_dump))
-    if bot.environment:
-        click.echo("environment:")
-        click.echo(yaml.safe_dump([var.name for var in bot.environment]))
+    if bot.vargroup:
+        click.echo("Vargroups:")
+        click.echo(yaml.safe_dump([var.name for var in bot.vargroup]))
 
 
 @bots.command(name="update", section="Configuration Commands")
@@ -1153,13 +1154,13 @@ def update_bot(
     set_vargroup = True
 
     if len(vargroup) == 0 and bot.vargroup:
-        set_environment = click.confirm("Do you want to clear all environment variables?")
+        set_vargroup = click.confirm("Do you want to clear all variable groups?")
 
     elif vargroup != bot.vargroup:
         click.echo("old-vargroup:")
-        click.echo(yaml.safe_dump([group for group in bot.vargroup]))
+        click.echo(yaml.safe_dump(bot.vargroup))
         click.echo("new-vargroup:")
-        click.echo(yaml.safe_dump([group for group in vargroups]))
+        click.echo(yaml.safe_dump(vargroup))
 
     redeploy_required |= set_vargroup
 
@@ -1182,13 +1183,13 @@ def update_bot(
     # NOTE: Skip machine `.id`
     click.echo(yaml.safe_dump(bot.model_dump(exclude={"id", "vargroup"})))
     if bot.vargroup:
-        click.echo("vargroup:")
+        click.echo("Vargroups:")
         click.echo(yaml.safe_dump(vargroup))
 
 
 @bots.command(name="remove", section="Configuration Commands")
 @click.argument("name", metavar="BOT")
-@click.option("-n", "--network")
+@click.option("-n", "--network", required=True)
 @cluster_client
 def remove_bot(cluster: "ClusterClient", name: str, network: str):
     """Remove BOT from CLUSTER (Shutdown if running)"""
