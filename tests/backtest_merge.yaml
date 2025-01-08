@@ -1,0 +1,5 @@
+bots: ["example"]
+network: "ethereum:mainnet"
+start_block: 15_338_009
+stop_block: 15_338_018
+something_else: blah
