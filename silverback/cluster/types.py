@@ -343,12 +343,6 @@ class VariableGroupInfo(BaseModel):
     created: datetime
 
 
-class EnvironmentVariable(BaseModel):
-    name: str
-    group_id: uuid.UUID
-    group_revision: int
-
-
 class BotTaskStatus(BaseModel):
     last_status: str
     exit_code: int | None
@@ -376,7 +370,7 @@ class BotInfo(BaseModel):
     revision: int
     registry_credentials_id: str | None
 
-    environment: list[EnvironmentVariable] = []
+    vargroup: list[VariableGroupInfo] = []
 
 
 class BotLogEntry(BaseModel):

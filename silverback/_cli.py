@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from fief_client.integrations.cli import FiefAuth
 
     from silverback.cluster.client import ClusterClient, PlatformClient
+    from silverback.cluster.types import VariableGroupInfo
 
 LOCAL_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
 
@@ -1012,7 +1013,7 @@ def new_bot(
     image: str,
     network: str,
     account: str | None,
-    vargroups: list[str],
+    vargroups: list["VariableGroupInfo"],
     registry_credentials_name: str | None,
     name: str,
 ):
@@ -1021,7 +1022,7 @@ def new_bot(
     if name in cluster.bots:
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
 
-    environment = [cluster.variable_groups[vg_name].get_revision("latest") for vg_name in vargroups]
+    vargroup = [group for group in vargroups]
 
     registry_credentials_id = None
     if registry_credentials_name:
@@ -1034,11 +1035,11 @@ def new_bot(
     click.echo(f"Name: {name}")
     click.echo(f"Image: {image}")
     click.echo(f"Network: {network}")
-    if environment:
-        click.echo("Environment:")
-        click.echo(yaml.safe_dump([var for vg in environment for var in vg.variables]))
+    if vargroup:
+        click.echo("Vargroups:")
+        click.echo(yaml.safe_dump(vargroup))
     if registry_credentials_id:
-        click.echo(f"registry credentials: {registry_credentials_name}")
+        click.echo(f"Registry credentials: {registry_credentials_name}")
 
     if not click.confirm("Do you want to create and start running this bot?"):
         return
@@ -1048,7 +1049,7 @@ def new_bot(
         image,
         network,
         account=account,
-        environment=environment,
+        vargroup=vargroup,
         registry_credentials_id=registry_credentials_id,
     )
     click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
@@ -1080,7 +1081,7 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
         exclude={
             "id",
             "name",
-            "environment",
+            "vargroup",
             "registry_credentials_id",
             "registry_credentials",
         }
@@ -1091,9 +1092,9 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
         )
 
     click.echo(yaml.safe_dump(bot_dump))
-    if bot.environment:
-        click.echo("environment:")
-        click.echo(yaml.safe_dump([var.name for var in bot.environment]))
+    if bot.vargroup:
+        click.echo("Vargroups:")
+        click.echo(yaml.safe_dump([var.name for var in bot.vargroup]))
 
 
 @bots.command(name="update", section="Configuration Commands")
@@ -1116,7 +1117,7 @@ def update_bot(
     image: str | None,
     network: str | None,
     account: str | None,
-    vargroups: list[str],
+    vargroups: list["VariableGroupInfo"],
     registry_credentials_name: str | None,
     name: str,
 ):
@@ -1149,20 +1150,20 @@ def update_bot(
         redeploy_required = True
         click.echo(f"Image:\n  old: {bot.image}\n  new: {image}")
 
-    environment = [cluster.variable_groups[vg_name].get_revision("latest") for vg_name in vargroups]
+    vargroup = [group for group in vargroups]
 
-    set_environment = True
+    set_vargroup = True
 
-    if len(environment) == 0 and bot.environment:
-        set_environment = click.confirm("Do you want to clear all environment variables?")
+    if len(vargroup) == 0 and bot.vargroup:
+        set_vargroup = click.confirm("Do you want to clear all variable groups?")
 
-    elif environment != bot.environment:
-        click.echo("old-environment:")
-        click.echo(yaml.safe_dump([var.name for var in bot.environment]))
-        click.echo("new-environment:")
-        click.echo(yaml.safe_dump([var for vg in environment for var in vg.variables]))
+    elif vargroup != bot.vargroup:
+        click.echo("old-vargroup:")
+        click.echo(yaml.safe_dump(bot.vargroup))
+        click.echo("new-vargroup:")
+        click.echo(yaml.safe_dump(vargroup))
 
-    redeploy_required |= set_environment
+    redeploy_required |= set_vargroup
 
     if not click.confirm(
         f"Do you want to update '{name}'?"
@@ -1176,21 +1177,22 @@ def update_bot(
         image=image,
         network=network,
         account=account,
-        environment=environment if set_environment else None,
+        vargroup=vargroup if set_vargroup else None,
         registry_credentials_id=registry_credentials_id,
     )
 
     # NOTE: Skip machine `.id`
-    click.echo(yaml.safe_dump(bot.model_dump(exclude={"id", "environment"})))
-    if bot.environment:
-        click.echo("environment:")
-        click.echo(yaml.safe_dump([var.name for var in bot.environment]))
+    click.echo(yaml.safe_dump(bot.model_dump(exclude={"id", "vargroup"})))
+    if bot.vargroup:
+        click.echo("Vargroups:")
+        click.echo(yaml.safe_dump(vargroup))
 
 
 @bots.command(name="remove", section="Configuration Commands")
 @click.argument("name", metavar="BOT")
+@click.option("-n", "--network", required=True)
 @cluster_client
-def remove_bot(cluster: "ClusterClient", name: str):
+def remove_bot(cluster: "ClusterClient", name: str, network: str):
     """Remove BOT from CLUSTER (Shutdown if running)"""
 
     if not (bot := cluster.bots.get(name)):
@@ -1199,7 +1201,7 @@ def remove_bot(cluster: "ClusterClient", name: str):
     elif not click.confirm(f"Do you want to shutdown and delete '{name}'?"):
         return
 
-    bot.remove()
+    bot.remove(network)
     click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
 
 
