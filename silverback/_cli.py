@@ -1098,9 +1098,8 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
 
 
 @bots.command(name="update", section="Configuration Commands")
-@click.option("--new-name", "new_name")  # NOTE: No shorthand, because conflicts w/ `--network`
 @click.option("-i", "--image")
-@click.option("-n", "--network")
+@click.option("-n", "--network", required=True)
 @click.option("-a", "--account")
 @click.option("-g", "--group", "vargroups", multiple=True)
 @click.option(
@@ -1113,7 +1112,6 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
 @cluster_client
 def update_bot(
     cluster: "ClusterClient",
-    new_name: str | None,
     image: str | None,
     network: str | None,
     account: str | None,
@@ -1125,14 +1123,8 @@ def update_bot(
 
     NOTE: Some configuration updates will trigger a redeploy"""
 
-    if new_name in cluster.bots:
-        raise click.UsageError(f"Cannot use name '{new_name}' to update bot '{name}'")
-
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
-
-    if new_name:
-        click.echo(f"Name:\n  old: {name}\n  new: {new_name}")
 
     if network:
         click.echo(f"Network:\n  old: {bot.network}\n  new: {network}")
@@ -1173,7 +1165,7 @@ def update_bot(
         return
 
     bot = bot.update(
-        name=new_name,
+        name=name,
         image=image,
         network=network,
         account=account,

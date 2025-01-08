@@ -153,7 +153,7 @@ class Bot(BotInfo):
         if registry_credentials_id:
             form["registry_credentials_id"] = registry_credentials_id
 
-        response = self.cluster.put(f"/bots/{self.name}", json=form)
+        response = self.cluster.put(f"/bots/network/{network}/bot/{self.name}", json=form)
         handle_error_with_response(response)
         return Bot.model_validate(response.json())
 
