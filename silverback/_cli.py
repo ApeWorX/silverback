@@ -32,12 +32,14 @@ from silverback._click_ext import (
 )
 
 if TYPE_CHECKING:
+    from typing import Dict, List
+
     from ape.api.accounts import AccountAPI
     from ape.api.networks import NetworkAPI
     from ape.contracts import ContractInstance
     from fief_client.integrations.cli import FiefAuth
 
-    from silverback.cluster.client import ClusterClient, PlatformClient
+    from silverback.cluster.client import Bot, ClusterClient, PlatformClient
     from silverback.cluster.types import VariableGroupInfo
 
 LOCAL_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
@@ -1060,8 +1062,34 @@ def new_bot(
 def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER (Regardless of status)"""
 
-    if bot_names := list(cluster.bots):
-        click.echo(yaml.safe_dump(bot_names))
+    if bot_names := cluster.bots:
+        grouped_bots: Dict[str, Dict[str, List[Bot]]] = {}
+        for bot in bot_names.values():
+            ecosystem, network, provider = bot.network.split("-")
+            if ecosystem not in grouped_bots:
+                grouped_bots[ecosystem] = {}
+            network_key = f"{network}-{provider}"
+            if network_key not in grouped_bots[ecosystem]:
+                grouped_bots[ecosystem][network_key] = []
+            grouped_bots[ecosystem][network_key].append(bot)
+
+        sorted_ecosystem = sorted(grouped_bots.keys())
+        for ecosystem in sorted_ecosystem:
+            sorted_networks = sorted(grouped_bots[ecosystem].keys())
+            grouped_bots[ecosystem] = {
+                network: sorted(grouped_bots[ecosystem][network], key=lambda b: b.name)
+                for network in sorted_networks
+            }
+
+        output = ""
+        for ecosystem in sorted_ecosystem:
+            output += f"{ecosystem}:\n"
+            for network in grouped_bots[ecosystem]:
+                output += f"    {network}:\n"
+                for bot in grouped_bots[ecosystem][network]:
+                    output += f"      - {bot.name}\n"
+
+        click.echo(output)
 
     else:
         click.secho("No bots in this cluster", bold=True, fg="red")
