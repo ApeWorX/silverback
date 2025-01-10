@@ -101,17 +101,16 @@ class VariableGroup(VariableGroupInfo):
     def update(
         self, name: str | None = None, variables: dict[str, str | None] | None = None
     ) -> "VariableGroup":
+
         if name is not None:
             # Update metadata
             response = self.cluster.put(f"/vars/{self.id}", json=dict(name=name))
             handle_error_with_response(response)
-
         if variables is not None:
             # Create a new revision
             response = self.cluster.post(f"/vars/{self.id}", json=dict(variables=variables))
             handle_error_with_response(response)
             return VariableGroup.model_validate(response.json())
-
         return self
 
     def get_revision(self, revision: int | Literal["latest"] = "latest") -> VariableGroupInfo:
@@ -124,7 +123,7 @@ class VariableGroup(VariableGroupInfo):
         return VariableGroupInfo.model_validate(response.json())
 
     def remove(self):
-        response = self.cluster.delete(f"/vars/{self.id}")
+        response = self.cluster.delete(f"/vars/{self.name}")
         handle_error_with_response(response)
 
 
