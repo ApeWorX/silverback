@@ -833,7 +833,7 @@ def credentials_new(cluster: "ClusterClient", name: str, registry: str):
         docker_password=password,
         docker_email=email
     )
-    click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
+    click.echo(yaml.safe_dump(creds.model_dump()))
 
 
 @registry_auth.command(name="update")
@@ -855,7 +855,7 @@ def credentials_update(cluster: "ClusterClient", name: str, registry: str | None
         docker_password=password,
         docker_email=email
     )
-    click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
+    click.echo(yaml.safe_dump(creds.model_dump()))
 
 
 @registry_auth.command(name="remove")
