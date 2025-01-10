@@ -328,11 +328,11 @@ class ClusterHealth(BaseModel):
 
 
 class RegistryCredentialsInfo(BaseModel):
-    id: str
     name: str
-    hostname: str
-    created: datetime
-    updated: datetime
+    docker_server: str
+    docker_username: str
+    docker_password: str
+    docker_email: str
 
 
 class VariableGroupInfo(BaseModel):

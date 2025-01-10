@@ -789,8 +789,8 @@ def registry():
 @cluster_client
 def credentials_list(cluster: "ClusterClient"):
     """List container registry credentials"""
-
-    if creds := list(cluster.registry_credentials):
+    
+    if creds := cluster.registry_credentials:
         click.echo(yaml.safe_dump(creds))
 
     else:
@@ -814,17 +814,22 @@ def credentials_info(cluster: "ClusterClient", name: str):
 @click.argument("registry")
 @cluster_client
 def credentials_new(cluster: "ClusterClient", name: str, registry: str):
-    """Add registry private registry credentials. This command will prompt you for a username and
-    password.
+    """Add registry private registry credentials. This command will prompt you for a username,
+    password, and email.
     """
 
     username = click.prompt("Username")
     password = click.prompt("Password", hide_input=True)
+    email = click.prompt("Email")
 
     creds = cluster.new_credentials(
-        name=name, hostname=registry, username=username, password=password
+        name=name,
+        docker_server=registry,
+        docker_username=username,
+        docker_password=password,
+        docker_email=email
     )
-    click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
+    click.echo(yaml.safe_dump(creds.model_dump()))
 
 
 @registry.command(name="update")
@@ -838,9 +843,15 @@ def credentials_update(cluster: "ClusterClient", name: str, registry: str | None
 
     username = click.prompt("Username")
     password = click.prompt("Password", hide_input=True)
+    email = click.prompt("Email")
 
-    creds = creds.update(hostname=registry, username=username, password=password)
-    click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
+    creds = creds.update(
+        docker_server=registry,
+        docker_username=username,
+        docker_password=password,
+        docker_email=email
+    )
+    click.echo(yaml.safe_dump(creds.model_dump()))
 
 
 @registry.command(name="remove")
