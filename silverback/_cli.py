@@ -32,8 +32,6 @@ from silverback._click_ext import (
 )
 
 if TYPE_CHECKING:
-    from typing import Dict, List
-
     from ape.api.accounts import AccountAPI
     from ape.api.networks import NetworkAPI
     from ape.contracts import ContractInstance
@@ -1063,7 +1061,7 @@ def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER (Regardless of status)"""
 
     if bot_names := cluster.bots:
-        grouped_bots: Dict[str, Dict[str, List[Bot]]] = {}
+        grouped_bots: dict[str, dict[str, list[Bot]]] = {}
         for bot in bot_names.values():
             ecosystem, network, provider = bot.network.split("-")
             if ecosystem not in grouped_bots:
