@@ -1,5 +1,6 @@
 import asyncio
 import os
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
@@ -1062,18 +1063,20 @@ def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER (Regardless of status)"""
 
     if bot_names := cluster.bots_list():
-        grouped_bots: dict[str, dict[str, list[Bot]]] = {}
+        grouped_bots: defaultdict[str, defaultdict[str, list[Bot]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
         for bot_list in bot_names.values():
             for bot in bot_list:
                 ecosystem, network, provider = bot.network.split("-")
                 network_key = f"{network}-{provider}"
-                grouped_bots.setdefault(ecosystem, {}).setdefault(network_key, []).append(bot)
+                grouped_bots[ecosystem][network_key].append(bot)
 
         for ecosystem in sorted(grouped_bots.keys()):
-            grouped_bots[ecosystem] = {
-                network: sorted(bots, key=lambda b: b.name)
-                for network, bots in sorted(grouped_bots[ecosystem].items())
-            }
+            for network in grouped_bots[ecosystem]:
+                grouped_bots[ecosystem][network] = sorted(
+                    grouped_bots[ecosystem][network], key=lambda b: b.name
+                )
 
         output = ""
         for ecosystem in grouped_bots:

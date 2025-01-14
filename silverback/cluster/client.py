@@ -308,7 +308,7 @@ class ClusterClient(httpx.Client):
         bots_dict = defaultdict(list)
         for bot in map(Bot.model_validate, response.json()):
             bots_dict[bot.name].append(bot)
-        return dict(bots_dict)
+        return bots_dict
 
     def new_bot(
         self,
