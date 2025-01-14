@@ -1020,7 +1020,8 @@ def new_bot(
     """Create a new bot in a CLUSTER with the given configuration"""
 
     if name in cluster.bots_by_network(network=network):
-        raise click.UsageError(f"Bot name {name} already exists in network {network}.")
+        trim_network = ":".join(network.split(":")[:2])
+        raise click.UsageError(f"Bot name {name} already exists in network {trim_network}.")
 
     vargroup = [group for group in vargroups]
 
