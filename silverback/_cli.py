@@ -1060,27 +1060,22 @@ def new_bot(
 def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER (Regardless of status)"""
 
-    if bot_names := cluster.bots:
+    if bot_names := cluster.bot_list():
         grouped_bots: dict[str, dict[str, list[Bot]]] = {}
-        for bot in bot_names.values():
-            ecosystem, network, provider = bot.network.split("-")
-            if ecosystem not in grouped_bots:
-                grouped_bots[ecosystem] = {}
-            network_key = f"{network}-{provider}"
-            if network_key not in grouped_bots[ecosystem]:
-                grouped_bots[ecosystem][network_key] = []
-            grouped_bots[ecosystem][network_key].append(bot)
+        for bot_list in bot_names.values():
+            for bot in bot_list:
+                ecosystem, network, provider = bot.network.split("-")
+                network_key = f"{network}-{provider}"
+                grouped_bots.setdefault(ecosystem, {}).setdefault(network_key, []).append(bot)
 
-        sorted_ecosystem = sorted(grouped_bots.keys())
-        for ecosystem in sorted_ecosystem:
-            sorted_networks = sorted(grouped_bots[ecosystem].keys())
+        for ecosystem in sorted(grouped_bots.keys()):
             grouped_bots[ecosystem] = {
-                network: sorted(grouped_bots[ecosystem][network], key=lambda b: b.name)
-                for network in sorted_networks
+                network: sorted(bots, key=lambda b: b.name)
+                for network, bots in sorted(grouped_bots[ecosystem].items())
             }
 
         output = ""
-        for ecosystem in sorted_ecosystem:
+        for ecosystem in grouped_bots:
             output += f"{ecosystem}:\n"
             for network in grouped_bots[ecosystem]:
                 output += f"    {network}:\n"

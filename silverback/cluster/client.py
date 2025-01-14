@@ -296,6 +296,14 @@ class ClusterClient(httpx.Client):
         handle_error_with_response(response)
         return {bot.name: bot for bot in map(Bot.model_validate, response.json())}
 
+    def bot_list(self) -> dict[str, list[Bot]]:
+        response = self.get("/bots")
+        handle_error_with_response(response)
+        bots_dict: dict[str, list[Bot]] = {}
+        for bot in map(Bot.model_validate, response.json()):
+            bots_dict.setdefault(bot.name, []).append(bot)
+        return bots_dict
+
     def new_bot(
         self,
         name: str,
