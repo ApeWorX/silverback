@@ -1019,8 +1019,8 @@ def new_bot(
 ):
     """Create a new bot in a CLUSTER with the given configuration"""
 
-    if name in cluster.bots:
-        raise click.UsageError(f"Cannot use name '{name}' to create bot")
+    if name in cluster.bots_by_network(network=network):
+        raise click.UsageError(f"Bot name {name} already exists in network {network}.")
 
     vargroup = [group for group in vargroups]
 
