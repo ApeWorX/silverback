@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from functools import cache
 from typing import ClassVar, Literal
@@ -295,6 +296,14 @@ class ClusterClient(httpx.Client):
         response = self.get("/bots")
         handle_error_with_response(response)
         return {bot.name: bot for bot in map(Bot.model_validate, response.json())}
+
+    def bots_list(self) -> dict[str, list[Bot]]:
+        response = self.get("/bots")
+        handle_error_with_response(response)
+        bots_dict = defaultdict(list)
+        for bot in map(Bot.model_validate, response.json()):
+            bots_dict[bot.name].append(bot)
+        return dict(bots_dict)
 
     def new_bot(
         self,
