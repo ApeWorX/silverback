@@ -1060,7 +1060,7 @@ def new_bot(
 def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER (Regardless of status)"""
 
-    if bot_names := cluster.bot_list():
+    if bot_names := cluster.bots_list():
         grouped_bots: dict[str, dict[str, list[Bot]]] = {}
         for bot_list in bot_names.values():
             for bot in bot_list:
