@@ -216,6 +216,7 @@ class Bot(BotInfo):
 
     def remove(self, network: str):
         response = self.cluster.delete(f"/bots/{self.name}", params={"network": network})
+        breakpoint()
         handle_error_with_response(response)
 
 
