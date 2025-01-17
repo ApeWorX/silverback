@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
+from silverback.cluster.client import RegistryCredentials
 
 import click
 import yaml  # type: ignore[import-untyped]
@@ -859,12 +860,20 @@ def credentials_update(cluster: "ClusterClient", name: str, registry: str | None
 @cluster_client
 def credentials_remove(cluster: "ClusterClient", name: str):
     """Remove a set of registry credentials"""
-    if not (creds := cluster.registry_credentials.get(name)):
+    # Verify the credential exists in the list
+    if name not in cluster.registry_credentials:
         raise click.UsageError(f"Unknown credentials '{name}'")
 
-    creds.remove()  # NOTE: No confirmation because can only delete if no references exist
-    click.secho(f"registry credentials '{creds.name}' removed.", fg="green", bold=True)
-
+    # Create instance and remove
+    creds = RegistryCredentials(
+        name=name,
+        docker_server="",
+        docker_username="",
+        docker_password="",
+        docker_email=""
+    )
+    creds.remove()  # This will call DELETE /credentials/{name}
+    click.secho(f"registry credentials '{name}' removed.", fg="green", bold=True)
 
 @cluster.group(cls=SectionedHelpGroup)
 def vars():

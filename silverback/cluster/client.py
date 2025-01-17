@@ -231,6 +231,7 @@ class ClusterClient(httpx.Client):
         RegistryCredentials.cluster = self  # Connect to cluster client
         VariableGroup.cluster = self  # Connect to cluster client
         Bot.cluster = self  # Connect to cluster client
+        
 
     def send(self, request, *args, **kwargs):
         try:
@@ -263,12 +264,21 @@ class ClusterClient(httpx.Client):
         handle_error_with_response(response)
         return ClusterHealth.model_validate(response.json())
 
+    def get_credential_details(self, name: str) -> RegistryCredentialsInfo:
+        # Try to get full details of a single credential
+        response = self.get(f"/credentials/{name}")
+        handle_error_with_response(response)
+        return RegistryCredentialsInfo.model_validate(response.json())
+
     @property
     def registry_credentials(self) -> dict[str, RegistryCredentials]:
         response = self.get("/credentials")
         handle_error_with_response(response)
-        
-        return response.json()
+
+        return {
+        name: self.get_credential_details(name)  # We'd implement this to use the right HTTP method
+        for name in response.json()
+    }
 
     def new_credentials(
         self, name: str, docker_server: str, docker_username: str, docker_password: str, docker_email: str
@@ -287,7 +297,6 @@ class ClusterClient(httpx.Client):
         except ValidationError as e:
             raise ClientError(f"Invalid response format: {e}")
         
-
     @property
     def variable_groups(self) -> dict[str, VariableGroup]:
         response = self.get("/vars")
