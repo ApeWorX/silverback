@@ -211,7 +211,6 @@ class Bot(BotInfo):
         response_data = response.json()
         logs_data = response.json().get('logs', {})
         log_query = [log for logs in logs_data.values() for log in logs if log.startswith(log_level)]
-        breakpoint()
         return log_query
 
     @property
