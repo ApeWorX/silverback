@@ -192,11 +192,12 @@ class Bot(BotInfo):
 
     def filter_logs(
         self,
+        network: str,
         log_level: LogLevel = LogLevel.INFO,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
     ) -> list[BotLogEntry]:
-        query = {"log_level": log_level.name}
+        log_level = "INFO"
 
         if start_time:
             query["start_time"] = start_time.isoformat()
@@ -204,9 +205,13 @@ class Bot(BotInfo):
         if end_time:
             query["end_time"] = end_time.isoformat()
 
-        response = self.cluster.get(f"/bots/{self.name}/logs", params=query, timeout=120)
+        response = self.cluster.get(f"/bots/network/{network}/name/{self.name}/logs", timeout=120)
         handle_error_with_response(response)
-        return [BotLogEntry.model_validate(log) for log in response.json()]
+        response_data = response.json()
+        logs_data = response.json().get('logs', {})
+        log_query = [log for logs in logs_data.values() for log in logs if log.startswith(log_level)]
+        breakpoint()
+        return log_query
 
     @property
     def logs(self) -> list[BotLogEntry]:
@@ -295,6 +300,11 @@ class ClusterClient(httpx.Client):
         response = self.get("/bots")
         handle_error_with_response(response)
         return {bot.name: bot for bot in map(Bot.model_validate, response.json())}
+
+    def get_bot(self, name: str, network: str):
+        response = self.get(f"/bots/network/{network}/name/{name}")
+        handle_error_with_response(response)
+        return Bot.model_validate(response.json())
 
     def new_bot(
         self,

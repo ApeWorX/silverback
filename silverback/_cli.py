@@ -1068,13 +1068,14 @@ def list_bots(cluster: "ClusterClient"):
 
 
 @bots.command(name="info", section="Configuration Commands")
-@click.argument("bot_name", metavar="BOT")
+@click.option("-n", "--network")
+@click.argument("name", metavar="BOT")
 @cluster_client
-def bot_info(cluster: "ClusterClient", bot_name: str):
+def bot_info(cluster: "ClusterClient", name: str, network: str):
     """Get configuration information of a BOT in a CLUSTER"""
 
-    if not (bot := cluster.bots.get(bot_name)):
-        raise click.UsageError(f"Unknown bot '{bot_name}'.")
+    if not (bot := cluster.get_bot(network=network, name=name)):
+        raise click.UsageError(f"Unknown bot '{name}'.")
 
     # NOTE: Skip machine `.id`, and we already know it is `.name`
     bot_dump = bot.model_dump(
@@ -1265,15 +1266,22 @@ def stop_bot(cluster: "ClusterClient", name: str):
     help="Return logs since N ago.",
     callback=timedelta_callback,
 )
+@click.option("-n", "--network", required=True)
 @cluster_client
-def show_bot_logs(cluster: "ClusterClient", name: str, log_level: str, since: timedelta | None):
+def show_bot_logs(
+    cluster: "ClusterClient",
+    name: str,
+    network: str,
+    log_level: str,
+    since: timedelta | None
+):
     """Show runtime logs for BOT in CLUSTER"""
 
     start_time = None
     if since:
         start_time = datetime.now(tz=timezone.utc) - since
 
-    if not (bot := cluster.bots.get(name)):
+    if not (bot := cluster.get_bot(network=network, name=name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
     try:
@@ -1281,7 +1289,7 @@ def show_bot_logs(cluster: "ClusterClient", name: str, log_level: str, since: ti
     except KeyError:
         level = LogLevel.INFO
 
-    for log in bot.filter_logs(log_level=level, start_time=start_time):
+    for log in bot.filter_logs(network=network, log_level=level, start_time=start_time):
         click.echo(log)
 
 
