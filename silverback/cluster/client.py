@@ -185,12 +185,6 @@ class Bot(BotInfo):
                     return v
         return None
 
-    @property
-    def errors(self) -> list[str]:
-        response = self.cluster.get(f"/bots/{self.name}/errors")
-        handle_error_with_response(response)
-        return response.json()
-
     def filter_logs(
         self,
         log_level: LogLevel = LogLevel.INFO,

@@ -29,7 +29,7 @@ CLI commands for interacting with the Silverback Platform.
 .. click:: silverback._cli:bots
     :prog: silverback cluster bots
     :nested: full
-    :commands: new, list, info, update, remove, health, start, stop, logs, errors
+    :commands: new, list, info, update, remove, health, start, stop, logs
 
 .. click:: silverback._cli:pay
     :prog: silverback cluster pay

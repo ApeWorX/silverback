@@ -151,8 +151,6 @@ We already saw how you can use the [`silverback cluster bots list`][silverback-c
 
 To see runtime health information about a specific bot, again use the [`silverback cluster bots health`][silverback-cluster-bots-health] command.
 You can view the logs that a specific bot is generating using the [`silverback cluster bots logs`][silverback-cluster-bots-logs] command.
-Lastly, you can view unacknowledged errors that your bot has experienced while in the RUNNING state
-using the [`silverback cluster bots errors`][silverback-cluster-bots-errors] command.
 
 ```{warning}
 Once in the RUNNING state, your Bot will not stop running unless it experiences a certain amount of errors in quick succession.
@@ -188,7 +186,6 @@ TODO: Downloading metrics from your Bot
 
 [silverback-build]: ../commands/run.html#silverback-build
 [silverback-cluster-bots]: ../commands/cluster.html#silverback-cluster-bots
-[silverback-cluster-bots-errors]: ../commands/cluster.html#silverback-cluster-bots-errors
 [silverback-cluster-bots-health]: ../commands/cluster.html#silverback-cluster-bots-health
 [silverback-cluster-bots-info]: ../commands/cluster.html#silverback-cluster-bots-info
 [silverback-cluster-bots-list]: ../commands/cluster.html#silverback-cluster-bots-list

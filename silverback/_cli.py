@@ -1304,16 +1304,3 @@ def show_bot_logs(cluster: "ClusterClient", name: str, log_level: str, since: ti
 
     for log in bot.filter_logs(log_level=level, start_time=start_time):
         click.echo(log)
-
-
-@bots.command(name="errors", section="Bot Operation Commands")
-@click.argument("name", metavar="BOT")
-@cluster_client
-def show_bot_errors(cluster: "ClusterClient", name: str):
-    """Show unacknowledged errors for BOT in CLUSTER"""
-
-    if not (bot := cluster.bots.get(name)):
-        raise click.UsageError(f"Unknown bot '{name}'.")
-
-    for log in bot.errors:
-        click.echo(log)
