@@ -5,6 +5,7 @@ from ape import chain
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
+from click import progressbar
 from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
@@ -420,3 +421,66 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             await self._checkpoint(last_block_seen=event.block_number)
             await self._handle_task(await event_log_task_kicker.kiq(event))
             await self._checkpoint(last_block_processed=event.block_number)
+
+
+class BacktestRunner(BaseRunner):
+    def __init__(
+        self,
+        app: SilverbackBot,
+        start_block: int,
+        stop_block: int,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(app, *args, **kwargs)
+
+        # NOTE: Takes time to do the data collection
+        with progressbar(
+            chain.blocks.range(start_block, stop_block + 1),
+            length=(stop_block - start_block),
+        ) as blocks:
+            self.blocks = list(blocks)
+
+        logger.info(
+            f"Using {self.__class__.__name__}:"
+            f" num_blocks={stop_block - start_block}"
+            f" max_exceptions={self.max_exceptions}"
+        )
+
+    async def _block_task(self, task_data: TaskData):
+        new_block_task_kicker = self._create_task_kicker(task_data)
+
+        async for block in async_wrap_iter(iter(self.blocks)):
+            await self._checkpoint(last_block_seen=block.number)
+            await self._handle_task(await new_block_task_kicker.kiq(block))
+            await self._checkpoint(last_block_processed=block.number)
+
+    async def _event_task(self, task_data: TaskData):
+        if not (event_signature := task_data.labels.get("event_signature")):
+            raise StartupFailure("No Event Signature provided.")
+
+        event_abi = EventABI.from_signature(event_signature)
+
+        if not (contract_address := task_data.labels.get("contract_address")):
+            raise StartupFailure("Contract instance required.")
+
+        if (
+            not (
+                events := chain.contracts.instance_at(contract_address)._events_.get(event_abi.name)
+            )
+            or len(events) == 0
+        ):
+            raise StartupFailure(
+                "Contract '{contract_address}' does not have event '{event_abi.name}'."
+            )
+
+        event_log_task_kicker = self._create_task_kicker(task_data)
+
+        async for block in async_wrap_iter(iter(self.blocks)):
+            txn_hashes = iter(tx.txn_hash.hex() for tx in block.transactions)
+            receipts = map(chain.get_receipt, txn_hashes)
+            async for logs in async_wrap_iter(map(events[0].from_receipt, receipts)):
+                async for log in async_wrap_iter(iter(logs)):
+                    await self._checkpoint(last_block_seen=log.block_number)
+                    await self._handle_task(await event_log_task_kicker.kiq(log))
+                    await self._checkpoint(last_block_processed=log.block_number)
