@@ -25,12 +25,7 @@ from .main import SilverbackBot, SystemConfig, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
 from .types import TaskType
-from .utils import (
-    async_wrap_iter,
-    hexbytes_dict,
-    run_taskiq_task_group_wait_results,
-    run_taskiq_task_wait_result,
-)
+from .utils import async_wrap_iter, run_taskiq_task_group_wait_results, run_taskiq_task_wait_result
 
 
 class BaseRunner(ABC):
@@ -156,12 +151,12 @@ class BaseRunner(ABC):
                 "Silverback no longer supports runner-based snapshotting, "
                 "please upgrade your bot SDK version to latest to use snapshots."
             )
-            startup_state = StateSnapshot(
+            startup_state: StateSnapshot | None = StateSnapshot(
                 last_block_seen=-1,
                 last_block_processed=-1,
             )  # Use empty snapshot
 
-        elif not (startup_state := await self.datastore.init(bot_id=self.bot.identifier)):
+        elif not (startup_state := await self.datastore.init(self.bot.identifier)):
             logger.warning("No state snapshot detected, using empty snapshot")
             startup_state = StateSnapshot(
                 # TODO: Migrate these to parameters (remove explicitly from state)
@@ -186,7 +181,7 @@ class BaseRunner(ABC):
 
         # Initialize recorder (if available)
         if self.recorder:
-            await self.recorder.init(bot_id=self.bot.identifier)
+            await self.recorder.init(self.bot.identifier)
 
         # Execute Silverback startup task before we init the rest
         startup_taskdata_result = await run_taskiq_task_wait_result(
@@ -318,11 +313,11 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         self.ws_uri = ws_uri
 
-    async def _block_task(self, task_data: TaskData) -> asyncio.Task | None:
+    async def _block_task(self, task_data: TaskData) -> None:
         new_block_task_kicker = self._create_task_kicker(task_data)
 
         async def block_handler(ctx: NewHeadsSubscriptionContext):
-            block = self.provider.network.ecosystem.decode_block(hexbytes_dict(ctx.result))
+            block = self.provider.network.ecosystem.decode_block(dict(ctx.result))
             await self._checkpoint(last_block_seen=block.number)
             await self._handle_task(await new_block_task_kicker.kiq(block))
             await self._checkpoint(last_block_processed=block.number)
@@ -332,7 +327,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         )
         logger.debug(f"Handling blocks via {sub_id}")
 
-    async def _event_task(self, task_data: TaskData) -> asyncio.Task | None:
+    async def _event_task(self, task_data: TaskData) -> None:
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -391,7 +386,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             "Do not use in production over long time periods unless you know what you're doing."
         )
 
-    async def _block_task(self, task_data: TaskData) -> asyncio.Task | None:
+    async def _block_task(self, task_data: TaskData) -> asyncio.Task:
         new_block_task_kicker = self._create_task_kicker(task_data)
 
         if block_settings := self.bot.poll_settings.get("_blocks_"):
@@ -416,7 +411,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
 
         return asyncio.create_task(block_handler())
 
-    async def _event_task(self, task_data: TaskData) -> asyncio.Task | None:
+    async def _event_task(self, task_data: TaskData) -> asyncio.Task:
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 

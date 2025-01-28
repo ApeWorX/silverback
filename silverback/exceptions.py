@@ -33,7 +33,7 @@ class SilverbackException(ApeException):
 
 # TODO: `ExceptionGroup` added in Python 3.11
 class StartupFailure(SilverbackException):
-    def __init__(self, *exceptions: Exception | str):
+    def __init__(self, *exceptions: BaseException | str | None):
         if len(exceptions) == 1 and isinstance(exceptions[0], str):
             super().__init__(exceptions[0])
         elif error_str := "\n".join(str(e) for e in exceptions):
