@@ -1,28 +1,31 @@
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from ape import chain
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
+from eth_utils import to_hex
 from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from taskiq import AsyncTaskiqTask
 from taskiq.kicker import AsyncKicker
+from web3 import AsyncWeb3, WebSocketProvider
+from web3.utils.subscriptions import (
+    LogsSubscription,
+    LogsSubscriptionContext,
+    NewHeadsSubscription,
+    NewHeadsSubscriptionContext,
+)
 
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
 from .main import SilverbackBot, SystemConfig, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
-from .subscriptions import SubscriptionType, Web3SubscriptionsManager
 from .types import TaskType
-from .utils import (
-    async_wrap_iter,
-    hexbytes_dict,
-    run_taskiq_task_group_wait_results,
-    run_taskiq_task_wait_result,
-)
+from .utils import async_wrap_iter, run_taskiq_task_group_wait_results, run_taskiq_task_wait_result
 
 
 class BaseRunner(ABC):
@@ -88,18 +91,18 @@ class BaseRunner(ABC):
             await self.datastore.save(result.return_value)
 
     @abstractmethod
-    async def _block_task(self, task_data: TaskData):
+    async def _block_task(self, task_data: TaskData) -> asyncio.Task | None:
         """
         Handle a block_handler task
         """
 
     @abstractmethod
-    async def _event_task(self, task_data: TaskData):
+    async def _event_task(self, task_data: TaskData) -> asyncio.Task | None:
         """
         Handle an event handler task for the given contract event
         """
 
-    async def run(self):
+    async def run(self, *runtime_tasks: asyncio.Task | Callable[[], asyncio.Task]):
         """
         Run the task broker client for the assembled ``SilverbackBot`` bot.
 
@@ -148,12 +151,12 @@ class BaseRunner(ABC):
                 "Silverback no longer supports runner-based snapshotting, "
                 "please upgrade your bot SDK version to latest to use snapshots."
             )
-            startup_state = StateSnapshot(
+            startup_state: StateSnapshot | None = StateSnapshot(
                 last_block_seen=-1,
                 last_block_processed=-1,
             )  # Use empty snapshot
 
-        elif not (startup_state := await self.datastore.init(bot_id=self.bot.identifier)):
+        elif not (startup_state := await self.datastore.init(self.bot.identifier)):
             logger.warning("No state snapshot detected, using empty snapshot")
             startup_state = StateSnapshot(
                 # TODO: Migrate these to parameters (remove explicitly from state)
@@ -178,7 +181,7 @@ class BaseRunner(ABC):
 
         # Initialize recorder (if available)
         if self.recorder:
-            await self.recorder.init(bot_id=self.bot.identifier)
+            await self.recorder.init(self.bot.identifier)
 
         # Execute Silverback startup task before we init the rest
         startup_taskdata_result = await run_taskiq_task_wait_result(
@@ -210,6 +213,7 @@ class BaseRunner(ABC):
             # NOTE: No need to handle results otherwise
 
         # Create our long-running event listeners
+        listener_tasks = []
         new_block_taskdata_results = await run_taskiq_task_wait_result(
             self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.NEW_BLOCK
         )
@@ -230,23 +234,22 @@ class BaseRunner(ABC):
             raise NoTasksAvailableError()
 
         # NOTE: Any propagated failure in here should be handled such that shutdown tasks also run
-        # TODO: `asyncio.TaskGroup` added in Python 3.11
-        listener_tasks = (
-            *(
-                asyncio.create_task(self._block_task(task_def))
-                for task_def in new_block_taskdata_results.return_value
-            ),
-            *(
-                asyncio.create_task(self._event_task(task_def))
-                for task_def in event_log_taskdata_results.return_value
-            ),
-        )
+        for task_def in new_block_taskdata_results.return_value:
+            if (task := await self._block_task(task_def)) is not None:
+                listener_tasks.append(task)
+
+        for task_def in event_log_taskdata_results.return_value:
+            if (task := await self._event_task(task_def)) is not None:
+                listener_tasks.append(task)
+
+        listener_tasks.extend(t if isinstance(t, asyncio.Task) else t() for t in runtime_tasks)
 
         # NOTE: Safe to do this because no tasks were actually scheduled to run
         if len(listener_tasks) == 0:
             raise NoTasksAvailableError()
 
         # Run until one task bubbles up an exception that should stop execution
+        # TODO: `asyncio.TaskGroup` added in Python 3.11
         tasks_with_errors, tasks_running = await asyncio.wait(
             listener_tasks, return_when=asyncio.FIRST_EXCEPTION
         )
@@ -310,19 +313,21 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         self.ws_uri = ws_uri
 
-    async def _block_task(self, task_data: TaskData):
+    async def _block_task(self, task_data: TaskData) -> None:
         new_block_task_kicker = self._create_task_kicker(task_data)
-        sub_id = await self.subscriptions.subscribe(SubscriptionType.BLOCKS)
-        logger.debug(f"Handling blocks via {sub_id}")
 
-        async for raw_block in self.subscriptions.get_subscription_data(sub_id):
-            block = self.provider.network.ecosystem.decode_block(hexbytes_dict(raw_block))
-
+        async def block_handler(ctx: NewHeadsSubscriptionContext):
+            block = self.provider.network.ecosystem.decode_block(dict(ctx.result))
             await self._checkpoint(last_block_seen=block.number)
-            await self._handle_task(await new_block_task_kicker.kiq(raw_block))
+            await self._handle_task(await new_block_task_kicker.kiq(block))
             await self._checkpoint(last_block_processed=block.number)
 
-    async def _event_task(self, task_data: TaskData):
+        sub_id = await self._web3.subscription_manager.subscribe(
+            NewHeadsSubscription(label=task_data.name, handler=block_handler)
+        )
+        logger.debug(f"Handling blocks via {sub_id}")
+
+    async def _event_task(self, task_data: TaskData) -> None:
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -333,26 +338,37 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         event_log_task_kicker = self._create_task_kicker(task_data)
 
-        sub_id = await self.subscriptions.subscribe(
-            SubscriptionType.EVENTS,
-            address=contract_address,
-            topics=["0x" + keccak(text=event_abi.selector).hex()],
-        )
-        logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
-
-        async for raw_event in self.subscriptions.get_subscription_data(sub_id):
+        async def log_handler(ctx: LogsSubscriptionContext):
             event = next(  # NOTE: `next` is okay since it only has one item
-                self.provider.network.ecosystem.decode_logs([raw_event], event_abi)
+                self.provider.network.ecosystem.decode_logs([ctx.result], event_abi)
             )
-
+            # TODO: Fix upstream w/ web3py
+            event.transaction_hash = "0x" + event.transaction_hash.hex()
             await self._checkpoint(last_block_seen=event.block_number)
             await self._handle_task(await event_log_task_kicker.kiq(event))
             await self._checkpoint(last_block_processed=event.block_number)
 
-    async def run(self):
-        async with Web3SubscriptionsManager(self.ws_uri) as subscriptions:
-            self.subscriptions = subscriptions
-            await super().run()
+        sub_id = await self._web3.subscription_manager.subscribe(
+            LogsSubscription(
+                label=task_data.name,
+                address=contract_address,
+                topics=[to_hex(keccak(text=event_abi.selector))],
+                handler=log_handler,
+            )
+        )
+        logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
+
+    async def run(self, *runtime_tasks: asyncio.Task | Callable[[], asyncio.Task]):
+        async with AsyncWeb3(WebSocketProvider(self.ws_uri)) as web3:
+            self._web3 = web3
+
+            def run_subscriptions() -> asyncio.Task:
+                return asyncio.create_task(
+                    web3.subscription_manager.handle_subscriptions(run_forever=True)
+                )
+
+            await super().run(*runtime_tasks, run_subscriptions)
+            await web3.subscription_manager.unsubscribe_all()
 
 
 class PollingRunner(BaseRunner, ManagerAccessMixin):
@@ -370,7 +386,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             "Do not use in production over long time periods unless you know what you're doing."
         )
 
-    async def _block_task(self, task_data: TaskData):
+    async def _block_task(self, task_data: TaskData) -> asyncio.Task:
         new_block_task_kicker = self._create_task_kicker(task_data)
 
         if block_settings := self.bot.poll_settings.get("_blocks_"):
@@ -381,17 +397,21 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         new_block_timeout = (
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
-        async for block in async_wrap_iter(
-            chain.blocks.poll_blocks(
-                # NOTE: No start block because we should begin polling from head
-                new_block_timeout=new_block_timeout,
-            )
-        ):
-            await self._checkpoint(last_block_seen=block.number)
-            await self._handle_task(await new_block_task_kicker.kiq(block))
-            await self._checkpoint(last_block_processed=block.number)
 
-    async def _event_task(self, task_data: TaskData):
+        async def block_handler():
+            async for block in async_wrap_iter(
+                chain.blocks.poll_blocks(
+                    # NOTE: No start block because we should begin polling from head
+                    new_block_timeout=new_block_timeout,
+                )
+            ):
+                await self._checkpoint(last_block_seen=block.number)
+                await self._handle_task(await new_block_task_kicker.kiq(block))
+                await self._checkpoint(last_block_processed=block.number)
+
+        return asyncio.create_task(block_handler())
+
+    async def _event_task(self, task_data: TaskData) -> asyncio.Task:
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -409,14 +429,18 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         new_block_timeout = (
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
-        async for event in async_wrap_iter(
-            self.provider.poll_logs(
-                # NOTE: No start block because we should begin polling from head
-                address=contract_address,
-                new_block_timeout=new_block_timeout,
-                events=[event_abi],
-            )
-        ):
-            await self._checkpoint(last_block_seen=event.block_number)
-            await self._handle_task(await event_log_task_kicker.kiq(event))
-            await self._checkpoint(last_block_processed=event.block_number)
+
+        async def log_handler():
+            async for event in async_wrap_iter(
+                self.provider.poll_logs(
+                    # NOTE: No start block because we should begin polling from head
+                    address=contract_address,
+                    new_block_timeout=new_block_timeout,
+                    events=[event_abi],
+                )
+            ):
+                await self._checkpoint(last_block_seen=event.block_number)
+                await self._handle_task(await event_log_task_kicker.kiq(event))
+                await self._checkpoint(last_block_processed=event.block_number)
+
+        return asyncio.create_task(log_handler())
