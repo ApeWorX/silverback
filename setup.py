@@ -61,9 +61,9 @@ setup(
     url="https://github.com/ApeWorX/silverback",
     include_package_data=True,
     install_requires=[
-        "apepay>=0.3.2,<1",
+        "apepay>=0.3.3,<1",
         "click",  # Use same version as eth-ape
-        "eth-ape>=0.8.19,<1.0",
+        "eth-ape>=0.8.24,<1",
         "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
         "eth-pydantic-types",  # Use same version as eth-ape
         "packaging",  # Use same version as eth-ape
@@ -71,7 +71,7 @@ setup(
         "taskiq[metrics]>=0.11.9,<0.12",
         "tomlkit>=0.12,<1",  # For reading/writing global platform profile
         "fief-client[cli]>=0.19,<1",  # for platform auth/cluster login
-        "websockets>=14.1,<15",  # For subscriptions
+        "web3>=7.7,<8",  # TODO: Remove when Ape v0.9 is released (Ape v0.8 allows web3 v6)
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],
