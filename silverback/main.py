@@ -182,7 +182,7 @@ class SilverbackBot(ManagerAccessMixin):
         return self.broker.register_task(
             task_handler,
             # NOTE: Name makes it impossible to conflict with user's handler fn names
-            task_name=str(task_type),
+            task_name=f"{self.identifier.name}:{task_type}",
             task_type=str(task_type),
         )
 
@@ -316,7 +316,7 @@ class SilverbackBot(ManagerAccessMixin):
 
             return self.broker.register_task(
                 handler,
-                task_name=handler.__name__,
+                task_name=f"{self.identifier.name}:{handler.__name__}",
                 **labels,
             )
 

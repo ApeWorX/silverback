@@ -52,7 +52,9 @@ class BaseRunner(ABC):
 
     def _create_task_kicker(self, task_data: TaskData) -> AsyncKicker:
         return AsyncKicker(
-            task_name=task_data.name, broker=self.bot.broker, labels=task_data.labels
+            task_name=f"{self.bot.identifier.name}:{task_data.name}",
+            broker=self.bot.broker,
+            labels=task_data.labels,
         )
 
     def _create_system_task_kicker(self, task_type: TaskType) -> AsyncKicker:
