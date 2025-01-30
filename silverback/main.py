@@ -1,5 +1,6 @@
 import atexit
 import inspect
+import logging
 from collections import defaultdict
 from datetime import timedelta
 from functools import wraps
@@ -18,6 +19,9 @@ from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
 from .settings import Settings
 from .state import StateSnapshot
 from .types import SilverbackID, TaskType
+
+# NOTE: Disable logging statement about forgotten imports in distributed mode
+logging.getLogger("taskiq.receiver.receiver").setLevel(logging.ERROR)
 
 
 class SystemConfig(BaseModel):
