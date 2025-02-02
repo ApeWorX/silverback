@@ -318,7 +318,7 @@ class ClusterHealth(BaseModel):
 
     @field_validator("bots", mode="before")  # TODO: Fix so this is default
     def convert_bot_health(cls, bots):
-        return {b["instance_id"]: ServiceHealth.model_validate(b) for b in bots}
+        return {k: ServiceHealth.model_validate(b) for k, b in bots.items()}
 
     @computed_field
     def cluster(self) -> ServiceHealth:
