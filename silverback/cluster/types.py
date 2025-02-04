@@ -37,9 +37,9 @@ class ClusterConfiguration(BaseModel):
     # NOTE: Update this to revise new models for every configuration change
     version: int = 1
 
-    # Bot Worker Configuration, priced per bot (Bytes 1-2)
+    # Cluster-wide Configuration, priced per maximum usage (Bytes 1-2)
     cpu: Annotated[int, Field(ge=0, le=6)] = 0  # defaults to 0.25 vCPU
-    """Allocated vCPUs per bot:
+    """Max vCPUs for entire cluster:
     - 0.25 vCPU (0)
     - 0.50 vCPU (1)
     - 1.00 vCPU (2)
@@ -49,7 +49,7 @@ class ClusterConfiguration(BaseModel):
     - 16.0 vCPU (6)"""
 
     memory: Annotated[int, Field(ge=0, le=120)] = 0  # defaults to 512 MiB
-    """Total memory per bot (in GB, 0 means '512 MiB')"""
+    """Max memory for entire cluster (in GB, 0 means '512 MiB')"""
 
     # NOTE: # of workers configured based on cpu & memory settings
 
@@ -57,14 +57,13 @@ class ClusterConfiguration(BaseModel):
     networks: Annotated[int, Field(ge=1, le=20)] = 1
     """Maximum number of concurrent network runners"""
 
-    bots: Annotated[int, Field(ge=1, le=250)] = 1
-    """Maximum number of concurrent running bots"""
+    # NOTE: Byte 4 unused
 
     # NOTE: Byte 5 unused
 
     # Recorder configuration (Bytes 6-7)
     bandwidth: Annotated[int, Field(ge=0, le=250)] = 0  # 512 kB/sec
-    """Rate at which data should be emitted by cluster (in MB/sec, 0 means '512 kB')"""
+    """Rate at which data should be emitted by cluster (in MB/sec, 0 means '512 kB/sec')"""
     # NOTE: This rate is only estimated average, and will serve as a throttling threshold
 
     duration: Annotated[int, Field(ge=1, le=120)] = 1
@@ -111,7 +110,6 @@ class ClusterConfiguration(BaseModel):
             version=self.version,
             runner=dict(
                 networks=self.networks,
-                bots=self.bots,
             ),
             bots=dict(
                 cpu=f"{256 * 2**self.cpu / 1024} vCPU",
@@ -147,7 +145,6 @@ class ClusterConfiguration(BaseModel):
                 cpu=cls._decode_byte(value, 1),
                 memory=cls._decode_byte(value, 2),
                 networks=cls._decode_byte(value, 3),
-                bots=cls._decode_byte(value, 4),
                 bandwidth=cls._decode_byte(value, 6),
                 duration=cls._decode_byte(value, 7),
             )
@@ -168,7 +165,6 @@ class ClusterConfiguration(BaseModel):
             + self._encode_byte(self.cpu, 1)
             + self._encode_byte(self.memory, 2)
             + self._encode_byte(self.networks, 3)
-            + self._encode_byte(self.bots, 4)
             + self._encode_byte(self.bandwidth, 6)
             + self._encode_byte(self.duration, 7)
         )
@@ -214,7 +210,6 @@ class ClusterTier(enum.IntEnum):
         cpu="0.25 vCPU",
         memory="512 MiB",
         networks=3,
-        bots=5,
         bandwidth="512 B/sec",  # 1.236 GB/mo
         duration=3,  # months
     ).encode()
@@ -222,7 +217,6 @@ class ClusterTier(enum.IntEnum):
         cpu="1 vCPU",
         memory="2 GB",
         networks=10,
-        bots=20,
         bandwidth="5 kB/sec",  # 12.36 GB/mo
         duration=12,  # 1 year = ~148GB
     ).encode()
