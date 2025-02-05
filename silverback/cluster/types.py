@@ -295,8 +295,7 @@ class ServiceHealth(BaseModel):
 
 class ClusterHealth(BaseModel):
     # NOTE: network => healthy
-    # TODO: Remove alias
-    networks: dict[str, ServiceHealth] = Field(default_factory=dict, alias="ars")
+    networks: dict[str, ServiceHealth] = Field(default_factory=dict)
     bots: dict[str, ServiceHealth] = Field(default_factory=dict)
 
     @field_validator("bots", mode="before")  # TODO: Fix so this is default
