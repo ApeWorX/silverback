@@ -73,20 +73,20 @@ class RegistryCredentials(RegistryCredentialsInfo):
 
     def update(
         self,
-        name: str | None = None,
         hostname: str | None = None,
+        email: str | None = None,
         username: str | None = None,
         password: str | None = None,
     ) -> "RegistryCredentials":
-        response = self.cluster.put(
-            f"/credentials/{self.id}",
-            json=dict(name=name, hostname=hostname, username=username, password=password),
+        response = self.cluster.patch(
+            f"/credentials/{self.name}",
+            json=dict(hostname=hostname, email=email, username=username, password=password),
         )
         handle_error_with_response(response)
         return self
 
     def remove(self):
-        response = self.cluster.delete(f"/credentials/{self.id}")
+        response = self.cluster.delete(f"/credentials/{self.name}")
         handle_error_with_response(response)
 
 
@@ -252,11 +252,17 @@ class ClusterClient(httpx.Client):
         }
 
     def new_credentials(
-        self, name: str, hostname: str, username: str, password: str
+        self, name: str, hostname: str, email: str, username: str, password: str
     ) -> RegistryCredentials:
         response = self.post(
             "/credentials",
-            json=dict(name=name, hostname=hostname, username=username, password=password),
+            json=dict(
+                name=name,
+                hostname=hostname,
+                email=email,
+                username=username,
+                password=password,
+            ),
         )
         handle_error_with_response(response)
         return RegistryCredentials.model_validate(response.json())

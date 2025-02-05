@@ -813,11 +813,12 @@ def credentials_new(cluster: "ClusterClient", name: str, registry: str):
     password.
     """
 
+    email = click.prompt("Email")
     username = click.prompt("Username")
     password = click.prompt("Password", hide_input=True)
 
     creds = cluster.new_credentials(
-        name=name, hostname=registry, username=username, password=password
+        name=name, email=email, hostname=registry, username=username, password=password
     )
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
 
@@ -831,10 +832,11 @@ def credentials_update(cluster: "ClusterClient", name: str, registry: str | None
     if not (creds := cluster.registry_credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
 
+    email = click.prompt("Email")
     username = click.prompt("Username")
     password = click.prompt("Password", hide_input=True)
 
-    creds = creds.update(hostname=registry, username=username, password=password)
+    creds = creds.update(hostname=registry, email=email, username=username, password=password)
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id"})))
 
 
