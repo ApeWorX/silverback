@@ -294,11 +294,10 @@ class ServiceHealth(BaseModel):
 
 
 class ClusterHealth(BaseModel):
-    # TODO: Replace w/ cluster
-    ccs: ServiceHealth
     # NOTE: network => healthy
-    ars: dict[str, ServiceHealth] = {}
-    bots: dict[str, ServiceHealth] = {}
+    # TODO: Remove alias
+    networks: dict[str, ServiceHealth] = Field(default_factory=dict, alias="ars")
+    bots: dict[str, ServiceHealth] = Field(default_factory=dict)
 
     @field_validator("bots", mode="before")  # TODO: Fix so this is default
     def convert_bot_health(cls, bots):
@@ -307,7 +306,8 @@ class ClusterHealth(BaseModel):
     @computed_field
     def cluster(self) -> ServiceHealth:
         return ServiceHealth(
-            healthy=all(ars.healthy for ars in self.ars.values()) and self.ccs.healthy
+            healthy=all(n.healthy for n in self.networks.values())
+            and all(b.healthy for b in self.bots.values())
         )
 
 
@@ -336,30 +336,24 @@ class BotTaskStatus(BaseModel):
     stopped_reason: str | None
 
 
-class BotHealth(BaseModel):
-    bot_id: uuid.UUID
-    task_status: BotTaskStatus | None
-    healthy: bool
-
-
 class BotInfo(BaseModel):
     id: uuid.UUID  # TODO: Change `.instance_id` field to `id: UUID`
     name: str
     created: datetime
 
     image: str
+    credential_name: str | None
+    ecosystem: str
     network: str
+    provider: str
     account: str | None
-    revision: int
-    registry_credentials_id: str | None
-
-    vargroup: list[VariableGroupInfo] = []
+    environment: list[str]
 
 
 class BotLogEntry(BaseModel):
+    level: LogLevel = LogLevel.INFO
+    timestamp: datetime | None = None
     message: str
-    timestamp: datetime | None
-    level: LogLevel
 
     def __str__(self) -> str:
-        return f"{self.timestamp}: {self.message}"
+        return f"{self.timestamp} [{self.level}]: {self.message}"

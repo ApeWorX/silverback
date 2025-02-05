@@ -1,7 +1,6 @@
-from collections import defaultdict
 from datetime import datetime
 from functools import cache
-from typing import ClassVar
+from typing import ClassVar, Iterator
 
 import httpx
 from ape import Contract
@@ -14,13 +13,14 @@ from silverback.exceptions import ClientError
 from silverback.version import version
 
 from .types import (
-    BotHealth,
     BotInfo,
     BotLogEntry,
     ClusterConfiguration,
     ClusterHealth,
     ClusterInfo,
     RegistryCredentialsInfo,
+    ResourceStatus,
+    ServiceHealth,
     StreamInfo,
     VariableGroupInfo,
     WorkspaceInfo,
@@ -113,62 +113,69 @@ class Bot(BotInfo):
     # NOTE: DI happens in `ClusterClient.__init__`
     cluster: ClassVar["ClusterClient"]
 
+    @property
+    def vargroups(self) -> list[VariableGroupInfo]:
+        vargroups = self.cluster.variable_groups
+        return [vargroups[vg_name] for vg_name in self.environment if vg_name in vargroups]
+
     def update(
         self,
         name: str | None = None,
         image: str | None = None,
+        credential_name: str | None = "<no-change>",
+        ecosystem: str | None = None,
         network: str | None = None,
-        account: str | None = None,
-        vargroup: list[VariableGroupInfo] | None = None,
-        registry_credentials_id: str | None = None,
+        provider: str | None = None,
+        account: str | None = "<no-change>",
+        environment: list[str] | None = None,
     ) -> "Bot":
         form: dict = dict(
             name=name,
-            account=account,
             image=image,
+            credential_name=credential_name,
+            ecosystem=ecosystem,
             network=network,
+            provider=provider,
+            account=account,
+            environment=environment,
         )
 
-        if vargroup:
-            form["vargroup"] = vargroup
-
-        if registry_credentials_id:
-            form["registry_credentials_id"] = registry_credentials_id
-
-        response = self.cluster.put(f"/bots/{self.name}", json=form)
+        response = self.cluster.put(f"/bots/{self.id}", json=form)
         handle_error_with_response(response)
         return Bot.model_validate(response.json())
 
     @property
-    def health(self) -> BotHealth:
-        response = self.cluster.get("/health")  # TODO: Migrate this endpoint
-        # response = self.cluster.get(f"/bots/{self.id}/health")
+    def status(self) -> ResourceStatus:
+        response = self.cluster.get(f"/bots/{self.id}/status")
         handle_error_with_response(response)
-        raw_health = next(bot for bot in response.json()["bots"] if bot["bot_id"] == str(self.id))
-        return BotHealth.model_validate(raw_health)  # response.json())  TODO: Migrate this endpoint
+        return ResourceStatus(response.json())
+
+    @property
+    def is_healthy(self) -> bool:
+        response = self.cluster.get(f"/bots/{self.id}/health")
+        handle_error_with_response(response)
+        return ServiceHealth.model_validate(response.json()).healthy
 
     def stop(self):
-        response = self.cluster.post(f"/bots/{self.name}/stop")
+        response = self.cluster.post(f"/bots/{self.id}/stop")
         handle_error_with_response(response)
 
     def start(self):
-        # response = self.cluster.post(f"/bots/{self.id}/start") TODO: Add `/start`
-        # NOTE: Currently, a noop PUT request will trigger a start
-        response = self.cluster.put(f"/bots/{self.name}", json=dict(name=self.name))
+        response = self.cluster.post(f"/bots/{self.id}/start")
         handle_error_with_response(response)
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def registry_credentials(self) -> RegistryCredentials | None:
-        if self.registry_credentials_id:
-            for v in self.cluster.registry_credentials.values():
-                if v.id == self.registry_credentials_id:
+    def credential(self) -> RegistryCredentials | None:
+        if self.credential_name:
+            for v in self.cluster.credentials.values():
+                if v.id == self.credential_name:
                     return v
         return None
 
     @property
     def errors(self) -> list[str]:
-        response = self.cluster.get(f"/bots/{self.name}/errors")
+        response = self.cluster.get(f"/bots/{self.id}/errors")
         handle_error_with_response(response)
         return response.json()
 
@@ -177,8 +184,9 @@ class Bot(BotInfo):
         log_level: LogLevel = LogLevel.INFO,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
-    ) -> list[BotLogEntry]:
-        query = {"log_level": log_level.name}
+        follow: bool = False,
+    ) -> Iterator[BotLogEntry]:
+        query: dict = dict(log_level=log_level.name, follow=follow)
 
         if start_time:
             query["start_time"] = start_time.isoformat()
@@ -186,16 +194,17 @@ class Bot(BotInfo):
         if end_time:
             query["end_time"] = end_time.isoformat()
 
-        response = self.cluster.get(f"/bots/{self.name}/logs", params=query, timeout=120)
+        request = self.cluster.build_request("GET", f"/bots/{self.id}/logs", params=query)
+        response = self.cluster.send(request, stream=True)
         handle_error_with_response(response)
-        return [BotLogEntry.model_validate(log) for log in response.json()]
+        yield from map(BotLogEntry.model_validate_json, response.iter_lines())
 
     @property
     def logs(self) -> list[BotLogEntry]:
-        return self.filter_logs()
+        return list(self.filter_logs())
 
-    def remove(self, network: str):
-        response = self.cluster.delete(f"/bots/{self.name}", params={"network": network})
+    def remove(self):
+        response = self.cluster.delete(f"/bots/{self.id}")
         handle_error_with_response(response)
 
 
@@ -242,7 +251,7 @@ class ClusterClient(httpx.Client):
         return ClusterHealth.model_validate(response.json())
 
     @property
-    def registry_credentials(self) -> dict[str, RegistryCredentials]:
+    def credentials(self) -> dict[str, RegistryCredentials]:
         response = self.get("/credentials")
         handle_error_with_response(response)
         return {
@@ -282,35 +291,27 @@ class ClusterClient(httpx.Client):
         handle_error_with_response(response)
         return {bot.name: bot for bot in map(Bot.model_validate, response.json())}
 
-    def bots_list(self) -> dict[str, list[Bot]]:
-        response = self.get("/bots")
-        handle_error_with_response(response)
-        bots_dict = defaultdict(list)
-        for bot in map(Bot.model_validate, response.json()):
-            bots_dict[bot.name].append(bot)
-        return dict(bots_dict)
-
     def new_bot(
         self,
         name: str,
         image: str,
+        ecosystem: str,
         network: str,
+        provider: str,
         account: str | None = None,
-        vargroup: list[VariableGroupInfo] | None = None,
-        registry_credentials_id: str | None = None,
+        environment: list[str] | None = None,
+        credential_name: str | None = None,
     ) -> Bot:
         form: dict = dict(
             name=name,
             image=image,
+            ecosystem=ecosystem,
             network=network,
+            provider=provider,
             account=account,
+            environment=environment or [],
+            credential_name=credential_name,
         )
-
-        if vargroup is not None:
-            form["vargroup"] = vargroup
-
-        if registry_credentials_id:
-            form["registry_credentials_id"] = registry_credentials_id
 
         response = self.post("/bots", json=form)
         handle_error_with_response(response)

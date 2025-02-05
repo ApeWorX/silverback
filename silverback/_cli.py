@@ -1,5 +1,6 @@
 import asyncio
 import os
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
@@ -32,13 +33,11 @@ from silverback._click_ext import (
 )
 
 if TYPE_CHECKING:
-    from ape.api.accounts import AccountAPI
-    from ape.api.networks import NetworkAPI
+    from ape.api import AccountAPI, EcosystemAPI, NetworkAPI, ProviderAPI
     from ape.contracts import ContractInstance
     from fief_client.integrations.cli import FiefAuth
 
     from silverback.cluster.client import Bot, ClusterClient, PlatformClient
-    from silverback.cluster.types import VariableGroupInfo
 
 LOCAL_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
 
@@ -761,7 +760,7 @@ def cancel_payment_stream(
 @cluster.command(name="info")
 @cluster_client
 def cluster_info(cluster: "ClusterClient"):
-    """Get Configuration information about a CLUSTER"""
+    """Get configuration information about a CLUSTER"""
 
     # NOTE: This actually doesn't query the cluster's routes, which are protected
     click.echo(f"Cluster Version: v{cluster.version}")
@@ -770,22 +769,22 @@ def cluster_info(cluster: "ClusterClient"):
 @cluster.command(name="health")
 @cluster_client
 def cluster_health(cluster: "ClusterClient"):
-    """Get Health information about a CLUSTER"""
+    """Get health information about a CLUSTER"""
 
     click.echo(yaml.safe_dump(cluster.health.model_dump()))
 
 
 @cluster.group(cls=SectionedHelpGroup)
 def registry():
-    """Manage container registry configuration"""
+    """Manage container registry credentials in CLUSTER"""
 
 
 @registry.command(name="list")
 @cluster_client
 def credentials_list(cluster: "ClusterClient"):
-    """List container registry credentials"""
+    """List container registry credentials in CLUSTER"""
 
-    if creds := list(cluster.registry_credentials):
+    if creds := list(cluster.credentials):
         click.echo(yaml.safe_dump(creds))
 
     else:
@@ -796,9 +795,9 @@ def credentials_list(cluster: "ClusterClient"):
 @click.argument("name")
 @cluster_client
 def credentials_info(cluster: "ClusterClient", name: str):
-    """Show info about registry credentials"""
+    """Show info about credential NAME in CLUSTER's registry"""
 
-    if not (creds := cluster.registry_credentials.get(name)):
+    if not (creds := cluster.credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
 
     click.echo(yaml.safe_dump(creds.model_dump(exclude={"id", "name"})))
@@ -809,8 +808,9 @@ def credentials_info(cluster: "ClusterClient", name: str):
 @click.argument("registry")
 @cluster_client
 def credentials_new(cluster: "ClusterClient", name: str, registry: str):
-    """Add registry private registry credentials. This command will prompt you for a username and
-    password.
+    """Add registry access credential NAME to CLUSTER's registry.
+
+    NOTE: This command will prompt you for an EMAIL, USERNAME, and PASSWORD.
     """
 
     email = click.prompt("Email")
@@ -828,8 +828,11 @@ def credentials_new(cluster: "ClusterClient", name: str, registry: str):
 @click.option("-r", "--registry")
 @cluster_client
 def credentials_update(cluster: "ClusterClient", name: str, registry: str | None = None):
-    """Update registry registry credentials"""
-    if not (creds := cluster.registry_credentials.get(name)):
+    """Update credential NAME in CLUSTER's registry
+
+    NOTE: This command will prompt you for an EMAIL, USERNAME, and PASSWORD.
+    """
+    if not (creds := cluster.credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
 
     email = click.prompt("Email")
@@ -844,8 +847,8 @@ def credentials_update(cluster: "ClusterClient", name: str, registry: str | None
 @click.argument("name")
 @cluster_client
 def credentials_remove(cluster: "ClusterClient", name: str):
-    """Remove a set of registry credentials"""
-    if not (creds := cluster.registry_credentials.get(name)):
+    """Remove credential NAME from CLUSTER's registry"""
+    if not (creds := cluster.credentials.get(name)):
         raise click.UsageError(f"Unknown credentials '{name}'")
 
     creds.remove()  # NOTE: No confirmation because can only delete if no references exist
@@ -991,13 +994,12 @@ def bots():
 
 @bots.command(name="new", section="Configuration Commands")
 @click.option("-i", "--image", required=True)
-@click.option("-n", "--network", required=True)
+@network_option(required=True)
 @click.option("-a", "--account")
-@click.option("-g", "--group", "vargroups", multiple=True)
+@click.option("-g", "--group", "environment", multiple=True)
 @click.option(
-    "-r",
-    "--registry-credentials",
-    "registry_credentials_name",
+    "--credential",
+    "credential_name",
     help="registry credentials to use to pull the image",
 )
 @click.argument("name")
@@ -1005,10 +1007,12 @@ def bots():
 def new_bot(
     cluster: "ClusterClient",
     image: str,
-    network: str,
+    ecosystem: "EcosystemAPI",
+    network: "NetworkAPI",
+    provider: "ProviderAPI",
     account: str | None,
-    vargroups: list["VariableGroupInfo"],
-    registry_credentials_name: str | None,
+    environment: list[str],
+    credential_name: str | None,
     name: str,
 ):
     """Create a new bot in a CLUSTER with the given configuration"""
@@ -1016,35 +1020,33 @@ def new_bot(
     if name in cluster.bots:
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
 
-    vargroup = [group for group in vargroups]
+    # NOTE: Check if credentials exist
+    if credential_name is not None and credential_name not in cluster.credentials:
+        raise click.UsageError(f"Unknown registry credentials '{credential_name}'")
 
-    registry_credentials_id = None
-    if registry_credentials_name:
-        if not (
-            creds := cluster.registry_credentials.get(registry_credentials_name)
-        ):  # NOTE: Check if credentials exist
-            raise click.UsageError(f"Unknown registry credentials '{registry_credentials_name}'")
-        registry_credentials_id = creds.id
+    click.echo(f"Name: '{name}'")
+    click.echo(f"Image: '{image}'")
+    click.echo(f"Network: '{ecosystem.name}:{network.name}:{provider.name}'")
+    if environment:
+        variable_groups = cluster.variable_groups
+        click.echo("Environment:")
+        click.echo(yaml.safe_dump([variable_groups[vg_name] for vg_name in environment]))
 
-    click.echo(f"Name: {name}")
-    click.echo(f"Image: {image}")
-    click.echo(f"Network: {network}")
-    if vargroup:
-        click.echo("Vargroups:")
-        click.echo(yaml.safe_dump(vargroup))
-    if registry_credentials_id:
-        click.echo(f"Registry credentials: {registry_credentials_name}")
+    if credential_name is not None:
+        click.echo(f"Registry credentials: {credential_name}")
 
     if not click.confirm("Do you want to create and start running this bot?"):
         return
 
     bot = cluster.new_bot(
-        name,
-        image,
-        network,
+        name=name,
+        image=image,
+        ecosystem=ecosystem.name,
+        network=network.name,
+        provider=provider.name,
         account=account,
-        vargroup=vargroup,
-        registry_credentials_id=registry_credentials_id,
+        environment=environment,
+        credential_name=credential_name,
     )
     click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
 
@@ -1054,29 +1056,17 @@ def new_bot(
 def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER (Regardless of status)"""
 
-    if bot_names := cluster.bots_list():
-        grouped_bots: dict[str, dict[str, list[Bot]]] = {}
-        for bot_list in bot_names.values():
-            for bot in bot_list:
-                ecosystem, network, provider = bot.network.split("-")
-                network_key = f"{network}-{provider}"
-                grouped_bots.setdefault(ecosystem, {}).setdefault(network_key, []).append(bot)
+    if bots := list(cluster.bots.values()):
+        groups: dict[str, dict[str, list["Bot"]]] = defaultdict(lambda: defaultdict(list))
+        for bot in bots:
+            groups[bot.ecosystem][bot.network].append(bot)
 
-        for ecosystem in sorted(grouped_bots.keys()):
-            grouped_bots[ecosystem] = {
-                network: sorted(bots, key=lambda b: b.name)
-                for network, bots in sorted(grouped_bots[ecosystem].items())
-            }
-
-        output = ""
-        for ecosystem in grouped_bots:
-            output += f"{ecosystem}:\n"
-            for network in grouped_bots[ecosystem]:
-                output += f"    {network}:\n"
-                for bot in grouped_bots[ecosystem][network]:
-                    output += f"      - {bot.name}\n"
-
-        click.echo(output)
+        for ecosystem, networks in groups.items():
+            click.echo(f"{ecosystem}:")
+            for network, bots_by_network in networks.items():
+                click.echo(f"    {network}:")
+                for bot in sorted(bots_by_network):
+                    click.echo(f"""      - {bot.name}""")
 
     else:
         click.secho("No bots in this cluster", bold=True, fg="red")
@@ -1096,32 +1086,35 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
         exclude={
             "id",
             "name",
-            "vargroup",
-            "registry_credentials_id",
-            "registry_credentials",
+            "credential_name",
+            "environment",
+            "ecosystem",
+            "network",
+            "provider",
         }
     )
-    if bot.registry_credentials:
-        bot_dump["registry_credentials"] = bot.registry_credentials.model_dump(
-            exclude={"id", "name"}
-        )
+    bot_dump["network"] = f"{bot.ecosystem}:{bot.network}:{bot.provider}"
+
+    if bot.credential:
+        bot_dump["credential"] = bot.credential.model_dump(exclude={"id", "name"})
 
     click.echo(yaml.safe_dump(bot_dump))
-    if bot.vargroup:
-        click.echo("Vargroups:")
-        click.echo(yaml.safe_dump([var.name for var in bot.vargroup]))
+    if bot.environment:
+        click.echo("environment:")
+        click.echo(yaml.safe_dump([var.model_dump() for var in bot.vargroups]))
 
 
 @bots.command(name="update", section="Configuration Commands")
 @click.option("--new-name", "new_name")  # NOTE: No shorthand, because conflicts w/ `--network`
 @click.option("-i", "--image")
-@click.option("-n", "--network")
-@click.option("-a", "--account")
+@click.option("-n", "--network", default=None)
+@click.option("-a", "--account", default="<no-change>")
 @click.option("-g", "--group", "vargroups", multiple=True)
+@click.option("--clear-vars", "clear_vargroups", is_flag=True)
 @click.option(
-    "-r",
-    "--registry-credentials",
-    "registry_credentials_name",
+    "--credential",
+    "credential_name",
+    default="<no-change>",
     help="registry credentials to use to pull the image",
 )
 @click.argument("name", metavar="BOT")
@@ -1132,8 +1125,9 @@ def update_bot(
     image: str | None,
     network: str | None,
     account: str | None,
-    vargroups: list["VariableGroupInfo"],
-    registry_credentials_name: str | None,
+    vargroups: list[str],
+    clear_vargroups: bool,
+    credential_name: str | None,
     name: str,
 ):
     """Update configuration of BOT in CLUSTER
@@ -1146,39 +1140,52 @@ def update_bot(
     if not (bot := cluster.bots.get(name)):
         raise click.UsageError(f"Unknown bot '{name}'.")
 
-    if new_name:
+    if new_name is not None:
         click.echo(f"Name:\n  old: {name}\n  new: {new_name}")
 
-    if network:
-        click.echo(f"Network:\n  old: {bot.network}\n  new: {network}")
+    ecosystem, provider = None, None
+    if network is not None:
+        network_choice = network.split(":")
+        ecosystem = network_choice[0] or None
+        network = network_choice[1] or None if len(network_choice) >= 2 else None
+        provider = network_choice[2] or None if len(network_choice) == 3 else None
 
-    registry_credentials_id = None
-    if registry_credentials_name:
-        if not (
-            creds := cluster.registry_credentials.get(registry_credentials_name)
-        ):  # NOTE: Check if credentials exist
-            raise click.UsageError(f"Unknown registry credentials '{registry_credentials_name}'")
-        registry_credentials_id = creds.id
+    if (
+        (ecosystem is not None and bot.ecosystem != ecosystem)
+        or (network is not None and bot.network != network)
+        or (provider is not None and bot.provider != provider)
+    ):
+        click.echo("Network:")
+        click.echo(f"  old: '{bot.ecosystem}:{bot.network}:{bot.provider}'")
+        new_network_choice = (
+            f"{ecosystem or bot.ecosystem}:{network or bot.network}:{provider or bot.provider}"
+        )
+        click.echo(f"  new: '{new_network_choice}'")
+
+    if (
+        credential_name is not None
+        and credential_name != "<no-change>"
+        and credential_name not in cluster.credentials
+    ):  # NOTE: Check if credentials exist
+        raise click.UsageError(f"Unknown credential '{credential_name}'")
 
     redeploy_required = False
     if image:
         redeploy_required = True
         click.echo(f"Image:\n  old: {bot.image}\n  new: {image}")
 
-    vargroup = [group for group in vargroups]
+    if clear_vargroups:
+        click.echo("old-env:")
+        click.echo(yaml.safe_dump(bot.vargroups))
+        click.echo("new-env: []")
 
-    set_vargroup = True
+    elif vargroups and vargroups != bot.environment:
+        click.echo("old-env:")
+        click.echo(yaml.safe_dump(bot.vargroups))
+        click.echo("new-env:")
+        click.echo(yaml.safe_dump([cluster.variable_groups[vg] for vg in vargroups]))
 
-    if len(vargroup) == 0 and bot.vargroup:
-        set_vargroup = click.confirm("Do you want to clear all variable groups?")
-
-    elif vargroup != bot.vargroup:
-        click.echo("old-vargroup:")
-        click.echo(yaml.safe_dump(bot.vargroup))
-        click.echo("new-vargroup:")
-        click.echo(yaml.safe_dump(vargroup))
-
-    redeploy_required |= set_vargroup
+    redeploy_required |= clear_vargroups
 
     if not click.confirm(
         f"Do you want to update '{name}'?"
@@ -1190,24 +1197,41 @@ def update_bot(
     bot = bot.update(
         name=new_name,
         image=image,
+        ecosystem=ecosystem,
         network=network,
+        provider=provider,
         account=account,
-        vargroup=vargroup if set_vargroup else None,
-        registry_credentials_id=registry_credentials_id,
+        environment=vargroups if clear_vargroups else None,
+        credential_name=credential_name,
     )
 
     # NOTE: Skip machine `.id`
-    click.echo(yaml.safe_dump(bot.model_dump(exclude={"id", "vargroup"})))
-    if bot.vargroup:
-        click.echo("Vargroups:")
-        click.echo(yaml.safe_dump(vargroup))
+    bot_dump = bot.model_dump(
+        exclude={
+            "id",
+            "name",
+            "credential_name",
+            "environment",
+            "ecosystem",
+            "network",
+            "provider",
+        }
+    )
+    bot_dump["network"] = f"{bot.ecosystem}:{bot.network}:{bot.provider}"
+
+    if bot.credential:
+        bot_dump["credential"] = bot.credential.model_dump(exclude={"id", "name"})
+
+    click.echo(yaml.safe_dump(bot_dump))
+    if bot.environment:
+        click.echo("environment:")
+        click.echo(yaml.safe_dump([var.model_dump() for var in bot.vargroups]))
 
 
 @bots.command(name="remove", section="Configuration Commands")
 @click.argument("name", metavar="BOT")
-@click.option("-n", "--network", required=True)
 @cluster_client
-def remove_bot(cluster: "ClusterClient", name: str, network: str):
+def remove_bot(cluster: "ClusterClient", name: str):
     """Remove BOT from CLUSTER (Shutdown if running)"""
 
     if not (bot := cluster.bots.get(name)):
@@ -1216,7 +1240,7 @@ def remove_bot(cluster: "ClusterClient", name: str, network: str):
     elif not click.confirm(f"Do you want to shutdown and delete '{name}'?"):
         return
 
-    bot.remove(network)
+    bot.remove()
     click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
 
 
@@ -1229,7 +1253,7 @@ def bot_health(cluster: "ClusterClient", bot_name: str):
     if not (bot := cluster.bots.get(bot_name)):
         raise click.UsageError(f"Unknown bot '{bot_name}'.")
 
-    click.echo(yaml.safe_dump(bot.health.model_dump(exclude={"bot_id"})))
+    click.echo("Bot is healthy" if bot.is_healthy else "Bot is not healthy")
 
 
 @bots.command(name="start", section="Bot Operation Commands")
