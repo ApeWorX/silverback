@@ -1065,7 +1065,7 @@ def list_bots(cluster: "ClusterClient"):
             click.echo(f"{ecosystem}:")
             for network, bots_by_network in networks.items():
                 click.echo(f"    {network}:")
-                for bot in sorted(bots_by_network):
+                for bot in sorted(bots_by_network, key=lambda b: b.name):
                     click.echo(f"""      - {bot.name}""")
 
     else:
