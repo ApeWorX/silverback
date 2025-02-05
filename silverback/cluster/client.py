@@ -17,9 +17,9 @@ from .types import (
     BotHealth,
     BotInfo,
     BotLogEntry,
+    ClusterConfiguration,
     ClusterHealth,
     ClusterInfo,
-    ClusterState,
     RegistryCredentialsInfo,
     StreamInfo,
     VariableGroupInfo,
@@ -232,10 +232,8 @@ class ClusterClient(httpx.Client):
         return self.openapi_schema["info"]["version"]
 
     @property
-    def state(self) -> ClusterState:
-        response = self.get("/")
-        handle_error_with_response(response)
-        return ClusterState.model_validate(response.json())
+    def configuration(self) -> ClusterConfiguration | None:
+        return self.openapi_schema["info"].get("x-config")
 
     @property
     def health(self) -> ClusterHealth:

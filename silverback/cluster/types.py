@@ -289,16 +289,6 @@ class ClusterInfo(BaseModel):
     last_updated: datetime  # Last time the resource was changed (upgrade, provisioning, etc.)
 
 
-class ClusterState(BaseModel):
-    """
-    Cluster Build Information and Configuration, direct from cluster control service
-    """
-
-    version: str = Field(alias="cluster_version")  # TODO: Rename in cluster
-    configuration: ClusterConfiguration | None = None  # TODO: Add to cluster
-    # TODO: Add other useful summary fields for frontend use
-
-
 class ServiceHealth(BaseModel):
     healthy: bool
 
