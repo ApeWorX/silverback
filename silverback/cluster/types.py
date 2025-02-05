@@ -332,7 +332,6 @@ class RegistryCredentialsInfo(BaseModel):
 class VariableGroupInfo(BaseModel):
     id: uuid.UUID
     name: str
-    revision: int
     variables: list[str]
     created: datetime
 

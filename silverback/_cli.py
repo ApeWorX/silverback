@@ -913,7 +913,6 @@ def vargroup_info(cluster: "ClusterClient", name: str):
 
 
 @vars.command(name="update")
-@click.option("--new-name", "new_name")  # NOTE: No `-n` to match `bots update`
 @click.option(
     "-e",
     "--env",
@@ -938,7 +937,6 @@ def vargroup_info(cluster: "ClusterClient", name: str):
 def update_vargroup(
     cluster: "ClusterClient",
     name: str,
-    new_name: str,
     updated_vars: dict[str, str],
     deleted_vars: tuple[str],
 ):
@@ -959,9 +957,8 @@ def update_vargroup(
     click.echo(
         yaml.safe_dump(
             vg.update(
-                name=new_name,
-                # NOTE: Do not update variables if no updates are provided
-                variables=dict(**updated_vars, **{v: None for v in deleted_vars}) or None,
+                **updated_vars,
+                **{v: None for v in deleted_vars},
             ).model_dump(
                 exclude={"id"}
             )  # NOTE: Skip machine `.id`

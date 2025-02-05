@@ -1,7 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 from functools import cache
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 import httpx
 from ape import Contract
@@ -98,32 +98,13 @@ class VariableGroup(VariableGroupInfo):
     def __hash__(self) -> int:
         return int(self.id)
 
-    def update(
-        self, name: str | None = None, variables: dict[str, str | None] | None = None
-    ) -> "VariableGroup":
-
-        if name is not None:
-            # Update metadata
-            response = self.cluster.put(f"/vars/{self.id}", json=dict(name=name))
-            handle_error_with_response(response)
-        if variables is not None:
-            # Create a new revision
-            response = self.cluster.post(f"/vars/{self.id}", json=dict(variables=variables))
-            handle_error_with_response(response)
-            return VariableGroup.model_validate(response.json())
-        return self
-
-    def get_revision(self, revision: int | Literal["latest"] = "latest") -> VariableGroupInfo:
-        # TODO: Add `/latest` revision route
-        if revision == "latest":
-            revision = -1  # NOTE: This works with how cluster does lookup
-
-        response = self.cluster.get(f"/vars/{self.id}/{revision}")
+    def update(self, **variables: str | None) -> "VariableGroup":
+        response = self.cluster.patch(f"/vars/{self.id}", json=dict(variables=variables))
         handle_error_with_response(response)
-        return VariableGroupInfo.model_validate(response.json())
+        return VariableGroup.model_validate(response.json())
 
     def remove(self):
-        response = self.cluster.delete(f"/vars/{self.name}")
+        response = self.cluster.delete(f"/vars/{self.id}")
         handle_error_with_response(response)
 
 
