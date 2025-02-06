@@ -104,6 +104,13 @@ data-aria-dark="Switch to auto color mode">
 </li>
       </ul></li>
       <li>
+    --clear-vars
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-clear-vars">silverback-cluster-bots-update command line option</a>
+</li>
+      </ul></li>
+      <li>
     --cluster
 
       <ul>
@@ -157,6 +164,15 @@ data-aria-dark="Switch to auto color mode">
 
       <ul>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-pay-create-c">silverback-cluster-pay-create command line option</a>
+</li>
+      </ul></li>
+      <li>
+    --credential
+
+      <ul>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-credential">silverback-cluster-bots-new command line option</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-credential">silverback-cluster-bots-update command line option</a>
 </li>
       </ul></li>
       <li>
@@ -226,9 +242,7 @@ data-aria-dark="Switch to auto color mode">
     --network
 
       <ul>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">silverback-cluster-bots-new command line option</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-n">silverback-cluster-bots-remove command line option</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-network">silverback-cluster-bots-new command line option</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-n">silverback-cluster-bots-update command line option</a>
 </li>
@@ -242,8 +256,6 @@ data-aria-dark="Switch to auto color mode">
 
       <ul>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-new-name">silverback-cluster-bots-update command line option</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-new-name">silverback-cluster-vars-update command line option</a>
 </li>
       </ul></li>
       <li>
@@ -331,15 +343,6 @@ data-aria-dark="Switch to auto color mode">
 
       <ul>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-registry-update-r">silverback-cluster-registry-update command line option</a>
-</li>
-      </ul></li>
-      <li>
-    --registry-credentials
-
-      <ul>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-r">silverback-cluster-bots-new command line option</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-r">silverback-cluster-bots-update command line option</a>
 </li>
       </ul></li>
       <li>
@@ -522,10 +525,6 @@ data-aria-dark="Switch to auto color mode">
     -n
 
       <ul>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">silverback-cluster-bots-new command line option</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-n">silverback-cluster-bots-remove command line option</a>
-</li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-n">silverback-cluster-bots-update command line option</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-new-n">silverback-cluster-new command line option</a>
@@ -614,10 +613,6 @@ data-aria-dark="Switch to auto color mode">
     -r
 
       <ul>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-r">silverback-cluster-bots-new command line option</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-r">silverback-cluster-bots-update command line option</a>
-</li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-registry-update-r">silverback-cluster-registry-update command line option</a>
 </li>
       </ul></li>
@@ -981,15 +976,15 @@ data-aria-dark="Switch to auto color mode">
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-c">--cluster</a>
 </li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-credential">--credential</a>
+</li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-g">--group</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-i">--image</a>
 </li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">--network</a>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-network">--network</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-p">--profile</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-r">--registry-credentials</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-a">-a</a>
 </li>
@@ -999,11 +994,7 @@ data-aria-dark="Switch to auto color mode">
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-i">-i</a>
 </li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-n">-n</a>
-</li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-p">-p</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-r">-r</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-new-arg-NAME">NAME</a>
 </li>
@@ -1014,13 +1005,9 @@ data-aria-dark="Switch to auto color mode">
       <ul>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-c">--cluster</a>
 </li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-n">--network</a>
-</li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-p">--profile</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-c">-c</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-n">-n</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-remove-p">-p</a>
 </li>
@@ -1063,7 +1050,11 @@ data-aria-dark="Switch to auto color mode">
       <ul>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-a">--account</a>
 </li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-clear-vars">--clear-vars</a>
+</li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-c">--cluster</a>
+</li>
+        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-credential">--credential</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-g">--group</a>
 </li>
@@ -1074,8 +1065,6 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-new-name">--new-name</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-p">--profile</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-r">--registry-credentials</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-a">-a</a>
 </li>
@@ -1088,8 +1077,6 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-n">-n</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-p">-p</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-r">-r</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-bots-update-arg-BOT">BOT</a>
 </li>
@@ -1222,8 +1209,6 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-registry-info-arg-NAME">NAME</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     silverback-cluster-registry-list command line option
 
@@ -1237,6 +1222,8 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-registry-list-p">-p</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     silverback-cluster-registry-new command line option
 
@@ -1378,8 +1365,6 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-d">--del</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-e">--env</a>
-</li>
-        <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-new-name">--new-name</a>
 </li>
         <li><a href="commands/cluster.html#cmdoption-silverback-cluster-vars-update-p">--profile</a>
 </li>
