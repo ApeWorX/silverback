@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Silverback Platform - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Deploying Bots" href="deploying.html" /><link rel="prev" title="Developing Bots" href="development.html" />
+      <link rel="canonical" href="silverback/userguides/managing.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=10d1008b" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+<meta property="og:url" content="silverback/userguides/managing.html"/>
+<meta property="og:title" content="Silverback Platform"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="silverback" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="silverback" height="28" loading="lazy" />
+      <strong>silverback</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Bots</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Silverback Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deploying.html">Deploying Bots</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/main.html">silverback.main</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#managing-a-workspace">Managing a Workspace</a></li>
+<li><a class="reference internal" href="#managing-a-cluster">Managing a Cluster</a><ul>
+<li><a class="reference internal" href="#deploying-a-cluster">Deploying a Cluster</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">silverback</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Silverback Platform</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="silverback-platform">
+<h1>Silverback Platform<a class="headerlink" href="#silverback-platform" title="Link to this heading"></a></h1>
+<p>In this guide, we are going to show you more details on how to manage get set up locally with the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a> to get your bots to production.</p>
+<p>You can signup for Silverback to get full access for free at <a class="reference external" href="https://silverback.apeworx.io">https://silverback.apeworx.io</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Platform UI will let you create and manage Workspaces and Clusters using a graphical experience, which may be preferred.
+The CLI experience is for those working locally who don’t want to visit the website, or are locally developing their bots.</p>
+</div>
+<p>Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
+logging in to the Platform using <a class="reference external" href="../commands/cluster.html#silverback-login"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">login</span></code></a>.</p>
+<section id="managing-a-workspace">
+<h2>Managing a Workspace<a class="headerlink" href="#managing-a-workspace" title="Link to this heading"></a></h2>
+<p>A Workspace is an area for one or more people to co-manage a set of clusters together. You can manage workspaces from the Silverback CLI using <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">workspaces</span></code></a>.</p>
+<p>Using the Silverback CLI you can <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-list">list workspaces</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-new">make new ones</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-info">view their configuration information</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-update">update their metadata</a>, as well as <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-delete">delete them</a>.</p>
+</section>
+<section id="managing-a-cluster">
+<h2>Managing a Cluster<a class="headerlink" href="#managing-a-cluster" title="Link to this heading"></a></h2>
+<p>The Silverback Platform runs your Bots on dedicated managed Clusters.
+These Clusters will take care to orchestrate infrastructure, monitor, run triggers, and collect metrics for all of your bots you have added to them.
+Each Cluster is bespoke for an individual or organization, and isolates your bots from other users by virtual of running on different infrastructure.</p>
+<p>Once you have a workspace, you can create (and pay for) your Clusters from the Silverback CLI using <a class="reference external" href="../commands/cluster.html#silverback-cluster-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">new</span></code></a> to follow the steps necessary to deploy it. You can also use the Silverback CLI to <a class="reference external" href="../commands/cluster.html#silverback-cluster-list">list</a> and <a class="reference external" href="../commands/cluster.html#silverback-cluster-update">update</a> existing clusters.</p>
+<section id="deploying-a-cluster">
+<h3>Deploying a Cluster<a class="headerlink" href="#deploying-a-cluster" title="Link to this heading"></a></h3>
+<p>Once you have created your Cluster, you have to fund it so it is made available for your use.
+To do that, use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-create"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">create</span></code></a> command to fund your newly created cluster.
+Please note that provisioning your cluster will take time, and it may take up to an hour for it to be ready.
+Check back after 10-15 minutes using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-info"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">info</span></code></a> command to see when it’s ready.</p>
+<p>At any point after the Cluster is funded, you can fund it with more funds via <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-add-time"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">add-time</span></code></a>
+command to extend the timeline that the Cluster is kept around for.
+Note that it is possible for anyone to add more time to the Cluster, at any time and for any amount.</p>
+<p>If that timeline expires, the Platform will automatically de-provision your infrastructure, and it is not possible to reverse this!
+The Platform may send you notifications when your Stream is close to expiring, but it is up to you to remember to fill it so it doesn’t.
+Note that your data collection will stay available for up to 30 days allowing you the ability to download any data you need.</p>
+<p>Lastly, if you ever feel like you want to delete your Cluster, you can cancel the funding for it and get a refund of the remaining funds.
+If you are the owner of the Stream, you can do this via the <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-cancel"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">cancel</span></code></a> command.
+Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.</p>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="development.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Developing Bots</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="deploying.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Deploying Bots</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=55e26b35"></script></body>
+</html>
