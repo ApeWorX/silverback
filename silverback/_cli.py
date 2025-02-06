@@ -1029,8 +1029,16 @@ def new_bot(
     click.echo(f"Network: '{ecosystem.name}:{network.name}:{provider.name}'")
     if environment:
         variable_groups = cluster.variable_groups
-        click.echo("Environment:")
-        click.echo(yaml.safe_dump([variable_groups[vg_name] for vg_name in environment]))
+        click.echo(
+            yaml.safe_dump(
+                {
+                    "Environment": {
+                        vg.name: vg.variables
+                        for vg in map(variable_groups.__getitem__, environment)
+                    }
+                }
+            )
+        )
 
     if credential_name is not None:
         click.echo(f"Registry credentials: {credential_name}")
@@ -1109,8 +1117,8 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
 @click.option("-i", "--image")
 @click.option("-n", "--network", default=None)
 @click.option("-a", "--account", default="<no-change>")
-@click.option("-g", "--group", "vargroups", multiple=True)
-@click.option("--clear-vars", "clear_vargroups", is_flag=True)
+@click.option("-g", "--group", "environment", multiple=True)
+@click.option("--clear-vars", "clear_environment", is_flag=True)
 @click.option(
     "--credential",
     "credential_name",
@@ -1125,8 +1133,8 @@ def update_bot(
     image: str | None,
     network: str | None,
     account: str | None,
-    vargroups: list[str],
-    clear_vargroups: bool,
+    environment: list[str],
+    clear_environment: bool,
     credential_name: str | None,
     name: str,
 ):
@@ -1174,18 +1182,22 @@ def update_bot(
         redeploy_required = True
         click.echo(f"Image:\n  old: {bot.image}\n  new: {image}")
 
-    if clear_vargroups:
-        click.echo("old-env:")
-        click.echo(yaml.safe_dump(bot.vargroups))
-        click.echo("new-env: []")
+    if clear_environment or (environment and bot.environment != list(environment)):
+        variable_groups = cluster.variable_groups
+        env = {
+            "old": {
+                vg.name: vg.variables for vg in map(variable_groups.__getitem__, bot.environment)
+            }
+        }
+        if not clear_environment:
+            env["new"] = {
+                vg.name: vg.variables for vg in map(variable_groups.__getitem__, environment)
+            }
+        else:
+            env["new"] = {}
+        click.echo(yaml.safe_dump({"Environment": env}))
 
-    elif vargroups and vargroups != bot.environment:
-        click.echo("old-env:")
-        click.echo(yaml.safe_dump(bot.vargroups))
-        click.echo("new-env:")
-        click.echo(yaml.safe_dump([cluster.variable_groups[vg] for vg in vargroups]))
-
-    redeploy_required |= clear_vargroups
+    redeploy_required |= clear_environment
 
     if not click.confirm(
         f"Do you want to update '{name}'?"
@@ -1201,7 +1213,7 @@ def update_bot(
         network=network,
         provider=provider,
         account=account,
-        environment=vargroups if clear_vargroups else None,
+        environment=environment if clear_environment else None,
         credential_name=credential_name,
     )
 
