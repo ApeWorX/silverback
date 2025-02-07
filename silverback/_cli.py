@@ -1332,8 +1332,8 @@ def show_bot_logs(cluster: "ClusterClient", name: str, log_level: str, since: ti
     except KeyError:
         level = LogLevel.INFO
 
-    for log in bot.filter_logs(log_level=level, start_time=start_time):
-        click.echo(log)
+    for log in bot.get_logs(log_level=level, start_time=start_time):
+        click.echo(str(log))
 
 
 @bots.command(name="errors", section="Bot Operation Commands")
