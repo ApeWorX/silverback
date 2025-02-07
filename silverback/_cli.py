@@ -1316,8 +1316,21 @@ def stop_bot(cluster: "ClusterClient", name: str):
     help="Return logs since N ago.",
     callback=timedelta_callback,
 )
+@click.option(
+    "-f",
+    "--follow",
+    help="Stream logs as they come in",
+    is_flag=True,
+    default=False,
+)
 @cluster_client
-def show_bot_logs(cluster: "ClusterClient", name: str, log_level: str, since: timedelta | None):
+def show_bot_logs(
+    cluster: "ClusterClient",
+    name: str,
+    log_level: str,
+    since: timedelta | None,
+    follow: bool,
+):
     """Show runtime logs for BOT in CLUSTER"""
 
     start_time = None
@@ -1332,7 +1345,7 @@ def show_bot_logs(cluster: "ClusterClient", name: str, log_level: str, since: ti
     except KeyError:
         level = LogLevel.INFO
 
-    for log in bot.get_logs(log_level=level, start_time=start_time):
+    for log in bot.get_logs(log_level=level, start_time=start_time, follow=follow):
         click.echo(str(log))
 
 
