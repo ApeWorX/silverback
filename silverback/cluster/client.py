@@ -179,7 +179,7 @@ class Bot(BotInfo):
         handle_error_with_response(response)
         return response.json()
 
-    def filter_logs(
+    def get_logs(
         self,
         log_level: LogLevel = LogLevel.INFO,
         start_time: datetime | None = None,
@@ -201,7 +201,7 @@ class Bot(BotInfo):
 
     @property
     def logs(self) -> list[BotLogEntry]:
-        return list(self.filter_logs())
+        return list(self.get_logs())
 
     def remove(self):
         response = self.cluster.delete(f"/bots/{self.id}")

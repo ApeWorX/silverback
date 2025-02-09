@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import enum
 import math
+import re
 import uuid
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, ClassVar
 
-from ape.logging import LogLevel
+from ape.logging import CLICK_STYLE_KWARGS, LogLevel
 from ape.types import AddressType, HexBytes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
 from eth_utils import to_bytes, to_int
 from pydantic import BaseModel, Field, computed_field, field_validator
+from typing_extensions import Self
 
 
 def normalize_bytes(val: bytes, length: int = 16) -> bytes:
@@ -350,9 +352,53 @@ class BotInfo(BaseModel):
 
 
 class BotLogEntry(BaseModel):
-    level: LogLevel = LogLevel.INFO
+    LOG_PATTERN: ClassVar[re.Pattern] = re.compile(
+        r"""^
+    (?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)\s
+    (?:
+        (?P<level>DEBUG:\s\s\s|INFO:\s\s\s\s|SUCCESS:\s|WARNING:\s|ERROR:\s\s\s|CRITICAL:)\s
+    )?
+    (?P<message>.*)$""",
+        re.VERBOSE,
+    )
+
+    level: LogLevel | None = None
     timestamp: datetime | None = None
     message: str
 
+    @classmethod
+    def parse_line(cls, line: str) -> Self:
+        # Typical line is like: `{timestamp} {str(log_level) + ':':<9} {message}`
+        if not (match := cls.LOG_PATTERN.match(line)):
+            return cls(message=line)
+
+        if level := match.group("level"):
+            level = LogLevel[level.strip()[:-1]]
+
+        return cls(
+            timestamp=match.group("timestamp"),
+            level=level,
+            message=match.group("message"),
+        )
+
     def __str__(self) -> str:
-        return f"{self.timestamp} [{self.level}]: {self.message}"
+        from click import style as click_style
+
+        if self.level is not None:
+            styles = CLICK_STYLE_KWARGS.get(self.level, {})
+            level_str = click_style(f"{self.level.name:<8}", **styles)  # type: ignore[arg-type]
+        else:
+            level_str = ""
+
+        if self.timestamp is not None:
+            timestamp_str = click_style(f"{self.timestamp:%x %X}", bold=True)
+        else:
+            timestamp_str = ""
+
+        # NOTE: Add offset (18+8+2=28) to all newlines in message after the first
+        if "\n" in (message := self.message):
+            message = (" " * 28 + "\n").join(message.split("\n"))
+
+        # NOTE: Max size of `LogLevel` is 8 chars
+        # NOTE: Max size of normalized timestamp is 18 chars
+        return f"{timestamp_str:<18} {level_str:<8} | {message}"
