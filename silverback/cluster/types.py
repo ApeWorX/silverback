@@ -13,6 +13,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
 from eth_utils import to_bytes, to_int
 from pydantic import BaseModel, Field, computed_field, field_validator
+from typing_extensions import Self
 
 
 def normalize_bytes(val: bytes, length: int = 16) -> bytes:
@@ -364,6 +365,21 @@ class BotLogEntry(BaseModel):
     level: LogLevel | None = None
     timestamp: datetime | None = None
     message: str
+
+    @classmethod
+    def parse_line(cls, line: str) -> Self:
+        # Typical line is like: `{timestamp} {str(log_level) + ':':<9} {message}`
+        if not (match := cls.LOG_PATTERN.match(line)):
+            return cls(message=line)
+
+        if level := match.group("level"):
+            level = LogLevel[level.strip()[:-1]]
+
+        return cls(
+            timestamp=match.group("timestamp"),
+            level=level,
+            message=match.group("message"),
+        )
 
     def __str__(self) -> str:
         from click import style as click_style
