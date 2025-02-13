@@ -83,7 +83,7 @@ class ClusterConfiguration(BaseModel):
                 bots=self.bots,
                 networks=self.networks,
             ),
-            bots=dict(
+            cluster=dict(
                 cpu=f"{self.cpu} vCPU",
                 memory=f"{self.memory} GiB",
             ),
