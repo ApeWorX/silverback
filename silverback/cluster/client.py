@@ -31,6 +31,9 @@ DEFAULT_HEADERS = {"User-Agent": f"Silverback SDK/{version}"}
 
 def handle_error_with_response(response: httpx.Response):
     if 400 <= response.status_code < 500:
+        # NOTE: Must call `response.read()` for for streaming request
+        # https://github.com/encode/httpx/discussions/1856#discussioncomment-1316674
+        response.read()
         message = response.text
 
         try:
