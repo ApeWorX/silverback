@@ -477,7 +477,10 @@ def migrate_cluster(
             f"Cannot migrate to version '{version}', must be one of: '{available_versions_str}'",
         )
 
-    click.echo(f"Migrating '{cluster_path}' from '{cluster.version}' to '{version or 'stable'}'")
+    click.echo(
+        f"{click.style('INFO', fg='blue')}: "
+        f"Migrating '{cluster_path}' from '{cluster.version}' to '{version or 'stable'}'"
+    )
     workspace_client.migrate_cluster(str(cluster.id), version=version)
     click.echo(f"{click.style('SUCCESS', fg='green')}: Migration of '{cluster.name}' started")
     click.echo(
