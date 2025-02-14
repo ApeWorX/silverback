@@ -1227,17 +1227,25 @@ def update_bot(
 
     if clear_environment or (environment and bot.environment != list(environment)):
         variable_groups = cluster.variable_groups
-        env = {
-            "old": {
-                vg.name: vg.variables for vg in map(variable_groups.__getitem__, bot.environment)
-            }
-        }
+        env: dict[str, dict[str, list[str]]] = dict(old={}, new={})
+
+        for vg_name in bot.environment:
+            if vg := variable_groups.get(vg_name):
+                env["old"][vg_name] = vg.variables
+
+            else:
+                click.secho(f"Variable Group missing: '{vg_name}'", bold=True, fg="red")
+
         if not clear_environment:
-            env["new"] = {
-                vg.name: vg.variables for vg in map(variable_groups.__getitem__, environment)
-            }
-        else:
-            env["new"] = {}
+            for vg_name in environment:
+                if vg := variable_groups.get(vg_name):
+                    env["new"][vg_name] = vg.variables
+
+                else:
+                    raise click.BadOptionUsage(
+                        "environment", f"Variable Group doesn't exist: '{vg_name}'"
+                    )
+
         click.echo(yaml.safe_dump({"Environment": env}))
 
     redeploy_required |= clear_environment
