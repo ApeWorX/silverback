@@ -1109,7 +1109,9 @@ def bot_info(cluster: "ClusterClient", bot_name: str):
     click.echo(yaml.safe_dump(bot_dump))
     if bot.environment:
         click.echo("environment:")
-        click.echo(yaml.safe_dump([var.model_dump() for var in bot.vargroups]))
+        click.echo(
+            yaml.safe_dump([var.model_dump(exclude={"id", "created"}) for var in bot.vargroups])
+        )
 
 
 @bots.command(name="update", section="Configuration Commands")
