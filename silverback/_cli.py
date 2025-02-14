@@ -1288,7 +1288,9 @@ def update_bot(
     click.echo(yaml.safe_dump(bot_dump))
     if bot.environment:
         click.echo("environment:")
-        click.echo(yaml.safe_dump([var.model_dump() for var in bot.vargroups]))
+        click.echo(
+            yaml.safe_dump([var.model_dump(exclude={"id", "created"}) for var in bot.vargroups])
+        )
 
 
 @bots.command(name="remove", section="Configuration Commands")
