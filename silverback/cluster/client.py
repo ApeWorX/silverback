@@ -392,11 +392,29 @@ class Workspace(WorkspaceInfo):
             data["slug"] = slug
         response = self.client.patch(
             f"/clusters/{cluster_id}",
-            params=dict(workspace=str(self.id), cluster_id=cluster_id),
+            params=dict(workspace=str(self.id)),
             data=data,
         )
         handle_error_with_response(response)
         return ClusterInfo.model_validate(response.json())
+
+    @property
+    def available_versions(self) -> list[str]:
+        response = self.client.get("/versions")
+        handle_error_with_response(response)
+        return response.json()
+
+    def migrate_cluster(self, cluster_id: str, version: str | None = None):
+        data = dict()
+        if version:
+            data["version"] = version
+
+        response = self.client.put(
+            f"/clusters/{cluster_id}",
+            params=dict(workspace=str(self.id)),
+            data=data,
+        )
+        handle_error_with_response(response)
 
     def get_payment_stream(self, cluster: ClusterInfo, chain_id: int) -> Stream | None:
         response = self.client.get(

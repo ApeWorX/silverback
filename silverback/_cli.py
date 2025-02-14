@@ -448,6 +448,44 @@ def update_cluster(
     click.echo(f"{click.style('SUCCESS', fg='green')}: Updated '{updated_cluster.name}'")
 
 
+@cluster.command(name="migrate", section="Platform Commands (https://silverback.apeworx.io)")
+@click.option("--version", default=None)
+@click.argument("cluster_path")
+@platform_client
+def migrate_cluster(
+    platform: "PlatformClient",
+    cluster_path: str,
+    version: str | None,
+):
+    """Migrate CLUSTER running software version to VERSION"""
+    if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+        raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
+
+    workspace_name, cluster_name = cluster_path.split("/")
+    if not (workspace_client := platform.workspaces.get(workspace_name)):
+        raise click.BadArgumentUsage(f"Unknown workspace: '{workspace_name}'")
+
+    elif not (cluster := workspace_client.clusters.get(cluster_name)):
+        raise click.BadArgumentUsage(
+            f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
+        )
+
+    elif version and version not in (available_versions := workspace_client.available_versions):
+        available_versions_str = "', '".join(available_versions)
+        raise click.BadOptionUsage(
+            "version",
+            f"Cannot migrate to version '{version}', must be one of: '{available_versions_str}'",
+        )
+
+    click.echo(f"Migrating '{cluster_path}' from '{cluster.version}' to '{version or 'stable'}'")
+    workspace_client.migrate_cluster(str(cluster.id), version=version)
+    click.echo(f"{click.style('SUCCESS', fg='green')}: Migration of '{cluster.name}' started")
+    click.echo(
+        f"{click.style('INFO', fg='blue')}: "
+        "This may take a couple of minutes, check `silverback cluster info` for version change"
+    )
+
+
 @cluster.group(cls=SectionedHelpGroup, section="Platform Commands (https://silverback.apeworx.io)")
 def pay():
     """Pay for CLUSTER with Crypto using ApePay streaming payments"""
