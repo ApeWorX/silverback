@@ -365,7 +365,7 @@ class BotLogEntry(BaseModel):
             level_str = ""
 
         if self.timestamp is not None:
-            timestamp_str = click_style(f"{self.timestamp:%x %X}", bold=True)
+            timestamp_str = click_style(f"{self.timestamp.astimezone():%x %X}", bold=True)
         else:
             timestamp_str = ""
 
