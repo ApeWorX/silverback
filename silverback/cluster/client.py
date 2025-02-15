@@ -143,7 +143,7 @@ class Bot(BotInfo):
             environment=environment,
         )
 
-        response = self.cluster.put(f"/bots/{self.id}", json=form)
+        response = self.cluster.patch(f"/bots/{self.id}", json=form)
         handle_error_with_response(response)
         return Bot.model_validate(response.json())
 
