@@ -330,7 +330,7 @@ class BotLogEntry(BaseModel):
         r"""^
     (?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)\s
     (?:
-        (?P<level>DEBUG:\s\s\s|INFO:\s\s\s\s|SUCCESS:\s|WARNING:\s|ERROR:\s\s\s|CRITICAL:)\s
+        (?P<level>DEBUG:\s\s\s|INFO:\s\s\s\s|SUCCESS:\s|WARNING:\s|ERROR:\s\s\s)\s
     )?
     (?P<message>.*)$""",
         re.VERBOSE,
