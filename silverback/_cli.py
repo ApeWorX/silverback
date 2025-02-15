@@ -1061,6 +1061,9 @@ def new_bot(
     if name in cluster.bots:
         raise click.UsageError(f"Cannot use name '{name}' to create bot")
 
+    elif cluster.configuration and len(cluster.bots) >= cluster.configuration.bots:
+        click.secho("Number of bots in cluster is at paid limit", bold=True, fg="yellow")
+
     # NOTE: Check if credentials exist
     if credential_name is not None and credential_name not in cluster.credentials:
         raise click.UsageError(f"Unknown registry credentials '{credential_name}'")
