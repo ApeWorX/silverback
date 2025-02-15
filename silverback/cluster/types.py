@@ -330,11 +330,13 @@ class BotLogEntry(BaseModel):
         r"""^
     (?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)\s
     (?:
-        (?P<level>DEBUG:\s\s\s|INFO:\s\s\s\s|SUCCESS:\s|WARNING:\s|ERROR:\s\s\s|CRITICAL:)\s
+        (?P<level>DEBUG:\s\s\s|INFO:\s\s\s\s|SUCCESS:\s|WARNING:\s|ERROR:\s\s\s)\s
     )?
     (?P<message>.*)$""",
         re.VERBOSE,
     )
+    # NOTE: Add offset (18+8+2=28) to all newlines in message after the first
+    LOGLINE_OFFSET: ClassVar[str] = "\n" + " " * 27 + "| "
 
     level: LogLevel | None = None
     timestamp: datetime | None = None
@@ -369,9 +371,8 @@ class BotLogEntry(BaseModel):
         else:
             timestamp_str = ""
 
-        # NOTE: Add offset (18+8+2=28) to all newlines in message after the first
         if "\n" in (message := self.message):
-            message = (" " * 28 + "\n").join(message.split("\n"))
+            message = self.LOGLINE_OFFSET.join(message.split("\n"))
 
         # NOTE: Max size of `LogLevel` is 8 chars
         # NOTE: Max size of normalized timestamp is 18 chars
