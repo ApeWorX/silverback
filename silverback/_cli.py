@@ -1267,7 +1267,7 @@ def update_bot(
         network=network,
         provider=provider,
         account=account,
-        environment=environment if clear_environment else None,
+        environment=environment if not (environment or clear_environment) else None,
         credential_name=credential_name,
     )
 
