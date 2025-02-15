@@ -371,7 +371,7 @@ class BotLogEntry(BaseModel):
 
         # NOTE: Add offset (18+8+2=28) to all newlines in message after the first
         if "\n" in (message := self.message):
-            message = (" " * 28 + "\n").join(message.split("\n"))
+            message = ("\n" + " " * 27 + "| ").join(message.split("\n"))
 
         # NOTE: Max size of `LogLevel` is 8 chars
         # NOTE: Max size of normalized timestamp is 18 chars
