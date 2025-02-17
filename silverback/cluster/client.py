@@ -143,7 +143,12 @@ class Bot(BotInfo):
             environment=environment,
         )
 
-        response = self.cluster.patch(f"/bots/{self.id}", json=form)
+        response = self.cluster.patch(
+            f"/bots/{self.id}",
+            json=form,
+            # NOTE: Sometimes this command takes a little longer
+            timeout=10,
+        )
         handle_error_with_response(response)
         return Bot.model_validate(response.json())
 
@@ -160,11 +165,19 @@ class Bot(BotInfo):
         return ServiceHealth.model_validate(response.json()).healthy
 
     def stop(self):
-        response = self.cluster.post(f"/bots/{self.id}/stop")
+        response = self.cluster.post(
+            f"/bots/{self.id}/stop",
+            # NOTE: Sometimes this command takes a little longer
+            timeout=10,
+        )
         handle_error_with_response(response)
 
     def start(self):
-        response = self.cluster.post(f"/bots/{self.id}/start")
+        response = self.cluster.post(
+            f"/bots/{self.id}/start",
+            # NOTE: Sometimes this command takes a little longer
+            timeout=10,
+        )
         handle_error_with_response(response)
 
     @computed_field  # type: ignore[prop-decorator]
@@ -197,7 +210,13 @@ class Bot(BotInfo):
         if end_time:
             query["end_time"] = end_time.isoformat()
 
-        request = self.cluster.build_request("GET", f"/bots/{self.id}/logs", params=query)
+        request = self.cluster.build_request(
+            "GET",
+            f"/bots/{self.id}/logs",
+            params=query,
+            # NOTE: Sometimes this command takes a little longer
+            timeout=10,
+        )
         response = self.cluster.send(request, stream=True)
         handle_error_with_response(response)
         yield from map(BotLogEntry.model_validate_json, response.iter_lines())
@@ -207,7 +226,11 @@ class Bot(BotInfo):
         return list(self.get_logs())
 
     def remove(self):
-        response = self.cluster.delete(f"/bots/{self.id}")
+        response = self.cluster.delete(
+            f"/bots/{self.id}",
+            # NOTE: Sometimes this command takes a little longer
+            timeout=10,
+        )
         handle_error_with_response(response)
 
 
@@ -316,7 +339,12 @@ class ClusterClient(httpx.Client):
             credential_name=credential_name,
         )
 
-        response = self.post("/bots", json=form)
+        response = self.post(
+            "/bots",
+            json=form,
+            # NOTE: Sometimes this command takes a little longer
+            timeout=10,
+        )
         handle_error_with_response(response)
         return Bot.model_validate(response.json())
 
@@ -413,6 +441,8 @@ class Workspace(WorkspaceInfo):
             f"/clusters/{cluster_id}",
             params=dict(workspace=str(self.id)),
             data=data,
+            # NOTE: Sometimes this command takes a little longer
+            timeout=10,
         )
         handle_error_with_response(response)
 
