@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>silverback.exceptions - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="silverback.main" href="main.html" /><link rel="prev" title="Cloud Platform" href="../commands/cluster.html" />
+      <link rel="canonical" href="silverback/methoddocs/exceptions.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=5d6d21aa" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+<meta property="og:url" content="silverback/methoddocs/exceptions.html"/>
+<meta property="og:title" content="silverback.exceptions"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="silverback" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="silverback" height="28" loading="lazy" />
+      <strong>silverback</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/development.html">Developing Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/managing.html">Silverback Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/deploying.html">Deploying Bots</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">silverback.main</a></li>
+<li class="toctree-l1"><a class="reference internal" href="middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subscriptions.html">silverback.subscriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#silverback.exceptions.CircuitBreaker"><code class="docutils literal notranslate"><span class="pre">CircuitBreaker</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.ClientError"><code class="docutils literal notranslate"><span class="pre">ClientError</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.ContainerTypeMismatchError"><code class="docutils literal notranslate"><span class="pre">ContainerTypeMismatchError</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.Halt"><code class="docutils literal notranslate"><span class="pre">Halt</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.ImportFromStringError"><code class="docutils literal notranslate"><span class="pre">ImportFromStringError</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.InvalidContainerTypeError"><code class="docutils literal notranslate"><span class="pre">InvalidContainerTypeError</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.NoTasksAvailableError"><code class="docutils literal notranslate"><span class="pre">NoTasksAvailableError</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.NoWebsocketAvailableError"><code class="docutils literal notranslate"><span class="pre">NoWebsocketAvailableError</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.SilverbackException"><code class="docutils literal notranslate"><span class="pre">SilverbackException</span></code></a></li>
+<li><a class="reference internal" href="#silverback.exceptions.StartupFailure"><code class="docutils literal notranslate"><span class="pre">StartupFailure</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">silverback</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">silverback.exceptions</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-silverback.exceptions">
+<span id="silverback-exceptions"></span><h1>silverback.exceptions<a class="headerlink" href="#module-silverback.exceptions" title="Link to this heading"></a></h1>
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.CircuitBreaker">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">CircuitBreaker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.CircuitBreaker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.Halt" title="silverback.exceptions.Halt"><code class="xref py py-class docutils literal notranslate"><span class="pre">Halt</span></code></a></p>
+<p>Custom exception (created by user) that will trigger an bot shutdown.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.ClientError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">ClientError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Context</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.ClientError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.SilverbackException" title="silverback.exceptions.SilverbackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">SilverbackException</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UsageError</span></code></p>
+<p>Exception for client errors in the HTTP request.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.ContainerTypeMismatchError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">ContainerTypeMismatchError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.ContainerTypeMismatchError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.Halt">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">Halt</span></span><a class="headerlink" href="#silverback.exceptions.Halt" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.SilverbackException" title="silverback.exceptions.SilverbackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">SilverbackException</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.ImportFromStringError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">ImportFromStringError</span></span><a class="headerlink" href="#silverback.exceptions.ImportFromStringError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.InvalidContainerTypeError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidContainerTypeError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.InvalidContainerTypeError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.NoTasksAvailableError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">NoTasksAvailableError</span></span><a class="headerlink" href="#silverback.exceptions.NoTasksAvailableError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.SilverbackException" title="silverback.exceptions.SilverbackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">SilverbackException</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.NoWebsocketAvailableError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">NoWebsocketAvailableError</span></span><a class="headerlink" href="#silverback.exceptions.NoWebsocketAvailableError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.SilverbackException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">SilverbackException</span></span><a class="headerlink" href="#silverback.exceptions.SilverbackException" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ApeException</span></code></p>
+<p>Base Exception for any Silverback runtime faults.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="silverback.exceptions.StartupFailure">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.exceptions.</span></span><span class="sig-name descname"><span class="pre">StartupFailure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">exceptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseException</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.exceptions.StartupFailure" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#silverback.exceptions.SilverbackException" title="silverback.exceptions.SilverbackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">SilverbackException</span></code></a></p>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../commands/cluster.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Cloud Platform</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="main.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">silverback.main</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=55e26b35"></script></body>
+</html>
