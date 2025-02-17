@@ -667,7 +667,7 @@ def create_payment_stream(
 
     click.echo(
         f"{click.style('WARNING', fg='yellow')}: Cluster may take up to 1 hour to deploy."
-        " Check back in 10-15 minutes using `silverback cluster info` to start using your cluster."
+        " Check back in 2-5 minutes using `silverback cluster info` to start using your cluster."
     )
 
 
