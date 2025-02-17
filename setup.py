@@ -61,7 +61,7 @@ setup(
     url="https://github.com/ApeWorX/silverback",
     include_package_data=True,
     install_requires=[
-        "apepay>=0.3.3,<1",
+        "apepay>=0.3.5,<1",
         "click",  # Use same version as eth-ape
         "eth-ape>=0.8.24,<1",
         "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
