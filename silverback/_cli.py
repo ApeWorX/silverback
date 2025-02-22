@@ -27,10 +27,12 @@ from silverback._click_ext import (
     cls_import_callback,
     cluster_client,
     display_login_message,
+    parse_globbed_arg,
     platform_client,
     timedelta_callback,
     token_amount_callback,
 )
+from silverback.exceptions import ClientError
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI, EcosystemAPI, NetworkAPI, ProviderAPI
@@ -950,7 +952,7 @@ def list_vargroups(cluster: "ClusterClient"):
 @click.argument("name")
 @cluster_client
 def vargroup_info(cluster: "ClusterClient", name: str):
-    """Show latest revision of a variable GROUP in a CLUSTER"""
+    """Show information about a variable GROUP in a CLUSTER"""
 
     if not (vg := cluster.variable_groups.get(name)):
         raise click.UsageError(f"Unknown Variable Group '{name}'")
@@ -1106,7 +1108,7 @@ def new_bot(
 @bots.command(name="list", section="Configuration Commands")
 @cluster_client
 def list_bots(cluster: "ClusterClient"):
-    """List all bots in a CLUSTER (Regardless of status)"""
+    """List all bots in a CLUSTER by network (Regardless of status)"""
 
     if bots := list(cluster.bots.values()):
         groups: dict[str, dict[str, list["Bot"]]] = defaultdict(lambda: defaultdict(list))
@@ -1125,37 +1127,33 @@ def list_bots(cluster: "ClusterClient"):
 
 
 @bots.command(name="info", section="Configuration Commands")
-@click.argument("bot_name", metavar="BOT")
+@click.argument("name", metavar="BOT", default="*")
 @cluster_client
-def bot_info(cluster: "ClusterClient", bot_name: str):
-    """Get configuration information of a BOT in a CLUSTER"""
+def bot_info(cluster: "ClusterClient", name: str):
+    """Get configuration information of one or more BOT(s) in a CLUSTER"""
 
-    if not (bot := cluster.bots.get(bot_name)):
-        raise click.UsageError(f"Unknown bot '{bot_name}'.")
-
-    # NOTE: Skip machine `.id`, and we already know it is `.name`
-    bot_dump = bot.model_dump(
-        exclude={
-            "id",
-            "name",
-            "credential_name",
-            "environment",
-            "ecosystem",
-            "network",
-            "provider",
-        }
-    )
-    bot_dump["network"] = f"{bot.ecosystem}:{bot.network}:{bot.provider}"
-
-    if bot.credential:
-        bot_dump["credential"] = bot.credential.model_dump(exclude={"id", "name"})
-
-    click.echo(yaml.safe_dump(bot_dump))
-    if bot.environment:
-        click.echo("environment:")
-        click.echo(
-            yaml.safe_dump([var.model_dump(exclude={"id", "created"}) for var in bot.vargroups])
+    for bot in parse_globbed_arg(name, cluster.bots):
+        bot_dump = bot.model_dump(
+            exclude={
+                "id",  # not needed
+                "name",  # key
+                # TODO: Remove from model
+                "credential_name",
+                # Must render later on
+                "environment",
+                # Display condensed version instead
+                "ecosystem",
+                "network",
+                "provider",
+            }
         )
+        bot_dump["network"] = f"{bot.ecosystem}:{bot.network}:{bot.provider}"
+        if bot.environment:
+            bot_dump["environment"] = [
+                var.model_dump(exclude={"id", "created"}) for var in bot.vargroups
+            ]
+
+        click.echo(yaml.safe_dump({bot.name: bot_dump}))
 
 
 @bots.command(name="update", section="Configuration Commands")
@@ -1297,63 +1295,60 @@ def update_bot(
 
 
 @bots.command(name="remove", section="Configuration Commands")
-@click.argument("name", metavar="BOT")
+@click.argument("name", metavar="BOT", default="*")
 @cluster_client
 def remove_bot(cluster: "ClusterClient", name: str):
-    """Remove BOT from CLUSTER (Shutdown if running)"""
+    """Remove one or more BOT(s) from CLUSTER (Shutdown if running)"""
 
-    if not (bot := cluster.bots.get(name)):
-        raise click.UsageError(f"Unknown bot '{name}'.")
-
-    elif not click.confirm(f"Do you want to shutdown and delete '{name}'?"):
-        return
-
-    bot.remove()
-    click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
+    for bot in parse_globbed_arg(name, cluster.bots):
+        if not click.confirm(f"Do you want to shutdown and delete '{bot.name}'?"):
+            bot.remove()
+            click.secho(f"Bot '{bot.name}' removed.", fg="green", bold=True)
 
 
 @bots.command(name="health", section="Bot Operation Commands")
-@click.argument("bot_name", metavar="BOT")
+@click.argument("name", metavar="BOT", default="*")
 @cluster_client
-def bot_health(cluster: "ClusterClient", bot_name: str):
-    """Show current health of BOT in a CLUSTER"""
+def bot_health(cluster: "ClusterClient", name: str):
+    """Show current health of one or more BOT(s) in a CLUSTER"""
 
-    if not (bot := cluster.bots.get(bot_name)):
-        raise click.UsageError(f"Unknown bot '{bot_name}'.")
+    for bot in parse_globbed_arg(name, cluster.bots):
+        if bot.is_healthy:
+            bot_status = click.style("healthy", fg="green")
+        else:
+            bot_status = click.style("not healthy", fg="red")
 
-    click.echo("Bot is healthy" if bot.is_healthy else "Bot is not healthy")
+        click.echo(f"{bot.name}: {bot_status}")
 
 
 @bots.command(name="start", section="Bot Operation Commands")
-@click.argument("name", metavar="BOT")
+@click.argument("name", metavar="BOT", default="*")
 @cluster_client
 def start_bot(cluster: "ClusterClient", name: str):
-    """Start BOT running in CLUSTER (if stopped or terminated)"""
+    """Start one or more BOT(s) running in CLUSTER (if stopped or terminated)"""
 
-    if not (bot := cluster.bots.get(name)):
-        raise click.UsageError(f"Unknown bot '{name}'.")
-
-    elif not click.confirm(f"Do you want to start running '{name}'?"):
-        return
-
-    bot.start()
-    click.secho(f"Bot '{bot.name}' starting...", fg="green", bold=True)
+    for bot in parse_globbed_arg(name, cluster.bots):
+        if click.confirm(f"Do you want to start running '{bot.name}'?"):
+            try:
+                bot.start()
+                click.secho(f"Bot '{bot.name}' starting...", fg="green", bold=True)
+            except ClientError as e:
+                click.secho(f"Error starting '{bot.name}': {e}", fg="red")
 
 
 @bots.command(name="stop", section="Bot Operation Commands")
-@click.argument("name", metavar="BOT")
+@click.argument("name", metavar="BOT", default="*")
 @cluster_client
 def stop_bot(cluster: "ClusterClient", name: str):
-    """Stop BOT from running in CLUSTER (if running)"""
+    """Stop one or more BOT(s) from running in CLUSTER (if running)"""
 
-    if not (bot := cluster.bots.get(name)):
-        raise click.UsageError(f"Unknown bot '{name}'.")
-
-    elif not click.confirm(f"Do you want to stop '{name}' from running?"):
-        return
-
-    bot.stop()
-    click.secho(f"Bot '{bot.name}' stopping...", fg="green", bold=True)
+    for bot in parse_globbed_arg(name, cluster.bots):
+        if not click.confirm(f"Do you want to stop '{bot.name}' from running?"):
+            try:
+                bot.stop()
+                click.secho(f"Bot '{bot.name}' stopping...", fg="green", bold=True)
+            except ClientError as e:
+                click.secho(f"Error stopping '{bot.name}': {e}", fg="red")
 
 
 @bots.command(name="logs", section="Bot Operation Commands")
@@ -1406,13 +1401,12 @@ def show_bot_logs(
 
 
 @bots.command(name="errors", section="Bot Operation Commands")
-@click.argument("name", metavar="BOT")
+@click.argument("name", metavar="BOT", default="*")
 @cluster_client
 def show_bot_errors(cluster: "ClusterClient", name: str):
-    """Show unacknowledged errors for BOT in CLUSTER"""
+    """Show unacknowledged errors for one or more BOT(s) in CLUSTER"""
 
-    if not (bot := cluster.bots.get(name)):
-        raise click.UsageError(f"Unknown bot '{name}'.")
-
-    for log in bot.errors:
-        click.echo(log)
+    for bot in parse_globbed_arg(name, cluster.bots):
+        click.echo(f"'{bot.name}' errors:")
+        for log in bot.errors:
+            click.echo(log)

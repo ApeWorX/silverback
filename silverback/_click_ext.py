@@ -1,7 +1,8 @@
+import fnmatch
 from datetime import datetime, timedelta
 from functools import update_wrapper
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import click
 from fief_client import Fief
@@ -24,6 +25,18 @@ if TYPE_CHECKING:
 
 # NOTE: only load once
 settings = ProfileSettings.from_config_file()
+
+
+def parse_globbed_arg(selection: str, collection: dict[str, Any]) -> list[Any]:
+    if selection in collection:
+        return [collection[selection]]
+
+    elif matches := fnmatch.filter(collection, selection):
+        return [collection[match] for match in matches]
+
+    else:
+        choices = "', '".join(collection)
+        raise click.BadArgumentUsage(f"Selection '{selection}' does not match any of: '{choices}'")
 
 
 def cls_import_callback(ctx, param, cls_name):
