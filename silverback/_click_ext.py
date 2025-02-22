@@ -34,9 +34,11 @@ def parse_globbed_arg(selection: str, collection: dict[str, Any]) -> list[Any]:
     elif matches := fnmatch.filter(collection, selection):
         return [collection[match] for match in matches]
 
+    elif choices := "', '".join(collection):
+        raise click.BadArgumentUsage(f"Selection '{selection}' should match one of: '{choices}'")
+
     else:
-        choices = "', '".join(collection)
-        raise click.BadArgumentUsage(f"Selection '{selection}' does not match any of: '{choices}'")
+        raise click.BadArgumentUsage("No choices available")
 
 
 def cls_import_callback(ctx, param, cls_name):
