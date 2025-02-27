@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=5d6d21aa" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2831755e" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -506,7 +506,7 @@ your platform account via <cite>-c WORKSPACE/NAME</cite></p>
 </section>
 <section id="silverback-cluster-vars-info">
 <h3>info<a class="headerlink" href="#silverback-cluster-vars-info" title="Link to this heading"></a></h3>
-<p>Show latest revision of a variable GROUP in a CLUSTER</p>
+<p>Show information about a variable GROUP in a CLUSTER</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>vars<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
 </span></pre></div>
 </div>
@@ -817,7 +817,7 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 </section>
 <section id="silverback-cluster-bots-list">
 <h3>list<a class="headerlink" href="#silverback-cluster-bots-list" title="Link to this heading"></a></h3>
-<p>List all bots in a CLUSTER (Regardless of status)</p>
+<p>List all bots in a CLUSTER by network (Regardless of status)</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </span></pre></div>
 </div>
@@ -837,7 +837,7 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 </section>
 <section id="silverback-cluster-bots-info">
 <h3>info<a class="headerlink" href="#silverback-cluster-bots-info" title="Link to this heading"></a></h3>
-<p>Get configuration information of a BOT in a CLUSTER</p>
+<p>Get configuration information of one or more BOT(s) in a CLUSTER</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
 </span></pre></div>
 </div>
@@ -858,7 +858,7 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-info-arg-BOT">
 <span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-info-arg-BOT" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
+<dd><p>Optional argument</p>
 </dd></dl>
 
 </section>
@@ -928,7 +928,7 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 </section>
 <section id="silverback-cluster-bots-remove">
 <h3>remove<a class="headerlink" href="#silverback-cluster-bots-remove" title="Link to this heading"></a></h3>
-<p>Remove BOT from CLUSTER (Shutdown if running)</p>
+<p>Remove one or more BOT(s) from CLUSTER (Shutdown if running)</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>remove<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
 </span></pre></div>
 </div>
@@ -949,13 +949,13 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-remove-arg-BOT">
 <span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-remove-arg-BOT" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
+<dd><p>Optional argument</p>
 </dd></dl>
 
 </section>
 <section id="silverback-cluster-bots-health">
 <h3>health<a class="headerlink" href="#silverback-cluster-bots-health" title="Link to this heading"></a></h3>
-<p>Show current health of BOT in a CLUSTER</p>
+<p>Show current health of one or more BOT(s) in a CLUSTER</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>health<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
 </span></pre></div>
 </div>
@@ -976,13 +976,13 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-health-arg-BOT">
 <span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-health-arg-BOT" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
+<dd><p>Optional argument</p>
 </dd></dl>
 
 </section>
 <section id="silverback-cluster-bots-start">
 <h3>start<a class="headerlink" href="#silverback-cluster-bots-start" title="Link to this heading"></a></h3>
-<p>Start BOT running in CLUSTER (if stopped or terminated)</p>
+<p>Start one or more BOT(s) running in CLUSTER (if stopped or terminated)</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>start<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
 </span></pre></div>
 </div>
@@ -1003,13 +1003,13 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-start-arg-BOT">
 <span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-start-arg-BOT" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
+<dd><p>Optional argument</p>
 </dd></dl>
 
 </section>
 <section id="silverback-cluster-bots-stop">
 <h3>stop<a class="headerlink" href="#silverback-cluster-bots-stop" title="Link to this heading"></a></h3>
-<p>Stop BOT from running in CLUSTER (if running)</p>
+<p>Stop one or more BOT(s) from running in CLUSTER (if running)</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>stop<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
 </span></pre></div>
 </div>
@@ -1030,7 +1030,7 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-stop-arg-BOT">
 <span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-stop-arg-BOT" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
+<dd><p>Optional argument</p>
 </dd></dl>
 
 </section>
@@ -1081,7 +1081,7 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 </section>
 <section id="silverback-cluster-bots-errors">
 <h3>errors<a class="headerlink" href="#silverback-cluster-bots-errors" title="Link to this heading"></a></h3>
-<p>Show unacknowledged errors for BOT in CLUSTER</p>
+<p>Show unacknowledged errors for one or more BOT(s) in CLUSTER</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>errors<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
 </span></pre></div>
 </div>
@@ -1102,7 +1102,7 @@ are immutable. New revisions do not automatically update bot configuration.</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-errors-arg-BOT">
 <span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-errors-arg-BOT" title="Link to this definition"></a></dt>
-<dd><p>Required argument</p>
+<dd><p>Optional argument</p>
 </dd></dl>
 
 </section>
@@ -1290,5 +1290,5 @@ are immutable. New revisions do not automatically update bot configuration.</p>
       <script src="../_static/doctools.js?v=9a2dae69"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=55e26b35"></script></body>
+      <script src="../_static/shibuya.js?v=e2230717"></script></body>
 </html>
