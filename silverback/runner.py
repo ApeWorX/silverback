@@ -1,4 +1,6 @@
 import asyncio
+import signal
+import sys
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
@@ -122,6 +124,16 @@ class BaseRunner(ABC):
             :class:`~silverback.exceptions.NoTasksAvailableError`:
                 If there are no configured tasks to execute.
         """
+
+        def exit_handler(signum, _frame):
+            logger.info(f"{signal.Signals(signum).name} signal received")
+            sys.exit(0)  # Exit normally
+
+        # NOTE: Make sure we handle various ways that OS might kill process
+        signal.signal(signal.SIGTERM, exit_handler)
+        # NOTE: Overwrite Ape's default signal handler (causes issues)
+        signal.signal(signal.SIGINT, exit_handler)
+
         # Initialize broker (run worker startup events)
         await self.bot.broker.startup()
 
