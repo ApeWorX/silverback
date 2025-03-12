@@ -1,5 +1,6 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from ape.api import AccountAPI
 from ape.logging import logger
 from ape.types import ContractLog
 from ape.utils import ManagerAccessMixin
@@ -9,9 +10,12 @@ from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult
 from silverback.types import TaskType
 from silverback.utils import hexbytes_dict
 
+if TYPE_CHECKING:
+    from silverback.settings import Settings
+
 
 class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, silverback_settings: "Settings", *args, **kwargs):
         def compute_block_time() -> int:
             genesis = self.chain_manager.blocks[0]
             head = self.chain_manager.blocks.head
@@ -22,6 +26,12 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             return int((head.timestamp - genesis.timestamp) / head.number)
 
         self.block_time = self.chain_manager.provider.network.block_time or compute_block_time()
+
+        self.signer: AccountAPI | None = None
+        if signer := silverback_settings.get_signer():
+            self.signer = signer
+            self.last_nonce = self.signer.nonce
+            # TODO: Figure out a way to determine nonce tracking without RPC call
 
     def pre_send(self, message: TaskiqMessage) -> TaskiqMessage:
         # TODO: Necessary because bytes/HexBytes doesn't encode/decode well for some reason
@@ -94,6 +104,13 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         return message
 
     def post_execute(self, message: TaskiqMessage, result: TaskiqResult):
+        if self.signer and (current_nonce := self.signer.nonce) > self.last_nonce:
+            txns_by_nonce = result.labels["txns_by_nonce"] = list(
+                range(self.last_nonce, current_nonce)
+            )
+            logger.info(f"Sent {current_nonce - self.last_nonce} transactions(s): {txns_by_nonce}")
+            self.last_nonce = current_nonce
+
         if self.block_time:
             percentage_time = 100 * (result.execution_time / self.block_time)
             percent_display = f" ({percentage_time:.1f}%)"
