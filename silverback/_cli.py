@@ -105,8 +105,9 @@ def _network_callback(ctx, param, val):
     callback=cls_import_callback,
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
+@click.option("--debug", is_flag=True, default=False)
 @click.argument("bot", required=False, callback=bot_path_callback)
-def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
+def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, debug, bot):
     """Run Silverback bot"""
     from silverback.runner import PollingRunner, WebsocketRunner
 
@@ -127,7 +128,7 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, bot):
         recorder=recorder_class() if recorder_class else None,
         max_exceptions=max_exceptions,
     )
-    asyncio.run(runner.run())
+    asyncio.run(runner.run(), debug=debug)
 
 
 @cli.command(section="Local Commands")
@@ -169,12 +170,16 @@ def build(generate, path):
 @click.option("-w", "--workers", type=int, default=2)
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
+@click.option("--debug", is_flag=True, default=False)
 @click.argument("bot", required=False, callback=bot_path_callback)
-def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, bot):
+def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, bot):
     """Run Silverback task workers (advanced)"""
     from silverback.worker import run_worker
 
-    asyncio.run(run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout))
+    asyncio.run(
+        run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout),
+        debug=debug,
+    )
 
 
 @cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
