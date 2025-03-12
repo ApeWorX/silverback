@@ -79,7 +79,10 @@ jobs:
             pip install .[test]
 
         - name: Run Tests
-          run: pytest -m "not fuzzing" -n 0 -s --cov
+          run: pytest -p "no:silverback_test" -m "not fuzzing" -n 0 -s --cov
+
+        - name: Run Backtests
+          run: silverback test example tests/backtest -n 0 -s --cov
 
 # NOTE: uncomment this block after you've marked tests with @pytest.mark.fuzzing
 #    fuzzing:
