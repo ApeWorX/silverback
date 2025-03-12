@@ -47,7 +47,7 @@ python3 setup.py install
 
 ## Quick Usage
 
-Checkout [the example](https://github.com/ApeWorX/silverback/blob/main/example.py) to see how to use the library.
+Checkout [the example](https://github.com/ApeWorX/silverback/blob/main/bots/example.py) to see how to use the library.
 
 ```{note}
 The example makes use of the [Ape Tokens](https://github.com/ApeWorX/ape-tokens) plugin.
@@ -84,7 +84,7 @@ for this object name when running. If you do not do so, once again, ensure you r
 To auto-generate Dockerfiles for your bots, from the root of your project, you can run:
 
 ```bash
-silverback build
+silverback build --generate
 ```
 
 This will place the generated dockerfiles in a special directory in the root of your project.
@@ -116,64 +116,11 @@ As an aside, if your bots/ directory is a python package, you will cause conflic
 ## Docker Usage
 
 ```sh
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run example --network :mainnet
+$ docker run -it apeworx/silverback-example:latest run --network :mainnet
 ```
 
 ```{note}
 The Docker image we publish uses Python 3.11.
-```
-
-## Setting Up Your Environment
-
-Running the `Quick Usage` and `Docker Usage` with the provided example will fail if you do not have a fully-configured environment.
-Most common issues when using the SDK stem from the proper configuration of Ape plugins to unlock the behavior you desire.
-
-You should use a provider that supports websockets to run silverback.
-If you want to use a hosted provider with websocket support like Alchemy to run this example, you will need a Alchemy API key for Ethereum mainnet.
-If you attempt to run the `Docker Usage` command without supplying this key, you will get the following error:
-
-```bash
-$ docker run --volume $PWD:/home/harambe/project --volume ~/.tokenlists:/home/harambe/.tokenlists apeworx/silverback:latest run example --network :mainnet:alchemy
-Traceback (most recent call last):
-  ...
-ape_alchemy.exceptions.MissingProjectKeyError: Must set one of $WEB3_ALCHEMY_PROJECT_ID, $WEB3_ALCHEMY_API_KEY, $WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID, $WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY.
-```
-
-Go to [Alchemy](https://alchemy.com), create an account, then create an bot in their dashboard, and copy the API Key.
-
-Another requirement for the command from `Docker Usage` to run the given example is that it uses [ape-tokens](https://github.com/ApeWorX/ape-tokens) plugin to look up token interfaces by symbol.
-In order for this to work, you should have installed and configured that plugin using a token list that includes both YFI and USDC on Ethereum mainnet.
-Doing this will give you a `~/.tokenlists` hidden folder in your home folder that you must mount into the docker container with the following flag:
-
-```bash
-... --volume ~/.tokenlists:/home/harambe/.tokenlists ...
-```
-
-```{note}
-It is suggested to install the 1inch tokenlist via `ape tokens install tokens.1inch.eth`.
-See the [ape-tokens](https://github.com/ApeWorX/ape-tokens?tab=readme-ov-file#quick-usage) README for more information.
-```
-
-To check that both of the tokens exist in your configured tokenlist, you can execute this command:
-
-```bash
-$ ape tokens token-info YFI
-      Symbol: YFI
-        Name: yearn.finance
-    Chain ID: 1
-     Address: 0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e
-    Decimals: 18
-
-$ ape tokens token-info USDC
-      Symbol: USDC
-        Name: Circle USD
-    Chain ID: 1
-     Address: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-    Decimals: 6
-```
-
-```{note}
-If you want, you can comment out the two functions `exec_event1` and `exec_event2` that handle the contract log events from these contracts if you do not have the configured tokenlist, then your command should work.
 ```
 
 ## Development

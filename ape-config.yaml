@@ -1,4 +1,14 @@
+plugins:
+  - name: etherscan
+  - name: tokens
+
 # Ensure we are configured for fork mode correct for example
 ethereum:
   mainnet-fork:
     default_provider: foundry
+
+tokens:
+  defualt: CoinGecko
+  required:
+    - name: CoinGecko
+      uri: "https://tokens.coingecko.com/uniswap/all.json"

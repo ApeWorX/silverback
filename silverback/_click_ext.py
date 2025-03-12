@@ -362,7 +362,7 @@ def bot_path_callback(ctx: click.Context, param: click.Parameter, path: str | No
     except ImportFromStringError:
         try:
             return import_from_string(f"bots.{path}")
-        except ModuleNotFoundError:
+        except (ImportFromStringError, ModuleNotFoundError):
             # This may happen if accidentally running `silverback run`
             # with no bots arguments outside of your bots-project directory.
             raise click.BadParameter(

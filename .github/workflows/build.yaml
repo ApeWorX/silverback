@@ -116,3 +116,20 @@ jobs:
           cut-off: 4w
           dry-run: true
 
+  example:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Examples
+        uses: SilverbackLtd/build-action@v1
+        with:
+            push: ${{ github.ref == 'refs/heads/main' }}
+            tag: latest
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
