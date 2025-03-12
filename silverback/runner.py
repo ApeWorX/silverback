@@ -342,8 +342,14 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
                     web3.subscription_manager.handle_subscriptions(run_forever=True)
                 )
 
+            # NOTE: This triggers daemon tasks
             await super().run(*runtime_tasks, run_subscriptions)
-            await web3.subscription_manager.unsubscribe_all()
+            try:
+                # TODO: ctrl+C raises `websockets.exceptions.ConnectionClosedError`
+                await web3.subscription_manager.unsubscribe_all()
+            except Exception as e:
+                # NOTE: We don't really need to see any errors from here
+                logger.debug(str(e))
 
 
 class PollingRunner(BaseRunner, ManagerAccessMixin):
