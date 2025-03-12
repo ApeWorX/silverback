@@ -154,14 +154,10 @@ class BaseRunner(ABC):
         # Load the snapshot (if available)
         # NOTE: Add some additional handling to see if this feature is available in bot
         if TaskType.SYSTEM_LOAD_SNAPSHOT not in supported_task_types:
-            logger.warning(
+            raise StartupFailure(
                 "Silverback no longer supports runner-based snapshotting, "
                 "please upgrade your bot SDK version to latest to use snapshots."
             )
-            startup_state: StateSnapshot | None = StateSnapshot(
-                last_block_seen=-1,
-                last_block_processed=-1,
-            )  # Use empty snapshot
 
         elif not (startup_state := await self.datastore.init(self.bot.identifier)):
             logger.warning("No state snapshot detected, using empty snapshot")
