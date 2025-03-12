@@ -1,7 +1,8 @@
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Any, Callable
 
+import quattro
 from ape import chain
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
@@ -21,7 +22,7 @@ from web3.utils.subscriptions import (
 )
 
 from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
-from .main import SilverbackBot, SystemConfig, TaskData
+from .main import SilverbackBot, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
 from .types import TaskType
@@ -58,6 +59,12 @@ class BaseRunner(ABC):
     def _create_system_task_kicker(self, task_type: TaskType) -> AsyncKicker:
         assert "system:" in str(task_type)
         return self._create_task_kicker(TaskData(name=str(task_type), labels={}))
+
+    async def run_system_task(self, task_type: TaskType, *args) -> Any:
+        system_task_kicker = self._create_system_task_kicker(task_type)
+        if (result := await run_taskiq_task_wait_result(system_task_kicker, *args)).is_err:
+            raise StartupFailure(f"System Task Failure [{task_type.name}]: {result.error}")
+        return result.return_value
 
     async def _handle_task(self, task: AsyncTaskiqTask):
         result = await task.wait_result()
@@ -119,34 +126,22 @@ class BaseRunner(ABC):
         await self.bot.broker.startup()
 
         # Obtain system configuration for worker
-        result = await run_taskiq_task_wait_result(
-            self._create_system_task_kicker(TaskType.SYSTEM_CONFIG)
-        )
-        if result.is_err or not isinstance(result.return_value, SystemConfig):
-            raise StartupFailure("Unable to determine system configuration of worker")
+        config = await self.run_system_task(TaskType.SYSTEM_CONFIG)
+        logger.info(f"Worker using Silverback SDK v{config.sdk_version}")
 
         # NOTE: Increase the specifier set here if there is a breaking change to this
-        if Version(result.return_value.sdk_version) not in SpecifierSet(">=0.5.0"):
-            # TODO: set to next breaking change release before release
+        # TODO: set to next breaking change release before release
+        if Version(config.sdk_version) not in SpecifierSet(">=0.5.0"):
             raise StartupFailure("Worker SDK version too old, please rebuild")
 
-        if not (
-            system_tasks := set(TaskType(task_name) for task_name in result.return_value.task_types)
-        ):
-            raise StartupFailure("No system tasks detected, startup failure")
-        # NOTE: Guaranteed to be at least one because of `TaskType.SYSTEM_CONFIG`
-        system_tasks_str = "\n- ".join(system_tasks)
-        logger.info(
-            f"Worker using Silverback SDK v{result.return_value.sdk_version}"
-            f", available task types:\n- {system_tasks_str}"
-        )
+        supported_task_types = set(TaskType(task_name) for task_name in config.task_types)
 
         # NOTE: Bypass snapshotting if unsupported
-        self._snapshotting_supported = TaskType.SYSTEM_CREATE_SNAPSHOT in system_tasks
+        self._snapshotting_supported = TaskType.SYSTEM_CREATE_SNAPSHOT in supported_task_types
 
         # Load the snapshot (if available)
         # NOTE: Add some additional handling to see if this feature is available in bot
-        if TaskType.SYSTEM_LOAD_SNAPSHOT not in system_tasks:
+        if TaskType.SYSTEM_LOAD_SNAPSHOT not in supported_task_types:
             logger.warning(
                 "Silverback no longer supports runner-based snapshotting, "
                 "please upgrade your bot SDK version to latest to use snapshots."
@@ -168,12 +163,7 @@ class BaseRunner(ABC):
         # NOTE: State snapshot is immediately out of date after init
 
         # Send startup state to bot
-        if (
-            result := await run_taskiq_task_wait_result(
-                self._create_system_task_kicker(TaskType.SYSTEM_LOAD_SNAPSHOT), startup_state
-            )
-        ).is_err:
-            raise StartupFailure(result.error)
+        await self.run_system_task(TaskType.SYSTEM_LOAD_SNAPSHOT, startup_state)
 
         # NOTE: Do this for other system tasks because they may not be in older SDK versions
         #       `if TaskType.<SYSTEM_TASK_NAME> not in system_tasks: raise StartupFailure(...)`
@@ -183,21 +173,13 @@ class BaseRunner(ABC):
         if self.recorder:
             await self.recorder.init(self.bot.identifier)
 
-        # Execute Silverback startup task before we init the rest
-        startup_taskdata_result = await run_taskiq_task_wait_result(
-            self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.STARTUP
-        )
-
-        if startup_taskdata_result.is_err:
-            raise StartupFailure(startup_taskdata_result.error)
-
-        else:
-            startup_task_handlers = map(
-                self._create_task_kicker, startup_taskdata_result.return_value
-            )
+        # Execute Silverback startup tasks before we enter into runtime
+        if startup_tasks_taskdata := await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.STARTUP
+        ):
 
             startup_task_results = await run_taskiq_task_group_wait_results(
-                (task_handler for task_handler in startup_task_handlers), startup_state
+                (map(self._create_task_kicker, startup_tasks_taskdata)), startup_state
             )
 
             if any(result.is_err for result in startup_task_results):
@@ -213,90 +195,68 @@ class BaseRunner(ABC):
             # NOTE: No need to handle results otherwise
 
         # Create our long-running event listeners
-        listener_tasks = []
-        new_block_taskdata_results = await run_taskiq_task_wait_result(
-            self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.NEW_BLOCK
+        new_block_tasks_taskdata = await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.NEW_BLOCK
         )
-        if new_block_taskdata_results.is_err:
-            raise StartupFailure(new_block_taskdata_results.error)
 
-        event_log_taskdata_results = await run_taskiq_task_wait_result(
-            self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.EVENT_LOG
+        event_log_tasks_taskdata = await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.EVENT_LOG
         )
-        if event_log_taskdata_results.is_err:
-            raise StartupFailure(event_log_taskdata_results.error)
 
-        if (
-            len(new_block_taskdata_results.return_value)
-            == len(event_log_taskdata_results.return_value)
-            == 0  # Both are empty
-        ):
+        if len(new_block_tasks_taskdata) == len(event_log_tasks_taskdata) == 0:
             raise NoTasksAvailableError()
 
-        # NOTE: Any propagated failure in here should be handled such that shutdown tasks also run
-        for task_def in new_block_taskdata_results.return_value:
-            if (task := await self._block_task(task_def)) is not None:
-                listener_tasks.append(task)
-
-        for task_def in event_log_taskdata_results.return_value:
-            if (task := await self._event_task(task_def)) is not None:
-                listener_tasks.append(task)
-
-        listener_tasks.extend(t if isinstance(t, asyncio.Task) else t() for t in runtime_tasks)
-
-        # NOTE: Safe to do this because no tasks were actually scheduled to run
-        if len(listener_tasks) == 0:
-            raise NoTasksAvailableError()
-
-        # Run until one task bubbles up an exception that should stop execution
-        # TODO: `asyncio.TaskGroup` added in Python 3.11
-        tasks_with_errors, tasks_running = await asyncio.wait(
-            listener_tasks, return_when=asyncio.FIRST_EXCEPTION
+        exceptions_or_none = await quattro.gather(
+            # NOTE: `_block_task`/`_event_task` either never complete (daemon task) or
+            #       immediately return None. In the case they return None, it is expected
+            #       that `runtime_tasks` contain at least one daemon task so that
+            #       `quattro.gather` does not return.
+            *map(self._block_task, new_block_tasks_taskdata),
+            *map(self._event_task, event_log_tasks_taskdata),
+            *(t if isinstance(t, asyncio.Task) else t() for t in runtime_tasks),
+            # NOTE: Any propagated failure in here should be handled so shutdown tasks run
+            return_exceptions=True,
         )
-        if runtime_errors := "\n".join(str(task.exception()) for task in tasks_with_errors):
+
+
+        # NOTE: `quattro.gather` runs until one task bubbles up an exception that stops execution
+        if runtime_errors := "\n".join(str(e) for e in exceptions_or_none if e is not None):
             # NOTE: In case we are somehow not displaying the error correctly with task status
             logger.warning(f"Runtime error(s) detected, shutting down:\n{runtime_errors}")
 
-        # Cancel any still running
-        for task in tasks_running:
-            task.cancel()
-
-        # NOTE: All listener tasks are shut down now
-
-        # Execute Silverback shutdown task(s) before shutting down the broker and bot
-        shutdown_taskdata_result = await run_taskiq_task_wait_result(
-            self._create_system_task_kicker(TaskType.SYSTEM_USER_TASKDATA), TaskType.SHUTDOWN
-        )
-
-        if shutdown_taskdata_result.is_err:
-            logger.error(f"Error when collecting shutdown tasks:\n{shutdown_taskdata_result.error}")
-
-        else:
-            shutdown_task_handlers = map(
-                self._create_task_kicker, shutdown_taskdata_result.return_value
+        # Execute all shutdown task(s) before shutting down the broker and bot
+        try:
+            shutdown_tasks_taskdata = await self.run_system_task(
+                TaskType.SYSTEM_USER_TASKDATA, TaskType.SHUTDOWN
             )
 
+        except StartupFailure:
+            logger.error("Error when collecting shutdown tasks")
+            # NOTE: Will cause it to skip to last checkpoint
+            shutdown_tasks_taskdata = []
+
+        if shutdown_tasks_taskdata:
             shutdown_task_results = await run_taskiq_task_group_wait_results(
-                (task_handler for task_handler in shutdown_task_handlers)
+                map(self._create_task_kicker, shutdown_tasks_taskdata)
             )
 
-            if any(result.is_err for result in shutdown_task_results):
-                errors_str = "\n".join(
-                    str(result.error) for result in shutdown_task_results if result.is_err
-                )
+            if errors_str := "\n".join(
+                str(result.error) for result in shutdown_task_results if result.is_err
+            ):
+                # NOTE: Just log errors to avoid exception during shutdown
                 logger.error(f"Errors while shutting down:\n{errors_str}")
 
-            elif self.recorder:
+            # NOTE: Run recorder for all shutdown tasks regardless of status
+            if self.recorder:
                 converted_results = map(TaskResult.from_taskiq, shutdown_task_results)
                 await asyncio.gather(*(self.recorder.add_result(r) for r in converted_results))
 
-            # NOTE: No need to handle results otherwise
-
+        # NOTE: Do one last checkpoint to save a snapshot of final state
         if self._snapshotting_supported:
-            # Do one last checkpoint to save a snapshot of final state
             await self._checkpoint()
 
-        await self.bot.broker.shutdown()  # Release broker
+        # NOTE: Will trigger worker shutdown function(s)
+        await self.bot.broker.shutdown()
 
 
 class WebsocketRunner(BaseRunner, ManagerAccessMixin):
