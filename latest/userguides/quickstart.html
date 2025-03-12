@@ -98,7 +98,6 @@ data-aria-dark="Switch to auto color mode">
 </li>
 <li><a class="reference internal" href="#quick-usage">Quick Usage</a></li>
 <li><a class="reference internal" href="#docker-usage">Docker Usage</a></li>
-<li><a class="reference internal" href="#setting-up-your-environment">Setting Up Your Environment</a></li>
 <li><a class="reference internal" href="#development">Development</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -176,7 +175,7 @@ The Silverback library leverages the <a class="reference external" href="https:/
 </section>
 <section id="quick-usage">
 <h2>Quick Usage<a class="headerlink" href="#quick-usage" title="Link to this heading"></a></h2>
-<p>Checkout <a class="reference external" href="https://github.com/ApeWorX/silverback/blob/main/example.py">the example</a> to see how to use the library.</p>
+<p>Checkout <a class="reference external" href="https://github.com/ApeWorX/silverback/blob/main/bots/example.py">the example</a> to see how to use the library.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The example makes use of the <a class="reference external" href="https://github.com/ApeWorX/ape-tokens">Ape Tokens</a> plugin.
@@ -208,7 +207,7 @@ for this object name when running. If you do not do so, once again, ensure you r
 <code class="docutils literal notranslate"><span class="pre">example:&lt;name-of-object&gt;</span></code> the previous example.</p>
 </div>
 <p>To auto-generate Dockerfiles for your bots, from the root of your project, you can run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>build
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>build<span class="w"> </span>--generate
 </span></pre></div>
 </div>
 <p>This will place the generated dockerfiles in a special directory in the root of your project.</p>
@@ -234,58 +233,12 @@ for this object name when running. If you do not do so, once again, ensure you r
 </section>
 <section id="docker-usage">
 <h2>Docker Usage<a class="headerlink" href="#docker-usage" title="Link to this heading"></a></h2>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>:mainnet
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>apeworx/silverback-example:latest<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>:mainnet
 </span></pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The Docker image we publish uses Python 3.11.</p>
-</div>
-</section>
-<section id="setting-up-your-environment">
-<h2>Setting Up Your Environment<a class="headerlink" href="#setting-up-your-environment" title="Link to this heading"></a></h2>
-<p>Running the <code class="docutils literal notranslate"><span class="pre">Quick</span> <span class="pre">Usage</span></code> and <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> with the provided example will fail if you do not have a fully-configured environment.
-Most common issues when using the SDK stem from the proper configuration of Ape plugins to unlock the behavior you desire.</p>
-<p>You should use a provider that supports websockets to run silverback.
-If you want to use a hosted provider with websocket support like Alchemy to run this example, you will need a Alchemy API key for Ethereum mainnet.
-If you attempt to run the <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> command without supplying this key, you will get the following error:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--volume<span class="w"> </span><span class="nv">$PWD</span>:/home/harambe/project<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>apeworx/silverback:latest<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
-</span><span data-line="2">Traceback<span class="w"> </span><span class="o">(</span>most<span class="w"> </span>recent<span class="w"> </span>call<span class="w"> </span>last<span class="o">)</span>:
-</span><span data-line="3"><span class="w">  </span>...
-</span><span data-line="4">ape_alchemy.exceptions.MissingProjectKeyError:<span class="w"> </span>Must<span class="w"> </span><span class="nb">set</span><span class="w"> </span>one<span class="w"> </span>of<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ALCHEMY_API_KEY</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID</span>,<span class="w"> </span><span class="nv">$WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY</span>.
-</span></pre></div>
-</div>
-<p>Go to <a class="reference external" href="https://alchemy.com">Alchemy</a>, create an account, then create an bot in their dashboard, and copy the API Key.</p>
-<p>Another requirement for the command from <code class="docutils literal notranslate"><span class="pre">Docker</span> <span class="pre">Usage</span></code> to run the given example is that it uses <a class="reference external" href="https://github.com/ApeWorX/ape-tokens">ape-tokens</a> plugin to look up token interfaces by symbol.
-In order for this to work, you should have installed and configured that plugin using a token list that includes both YFI and USDC on Ethereum mainnet.
-Doing this will give you a <code class="docutils literal notranslate"><span class="pre">~/.tokenlists</span></code> hidden folder in your home folder that you must mount into the docker container with the following flag:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">...<span class="w"> </span>--volume<span class="w"> </span>~/.tokenlists:/home/harambe/.tokenlists<span class="w"> </span>...
-</span></pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>It is suggested to install the 1inch tokenlist via <code class="docutils literal notranslate"><span class="pre">ape</span> <span class="pre">tokens</span> <span class="pre">install</span> <span class="pre">tokens.1inch.eth</span></code>.
-See the <a class="reference external" href="https://github.com/ApeWorX/ape-tokens?tab=readme-ov-file#quick-usage">ape-tokens</a> README for more information.</p>
-</div>
-<p>To check that both of the tokens exist in your configured tokenlist, you can execute this command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>ape<span class="w"> </span>tokens<span class="w"> </span>token-info<span class="w"> </span>YFI
-</span><span data-line="2"><span class="w">      </span>Symbol:<span class="w"> </span>YFI
-</span><span data-line="3"><span class="w">        </span>Name:<span class="w"> </span>yearn.finance
-</span><span data-line="4"><span class="w">    </span>Chain<span class="w"> </span>ID:<span class="w"> </span><span class="m">1</span>
-</span><span data-line="5"><span class="w">     </span>Address:<span class="w"> </span>0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e
-</span><span data-line="6"><span class="w">    </span>Decimals:<span class="w"> </span><span class="m">18</span>
-</span><span data-line="7">
-</span><span data-line="8">$<span class="w"> </span>ape<span class="w"> </span>tokens<span class="w"> </span>token-info<span class="w"> </span>USDC
-</span><span data-line="9"><span class="w">      </span>Symbol:<span class="w"> </span>USDC
-</span><span data-line="10"><span class="w">        </span>Name:<span class="w"> </span>Circle<span class="w"> </span>USD
-</span><span data-line="11"><span class="w">    </span>Chain<span class="w"> </span>ID:<span class="w"> </span><span class="m">1</span>
-</span><span data-line="12"><span class="w">     </span>Address:<span class="w"> </span>0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-</span><span data-line="13"><span class="w">    </span>Decimals:<span class="w"> </span><span class="m">6</span>
-</span></pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you want, you can comment out the two functions <code class="docutils literal notranslate"><span class="pre">exec_event1</span></code> and <code class="docutils literal notranslate"><span class="pre">exec_event2</span></code> that handle the contract log events from these contracts if you do not have the configured tokenlist, then your command should work.</p>
 </div>
 </section>
 <section id="development">
