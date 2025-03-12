@@ -195,7 +195,7 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, b
 @verbosity_option()
 @click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
 def test(cli_ctx, pytest_args):
-    if return_code := pytest.main([*pytest_args], ["silverback.pytest"]):
+    if return_code := pytest.main([*pytest_args], ["silverback_test"]):
         # only exit with non-zero status to make testing easier
         sys.exit(return_code)
 
