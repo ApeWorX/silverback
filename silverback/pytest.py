@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 from functools import cached_property
 from pathlib import Path
 
@@ -114,6 +115,10 @@ class BacktestItem(pytest.Item):
 
     @cached_property
     def runner(self) -> BacktestRunner:
+        # NOTE: Make sure it can find the path
+        if (bot_folder := (Path.cwd() / "bots")).exists():
+            sys.path.insert(0, str(bot_folder))
+
         # NOTE: Set parameters for loading settings properly
         os.environ["SILVERBACK_BOT_NAME"] = self.bot_path
         with networks.parse_network_choice(self.network_triple):
