@@ -214,18 +214,25 @@ class BaseRunner(ABC):
         if len(new_block_tasks_taskdata) == len(event_log_tasks_taskdata) == 0:
             raise NoTasksAvailableError()
 
-        exceptions_or_none = await quattro.gather(
-            # NOTE: `_block_task`/`_event_task` either never complete (daemon task) or
-            #       immediately return None. In the case they return None, it is expected
-            #       that `runtime_tasks` contain at least one daemon task so that
-            #       `quattro.gather` does not return.
-            *map(self._block_task, new_block_tasks_taskdata),
-            *map(self._event_task, event_log_tasks_taskdata),
-            *(t if isinstance(t, asyncio.Task) else t() for t in runtime_tasks),
-            # NOTE: Any propagated failure in here should be handled so shutdown tasks run
-            return_exceptions=True,
-        )
+        try:
+            # NOTE: Block any interrupts during runtime w/ `asyncio.shield` to shutdown gracefully
+            exceptions_or_none = await asyncio.shield(
+                quattro.gather(
+                    # NOTE: `_block_task`/`_event_task` either never complete (daemon task) or
+                    #       immediately return None. In the case they return None, it is expected
+                    #       that `runtime_tasks` contain at least one daemon task so that
+                    #       `quattro.gather` does not return.
+                    *map(self._block_task, new_block_tasks_taskdata),
+                    *map(self._event_task, event_log_tasks_taskdata),
+                    *(t if isinstance(t, asyncio.Task) else t() for t in runtime_tasks),
+                    # NOTE: Any propagated failure in here should be handled so shutdown tasks run
+                    return_exceptions=True,
+                )
+            )
 
+        except asyncio.CancelledError:
+            # NOTE: Use this to continue with shutdown if interrupted
+            exceptions_or_none = (None,)
 
         # NOTE: `quattro.gather` runs until one task bubbles up an exception that stops execution
         if runtime_errors := "\n".join(str(e) for e in exceptions_or_none if e is not None):
