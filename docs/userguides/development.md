@@ -306,7 +306,31 @@ The client will send tasks to the 2 worker subprocesses, and all task queue and 
 
 ## Testing your Bot
 
-TODO: Add backtesting mode w/ `silverback test`
+You can test your bot across various ranges of history using the [`silverback test`](../commands/test) command to perform "backtesting".
+Backtesting is a super useful technique to measure the performance of your bot by checking it against different periods of history to see how it would react.
+Silverback has provisional support for special backtest cases that must have a name like `backtest_*.yaml` under your `tests/` folder in your project.
+
+Here is an example test case:
+
+```yaml
+# `bots` key is optional, defaults to `bot:bot` if omitted
+bots: "<bot name>"
+# can also use array of bot names, or "*" for all bots under `bots/`
+
+# required, recommended to be a public network
+network: "ethereum:mainnet"
+
+# recommended to pick a small range of blocks for your case
+start_block: 15_338_009
+stop_block: 15_338_018
+
+# NOTE: Ignores extra data
+something_else: blah
+```
+
+In a complex project (where your bot(s) are not the only component), it is recommended to place your backtests under a separate folder such as `tests/backtest/`.
+This will allow you to run backtests separately from your other tests as they take a long time to execute.
+Further, you can use any pytest arguments to help select your tests, for example using `-k <bot-name>` in a [test matrix](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/running-variations-of-jobs-in-a-workflow#using-a-matrix-strategy), if you have multiple bots to test.
 
 ## Deploying your Bot
 
