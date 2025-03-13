@@ -20,7 +20,7 @@ from ape.exceptions import Abort, ApeException, ConversionError
 from ape.logging import LogLevel
 from ape.types import AddressType
 
-from silverback._click_ext import (
+from ._click_ext import (
     SectionedHelpGroup,
     auth_required,
     bot_path_callback,
@@ -32,7 +32,8 @@ from silverback._click_ext import (
     timedelta_callback,
     token_amount_callback,
 )
-from silverback.exceptions import ClientError
+from .cluster import mcp
+from .exceptions import ClientError
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI, EcosystemAPI, NetworkAPI, ProviderAPI
@@ -1425,3 +1426,11 @@ def show_bot_errors(cluster: "ClusterClient", name: str):
         click.echo(f"'{bot.name}' errors:")
         for log in bot.errors:
             click.echo(log)
+
+
+@cluster.command(name="mcp", section="Platform Commands (https://silverback.apeworx.io)")
+@platform_client
+def run_mcp_server(platform: "PlatformClient"):
+    """Run MCP (Model Context Protocol) Server"""
+    mcp.context.client = platform
+    mcp.server.run()
