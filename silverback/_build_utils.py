@@ -63,24 +63,31 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
     if not ((Path.cwd() / contracts_folder)).exists():
         contracts_folder = None
 
-    build_options = dict(
-        sdk_version=sdk_version,
-        has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
-        has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
-        has_ape_config_yaml=has_ape_config_yaml,
-        contracts_folder=contracts_folder,
-    )
-
     if path.is_dir() and path.name == "bots":
         for bot in path.glob("*.py"):
             bot = bot.relative_to(Path.cwd())
             (Path.cwd() / IMAGES_FOLDER_NAME / f"Dockerfile.{bot.stem}").write_text(
-                dockerfile_template(bot, include_bot_dir=True, **build_options)
+                dockerfile_template(
+                    bot,
+                    include_bot_dir=True,
+                    sdk_version=sdk_version,
+                    has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
+                    has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
+                    has_ape_config_yaml=has_ape_config_yaml,
+                    contracts_folder=contracts_folder,
+                )
             )
 
     else:
         (Path.cwd() / IMAGES_FOLDER_NAME / "Dockerfile.bot").write_text(
-            dockerfile_template(path, **build_options)
+            dockerfile_template(
+                path,
+                sdk_version=sdk_version,
+                has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
+                has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
+                has_ape_config_yaml=has_ape_config_yaml,
+                contracts_folder=contracts_folder,
+            )
         )
 
 
