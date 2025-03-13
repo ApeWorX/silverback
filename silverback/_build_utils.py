@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 
 import click
+import yaml
 
 IMAGES_FOLDER_NAME = ".silverback-images"
 
@@ -13,6 +14,7 @@ def dockerfile_template(
     has_requirements_txt: bool = False,
     has_pyproject_toml: bool = False,
     has_ape_config_yaml: bool = False,
+    contracts_folder: str | None = None,
 ):
     dockerfile = [
         f"FROM ghcr.io/apeworx/silverback:{sdk_version}",
@@ -35,6 +37,10 @@ def dockerfile_template(
         dockerfile.append("COPY ape-config.yaml /app")
         dockerfile.append("RUN ape plugins install -U .")
 
+    if contracts_folder:
+        dockerfile.append(f"COPY {contracts_folder} /app")
+        dockerfile.append("RUN ape compile")
+
     bot_src = f"{bot_path.parent}/{bot_path.name}" if include_bot_dir else bot_path.name
     bot_dst = "/app/bot" if bot_path.is_dir() else "/app/bot.py"
     dockerfile.append(f"COPY {bot_src} {bot_dst}")
@@ -45,11 +51,24 @@ def dockerfile_template(
 def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
     (Path.cwd() / IMAGES_FOLDER_NAME).mkdir(exist_ok=True)
 
+    contracts_folder: str | None = "contracts"
+    if has_ape_config_yaml := (ape_config_path := Path.cwd() / "ape-config.yaml").exists():
+        contracts_folder = (
+            yaml.safe_load(ape_config_path.read_text())
+            .get("compiler", {})
+            .get("contracts_folder", contracts_folder)
+        )
+
+    assert contracts_folder  # make mypy happy
+    if not ((Path.cwd() / contracts_folder)).exists():
+        contracts_folder = None
+
     build_options = dict(
         sdk_version=sdk_version,
         has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
         has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
-        has_ape_config_yaml=(Path.cwd() / "ape-config.yaml").exists(),
+        has_ape_config_yaml=has_ape_config_yaml,
+        contracts_folder=contracts_folder,
     )
 
     if path.is_dir() and path.name == "bots":
