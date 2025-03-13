@@ -8,7 +8,7 @@ ethereum:
     default_provider: foundry
 
 tokens:
-  defualt: CoinGecko
+  default: CoinGecko
   required:
     - name: CoinGecko
       uri: "https://tokens.coingecko.com/uniswap/all.json"

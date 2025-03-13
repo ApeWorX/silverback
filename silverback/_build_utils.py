@@ -1,144 +1,102 @@
-import shlex
 import subprocess
-from functools import singledispatchmethod
 from pathlib import Path
-from typing import Union
 
 import click
-from ape.utils.os import clean_path
+import yaml
 
-DOCKERFILE_CONTENT = """
-FROM ghcr.io/apeworx/silverback:stable
-USER root
-WORKDIR /app
-RUN chown harambe:harambe /app
-USER harambe
-"""
+IMAGES_FOLDER_NAME = ".silverback-images"
 
 
-# Note: Python3.12 supports subclassing pathlib.Path
-class BasePath(Path):
-    _flavour = type(Path())._flavour  # type: ignore
+def dockerfile_template(
+    bot_path: Path,
+    sdk_version: str = "stable",
+    include_bot_dir: bool = False,
+    has_requirements_txt: bool = False,
+    has_pyproject_toml: bool = False,
+    has_ape_config_yaml: bool = False,
+    contracts_folder: str | None = None,
+):
+    dockerfile = [
+        f"FROM ghcr.io/apeworx/silverback:{sdk_version}",
+        "USER root",
+        "WORKDIR /app",
+        "RUN chown harambe:harambe /app",
+        "USER harambe",
+    ]
+
+    if has_requirements_txt:
+        dockerfile.append("COPY requirements.txt .")
+        dockerfile.append("RUN pip install --upgrade pip && pip install -r requirements.txt")
+
+    # TODO: Figure out how to avoid build issues w/ pip
+    # if has_pyproject_toml:
+    #     dockerfile.append("COPY pyproject.toml /app")
+    #     dockerfile.append("RUN pip install --upgrade pip && pip install .")
+
+    if has_ape_config_yaml:
+        dockerfile.append("COPY ape-config.yaml /app")
+        dockerfile.append("RUN ape plugins install -U .")
+
+    if contracts_folder:
+        dockerfile.append(f"COPY {contracts_folder} /app")
+        dockerfile.append("RUN ape compile")
+
+    bot_src = f"{bot_path.parent}/{bot_path.name}" if include_bot_dir else bot_path.name
+    bot_dst = "/app/bot" if bot_path.is_dir() else "/app/bot.py"
+    dockerfile.append(f"COPY {bot_src} {bot_dst}")
+
+    return "\n".join(dockerfile)
 
 
-class FilePath(BasePath):
-    """A subclass of Path representing a file."""
+def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
+    (Path.cwd() / IMAGES_FOLDER_NAME).mkdir(exist_ok=True)
 
+    contracts_folder: str | None = "contracts"
+    if has_ape_config_yaml := (ape_config_path := Path.cwd() / "ape-config.yaml").exists():
+        contracts_folder = (
+            yaml.safe_load(ape_config_path.read_text())
+            .get("compiler", {})
+            .get("contracts_folder", contracts_folder)
+        )
 
-class DirPath(BasePath):
-    """A subclass of Path representing a path"""
+    assert contracts_folder  # make mypy happy
+    if not ((Path.cwd() / contracts_folder)).exists():
+        contracts_folder = None
 
-
-def get_path(path: Path):
-    if path.is_file():
-        return FilePath(str(path))
-    elif path.is_dir():
-        return DirPath(str(path))
-    else:
-        raise ValueError(f"{path} is neither a file nor a directory")
-
-
-PathType = Union["FilePath", "DirPath"]
-
-
-def generate_dockerfiles(path: Path):
-    path = get_path(path)
-    dg = DockerfileGenerator()
-    dg.generate_dockerfiles(path)
-
-
-def build_docker_images(path: Path):
-    DockerfileGenerator.build_images(path)
-
-
-class DockerfileGenerator:
-
-    @property
-    def dockerfile_name(self):
-        return self._dockerfile_name
-
-    @dockerfile_name.setter
-    def dockerfile_name(self, name):
-        self._dockerfile_name = name
-
-    @singledispatchmethod
-    def generate_dockerfiles(self, path: PathType):
-        """
-        Will generate a file based on path type
-        """
-        raise NotImplementedError(f"Path type {type(path)} not supported")
-
-    @generate_dockerfiles.register
-    def _(self, path: FilePath):
-        dockerfile_content = self._check_for_requirements(DOCKERFILE_CONTENT)
-        self.dockerfile_name = f"Dockerfile.{path.parent.name}-bot"
-        dockerfile_content += f"COPY {path.name}/ /app/bot.py\n"
-        self._build_helper(dockerfile_content)
-
-    @generate_dockerfiles.register
-    def _(self, path: DirPath):
-        bots = self._get_all_bot_files(path)
-        for bot in bots:
-            dockerfile_content = self._check_for_requirements(DOCKERFILE_CONTENT)
-            if bot.name == "__init__.py" or bot.name == "bot.py":
-                self.dockerfile_name = f"Dockerfile.{bot.parent.parent.name}-bot"
-                dockerfile_content += f"COPY {path.name}/ /app/bot\n"
-            else:
-                self.dockerfile_name = f"Dockerfile.{bot.name.replace('.py', '')}"
-                dockerfile_content += f"COPY {path.name}/{bot.name} /app/bot.py\n"
-            self._build_helper(dockerfile_content)
-
-    def _build_helper(self, dockerfile_c: str):
-        """
-        Used in multiple places in build.
-        """
-        dockerfile_path = Path.cwd() / ".silverback-images" / self.dockerfile_name
-        dockerfile_path.parent.mkdir(exist_ok=True)
-        dockerfile_path.write_text(dockerfile_c.strip() + "\n")
-        click.echo(f"Generated {clean_path(dockerfile_path)}")
-
-    def _check_for_requirements(self, dockerfile_content):
-        if (Path.cwd() / "requirements.txt").exists():
-            dockerfile_content += "COPY requirements.txt .\n"
-            dockerfile_content += (
-                "RUN pip install --upgrade pip && pip install -r requirements.txt\n"
+    if path.is_dir() and path.name == "bots":
+        for bot in path.glob("*.py"):
+            bot = bot.relative_to(Path.cwd())
+            (Path.cwd() / IMAGES_FOLDER_NAME / f"Dockerfile.{bot.stem}").write_text(
+                dockerfile_template(
+                    bot,
+                    include_bot_dir=True,
+                    sdk_version=sdk_version,
+                    has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
+                    has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
+                    has_ape_config_yaml=has_ape_config_yaml,
+                    contracts_folder=contracts_folder,
+                )
             )
 
-        if (Path.cwd() / "ape-config.yaml").exists():
-            dockerfile_content += "COPY ape-config.yaml .\n"
-            dockerfile_content += "RUN ape plugins install -U .\n"
+    else:
+        (Path.cwd() / IMAGES_FOLDER_NAME / "Dockerfile.bot").write_text(
+            dockerfile_template(
+                path,
+                sdk_version=sdk_version,
+                has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
+                has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
+                has_ape_config_yaml=has_ape_config_yaml,
+                contracts_folder=contracts_folder,
+            )
+        )
 
-        return dockerfile_content
 
-    def _get_all_bot_files(self, path: DirPath):
-        files = sorted({file for file in path.iterdir() if file.is_file()}, reverse=True)
-        bots = []
-        for file in files:
-            if file.name == "__init__.py" or file.name == "bot.py":
-                bots = [file]
-                break
-            bots.append(file)
-        return bots
+def build_docker_images():
+    for dockerfile in (Path.cwd() / IMAGES_FOLDER_NAME).glob("Dockerfile.*"):
+        command = f"docker build -f {dockerfile.relative_to(Path.cwd())} ."
+        click.secho(f"{command}", fg="green")
 
-    @staticmethod
-    def build_images(path: Path):
-        dockerfiles = {file for file in path.iterdir() if file.is_file()}
-        for file in dockerfiles:
-            try:
-                command = shlex.split(
-                    "docker build -f "
-                    f"./{file.parent.name}/{file.name} "
-                    f"-t {file.name.split('.')[1]}:latest ."
-                )
-                result = subprocess.run(
-                    command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    check=True,
-                )
-                click.echo(result.stdout)
-            except subprocess.CalledProcessError as e:
-                click.echo("Error during docker build:")
-                click.echo(e.stderr)
-                raise
+        try:
+            subprocess.run(command, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            raise click.ClickException(str(e))

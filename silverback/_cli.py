@@ -133,31 +133,41 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, debug, b
 
 @cli.command(section="Local Commands")
 @click.option("--generate", is_flag=True, default=False)
-@click.argument("path", required=False, type=str, default="bots")
+@click.argument("path", required=False, default=None)
 def build(generate, path):
-    """Generate Dockerfiles and build bot images"""
-    from silverback._build_utils import build_docker_images, generate_dockerfiles
+    """Generate Dockerfiles and build bot container images"""
+    from silverback._build_utils import (
+        IMAGES_FOLDER_NAME,
+        build_docker_images,
+        generate_dockerfiles,
+    )
 
     if generate:
         if (
-            not (path := Path.cwd() / path).exists()
+            path is not None
+            and not (path := Path.cwd() / f"{path}.py").exists()
+            and not (path := Path.cwd() / path).exists()
+        ) or (
+            path is None
+            and not (path := Path.cwd() / "bots").exists()
             and not (path := Path.cwd() / "bot").exists()
             and not (path := Path.cwd() / "bot.py").exists()
         ):
-            raise FileNotFoundError(
-                f"The bots directory '{path}', 'bot/' and 'bot.py' does not exist in your path. "
-                f"You should have a '{path}/' or 'bot/' folder, or a 'bot.py' file in the root "
-                "of your project."
+            raise click.ClickException(
+                f"The path '{path.relative_to(Path.cwd())}' does not exist in project. "
+                "This command can auto-detect 'bot.py' or 'bot/' folder in project root"
+                ", or process all '*.py' bots in  'bots/' folder."
             )
+        print(path)
         generate_dockerfiles(path)
 
-    if not (path := Path.cwd() / ".silverback-images").exists():
-        raise FileNotFoundError(
-            f"The dockerfile directory '{path}' does not exist. "
-            "You should have a `{path}/` folder in the root of your project."
+    if not (Path.cwd() / IMAGES_FOLDER_NAME).exists():
+        raise click.ClickException(
+            f"The dockerfile cache folder '{IMAGES_FOLDER_NAME}' does not exist. "
+            "You can run `silverback build --generate` to generate it and build."
         )
 
-    build_docker_images(path)
+    build_docker_images()
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
