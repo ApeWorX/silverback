@@ -13,6 +13,7 @@ class AppContext:
     client: PlatformClient | ClusterClient | None = None
 
 
+# TODO: figure out a less janky way to do this
 context = AppContext()
 
 
