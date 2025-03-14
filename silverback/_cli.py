@@ -1432,5 +1432,6 @@ def show_bot_errors(cluster: "ClusterClient", name: str):
 @platform_client
 def run_mcp_server(platform: "PlatformClient"):
     """Run MCP (Model Context Protocol) Server"""
+    # NOTE: Need to inject this into context so it has access
     mcp.context.client = platform
-    mcp.server.run()
+    mcp.server.run(transport="sse")
