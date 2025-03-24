@@ -298,7 +298,7 @@ class SilverbackBot(ManagerAccessMixin):
         elif container and isinstance(container, ContractEventWrapper):
             if len(container.events) != 1:
                 raise InvalidContainerTypeError(
-                    f"Cannot use {container} as it contains multiple event definitions"
+                    f"Requires exactly 1 event to unwrap: {container.events}"
                 )
             container = container.events[0]
 
