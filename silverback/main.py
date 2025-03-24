@@ -6,7 +6,7 @@ from functools import wraps
 from typing import Any, Awaitable, Callable
 
 from ape.api.networks import LOCAL_NETWORK_NAME
-from ape.contracts import ContractEvent, ContractInstance
+from ape.contracts import ContractEvent, ContractEventWrapper, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
 from ape.utils import ManagerAccessMixin
@@ -255,7 +255,7 @@ class SilverbackBot(ManagerAccessMixin):
     def broker_task_decorator(
         self,
         task_type: TaskType,
-        container: BlockContainer | ContractEvent | None = None,
+        container: BlockContainer | ContractEvent | ContractEventWrapper | None = None,
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
@@ -280,7 +280,10 @@ class SilverbackBot(ManagerAccessMixin):
         """
         if (
             (task_type is TaskType.NEW_BLOCK and not isinstance(container, BlockContainer))
-            or (task_type is TaskType.EVENT_LOG and not isinstance(container, ContractEvent))
+            or (
+                task_type is TaskType.EVENT_LOG
+                and not isinstance(container, (ContractEvent, ContractEventWrapper))
+            )
             or (
                 task_type
                 not in (
@@ -291,6 +294,13 @@ class SilverbackBot(ManagerAccessMixin):
             )
         ):
             raise ContainerTypeMismatchError(task_type, container)
+
+        elif container and isinstance(container, ContractEventWrapper):
+            if len(container.events) != 1:
+                raise InvalidContainerTypeError(
+                    f"Requires exactly 1 event to unwrap: {container.events}"
+                )
+            container = container.events[0]
 
         # Register user function as task handler with our broker
         def add_taskiq_task(
