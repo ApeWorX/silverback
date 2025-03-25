@@ -1,0 +1,7 @@
+bots: "example"
+network: "ethereum:mainnet"
+# 10 blocks = 120 seconds (2 mins)
+start_block: 15_338_009
+stop_block: 15_338_018
+# Ignores extra data
+something_else: blah

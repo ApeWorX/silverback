@@ -1,11 +1,10 @@
 import asyncio
 import signal
 import sys
-from abc import ABC, abstractmethod
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 import quattro
-from ape import chain
+from ape.contracts import ContractEvent
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
@@ -30,8 +29,11 @@ from .state import Datastore, StateSnapshot
 from .types import TaskType
 from .utils import async_wrap_iter, run_taskiq_task_group_wait_results, run_taskiq_task_wait_result
 
+if TYPE_CHECKING:
+    pass
 
-class BaseRunner(ABC):
+
+class BaseRunner:
     def __init__(
         self,
         # TODO: Make fully stateless by replacing `bot` with `broker` and `identifier`
@@ -99,17 +101,17 @@ class BaseRunner(ABC):
         else:
             await self.datastore.save(result.return_value)
 
-    @abstractmethod
     async def _block_task(self, task_data: TaskData) -> asyncio.Task | None:
         """
         Handle a block_handler task
         """
+        raise NotImplementedError
 
-    @abstractmethod
     async def _event_task(self, task_data: TaskData) -> asyncio.Task | None:
         """
         Handle an event handler task for the given contract event
         """
+        raise NotImplementedError
 
     async def run(self, *runtime_tasks: asyncio.Task | Callable[[], asyncio.Task]):
         """
@@ -381,7 +383,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
 
         async def block_handler():
             async for block in async_wrap_iter(
-                chain.blocks.poll_blocks(
+                self.chain_manager.blocks.poll_blocks(
                     # NOTE: No start block because we should begin polling from head
                     new_block_timeout=new_block_timeout,
                 )
@@ -425,3 +427,128 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
                 await self._checkpoint(last_block_processed=event.block_number)
 
         return asyncio.create_task(log_handler())
+
+
+class BacktestRunner(BaseRunner, ManagerAccessMixin):
+    def __init__(
+        self,
+        bot: SilverbackBot,
+        start_block: int,
+        stop_block: int,
+        network_triple: str,
+        check_assertions: Callable[[TaskResult], None],
+    ):
+        super().__init__(bot)
+        self.start_block = start_block
+        self.stop_block = stop_block
+        self.network_triple = network_triple
+        self.check_assertions = check_assertions
+
+    async def _handle_task(self, task: AsyncTaskiqTask):
+        self.check_assertions(TaskResult.from_taskiq(await task.wait_result()))
+
+    def _event_from_taskdata(self, task_data: TaskData) -> ContractEvent:
+        if not (event_signature := task_data.labels.get("event_signature")):
+            raise StartupFailure("No Event Signature provided.")
+
+        event_abi = EventABI.from_signature(event_signature)
+
+        if not (contract_address := task_data.labels.get("contract_address")):
+            raise StartupFailure("Contract instance required.")
+
+        events = self.chain_manager.contracts.instance_at(contract_address)._events_.get(
+            event_abi.name, []
+        )
+
+        assert len(events) == 1, "Could not find event"
+        return events[0]
+
+    async def run(self, *runtime_tasks: asyncio.Task | Callable[[], asyncio.Task]):
+        # Initialize broker (run worker startup events)
+        await self.bot.broker.startup()
+
+        startup_state = StateSnapshot(
+            # TODO: Migrate these to parameters (remove explicitly from state)
+            last_block_seen=self.start_block - 1,
+            last_block_processed=self.start_block - 1,
+        )  # Use snapshot starting at previous block
+
+        # Send startup state to bot
+        await self.run_system_task(TaskType.SYSTEM_LOAD_SNAPSHOT, startup_state)
+
+        # Execute Silverback startup tasks before we enter into runtime
+        if startup_tasks_taskdata := await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.STARTUP
+        ):
+            # NOTE: Must start at block before start of test case period
+            with self.network_manager.fork(block_number=self.start_block - 1) as provider:
+                # NOTE: Do not automatically mine new transactions, tester will mine manually
+                provider.auto_mine = False
+
+                startup_task_results = await run_taskiq_task_group_wait_results(
+                    (map(self._create_task_kicker, startup_tasks_taskdata)), startup_state
+                )
+
+            assert not any(result.is_err for result in startup_task_results), "\n".join(
+                str(result.error) for result in startup_task_results if result.is_err
+            )
+
+        # Get all the user runtime tasks
+        new_block_tasks_taskdata = await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.NEW_BLOCK
+        )
+        block_handlers = (
+            self._create_task_kicker(taskdata) for taskdata in new_block_tasks_taskdata
+        )
+
+        event_log_tasks_taskdata = await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.EVENT_LOG
+        )
+
+        event_handlers = [
+            (self._event_from_taskdata(taskdata), self._create_task_kicker(taskdata))
+            for taskdata in event_log_tasks_taskdata
+        ]
+
+        assert len(new_block_tasks_taskdata) + len(event_log_tasks_taskdata) > 0, "No Runtime Tasks"
+
+        # Main test loop
+        for block_number in range(self.start_block, self.stop_block):
+            with self.network_manager.fork(block_number=block_number) as provider:
+
+                # Run all blocks handlers first with next block
+                block = provider.get_block(block_id=block_number)
+                results = await quattro.gather(*(handler.kiq(block) for handler in block_handlers))
+                await quattro.gather(*(map(self._handle_task, results)))
+
+                # Then trigger all event log handlers for logs in receipts (confirmation order)
+                for txn in block.transactions:
+                    receipt = provider.get_receipt(txn.hash)
+
+                    if tasks := list(
+                        handler.kiq(log)
+                        for event, handler in event_handlers
+                        for log in event.from_receipt(receipt)
+                    ):
+                        results = await quattro.gather(*tasks)
+                        await quattro.gather(*(map(self._handle_task, results)))
+
+        # NOTE: Finished executing range up to right before `stop_block`
+
+        # Execute all shutdown task(s) before shutting down the broker and bot
+        shutdown_tasks_taskdata = await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.SHUTDOWN
+        )
+
+        if shutdown_tasks_taskdata:
+            with self.network_manager.fork(block_number=self.stop_block) as provider:
+                shutdown_task_results = await run_taskiq_task_group_wait_results(
+                    map(self._create_task_kicker, shutdown_tasks_taskdata)
+                )
+
+            assert not any(result.is_err for result in shutdown_task_results), "\n".join(
+                str(result.error) for result in shutdown_task_results if result.is_err
+            )
+
+        # NOTE: Will trigger worker shutdown function(s)
+        await self.bot.broker.shutdown()
