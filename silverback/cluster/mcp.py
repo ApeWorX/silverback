@@ -49,7 +49,7 @@ def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
     return list(platform.workspaces[workspace_name].clusters)
 
 
-@server.resource("cluster://{workspace_name}/{cluster_name}/health")
+@server.tool()
 def cluster_health(workspace_name: str, cluster_name: str, ctx: Context) -> ClusterHealth:
     """Obtain the health of Bots and Networks in connected Cluster."""
     if not isinstance(
