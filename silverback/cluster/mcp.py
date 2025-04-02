@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from mcp.server.fastmcp import Context, FastMCP  # type: ignore[import-not-found]
 
 from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.types import BotInfo, ClusterHealth
+from silverback.cluster.types import BotInfo, ClusterHealth, ClusterInfo, WorkspaceInfo
 
 
 @dataclass
@@ -26,9 +26,9 @@ async def lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 server = FastMCP("Silverback Platform", lifespan=lifespan)
 
 
-@server.resource("workspace://")
+@server.resource("silverback://workspaces")
 def list_workspaces(ctx: Context) -> list[str]:
-    """Get the list of all available Workspaces"""
+    """Get all available Workspaces in the Platform"""
     if not isinstance(
         platform := ctx.request_context.lifespan_context.client,
         PlatformClient,
@@ -38,19 +38,69 @@ def list_workspaces(ctx: Context) -> list[str]:
     return list(platform.workspaces)
 
 
-@server.resource("workspace://{workspace_name}")
-def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
-    """Get the list of all Cluster names in a specific Workspace."""
+@server.resource("silverback://workspaces/{workspace_name}")
+def workspace_info(workspace_name: str, ctx: Context) -> WorkspaceInfo:
+    """Get information about a particular Workspace in the Platform"""
     if not isinstance(
         platform := ctx.request_context.lifespan_context.client,
         PlatformClient,
     ):
         raise RuntimeError("Platform-only command")
-    return list(platform.workspaces[workspace_name].clusters)
+
+    elif not (workspace := platform.workspaces.get(workspace_name)):
+        raise RuntimeError
+
+    return workspace
 
 
-@server.resource("bots://{workspace_name}/{cluster_name}/{bot_name}")
+@server.resource("silverback://workspaces/{workspace_name}/clusters")
+def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
+    """Get all Clusters by name under a specific Workspace in the Platform"""
+    if not isinstance(
+        platform := ctx.request_context.lifespan_context.client,
+        PlatformClient,
+    ):
+        raise RuntimeError("Platform-only command")
+
+    elif not (workspace := platform.workspaces.get(workspace_name)):
+        raise RuntimeError
+
+    return list(workspace.clusters)
+
+
+@server.resource("silverback://workspaces/{workspace_name}/clusters/{cluster_name}")
+def cluster_info(workspace_name: str, cluster_name: str, ctx: Context) -> ClusterInfo:
+    """Get information about a particular Cluster, under a Workspace in the Platform"""
+    if not isinstance(
+        platform := ctx.request_context.lifespan_context.client,
+        PlatformClient,
+    ):
+        raise RuntimeError("Platform-only command")
+
+    elif not (workspace := platform.workspaces.get(workspace_name)):
+        raise RuntimeError
+
+    elif not (cluster := workspace.clusters.get(cluster_name)):
+        raise RuntimeError
+
+    return cluster
+
+
+@server.resource("silverback://workspaces/{workspace_name}/clusters/{cluster_name}/bots")
+def list_bots(workspace_name: str, cluster_name: str, ctx: Context) -> list[str]:
+    """List all bots in a particular Cluster, under a Workspace in the Platform"""
+    if not isinstance(
+        client := ctx.request_context.lifespan_context.client,
+        ClusterClient,
+    ):
+        client = client.get_cluster_client(workspace_name, cluster_name)
+
+    return list(client.bots)
+
+
+@server.resource("silverback://{workspace_name}/{cluster_name}/bots/{bot_name}")
 def bot_info(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context) -> BotInfo:
+    """Get information about a particular bot, under a particular Cluster"""
     if not isinstance(
         client := ctx.request_context.lifespan_context.client,
         ClusterClient,
@@ -77,6 +127,7 @@ def cluster_health(workspace_name: str, cluster_name: str, ctx: Context) -> Clus
 
 @server.tool()
 def start_bot(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context):
+    """Start a bot by name in connected Cluster"""
     if not isinstance(
         client := ctx.request_context.lifespan_context.client,
         ClusterClient,
@@ -91,6 +142,7 @@ def start_bot(workspace_name: str, cluster_name: str, bot_name: str, ctx: Contex
 
 @server.tool()
 def stop_bot(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context):
+    """Stop a bot by name in connected Cluster"""
     if not isinstance(
         client := ctx.request_context.lifespan_context.client,
         ClusterClient,
