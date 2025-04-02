@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from mcp.server.fastmcp import Context, FastMCP  # type: ignore[import-not-found]
 
 from silverback.cluster.client import ClusterClient, PlatformClient
-from silverback.cluster.types import ClusterHealth
+from silverback.cluster.types import BotInfo, ClusterHealth
 
 
 @dataclass
@@ -49,6 +49,20 @@ def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
     return list(platform.workspaces[workspace_name].clusters)
 
 
+@server.resource("bots://{workspace_name}/{cluster_name}/{bot_name}")
+def bot_info(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context) -> BotInfo:
+    if not isinstance(
+        client := ctx.request_context.lifespan_context.client,
+        ClusterClient,
+    ):
+        client = client.get_cluster_client(workspace_name, cluster_name)
+
+    if not (bot := client.bots.get(bot_name)):
+        raise RuntimeError("Unknown bot")
+
+    return bot
+
+
 @server.tool()
 def cluster_health(workspace_name: str, cluster_name: str, ctx: Context) -> ClusterHealth:
     """Obtain the health of Bots and Networks in connected Cluster."""
@@ -59,3 +73,31 @@ def cluster_health(workspace_name: str, cluster_name: str, ctx: Context) -> Clus
         client = client.get_cluster_client(workspace_name, cluster_name)
 
     return client.health
+
+
+@server.tool()
+def start_bot(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context):
+    if not isinstance(
+        client := ctx.request_context.lifespan_context.client,
+        ClusterClient,
+    ):
+        client = client.get_cluster_client(workspace_name, cluster_name)
+
+    if not (bot := client.bots.get(bot_name)):
+        raise RuntimeError("Unknown bot")
+
+    bot.start()
+
+
+@server.tool()
+def stop_bot(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context):
+    if not isinstance(
+        client := ctx.request_context.lifespan_context.client,
+        ClusterClient,
+    ):
+        client = client.get_cluster_client(workspace_name, cluster_name)
+
+    if not (bot := client.bots.get(bot_name)):
+        raise RuntimeError("Unknown bot")
+
+    bot.stop()
