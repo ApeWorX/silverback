@@ -23,14 +23,14 @@ async def lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     yield context
 
 
-server = FastMCP("silverback", dependencies=["silverback"], lifespan=lifespan)
+server = FastMCP("Silverback Platform", lifespan=lifespan)
 
 
 @server.resource("workspace://")
 def list_workspaces(ctx: Context) -> list[str]:
     """Get the list of all available Workspaces"""
     if not isinstance(
-        platform := ctx.request_context.lifespan_context["client"],
+        platform := ctx.request_context.lifespan_context.client,
         PlatformClient,
     ):
         raise RuntimeError("Platform-only command")
@@ -42,7 +42,7 @@ def list_workspaces(ctx: Context) -> list[str]:
 def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
     """Get the list of all Cluster names in a specific Workspace."""
     if not isinstance(
-        platform := ctx.request_context.lifespan_context["client"],
+        platform := ctx.request_context.lifespan_context.client,
         PlatformClient,
     ):
         raise RuntimeError("Platform-only command")
@@ -53,7 +53,7 @@ def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
 def cluster_health(workspace_name: str, cluster_name: str, ctx: Context) -> ClusterHealth:
     """Obtain the health of Bots and Networks in connected Cluster."""
     if not isinstance(
-        client := ctx.request_context.lifespan_context["client"],
+        client := ctx.request_context.lifespan_context.client,
         ClusterClient,
     ):
         client = client.get_cluster_client(workspace_name, cluster_name)
