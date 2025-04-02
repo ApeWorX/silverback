@@ -32,8 +32,12 @@ from ._click_ext import (
     timedelta_callback,
     token_amount_callback,
 )
-from .cluster import mcp
 from .exceptions import ClientError
+
+try:
+    from .cluster import mcp
+except ImportError:
+    mcp = None  # type: ignore[assignment]
 
 if TYPE_CHECKING:
     from ape.api import AccountAPI, EcosystemAPI, NetworkAPI, ProviderAPI
@@ -1428,10 +1432,12 @@ def show_bot_errors(cluster: "ClusterClient", name: str):
             click.echo(log)
 
 
-@cluster.command(name="mcp", section="Platform Commands (https://silverback.apeworx.io)")
-@platform_client
-def run_mcp_server(platform: "PlatformClient"):
-    """Run MCP (Model Context Protocol) Server"""
-    # NOTE: Need to inject this into context so it has access
-    mcp.context.client = platform
-    mcp.server.run(transport="sse")
+if mcp:
+
+    @cluster.command(name="mcp", section="Platform Commands (https://silverback.apeworx.io)")
+    @platform_client
+    def run_mcp_server(platform: "PlatformClient"):
+        """Run MCP (Model Context Protocol) Server"""
+        # NOTE: Need to inject this into context so it has access
+        mcp.context.client = platform
+        mcp.server.run(transport="sse")
