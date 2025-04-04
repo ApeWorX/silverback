@@ -26,7 +26,11 @@ async def lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
 server = FastMCP("Silverback Platform", lifespan=lifespan)
 
 
-@server.resource("silverback://workspaces")
+# TODO: Refactor to using resources when the following are implemented:
+#       - https://github.com/modelcontextprotocol/python-sdk/pull/248
+#       - https://github.com/pydantic/pydantic-ai/issues/1273
+# @server.resource("silverback://workspaces")
+@server.tool()
 def list_workspaces(ctx: Context) -> list[str]:
     """Get all available Workspaces in the Platform"""
     if not isinstance(
@@ -38,7 +42,8 @@ def list_workspaces(ctx: Context) -> list[str]:
     return list(platform.workspaces)
 
 
-@server.resource("silverback://workspaces/{workspace_name}")
+# @server.resource("silverback://workspaces/{workspace_name}")
+@server.tool()
 def workspace_info(workspace_name: str, ctx: Context) -> WorkspaceInfo:
     """Get information about a particular Workspace in the Platform"""
     if not isinstance(
@@ -53,7 +58,8 @@ def workspace_info(workspace_name: str, ctx: Context) -> WorkspaceInfo:
     return workspace
 
 
-@server.resource("silverback://workspaces/{workspace_name}/clusters")
+# @server.resource("silverback://workspaces/{workspace_name}/clusters")
+@server.tool()
 def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
     """Get all Clusters by name under a specific Workspace in the Platform"""
     if not isinstance(
@@ -68,7 +74,8 @@ def list_clusters(workspace_name: str, ctx: Context) -> list[str]:
     return list(workspace.clusters)
 
 
-@server.resource("silverback://workspaces/{workspace_name}/clusters/{cluster_name}")
+# @server.resource("silverback://workspaces/{workspace_name}/clusters/{cluster_name}")
+@server.tool()
 def cluster_info(workspace_name: str, cluster_name: str, ctx: Context) -> ClusterInfo:
     """Get information about a particular Cluster, under a Workspace in the Platform"""
     if not isinstance(
@@ -86,7 +93,8 @@ def cluster_info(workspace_name: str, cluster_name: str, ctx: Context) -> Cluste
     return cluster
 
 
-@server.resource("silverback://workspaces/{workspace_name}/clusters/{cluster_name}/bots")
+# @server.resource("silverback://workspaces/{workspace_name}/clusters/{cluster_name}/bots")
+@server.tool()
 def list_bots(workspace_name: str, cluster_name: str, ctx: Context) -> list[str]:
     """List all bots in a particular Cluster, under a Workspace in the Platform"""
     if not isinstance(
@@ -98,7 +106,8 @@ def list_bots(workspace_name: str, cluster_name: str, ctx: Context) -> list[str]
     return list(client.bots)
 
 
-@server.resource("silverback://{workspace_name}/{cluster_name}/bots/{bot_name}")
+# @server.resource("silverback://{workspace_name}/{cluster_name}/bots/{bot_name}")
+@server.tool()
 def bot_info(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context) -> BotInfo:
     """Get information about a particular bot, under a particular Cluster"""
     if not isinstance(
