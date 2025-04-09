@@ -23,7 +23,19 @@ async def lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     yield context
 
 
-server = FastMCP("Silverback Platform", lifespan=lifespan)
+server = FastMCP(
+    "Silverback Platform",
+    lifespan=lifespan,
+    instructions="""
+    # Silverback Platform MCP Server
+
+    This server provides tools to access the Silverback Platform (https://silverback.apeworx.io)
+
+    ## Tool Selection Guide
+
+    - Use `list_workspaces` when: You need to identify what workspaces you have access to
+    """,
+)
 
 
 # TODO: Refactor to using resources when the following are implemented:
@@ -132,6 +144,21 @@ def cluster_health(workspace_name: str, cluster_name: str, ctx: Context) -> Clus
         client = client.get_cluster_client(workspace_name, cluster_name)
 
     return client.health
+
+
+@server.tool()
+def bot_logs(workspace_name: str, cluster_name: str, bot_name: str, ctx: Context) -> list[str]:
+    """Get logs from a running bot by name in connected Cluster"""
+    if not isinstance(
+        client := ctx.request_context.lifespan_context.client,
+        ClusterClient,
+    ):
+        client = client.get_cluster_client(workspace_name, cluster_name)
+
+    if not (bot := client.bots.get(bot_name)):
+        raise RuntimeError("Unknown bot")
+
+    return [log.message for log in bot.logs]
 
 
 @server.tool()
