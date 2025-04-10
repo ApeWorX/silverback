@@ -70,7 +70,7 @@ setup(
         "packaging",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
         "quattro>=25.2,<26",  # Manage task groups and background tasks
-        "taskiq[metrics]>=0.11.9,<0.12",
+        "taskiq[metrics]>=0.11.16,<0.12",
         "tomlkit>=0.12,<1",  # For reading/writing global platform profile
         "fief-client[cli]>=0.19,<1",  # for platform auth/cluster login
         "web3>=7.7,<8",  # TODO: Remove when Ape v0.9 is released (Ape v0.8 allows web3 v6)
