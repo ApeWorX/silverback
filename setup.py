@@ -64,7 +64,7 @@ setup(
     install_requires=[
         "apepay>=0.3.5,<1",
         "click",  # Use same version as eth-ape
-        "eth-ape>=0.8.24,<1",
+        "eth-ape>=0.8.31,<1",
         "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
         "eth-pydantic-types",  # Use same version as eth-ape
         "packaging",  # Use same version as eth-ape
