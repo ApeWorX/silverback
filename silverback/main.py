@@ -2,7 +2,7 @@ import atexit
 import inspect
 from collections import defaultdict
 from datetime import timedelta
-from functools import wraps
+from functools import update_wrapper, wraps
 from typing import Any, Awaitable, Callable
 
 from ape.api.networks import LOCAL_NETWORK_NAME
@@ -182,7 +182,9 @@ class SilverbackBot(ManagerAccessMixin):
         assert str(task_type).startswith("system:"), "Can only add system tasks"
         # NOTE: This has to be registered with the broker in the worker
         return self.broker.register_task(
-            task_handler,
+            # NOTE: We need this as `.register_task` tries to update `.__name__` of `task_handler`,
+            #       but it is a method not a function (`update_wrapper` transforms it into one)
+            update_wrapper(lambda *args, **kwargs: task_handler(*args, **kwargs), task_handler),
             # NOTE: Name makes it impossible to conflict with user's handler fn names
             task_name=str(task_type),
             task_type=str(task_type),
