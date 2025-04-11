@@ -1435,9 +1435,9 @@ def show_bot_errors(cluster: "ClusterClient", name: str):
 if mcp:
 
     @cluster.command(name="mcp", section="Platform Commands (https://silverback.apeworx.io)")
-    @platform_client
-    def run_mcp_server(platform: "PlatformClient"):
+    @cluster_client
+    def run_mcp_server(cluster: "ClusterClient"):
         """Run MCP (Model Context Protocol) Server"""
         # NOTE: Need to inject this into context so it has access
-        mcp.context.client = platform
+        mcp.client = cluster
         mcp.server.run(transport="sse")
