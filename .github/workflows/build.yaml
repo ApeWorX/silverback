@@ -130,7 +130,7 @@ jobs:
       - name: Build Examples
         uses: SilverbackLtd/build-action@v1
         with:
-            push: ${{ github.ref == 'refs/heads/main' }}
+            push: ${{ github.event_name != 'pull_request' }}
             tag: latest
             registry: ghcr.io
             username: ${{ github.actor }}
