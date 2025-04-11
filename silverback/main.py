@@ -307,7 +307,7 @@ class SilverbackBot(ManagerAccessMixin):
         ):
             raise ContainerTypeMismatchError(task_type, container)
 
-        elif container and isinstance(container, ContractEventWrapper):
+        elif isinstance(container, ContractEventWrapper):
             if len(container.events) != 1:
                 raise InvalidContainerTypeError(
                     f"Requires exactly 1 event to unwrap: {container.events}"

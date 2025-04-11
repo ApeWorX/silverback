@@ -64,9 +64,9 @@ def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
     return len(block.transactions)
 
 
-# This is how we trigger off of events
-# Set new_block_timeout to adjust the expected block time.
-@bot.on_(USDC.Transfer, start_block=19784367, new_block_timeout=25)
+# This is how we trigger off of events including logs from previous blocks
+# NOTE: Set new_block_timeout to adjust the expected block time.
+@bot.on_(USDC.Transfer, start_block=-10, new_block_timeout=25)
 # NOTE: Typing isn't required, it will still be an Ape `ContractLog` type
 def exec_event1(log):
     if log.log_index % 7 == 3:
