@@ -117,6 +117,8 @@ jobs:
           dry-run: true
 
   example:
+    # NOTE: We want the silverback image built above to base ours on
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
