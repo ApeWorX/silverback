@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from mcp.server.fastmcp import Context, FastMCP  # type: ignore[import-not-found]
 
 from silverback.cluster.client import ClusterClient
-from silverback.cluster.types import BotInfo, ClusterConfiguration, ClusterHealth
+from silverback.cluster.types import BotInfo, ClusterConfiguration, ClusterHealth, VariableGroupInfo
 
 # TODO: figure out a less janky way to do this
 client: ClusterClient | None = None
@@ -54,6 +54,27 @@ def cluster_health(ctx: Context) -> ClusterHealth:
     """Obtain the health of Bots and Networks in the Cluster"""
     cluster: ClusterClient = ctx.request_context.lifespan_context
     return cluster.health
+
+
+# @server.resource("silverback://variable-groups")
+@server.tool()
+def list_variable_groups(ctx: Context) -> list[str]:
+    """List all bots in the Cluster"""
+    cluster: ClusterClient = ctx.request_context.lifespan_context
+
+    return list(cluster.variable_groups)
+
+
+# @server.resource("silverback://variable-groups/{vargroup_name}")
+@server.tool()
+def variable_group_info(ctx: Context, vargroup_name: str) -> VariableGroupInfo:
+    """List all bots in the Cluster"""
+    cluster: ClusterClient = ctx.request_context.lifespan_context
+
+    if not (vg := cluster.variable_groups.get(vargroup_name)):
+        raise RuntimeError("Unknown Variable Group")
+
+    return vg
 
 
 # @server.resource("silverback://bots")
