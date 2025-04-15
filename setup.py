@@ -77,6 +77,7 @@ setup(
     ],
     entry_points={
         "console_scripts": ["silverback=silverback._cli:cli"],
+        "pytest11": ["silverback_test=silverback.pytest"],
     },
     python_requires=">=3.10,<4",
     extras_require=extras_require,

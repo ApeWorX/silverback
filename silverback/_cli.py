@@ -1,11 +1,13 @@
 import asyncio
 import os
+import sys
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 import click
+import pytest
 import yaml  # type: ignore[import-untyped]
 from ape import Contract, convert
 from ape.cli import (
@@ -15,6 +17,7 @@ from ape.cli import (
     account_option,
     ape_cli_context,
     network_option,
+    verbosity_option,
 )
 from ape.exceptions import Abort, ApeException, ConversionError
 from ape.logging import LogLevel
@@ -190,6 +193,21 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, b
         run_worker(bot.broker, worker_count=workers, shutdown_timeout=shutdown_timeout),
         debug=debug,
     )
+
+
+@cli.command(
+    section="Local Commands",
+    add_help_option=False,  # NOTE: This allows pass-through to pytest's help
+    short_help="Run bot backtests (`tests/**/backtest_*.yaml`)",
+    context_settings=dict(ignore_unknown_options=True),
+)
+@ape_cli_context()
+@verbosity_option()
+@click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
+def test(cli_ctx, pytest_args):
+    if return_code := pytest.main([*pytest_args], ["silverback_test"]):
+        # only exit with non-zero status to make testing easier
+        sys.exit(return_code)
 
 
 @cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
