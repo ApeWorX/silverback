@@ -17,7 +17,8 @@ async def lifespan(server: FastMCP) -> AsyncIterator[ClusterClient]:
 
 
 server = FastMCP(
-    "Silverback Bot Cluster",
+    name="silverback-cluster",
+    transport=["sse"],
     lifespan=lifespan,
     instructions="""
     # Silverback Cluster MCP Server
