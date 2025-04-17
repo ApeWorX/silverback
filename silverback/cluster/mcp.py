@@ -29,6 +29,12 @@ server = FastMCP(
 )
 
 
+@server.prompt()
+def cluster_is_okay() -> str:
+    """Create a prompt that asks if the cluster is okay"""
+    return "What is the health of my Silverback cluster?"
+
+
 # TODO: Refactor to using resources when the following are implemented:
 #       - https://github.com/modelcontextprotocol/python-sdk/pull/248
 #       - https://github.com/pydantic/pydantic-ai/issues/1273
