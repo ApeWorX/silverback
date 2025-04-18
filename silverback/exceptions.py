@@ -47,11 +47,6 @@ class StartupFailure(SilverbackException):
             super().__init__("Startup failure(s) detected. See logs for details.")
 
 
-# NOTE: Subclass `click.UsageError` here so bad requests in CLI don't show stack trace
-class ClientError(SilverbackException, click.UsageError):
-    """Exception for client errors in the HTTP request."""
-
-
 class NoTasksAvailableError(SilverbackException):
     def __init__(self):
         super().__init__("No tasks to execute")
@@ -67,3 +62,9 @@ class CircuitBreaker(Halt):
 
     def __init__(self, message: str):
         super(SilverbackException, self).__init__(message)
+
+
+# For Silverback Cluster client commands (CLI)
+# NOTE: Subclass `click.UsageError` here so bad requests in CLI don't show stack trace
+class ClientError(SilverbackException, click.UsageError):
+    """Exception for client errors in the HTTP request."""
