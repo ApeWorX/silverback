@@ -36,6 +36,13 @@ class SilverbackException(ApeException):
     """Base Exception for any Silverback runtime faults."""
 
 
+class NoSignerLoaded(SilverbackException):
+    def __init__(self):
+        super().__init__(
+            "No signer was made available. Please check config (e.g. `SILVERBACK_SIGNER_ALIAS=...`)"
+        )
+
+
 # TODO: `ExceptionGroup` added in Python 3.11
 class StartupFailure(SilverbackException):
     def __init__(self, *exceptions: BaseException | str | None):
