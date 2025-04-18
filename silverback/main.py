@@ -266,6 +266,19 @@ class SilverbackBot(ManagerAccessMixin):
     # To ensure we don't have too many forks at once
     # HACK: Until `NetworkManager.fork` (and `ProviderContextManager`) allows concurrency
 
+    @property
+    def nonce(self) -> int:
+        if not self.signer:
+            raise NoSignerLoaded()
+
+        elif not (last_nonce_used := self.state["system:last_nonce_used"]):
+            raise AttributeError(
+                "`bot.state` not fully loaded yet, please do not use during worker startup."
+            )
+
+        # NOTE: Next nonce (`.nonce` is meant to be used in next txn) is 1 + last
+        return max(last_nonce_used + 1, self.signer.nonce)
+
     def _with_fork_decorator(self, handler: Callable) -> Callable:
         # Trigger worker-side handling using fork network by wrapping handler
         fork_context = self.provider.network_manager.fork
