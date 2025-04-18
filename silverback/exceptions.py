@@ -15,6 +15,11 @@ class InvalidContainerTypeError(Exception):
         super().__init__(f"Invalid container type: {container.__class__}")
 
 
+class UnregisteredTask(Exception):
+    def __init__(self, task_name: str):
+        super().__init__(f"Could not find task '{task_name}'.")
+
+
 class ContainerTypeMismatchError(Exception):
     def __init__(self, task_type: TaskType, container: Any):
         super().__init__(f"Invalid container type for '{task_type}': {container.__class__}")
