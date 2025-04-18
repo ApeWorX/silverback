@@ -140,6 +140,35 @@ def bot_info(ctx: Context, bot_name: str) -> BotInfo:
 
 
 @server.tool()
+def update_bot(
+    ctx: Context,
+    bot_name: str,
+    new_name: str | None = None,
+    new_image: str | None = None,
+    new_ecosystem: str | None = None,
+    new_network: str | None = None,
+    new_provider: str | None = None,
+    new_account: str | None = "<no-change>",
+    new_environment: list[str] | None = None,
+) -> BotInfo:
+    """Remove a particular bot from the Cluster"""
+    cluster: ClusterClient = ctx.request_context.lifespan_context
+
+    if not (bot := cluster.bots.get(bot_name)):
+        raise RuntimeError("Unknown bot")
+
+    return bot.update(
+        name=new_name,
+        image=new_image,
+        ecosystem=new_ecosystem,
+        network=new_network,
+        provider=new_provider,
+        account=new_account,
+        environment=new_environment,
+    )
+
+
+@server.tool()
 def remove_bot(ctx: Context, bot_name: str):
     """Remove a particular bot from the Cluster"""
     cluster: ClusterClient = ctx.request_context.lifespan_context
