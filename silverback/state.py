@@ -12,6 +12,11 @@ class StateSnapshot(BaseModel):
     # Last block number processed by a worker
     last_block_processed: int
 
+    # NOTE: Any new items we add here must have a default to be backwards-compatible
+
+    # Last nonce used by signer
+    last_nonce_used: int | None = None
+
     # Last time the state was updated
     # NOTE: intended to use default when creating a model with this type
     last_updated: UTCTimestamp = Field(default_factory=utc_now)
