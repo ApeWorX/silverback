@@ -64,6 +64,9 @@ def cluster_health(ctx: Context) -> ClusterHealth:
     return cluster.health
 
 
+# NOTE: Do now allow MCP to transmit API keys and such (therefore no new vargroups)
+
+
 # @server.resource("silverback://variable-groups")
 @server.tool()
 def list_variable_groups(ctx: Context) -> list[str]:
@@ -83,6 +86,9 @@ def variable_group_info(ctx: Context, vargroup_name: str) -> VariableGroupInfo:
         raise RuntimeError("Unknown Variable Group")
 
     return vg
+
+
+# NOTE: Do *not* allow MCP to update or delete variable groups, only display them
 
 
 @server.tool()
