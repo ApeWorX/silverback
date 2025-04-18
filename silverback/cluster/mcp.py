@@ -17,7 +17,7 @@ async def lifespan(server: FastMCP) -> AsyncIterator[ClusterClient]:
 
 
 server = FastMCP(
-    name="silverback-cluster",
+    name="Silverback Cluster",
     transport=["sse"],
     lifespan=lifespan,
     instructions="""
@@ -60,6 +60,7 @@ def cluster_configuration(ctx: Context) -> ClusterConfiguration | None:
 def cluster_health(ctx: Context) -> ClusterHealth:
     """Obtain the health of Bots and Networks in the Cluster"""
     cluster: ClusterClient = ctx.request_context.lifespan_context
+
     return cluster.health
 
 
