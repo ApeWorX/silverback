@@ -85,6 +85,31 @@ def variable_group_info(ctx: Context, vargroup_name: str) -> VariableGroupInfo:
     return vg
 
 
+@server.tool()
+def new_bot(
+    ctx: Context,
+    name: str,
+    image: str,
+    ecosystem: str,
+    network: str,
+    provider: str,
+    account: str | None = None,
+    environment: list[str] | None = None,
+) -> BotInfo:
+    """Create a new bot using the given configration, and start running it"""
+    cluster: ClusterClient = ctx.request_context.lifespan_context
+
+    return cluster.new_bot(
+        name=name,
+        image=image,
+        ecosystem=ecosystem,
+        network=network,
+        provider=provider,
+        account=account,
+        environment=environment,
+    )
+
+
 # @server.resource("silverback://bots")
 @server.tool()
 def list_bots(ctx: Context) -> list[str]:
@@ -104,6 +129,17 @@ def bot_info(ctx: Context, bot_name: str) -> BotInfo:
         raise RuntimeError("Unknown bot")
 
     return bot
+
+
+@server.tool()
+def remove_bot(ctx: Context, bot_name: str):
+    """Remove a particular bot from the Cluster"""
+    cluster: ClusterClient = ctx.request_context.lifespan_context
+
+    if not (bot := cluster.bots.get(bot_name)):
+        raise RuntimeError("Unknown bot")
+
+    bot.remove()
 
 
 @server.tool()
