@@ -34,11 +34,6 @@ from ._click_ext import (
 )
 from .exceptions import ClientError
 
-try:
-    from .cluster import mcp
-except ImportError:
-    mcp = None  # type: ignore[assignment]
-
 if TYPE_CHECKING:
     from ape.api import AccountAPI, EcosystemAPI, NetworkAPI, ProviderAPI
     from ape.contracts import ContractInstance
@@ -1432,12 +1427,18 @@ def show_bot_errors(cluster: "ClusterClient", name: str):
             click.echo(log)
 
 
-if mcp:
+@cluster.command(name="mcp", section="Platform Commands (https://silverback.apeworx.io)")
+@cluster_client
+def run_mcp_server(cluster: "ClusterClient"):
+    """Run MCP (Model Context Protocol) Server"""
 
-    @cluster.command(name="mcp", section="Platform Commands (https://silverback.apeworx.io)")
-    @cluster_client
-    def run_mcp_server(cluster: "ClusterClient"):
-        """Run MCP (Model Context Protocol) Server"""
-        # NOTE: Need to inject this into context so it has access
-        mcp.client = cluster
-        mcp.server.run(transport="sse")
+    try:
+        from .cluster import mcp
+    except ImportError:
+        raise click.UsageError(
+            "You must install the `mcp` package (or use `silverback[mcp]` extra)"
+        )
+
+    # NOTE: Need to inject this into context so it has access
+    mcp.client = cluster
+    mcp.server.run(transport="sse")
