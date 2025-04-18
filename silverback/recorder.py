@@ -25,6 +25,7 @@ class TaskResult(BaseModel):
 
     # System Metrics here (must default to None in case they are missing)
     block_number: int | None = None
+    txns_by_nonce: list[int] = []
 
     # Custom user metrics here
     metrics: Datapoints
@@ -45,6 +46,9 @@ class TaskResult(BaseModel):
 
         if block_number := labels.get("block_number"):
             metrics["block_number"] = int(block_number)
+
+        if txns_by_nonce := labels.get("txns_by_nonce"):
+            metrics["txns_by_nonce"] = txns_by_nonce
 
         return metrics
 
