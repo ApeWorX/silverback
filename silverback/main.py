@@ -261,6 +261,7 @@ class SilverbackBot(ManagerAccessMixin):
             # TODO: Migrate these to parameters (remove explicitly from state)
             last_block_seen=self.state.get("system:last_block_seen", -1),
             last_block_processed=self.state.get("system:last_block_processed", -1),
+            last_nonce_used=self.state.get("system:last_nonce_used"),
         )
 
     # To ensure we don't have too many forks at once
@@ -271,7 +272,7 @@ class SilverbackBot(ManagerAccessMixin):
         if not self.signer:
             raise NoSignerLoaded()
 
-        elif not (last_nonce_used := self.state["system:last_nonce_used"]):
+        elif (last_nonce_used := self.state.get("system:last_nonce_used")) is None:
             raise AttributeError(
                 "`bot.state` not fully loaded yet, please do not use during worker startup."
             )
