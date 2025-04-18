@@ -6,6 +6,7 @@ from mcp.server.fastmcp import Context, FastMCP  # type: ignore[import-not-found
 from silverback.cluster.client import ClusterClient
 from silverback.cluster.types import BotInfo, ClusterConfiguration, ClusterHealth, VariableGroupInfo
 
+# NOTE: Only work with one client at a time (to reduce # of tools)
 # TODO: figure out a less janky way to do this
 client: ClusterClient | None = None
 
@@ -64,6 +65,7 @@ def cluster_health(ctx: Context) -> ClusterHealth:
     return cluster.health
 
 
+# NOTE: Do not allow updating docker credentials (use CLI)
 # NOTE: Do now allow MCP to transmit API keys and such (therefore no new vargroups)
 
 
