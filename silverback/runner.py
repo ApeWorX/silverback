@@ -135,18 +135,14 @@ class BaseRunner(ABC):
         Handle an event handler task for the given contract event
         """
 
-    async def run(self, *runtime_tasks: Coroutine):
+    async def startup(self) -> list[Coroutine]:
         """
-        Run the task broker client for the assembled ``SilverbackBot`` bot.
+        Execute runner startup sequence to configure the runner for runtime.
 
-        Will listen for events against the connected provider (using `ManagerAccessMixin` context),
-        and process them by kicking events over to the configured broker.
+        NOTE: Execution will abort if startup sequence has a failure.
 
-        Raises:
-            :class:`~silverback.exceptions.StartupFailure`:
-                If there was an exception during startup.
-            :class:`~silverback.exceptions.NoTasksAvailableError`:
-                If there are no configured tasks to execute.
+        Returns:
+            user_tasks (list[Coroutine]): functions to execute as user daemon tasks
         """
 
         def exit_handler(signum, _frame):
@@ -233,7 +229,7 @@ class BaseRunner(ABC):
         if len(new_block_tasks_taskdata) == len(event_log_tasks_taskdata) == 0:
             raise NoTasksAvailableError()
 
-        user_tasks: list[Coroutine] = [
+        return [
             task
             for task in await quattro.gather(
                 *map(self._block_task, new_block_tasks_taskdata),
@@ -242,32 +238,15 @@ class BaseRunner(ABC):
             if task is not None
         ]
 
-        logger.success("Startup complete, transitioning to runtime")
+    def _cleanup_tasks(self) -> list[Coroutine]:
+        return []
 
-        try:
-            # NOTE: Block any interrupts during runtime w/ `asyncio.shield` to shutdown gracefully
-            exceptions_or_none = await asyncio.shield(
-                quattro.gather(
-                    # NOTE: Either `user_tasks` contains coroutines that should run as daemon tasks,
-                    #       or `runtime_tasks` must contain at least one daemon task coroutine,
-                    #       otherwise `quattro.gather` will fail because it does not accept 0 args.
-                    *user_tasks,
-                    *runtime_tasks,
-                    # NOTE: Any propagated failure in here should be handled so shutdown tasks run
-                    return_exceptions=True,
-                )
-            )
+    async def shutdown(self):
+        """
+        Execute the runner shutdown sequence, including user tasks.
 
-        except asyncio.CancelledError:
-            # NOTE: Use this to continue with shutdown if interrupted
-            exceptions_or_none = (None,)
-
-        logger.info("Shutdown started")
-
-        # NOTE: `quattro.gather` runs until one task bubbles up an exception that stops execution
-        if runtime_errors := "\n".join(str(e) for e in exceptions_or_none if e is not None):
-            # NOTE: In case we are somehow not displaying the error correctly with task status
-            logger.warning(f"Runtime error(s) detected:\n{runtime_errors}")
+        NOTE: Must be placed into runtime before called.
+        """
 
         # Execute all shutdown task(s) before shutting down the broker and bot
         try:
@@ -299,6 +278,56 @@ class BaseRunner(ABC):
 
         # NOTE: Will trigger worker shutdown function(s)
         await self.bot.broker.shutdown()
+
+        # NOTE: Finally execute runner cleanup tasks
+        await quattro.gather(*self._cleanup_tasks())
+
+    def _background_tasks(self) -> list[Coroutine]:
+        return []
+
+    async def run(self):
+        """
+        Run the task broker client for the assembled ``SilverbackBot`` bot.
+
+        Will listen for events against the connected provider (using `ManagerAccessMixin` context),
+        and process them by kicking events over to the configured broker.
+
+        Raises:
+            :class:`~silverback.exceptions.StartupFailure`:
+                If there was an exception during startup.
+            :class:`~silverback.exceptions.NoTasksAvailableError`:
+                If there are no configured tasks to execute.
+        """
+
+        # NOTE: No need to display startup text, obvious from loading settings
+        user_tasks = await self.startup()
+        logger.success("Startup complete, transitioning to runtime")
+
+        try:
+            # NOTE: Block any interrupts during runtime w/ `asyncio.shield` to shutdown gracefully
+            exceptions_or_none = await asyncio.shield(
+                quattro.gather(
+                    # NOTE: Either `user_tasks` contains coroutines that should run as daemon tasks,
+                    #       or `_background_tasks` must contain at least one daemon task coroutine,
+                    #       otherwise `quattro.gather` will fail because it does not accept 0 args.
+                    *user_tasks,
+                    *self._background_tasks(),
+                    # NOTE: Any propagated failure in here should be handled so shutdown tasks run
+                    return_exceptions=True,
+                )
+            )
+
+        except asyncio.CancelledError:
+            # NOTE: Use this to continue with shutdown if interrupted
+            exceptions_or_none = []
+
+        # NOTE: `quattro.gather` runs until one task bubbles up an exception that stops execution
+        if runtime_errors := "\n".join(str(e) for e in exceptions_or_none if e is not None):
+            # NOTE: In case we are somehow not displaying the error correctly with task status
+            logger.warning(f"Runtime error(s) detected:\n{runtime_errors}")
+
+        logger.warning("Shutdown started")
+        await self.shutdown()
 
 
 class WebsocketRunner(BaseRunner, ManagerAccessMixin):
@@ -360,22 +389,17 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         )
         logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
 
-    async def run(self, *runtime_tasks: Coroutine):
+    def _background_tasks(self) -> list[Coroutine]:
+        # NOTE: Handle this as a daemon task (after startup)
+        return [self._web3.subscription_manager.handle_subscriptions()]
+
+    def _cleanup_tasks(self) -> list[Coroutine]:
+        return [self._web3.subscription_manager.unsubscribe_all()]
+
+    async def run(self):
         async with AsyncWeb3(WebSocketProvider(self.ws_uri)) as web3:
             self._web3 = web3
-
-            await super().run(
-                *runtime_tasks,
-                # NOTE: Handle this as a daemon task
-                web3.subscription_manager.handle_subscriptions(run_forever=True),
-            )
-
-            try:
-                # TODO: ctrl+C raises `websockets.exceptions.ConnectionClosedError`
-                await web3.subscription_manager.unsubscribe_all()
-            except Exception as e:
-                # NOTE: We don't really need to see any errors from here
-                logger.debug(str(e))
+            await super().run()
 
 
 class PollingRunner(BaseRunner, ManagerAccessMixin):
@@ -405,7 +429,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def block_handler():
+        async def block_handler() -> None:
             async for block in async_wrap_iter(
                 chain.blocks.poll_blocks(
                     # NOTE: No start block because we should begin polling from head
@@ -438,7 +462,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def event_handler():
+        async def event_handler() -> None:
             async for event in async_wrap_iter(
                 self.provider.poll_logs(
                     # NOTE: No start block because we should begin polling from head
