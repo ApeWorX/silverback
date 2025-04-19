@@ -2,7 +2,7 @@ import asyncio
 import signal
 import sys
 from abc import ABC, abstractmethod
-from typing import Any, Callable
+from typing import Any, Coroutine, Type
 
 import quattro
 from ape import chain
@@ -13,8 +13,8 @@ from eth_utils import to_hex
 from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
-from taskiq import AsyncTaskiqTask
-from taskiq.kicker import AsyncKicker
+from pydantic import TypeAdapter
+from taskiq import AsyncTaskiqDecoratedTask, AsyncTaskiqTask
 from web3 import AsyncWeb3, WebSocketProvider
 from web3.utils.subscriptions import (
     LogsSubscription,
@@ -23,12 +23,21 @@ from web3.utils.subscriptions import (
     NewHeadsSubscriptionContext,
 )
 
-from .exceptions import Halt, NoTasksAvailableError, NoWebsocketAvailableError, StartupFailure
+from .exceptions import (
+    Halt,
+    NoTasksAvailableError,
+    NoWebsocketAvailableError,
+    StartupFailure,
+    UnregisteredTask,
+)
 from .main import SilverbackBot, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
 from .types import TaskType
-from .utils import async_wrap_iter, run_taskiq_task_group_wait_results, run_taskiq_task_wait_result
+from .utils import async_wrap_iter
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup
 
 
 class BaseRunner(ABC):
@@ -53,20 +62,32 @@ class BaseRunner(ABC):
 
         logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
 
-    def _create_task_kicker(self, task_data: TaskData) -> AsyncKicker:
-        return AsyncKicker(
-            task_name=task_data.name, broker=self.bot.broker, labels=task_data.labels
-        )
+    def get_task(self, task_name: str) -> AsyncTaskiqDecoratedTask:
+        if not (task := self.bot.broker.find_task(task_name)):
+            raise UnregisteredTask(task_name)
 
-    def _create_system_task_kicker(self, task_type: TaskType) -> AsyncKicker:
-        assert "system:" in str(task_type)
-        return self._create_task_kicker(TaskData(name=str(task_type), labels={}))
+        return task
 
-    async def run_system_task(self, task_type: TaskType, *args) -> Any:
-        system_task_kicker = self._create_system_task_kicker(task_type)
-        if (result := await run_taskiq_task_wait_result(system_task_kicker, *args)).is_err:
-            raise StartupFailure(f"System Task Failure [{task_type.name}]: {result.error}")
-        return result.return_value
+    async def run_system_task(
+        self,
+        task_type: TaskType,
+        *args: Any,
+        raise_on_error: bool = True,
+    ) -> Any:
+        system_task_kicker = self.get_task(task_type.value)
+        system_task = await system_task_kicker.kiq(*args)
+
+        if (result := await system_task.wait_result()).is_err:
+            if raise_on_error:
+                raise StartupFailure(f"System Task Failure [{task_type.name}]: {result.error}")
+
+            else:
+                logger.error(f"System Task Failure [{task_type.name}]: {result.error}")
+                return
+
+        # HACK: Don't understand why this is failing to work properly in TaskIQ
+        return_type: Type | None = system_task_kicker.__annotations__.get("return")
+        return TypeAdapter(return_type).validate_python(result.return_value)
 
     async def _handle_task(self, task: AsyncTaskiqTask):
         result = await task.wait_result()
@@ -84,6 +105,10 @@ class BaseRunner(ABC):
         if self.exceptions > self.max_exceptions or isinstance(result.error, Halt):
             result.raise_for_error()
 
+    async def run_task(self, task_data: TaskData, *args):
+        task = await self.get_task(task_data.name).kiq(*args)
+        return await self._handle_task(task)
+
     async def _checkpoint(
         self,
         last_block_seen: int | None = None,
@@ -93,46 +118,35 @@ class BaseRunner(ABC):
         if not self._snapshotting_supported:
             return  # Can't support this feature
 
-        task = await self.bot._create_snapshot.kiq(last_block_seen, last_block_processed)
-        if (result := await task.wait_result()).is_err:
-            logger.error(f"Error saving snapshot: {result.error}")
-        else:
-            await self.datastore.save(result.return_value)
+        elif snapshot := await self.run_system_task(
+            TaskType.SYSTEM_CREATE_SNAPSHOT,
+            last_block_seen,
+            last_block_processed,
+            raise_on_error=False,
+        ):
+            await self.datastore.save(snapshot)
 
     @abstractmethod
-    async def _block_task(self, task_data: TaskData) -> asyncio.Task | None:
+    async def _block_task(self, task_data: TaskData) -> Coroutine | None:
         """
         Handle a block_handler task
         """
 
     @abstractmethod
-    async def _event_task(self, task_data: TaskData) -> asyncio.Task | None:
+    async def _event_task(self, task_data: TaskData) -> Coroutine | None:
         """
         Handle an event handler task for the given contract event
         """
 
-    async def run(self, *runtime_tasks: asyncio.Task | Callable[[], asyncio.Task]):
+    async def startup(self) -> list[Coroutine]:
         """
-        Run the task broker client for the assembled ``SilverbackBot`` bot.
+        Execute runner startup sequence to configure the runner for runtime.
 
-        Will listen for events against the connected provider (using `ManagerAccessMixin` context),
-        and process them by kicking events over to the configured broker.
+        NOTE: Execution will abort if startup sequence has a failure.
 
-        Raises:
-            :class:`~silverback.exceptions.StartupFailure`:
-                If there was an exception during startup.
-            :class:`~silverback.exceptions.NoTasksAvailableError`:
-                If there are no configured tasks to execute.
+        Returns:
+            user_tasks (list[Coroutine]): functions to execute as user daemon tasks
         """
-
-        def exit_handler(signum, _frame):
-            logger.info(f"{signal.Signals(signum).name} signal received")
-            sys.exit(0)  # Exit normally
-
-        # NOTE: Make sure we handle various ways that OS might kill process
-        signal.signal(signal.SIGTERM, exit_handler)
-        # NOTE: Overwrite Ape's default signal handler (causes issues)
-        signal.signal(signal.SIGINT, exit_handler)
 
         # Initialize broker (run worker startup events)
         await self.bot.broker.startup()
@@ -185,20 +199,15 @@ class BaseRunner(ABC):
         if startup_tasks_taskdata := await self.run_system_task(
             TaskType.SYSTEM_USER_TASKDATA, TaskType.STARTUP
         ):
-
-            startup_task_results = await run_taskiq_task_group_wait_results(
-                (map(self._create_task_kicker, startup_tasks_taskdata)), startup_state
+            exceptions_or_none = await quattro.gather(
+                *map(lambda td: self.run_task(td, startup_state), startup_tasks_taskdata),
+                # NOTE: Any propagated failure in here should be handled so shutdown tasks run
+                return_exceptions=True,
             )
 
-            if any(result.is_err for result in startup_task_results):
+            if errors := list(filter(lambda e: e is not None, exceptions_or_none)):
                 # NOTE: Abort before even starting to run
-                raise StartupFailure(
-                    *(result.error for result in startup_task_results if result.is_err)
-                )
-
-            elif self.recorder:
-                converted_results = map(TaskResult.from_taskiq, startup_task_results)
-                await asyncio.gather(*(self.recorder.add_result(r) for r in converted_results))
+                raise StartupFailure(*errors)
 
             # NOTE: No need to handle results otherwise
 
@@ -214,30 +223,24 @@ class BaseRunner(ABC):
         if len(new_block_tasks_taskdata) == len(event_log_tasks_taskdata) == 0:
             raise NoTasksAvailableError()
 
-        try:
-            # NOTE: Block any interrupts during runtime w/ `asyncio.shield` to shutdown gracefully
-            exceptions_or_none = await asyncio.shield(
-                quattro.gather(
-                    # NOTE: `_block_task`/`_event_task` either never complete (daemon task) or
-                    #       immediately return None. In the case they return None, it is expected
-                    #       that `runtime_tasks` contain at least one daemon task so that
-                    #       `quattro.gather` does not return.
-                    *map(self._block_task, new_block_tasks_taskdata),
-                    *map(self._event_task, event_log_tasks_taskdata),
-                    *(t if isinstance(t, asyncio.Task) else t() for t in runtime_tasks),
-                    # NOTE: Any propagated failure in here should be handled so shutdown tasks run
-                    return_exceptions=True,
-                )
+        return [
+            task
+            for task in await quattro.gather(
+                *map(self._block_task, new_block_tasks_taskdata),
+                *map(self._event_task, event_log_tasks_taskdata),
             )
+            if task is not None
+        ]
 
-        except asyncio.CancelledError:
-            # NOTE: Use this to continue with shutdown if interrupted
-            exceptions_or_none = (None,)
+    def _cleanup_tasks(self) -> list[Coroutine]:
+        return []
 
-        # NOTE: `quattro.gather` runs until one task bubbles up an exception that stops execution
-        if runtime_errors := "\n".join(str(e) for e in exceptions_or_none if e is not None):
-            # NOTE: In case we are somehow not displaying the error correctly with task status
-            logger.warning(f"Runtime error(s) detected, shutting down:\n{runtime_errors}")
+    async def shutdown(self):
+        """
+        Execute the runner shutdown sequence, including user tasks.
+
+        NOTE: Must be placed into runtime before called.
+        """
 
         # Execute all shutdown task(s) before shutting down the broker and bot
         try:
@@ -245,26 +248,23 @@ class BaseRunner(ABC):
                 TaskType.SYSTEM_USER_TASKDATA, TaskType.SHUTDOWN
             )
 
-        except StartupFailure:
-            logger.error("Error when collecting shutdown tasks")
+        except StartupFailure as e:
+            logger.error(f"Error when collecting shutdown tasks: {e}")
             # NOTE: Will cause it to skip to last checkpoint
             shutdown_tasks_taskdata = []
 
         if shutdown_tasks_taskdata:
-            shutdown_task_results = await run_taskiq_task_group_wait_results(
-                map(self._create_task_kicker, shutdown_tasks_taskdata)
+            exceptions_or_none = await quattro.gather(
+                *map(self.run_task, shutdown_tasks_taskdata),
+                # NOTE: Any propagated failure in here should be handled so shutdown tasks run
+                return_exceptions=True,
             )
 
             if errors_str := "\n".join(
-                str(result.error) for result in shutdown_task_results if result.is_err
+                map(str, filter(lambda e: e is not None, exceptions_or_none))
             ):
                 # NOTE: Just log errors to avoid exception during shutdown
                 logger.error(f"Errors while shutting down:\n{errors_str}")
-
-            # NOTE: Run recorder for all shutdown tasks regardless of status
-            if self.recorder:
-                converted_results = map(TaskResult.from_taskiq, shutdown_task_results)
-                await asyncio.gather(*(self.recorder.add_result(r) for r in converted_results))
 
         # NOTE: Do one last checkpoint to save a snapshot of final state
         if self._snapshotting_supported:
@@ -272,6 +272,66 @@ class BaseRunner(ABC):
 
         # NOTE: Will trigger worker shutdown function(s)
         await self.bot.broker.shutdown()
+
+        # NOTE: Finally execute runner cleanup tasks
+        await quattro.gather(*self._cleanup_tasks())
+
+    def _background_tasks(self) -> list[Coroutine]:
+        return []
+
+    async def run(self):
+        """
+        Run the task broker client for the assembled ``SilverbackBot`` bot.
+
+        Will listen for events against the connected provider (using `ManagerAccessMixin` context),
+        and process them by kicking events over to the configured broker.
+
+        Raises:
+            :class:`~silverback.exceptions.StartupFailure`:
+                If there was an exception during startup.
+            :class:`~silverback.exceptions.NoTasksAvailableError`:
+                If there are no configured tasks to execute.
+        """
+
+        # NOTE: No need to display startup text, obvious from loading settings
+        user_tasks = await self.startup()
+
+        # NOTE: After startup, we need to gracefully shutdown
+        self.shutdown_event = asyncio.Event()
+
+        def exit_handler(signum, _frame):
+            logger.info(f"{signal.Signals(signum).name} signal received")
+            self.shutdown_event.set()
+
+        # Make sure we handle various ways that OS might kill process
+        signal.signal(signal.SIGTERM, exit_handler)
+        # NOTE: Overwrite Ape's default signal handler (causes issues)
+        signal.signal(signal.SIGINT, exit_handler)
+
+        async def wait_for_graceful_shutdown():
+            logger.success("Startup complete, transitioning to runtime")
+            await self.shutdown_event.wait()
+            raise Halt()  # Trigger shutdown process
+
+        try:
+            async with quattro.TaskGroup() as tg:
+                # NOTE: User tasks that should run forever
+                for coro in user_tasks:
+                    tg.create_task(coro)
+
+                # NOTE: It is assumed if no user tasks, there is a background task
+                for coro in self._background_tasks():
+                    tg.create_task(coro)
+
+                # NOTE: Will wait forever on this task to halt
+                tg.create_task(wait_for_graceful_shutdown())
+
+        except ExceptionGroup as eg:
+            if error_str := "\n".join(str(e) for e in eg.exceptions if not isinstance(e, Halt)):
+                logger.error(error_str)
+
+        logger.warning("Shutdown started")
+        await self.shutdown()
 
 
 class WebsocketRunner(BaseRunner, ManagerAccessMixin):
@@ -289,7 +349,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         self.ws_uri = ws_uri
 
     async def _block_task(self, task_data: TaskData) -> None:
-        new_block_task_kicker = self._create_task_kicker(task_data)
+        new_block_task_kicker = self.get_task(task_data.name)
 
         async def block_handler(ctx: NewHeadsSubscriptionContext):
             block = self.provider.network.ecosystem.decode_block(dict(ctx.result))
@@ -311,7 +371,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         event_abi = EventABI.from_signature(event_signature)
 
-        event_log_task_kicker = self._create_task_kicker(task_data)
+        event_log_task_kicker = self.get_task(task_data.name)
 
         async def log_handler(ctx: LogsSubscriptionContext):
             event = next(  # NOTE: `next` is okay since it only has one item
@@ -333,23 +393,17 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         )
         logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
 
-    async def run(self, *runtime_tasks: asyncio.Task | Callable[[], asyncio.Task]):
+    def _background_tasks(self) -> list[Coroutine]:
+        # NOTE: Handle this as a daemon task (after startup)
+        return [self._web3.subscription_manager.handle_subscriptions(run_forever=True)]
+
+    def _cleanup_tasks(self) -> list[Coroutine]:
+        return [self._web3.subscription_manager.unsubscribe_all()]
+
+    async def run(self):
         async with AsyncWeb3(WebSocketProvider(self.ws_uri)) as web3:
             self._web3 = web3
-
-            def run_subscriptions() -> asyncio.Task:
-                return asyncio.create_task(
-                    web3.subscription_manager.handle_subscriptions(run_forever=True)
-                )
-
-            # NOTE: This triggers daemon tasks
-            await super().run(*runtime_tasks, run_subscriptions)
-            try:
-                # TODO: ctrl+C raises `websockets.exceptions.ConnectionClosedError`
-                await web3.subscription_manager.unsubscribe_all()
-            except Exception as e:
-                # NOTE: We don't really need to see any errors from here
-                logger.debug(str(e))
+            await super().run()
 
 
 class PollingRunner(BaseRunner, ManagerAccessMixin):
@@ -367,8 +421,8 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             "Do not use in production over long time periods unless you know what you're doing."
         )
 
-    async def _block_task(self, task_data: TaskData) -> asyncio.Task:
-        new_block_task_kicker = self._create_task_kicker(task_data)
+    async def _block_task(self, task_data: TaskData) -> Coroutine:
+        new_block_task_kicker = self.get_task(task_data.name)
 
         if block_settings := self.bot.poll_settings.get("_blocks_"):
             new_block_timeout = block_settings.get("new_block_timeout")
@@ -379,7 +433,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def block_handler():
+        async def block_handler() -> None:
             async for block in async_wrap_iter(
                 chain.blocks.poll_blocks(
                     # NOTE: No start block because we should begin polling from head
@@ -390,9 +444,9 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
                 await self._handle_task(await new_block_task_kicker.kiq(block))
                 await self._checkpoint(last_block_processed=block.number)
 
-        return asyncio.create_task(block_handler())
+        return block_handler()
 
-    async def _event_task(self, task_data: TaskData) -> asyncio.Task:
+    async def _event_task(self, task_data: TaskData) -> Coroutine:
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -401,7 +455,8 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
 
         event_abi = EventABI.from_signature(event_signature)
 
-        event_log_task_kicker = self._create_task_kicker(task_data)
+        event_log_task_kicker = self.get_task(task_data.name)
+
         if address_settings := self.bot.poll_settings.get(contract_address):
             new_block_timeout = address_settings.get("new_block_timeout")
         else:
@@ -411,7 +466,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def log_handler():
+        async def event_handler() -> None:
             async for event in async_wrap_iter(
                 self.provider.poll_logs(
                     # NOTE: No start block because we should begin polling from head
@@ -424,4 +479,4 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
                 await self._handle_task(await event_log_task_kicker.kiq(event))
                 await self._checkpoint(last_block_processed=event.block_number)
 
-        return asyncio.create_task(log_handler())
+        return event_handler()

@@ -231,7 +231,7 @@ class SilverbackBot(ManagerAccessMixin):
         self,
         last_block_seen: int | None = None,
         last_block_processed: int | None = None,
-    ):
+    ) -> StateSnapshot:
         # Task that updates state checkpoints before/after every non-system runtime task/at shutdown
         if last_block_seen is not None:
             self.state["system:last_block_seen"] = last_block_seen

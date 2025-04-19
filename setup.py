@@ -67,6 +67,7 @@ setup(
         "eth-ape>=0.8.31,<1",
         "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
         "eth-pydantic-types",  # Use same version as eth-ape
+        "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup
         "packaging",  # Use same version as eth-ape
         "pydantic_settings",  # Use same version as eth-ape
         "quattro>=25.2,<26",  # Manage task groups and background tasks
