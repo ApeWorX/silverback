@@ -11,6 +11,7 @@ from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
 from eth_utils import to_hex
 from ethpm_types import EventABI
+from exceptiongroup import ExceptionGroup
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from pydantic import TypeAdapter
@@ -35,6 +36,9 @@ from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
 from .types import TaskType
 from .utils import async_wrap_iter
+
+if sys.version_info < (3, 11):
+    from exceptiongroup import ExceptionGroup
 
 
 class BaseRunner(ABC):
@@ -144,15 +148,6 @@ class BaseRunner(ABC):
         Returns:
             user_tasks (list[Coroutine]): functions to execute as user daemon tasks
         """
-
-        def exit_handler(signum, _frame):
-            logger.info(f"{signal.Signals(signum).name} signal received")
-            sys.exit(0)  # Exit normally
-
-        # NOTE: Make sure we handle various ways that OS might kill process
-        signal.signal(signal.SIGTERM, exit_handler)
-        # NOTE: Overwrite Ape's default signal handler (causes issues)
-        signal.signal(signal.SIGINT, exit_handler)
 
         # Initialize broker (run worker startup events)
         await self.bot.broker.startup()
@@ -301,30 +296,40 @@ class BaseRunner(ABC):
 
         # NOTE: No need to display startup text, obvious from loading settings
         user_tasks = await self.startup()
-        logger.success("Startup complete, transitioning to runtime")
+
+        # NOTE: After startup, we need to gracefully shutdown
+        self.shutdown_event = asyncio.Event()
+
+        def exit_handler(signum, _frame):
+            logger.info(f"{signal.Signals(signum).name} signal received")
+            self.shutdown_event.set()
+
+        # Make sure we handle various ways that OS might kill process
+        signal.signal(signal.SIGTERM, exit_handler)
+        # NOTE: Overwrite Ape's default signal handler (causes issues)
+        signal.signal(signal.SIGINT, exit_handler)
+
+        async def wait_for_graceful_shutdown():
+            logger.success("Startup complete, transitioning to runtime")
+            await self.shutdown_event.wait()
+            raise Halt()  # Trigger shutdown process
 
         try:
-            # NOTE: Block any interrupts during runtime w/ `asyncio.shield` to shutdown gracefully
-            exceptions_or_none = await asyncio.shield(
-                quattro.gather(
-                    # NOTE: Either `user_tasks` contains coroutines that should run as daemon tasks,
-                    #       or `_background_tasks` must contain at least one daemon task coroutine,
-                    #       otherwise `quattro.gather` will fail because it does not accept 0 args.
-                    *user_tasks,
-                    *self._background_tasks(),
-                    # NOTE: Any propagated failure in here should be handled so shutdown tasks run
-                    return_exceptions=True,
-                )
-            )
+            async with quattro.TaskGroup() as tg:
+                # NOTE: User tasks that should run forever
+                for coro in user_tasks:
+                    tg.create_task(coro)
 
-        except asyncio.CancelledError:
-            # NOTE: Use this to continue with shutdown if interrupted
-            exceptions_or_none = []
+                # NOTE: It is assumed if no user tasks, there is a background task
+                for coro in self._background_tasks():
+                    tg.create_task(coro)
 
-        # NOTE: `quattro.gather` runs until one task bubbles up an exception that stops execution
-        if runtime_errors := "\n".join(str(e) for e in exceptions_or_none if e is not None):
-            # NOTE: In case we are somehow not displaying the error correctly with task status
-            logger.warning(f"Runtime error(s) detected:\n{runtime_errors}")
+                # NOTE: Will wait forever on this task to halt
+                tg.create_task(wait_for_graceful_shutdown())
+
+        except ExceptionGroup as eg:
+            if error_str := "\n".join(str(e) for e in eg.exceptions if not isinstance(e, Halt)):
+                logger.error(error_str)
 
         logger.warning("Shutdown started")
         await self.shutdown()
@@ -391,7 +396,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
     def _background_tasks(self) -> list[Coroutine]:
         # NOTE: Handle this as a daemon task (after startup)
-        return [self._web3.subscription_manager.handle_subscriptions()]
+        return [self._web3.subscription_manager.handle_subscriptions(run_forever=True)]
 
     def _cleanup_tasks(self) -> list[Coroutine]:
         return [self._web3.subscription_manager.unsubscribe_all()]
