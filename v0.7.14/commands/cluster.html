@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Cloud Platform - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="silverback.exceptions" href="../methoddocs/exceptions.html" /><link rel="prev" title="Local Development" href="run.html" />
+      <link rel="canonical" href="silverback/commands/cluster.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=397bb51e" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=c516b45e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+<meta property="og:url" content="silverback/commands/cluster.html"/>
+<meta property="og:title" content="Cloud Platform"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="silverback" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="silverback" height="28" loading="lazy" />
+      <strong>silverback</strong>
+    </a>
+    <div class="sy-head-nav" id="HeadNav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="HeadNav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2 -translate-x-2"></span>
+          <span class="hamburger_3 -translate-x-1"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/development.html">Developing Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/managing.html">Silverback Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguides/deploying.html">Deploying Bots</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="run.html">Local Development</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cloud Platform</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/main.html">silverback.main</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#silverback-login">silverback login</a></li>
+<li><a class="reference internal" href="#silverback-cluster">silverback cluster</a><ul>
+<li><a class="reference internal" href="#silverback-cluster-new">new</a></li>
+<li><a class="reference internal" href="#silverback-cluster-update">update</a></li>
+<li><a class="reference internal" href="#silverback-cluster-list">list</a></li>
+<li><a class="reference internal" href="#silverback-cluster-info">info</a></li>
+<li><a class="reference internal" href="#silverback-cluster-health">health</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#silverback-cluster-workspaces">silverback cluster workspaces</a><ul>
+<li><a class="reference internal" href="#silverback-cluster-workspaces-new">new</a></li>
+<li><a class="reference internal" href="#silverback-cluster-workspaces-list">list</a></li>
+<li><a class="reference internal" href="#silverback-cluster-workspaces-info">info</a></li>
+<li><a class="reference internal" href="#silverback-cluster-workspaces-update">update</a></li>
+<li><a class="reference internal" href="#silverback-cluster-workspaces-delete">delete</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#silverback-cluster-vars">silverback cluster vars</a><ul>
+<li><a class="reference internal" href="#silverback-cluster-vars-new">new</a></li>
+<li><a class="reference internal" href="#silverback-cluster-vars-list">list</a></li>
+<li><a class="reference internal" href="#silverback-cluster-vars-info">info</a></li>
+<li><a class="reference internal" href="#silverback-cluster-vars-update">update</a></li>
+<li><a class="reference internal" href="#silverback-cluster-vars-remove">remove</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#silverback-cluster-registry">silverback cluster registry</a><ul>
+<li><a class="reference internal" href="#silverback-cluster-registry-new">new</a></li>
+<li><a class="reference internal" href="#silverback-cluster-registry-list">list</a></li>
+<li><a class="reference internal" href="#silverback-cluster-registry-info">info</a></li>
+<li><a class="reference internal" href="#silverback-cluster-registry-update">update</a></li>
+<li><a class="reference internal" href="#silverback-cluster-registry-remove">remove</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#silverback-cluster-bots">silverback cluster bots</a><ul>
+<li><a class="reference internal" href="#silverback-cluster-bots-new">new</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-list">list</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-info">info</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-update">update</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-remove">remove</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-health">health</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-start">start</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-stop">stop</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-logs">logs</a></li>
+<li><a class="reference internal" href="#silverback-cluster-bots-errors">errors</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#silverback-cluster-pay">silverback cluster pay</a><ul>
+<li><a class="reference internal" href="#silverback-cluster-pay-create">create</a></li>
+<li><a class="reference internal" href="#silverback-cluster-pay-add-time">add-time</a></li>
+<li><a class="reference internal" href="#silverback-cluster-pay-cancel">cancel</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6"><div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">silverback</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Cloud Platform</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="cloud-platform">
+<h1>Cloud Platform<a class="headerlink" href="#cloud-platform" title="Link to this heading"></a></h1>
+<p>CLI commands for interacting with the Silverback Platform.</p>
+<section id="silverback-login">
+<h2>silverback login<a class="headerlink" href="#silverback-login" title="Link to this heading"></a></h2>
+<p>Login to ApeWorX Authorization Service (<a class="reference external" href="https://account.apeworx.io">https://account.apeworx.io</a>)</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>login<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-login-p">
+<span id="cmdoption-silverback-login-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-login-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster">
+<h2>silverback cluster<a class="headerlink" href="#silverback-cluster" title="Link to this heading"></a></h2>
+<p>Manage a Silverback hosted bot cluster</p>
+<p>For clusters on the Silverback Platform, please provide a name for the cluster to access under
+your platform account via <cite>-c WORKSPACE/NAME</cite></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</span></pre></div>
+</div>
+<section id="silverback-cluster-new">
+<h3>new<a class="headerlink" href="#silverback-cluster-new" title="Link to this heading"></a></h3>
+<p>Create a new cluster in WORKSPACE</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>new<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>WORKSPACE
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-new-n">
+<span id="cmdoption-silverback-cluster-new-name"></span><span class="sig-name descname"><span class="pre">-n</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;cluster_name&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-new-n" title="Link to this definition"></a></dt>
+<dd><p>Name for new cluster (Defaults to random)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-new-s">
+<span id="cmdoption-silverback-cluster-new-slug"></span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--slug</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;cluster_slug&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-new-s" title="Link to this definition"></a></dt>
+<dd><p>Slug for new cluster (Defaults to <cite>name.lower()</cite>)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-new-p">
+<span id="cmdoption-silverback-cluster-new-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-new-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-new-arg-WORKSPACE">
+<span class="sig-name descname"><span class="pre">WORKSPACE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-new-arg-WORKSPACE" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-update">
+<h3>update<a class="headerlink" href="#silverback-cluster-update" title="Link to this heading"></a></h3>
+<p>Update name and slug for a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>update<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>CLUSTER_PATH
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-update-n">
+<span id="cmdoption-silverback-cluster-update-name"></span><span class="sig-name descname"><span class="pre">-n</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;name&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-update-n" title="Link to this definition"></a></dt>
+<dd><p>Update name for cluster</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-update-s">
+<span id="cmdoption-silverback-cluster-update-slug"></span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--slug</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;slug&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-update-s" title="Link to this definition"></a></dt>
+<dd><p>Update slug for cluster</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-update-p">
+<span id="cmdoption-silverback-cluster-update-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-update-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-update-arg-CLUSTER_PATH">
+<span class="sig-name descname"><span class="pre">CLUSTER_PATH</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-update-arg-CLUSTER_PATH" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-list">
+<h3>list<a class="headerlink" href="#silverback-cluster-list" title="Link to this heading"></a></h3>
+<p>List available clusters in a WORKSPACE</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>WORKSPACE
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-list-p">
+<span id="cmdoption-silverback-cluster-list-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-list-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-list-arg-WORKSPACE">
+<span class="sig-name descname"><span class="pre">WORKSPACE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-list-arg-WORKSPACE" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-info">
+<h3>info<a class="headerlink" href="#silverback-cluster-info" title="Link to this heading"></a></h3>
+<p>Get configuration information about a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-info-c">
+<span id="cmdoption-silverback-cluster-info-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-info-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-info-p">
+<span id="cmdoption-silverback-cluster-info-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-info-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-health">
+<h3>health<a class="headerlink" href="#silverback-cluster-health" title="Link to this heading"></a></h3>
+<p>Get health information about a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>health<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-health-c">
+<span id="cmdoption-silverback-cluster-health-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-health-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-health-p">
+<span id="cmdoption-silverback-cluster-health-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-health-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="silverback-cluster-workspaces">
+<h2>silverback cluster workspaces<a class="headerlink" href="#silverback-cluster-workspaces" title="Link to this heading"></a></h2>
+<p>View and Manage Workspaces on the Silverback Platform</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>workspaces<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</span></pre></div>
+</div>
+<section id="silverback-cluster-workspaces-new">
+<h3>new<a class="headerlink" href="#silverback-cluster-workspaces-new" title="Link to this heading"></a></h3>
+<p>Create a new workspace</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>workspaces<span class="w"> </span>new<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-new-n">
+<span id="cmdoption-silverback-cluster-workspaces-new-name"></span><span class="sig-name descname"><span class="pre">-n</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;workspace_name&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-new-n" title="Link to this definition"></a></dt>
+<dd><p>Name for new workspace</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-new-s">
+<span id="cmdoption-silverback-cluster-workspaces-new-slug"></span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--slug</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;workspace_slug&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-new-s" title="Link to this definition"></a></dt>
+<dd><p>Slug for new workspace</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-new-p">
+<span id="cmdoption-silverback-cluster-workspaces-new-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-new-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-workspaces-list">
+<h3>list<a class="headerlink" href="#silverback-cluster-workspaces-list" title="Link to this heading"></a></h3>
+<p>List available workspaces for your account</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>workspaces<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-list-p">
+<span id="cmdoption-silverback-cluster-workspaces-list-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-list-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-workspaces-info">
+<h3>info<a class="headerlink" href="#silverback-cluster-workspaces-info" title="Link to this heading"></a></h3>
+<p>Get Configuration information about a WORKSPACE</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>workspaces<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>WORKSPACE
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-info-p">
+<span id="cmdoption-silverback-cluster-workspaces-info-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-info-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-info-arg-WORKSPACE">
+<span class="sig-name descname"><span class="pre">WORKSPACE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-info-arg-WORKSPACE" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-workspaces-update">
+<h3>update<a class="headerlink" href="#silverback-cluster-workspaces-update" title="Link to this heading"></a></h3>
+<p>Update name and slug for a workspace</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>workspaces<span class="w"> </span>update<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>WORKSPACE
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-update-n">
+<span id="cmdoption-silverback-cluster-workspaces-update-name"></span><span class="sig-name descname"><span class="pre">-n</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;name&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-update-n" title="Link to this definition"></a></dt>
+<dd><p>Update name for workspace</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-update-s">
+<span id="cmdoption-silverback-cluster-workspaces-update-slug"></span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--slug</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;slug&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-update-s" title="Link to this definition"></a></dt>
+<dd><p>Update slug for workspace</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-update-p">
+<span id="cmdoption-silverback-cluster-workspaces-update-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-update-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-update-arg-WORKSPACE">
+<span class="sig-name descname"><span class="pre">WORKSPACE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-update-arg-WORKSPACE" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-workspaces-delete">
+<h3>delete<a class="headerlink" href="#silverback-cluster-workspaces-delete" title="Link to this heading"></a></h3>
+<p>Delete an empty Workspace on the Silverback Platform</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>workspaces<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>WORKSPACE
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-delete-p">
+<span id="cmdoption-silverback-cluster-workspaces-delete-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-delete-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-workspaces-delete-arg-WORKSPACE">
+<span class="sig-name descname"><span class="pre">WORKSPACE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-workspaces-delete-arg-WORKSPACE" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="silverback-cluster-vars">
+<h2>silverback cluster vars<a class="headerlink" href="#silverback-cluster-vars" title="Link to this heading"></a></h2>
+<p>Manage groups of environment variables in a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>vars<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</span></pre></div>
+</div>
+<section id="silverback-cluster-vars-new">
+<h3>new<a class="headerlink" href="#silverback-cluster-vars-new" title="Link to this heading"></a></h3>
+<p>Create a new group of environment variables in a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>vars<span class="w"> </span>new<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-new-e">
+<span id="cmdoption-silverback-cluster-vars-new-env"></span><span class="sig-name descname"><span class="pre">-e</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--env</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;NAME=VAL&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-new-e" title="Link to this definition"></a></dt>
+<dd><p>Environment variable key and value to add (Multiple allowed)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-new-c">
+<span id="cmdoption-silverback-cluster-vars-new-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-new-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-new-p">
+<span id="cmdoption-silverback-cluster-vars-new-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-new-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-new-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-new-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-vars-list">
+<h3>list<a class="headerlink" href="#silverback-cluster-vars-list" title="Link to this heading"></a></h3>
+<p>List latest revisions of all variable groups in a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>vars<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-list-c">
+<span id="cmdoption-silverback-cluster-vars-list-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-list-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-list-p">
+<span id="cmdoption-silverback-cluster-vars-list-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-list-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-vars-info">
+<h3>info<a class="headerlink" href="#silverback-cluster-vars-info" title="Link to this heading"></a></h3>
+<p>Show information about a variable GROUP in a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>vars<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-info-c">
+<span id="cmdoption-silverback-cluster-vars-info-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-info-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-info-p">
+<span id="cmdoption-silverback-cluster-vars-info-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-info-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-info-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-info-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-vars-update">
+<h3>update<a class="headerlink" href="#silverback-cluster-vars-update" title="Link to this heading"></a></h3>
+<p>Update a variable GROUP in CLUSTER</p>
+<p>NOTE: Changing the values of variables in GROUP by create a new revision, since variable groups
+are immutable. New revisions do not automatically update bot configuration.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>vars<span class="w"> </span>update<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-update-e">
+<span id="cmdoption-silverback-cluster-vars-update-env"></span><span class="sig-name descname"><span class="pre">-e</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--env</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;NAME=VAL&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-update-e" title="Link to this definition"></a></dt>
+<dd><p>Environment variable key and value to add/update (Multiple allowed)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-update-d">
+<span id="cmdoption-silverback-cluster-vars-update-del"></span><span class="sig-name descname"><span class="pre">-d</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--del</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-update-d" title="Link to this definition"></a></dt>
+<dd><p>Environment variable name to delete (Multiple allowed)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-update-c">
+<span id="cmdoption-silverback-cluster-vars-update-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-update-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-update-p">
+<span id="cmdoption-silverback-cluster-vars-update-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-update-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-update-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-update-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-vars-remove">
+<h3>remove<a class="headerlink" href="#silverback-cluster-vars-remove" title="Link to this heading"></a></h3>
+<p>Remove a variable GROUP from a CLUSTER</p>
+<p>NOTE: Cannot delete if any bots reference any revision of GROUP</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>vars<span class="w"> </span>remove<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-remove-c">
+<span id="cmdoption-silverback-cluster-vars-remove-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-remove-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-remove-p">
+<span id="cmdoption-silverback-cluster-vars-remove-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-remove-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-vars-remove-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-vars-remove-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="silverback-cluster-registry">
+<h2>silverback cluster registry<a class="headerlink" href="#silverback-cluster-registry" title="Link to this heading"></a></h2>
+<p>Manage container registry credentials in CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>registry<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</span></pre></div>
+</div>
+<section id="silverback-cluster-registry-new">
+<h3>new<a class="headerlink" href="#silverback-cluster-registry-new" title="Link to this heading"></a></h3>
+<p>Add registry access credential NAME to CLUSTER’s registry.</p>
+<p>NOTE: This command will prompt you for an EMAIL, USERNAME, and PASSWORD.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>registry<span class="w"> </span>new<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME<span class="w"> </span>REGISTRY
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-new-c">
+<span id="cmdoption-silverback-cluster-registry-new-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-new-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-new-p">
+<span id="cmdoption-silverback-cluster-registry-new-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-new-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-new-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-new-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-new-arg-REGISTRY">
+<span class="sig-name descname"><span class="pre">REGISTRY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-new-arg-REGISTRY" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-registry-list">
+<h3>list<a class="headerlink" href="#silverback-cluster-registry-list" title="Link to this heading"></a></h3>
+<p>List container registry credentials in CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>registry<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-list-c">
+<span id="cmdoption-silverback-cluster-registry-list-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-list-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-list-p">
+<span id="cmdoption-silverback-cluster-registry-list-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-list-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-registry-info">
+<h3>info<a class="headerlink" href="#silverback-cluster-registry-info" title="Link to this heading"></a></h3>
+<p>Show info about credential NAME in CLUSTER’s registry</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>registry<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-info-c">
+<span id="cmdoption-silverback-cluster-registry-info-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-info-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-info-p">
+<span id="cmdoption-silverback-cluster-registry-info-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-info-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-info-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-info-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-registry-update">
+<h3>update<a class="headerlink" href="#silverback-cluster-registry-update" title="Link to this heading"></a></h3>
+<p>Update credential NAME in CLUSTER’s registry</p>
+<p>NOTE: This command will prompt you for an EMAIL, USERNAME, and PASSWORD.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>registry<span class="w"> </span>update<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-update-r">
+<span id="cmdoption-silverback-cluster-registry-update-registry"></span><span class="sig-name descname"><span class="pre">-r</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--registry</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;registry&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-update-r" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-update-c">
+<span id="cmdoption-silverback-cluster-registry-update-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-update-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-update-p">
+<span id="cmdoption-silverback-cluster-registry-update-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-update-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-update-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-update-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-registry-remove">
+<h3>remove<a class="headerlink" href="#silverback-cluster-registry-remove" title="Link to this heading"></a></h3>
+<p>Remove credential NAME from CLUSTER’s registry</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>registry<span class="w"> </span>remove<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-remove-c">
+<span id="cmdoption-silverback-cluster-registry-remove-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-remove-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-remove-p">
+<span id="cmdoption-silverback-cluster-registry-remove-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-remove-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-registry-remove-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-registry-remove-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="silverback-cluster-bots">
+<h2>silverback cluster bots<a class="headerlink" href="#silverback-cluster-bots" title="Link to this heading"></a></h2>
+<p>Manage bots in a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</span></pre></div>
+</div>
+<section id="silverback-cluster-bots-new">
+<h3>new<a class="headerlink" href="#silverback-cluster-bots-new" title="Link to this heading"></a></h3>
+<p>Create a new bot in a CLUSTER with the given configuration</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>new<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>NAME
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-i">
+<span id="cmdoption-silverback-cluster-bots-new-image"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--image</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;image&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-i" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-network">
+<span class="sig-name descname"><span class="pre">--network</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;network&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-network" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong> Override the default network and provider. (see <cite>ape networks list</cite> for options)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>abstract::node | abstract:mainnet:node | abstract:mainnet | abstract:testnet:node | abstract:testnet | abstract:mainnet-fork:node | abstract:mainnet-fork | abstract:testnet-fork:node | abstract:testnet-fork | abstract | apechain::node | apechain:mainnet:node | apechain:mainnet | apechain:curtis:node | apechain:curtis | apechain:mainnet-fork:node | apechain:mainnet-fork | apechain:curtis-fork:node | apechain:curtis-fork | apechain | arbitrum::node | arbitrum:mainnet:node | arbitrum:mainnet | arbitrum:goerli:node | arbitrum:goerli | arbitrum:sepolia:node | arbitrum:sepolia | arbitrum:nova:node | arbitrum:nova | arbitrum:mainnet-fork:node | arbitrum:mainnet-fork | arbitrum:goerli-fork:node | arbitrum:goerli-fork | arbitrum:sepolia-fork:node | arbitrum:sepolia-fork | arbitrum:nova-fork:node | arbitrum:nova-fork | arbitrum | astar::node | astar:mainnet:node | astar:mainnet | astar:mainnet-fork:node | astar:mainnet-fork | astar | avalanche::node | avalanche:mainnet:node | avalanche:mainnet | avalanche:fuji:node | avalanche:fuji | avalanche:mainnet-fork:node | avalanche:mainnet-fork | avalanche:fuji-fork:node | avalanche:fuji-fork | avalanche | base::node | base:mainnet:node | base:mainnet | base:sepolia:node | base:sepolia | base:mainnet-fork:node | base:mainnet-fork | base:sepolia-fork:node | base:sepolia-fork | base | berachain::node | berachain:bartio:node | berachain:bartio | berachain:bartio-fork:node | berachain:bartio-fork | berachain | blast::node | blast:mainnet:node | blast:mainnet | blast:sepolia:node | blast:sepolia | blast:testnet:node | blast:testnet | blast:mainnet-fork:node | blast:mainnet-fork | blast:sepolia-fork:node | blast:sepolia-fork | blast:testnet-fork:node | blast:testnet-fork | blast | bsc::node | bsc:mainnet:node | bsc:mainnet | bsc:testnet:node | bsc:testnet | bsc:opbnb:node | bsc:opbnb | bsc:opbnb-testnet:node | bsc:opbnb-testnet | bsc:mainnet-fork:node | bsc:mainnet-fork | bsc:testnet-fork:node | bsc:testnet-fork | bsc:opbnb-fork:node | bsc:opbnb-fork | bsc:opbnb-testnet-fork:node | bsc:opbnb-testnet-fork | bsc | bttc::node | bttc:mainnet:node | bttc:mainnet | bttc:donau:node | bttc:donau | bttc:mainnet-fork:node | bttc:mainnet-fork | bttc:donau-fork:node | bttc:donau-fork | bttc | celo::node | celo:mainnet:node | celo:mainnet | celo:alfajores:node | celo:alfajores | celo:mainnet-fork:node | celo:mainnet-fork | celo:alfajores-fork:node | celo:alfajores-fork | celo | cronos::node | cronos:mainnet:node | cronos:mainnet | cronos:testnet:node | cronos:testnet | cronos:mainnet-fork:node | cronos:mainnet-fork | cronos:testnet-fork:node | cronos:testnet-fork | cronos | cronos-zkevm::node | cronos-zkevm:mainnet:node | cronos-zkevm:mainnet | cronos-zkevm:testnet:node | cronos-zkevm:testnet | cronos-zkevm:mainnet-fork:node | cronos-zkevm:mainnet-fork | cronos-zkevm:testnet-fork:node | cronos-zkevm:testnet-fork | cronos-zkevm | crossfi::node | crossfi:mainnet:node | crossfi:mainnet | crossfi:testnet:node | crossfi:testnet | crossfi:mainnet-fork:node | crossfi:mainnet-fork | crossfi:testnet-fork:node | crossfi:testnet-fork | crossfi | :goerli:node | ethereum:goerli:node | :goerli | ethereum:goerli | :goerli-fork:node | ethereum:goerli-fork:node | :goerli-fork | ethereum:goerli-fork | :mainnet:node | ethereum:mainnet:node | :mainnet | ethereum:mainnet | :sepolia:node | ethereum:sepolia:node | :sepolia | ethereum:sepolia | :holesky:node | ethereum:holesky:node | :holesky | ethereum:holesky | ::node | :local:node | ethereum::node | ethereum:local:node | ::test | :local:test | ethereum::test | ethereum:local:test | :local | ethereum:local | ethereum | fantom::node | fantom:mainnet:node | fantom:mainnet | fantom:testnet:node | fantom:testnet | fantom:mainnet-fork:node | fantom:mainnet-fork | fantom:testnet-fork:node | fantom:testnet-fork | fantom | filecoin::node | filecoin:mainnet:node | filecoin:mainnet | filecoin:calibration:node | filecoin:calibration | filecoin:mainnet-fork:node | filecoin:mainnet-fork | filecoin:calibration-fork:node | filecoin:calibration-fork | filecoin | flow-evm::node | flow-evm:mainnet:node | flow-evm:mainnet | flow-evm:testnet:node | flow-evm:testnet | flow-evm:mainnet-fork:node | flow-evm:mainnet-fork | flow-evm:testnet-fork:node | flow-evm:testnet-fork | flow-evm | fraxtal::node | fraxtal:mainnet:node | fraxtal:mainnet | fraxtal:holesky:node | fraxtal:holesky | fraxtal:mainnet-fork:node | fraxtal:mainnet-fork | fraxtal:holesky-fork:node | fraxtal:holesky-fork | fraxtal | geist::node | geist:mainnet:node | geist:mainnet | geist:polter:node | geist:polter | geist:mainnet-fork:node | geist:mainnet-fork | geist:polter-fork:node | geist:polter-fork | geist | gnosis::node | gnosis:chiado:node | gnosis:chiado | gnosis:mainnet:node | gnosis:mainnet | gnosis:chiado-fork:node | gnosis:chiado-fork | gnosis:mainnet-fork:node | gnosis:mainnet-fork | gnosis | kroma::node | kroma:mainnet:node | kroma:mainnet | kroma:sepolia:node | kroma:sepolia | kroma:mainnet-fork:node | kroma:mainnet-fork | kroma:sepolia-fork:node | kroma:sepolia-fork | kroma | lens::node | lens:sepolia:node | lens:sepolia | lens:sepolia-fork:node | lens:sepolia-fork | lens | linea::node | linea:mainnet:node | linea:mainnet | linea:sepolia:node | linea:sepolia | linea:mainnet-fork:node | linea:mainnet-fork | linea:sepolia-fork:node | linea:sepolia-fork | linea | lumia::node | lumia:prism:node | lumia:prism | lumia:testnet:node | lumia:testnet | lumia:prism-fork:node | lumia:prism-fork | lumia:testnet-fork:node | lumia:testnet-fork | lumia | mantle::node | mantle:mainnet:node | mantle:mainnet | mantle:testnet:node | mantle:testnet | mantle:sepolia:node | mantle:sepolia | mantle:mainnet-fork:node | mantle:mainnet-fork | mantle:testnet-fork:node | mantle:testnet-fork | mantle:sepolia-fork:node | mantle:sepolia-fork | mantle | metis::node | metis:mainnet:node | metis:mainnet | metis:mainnet-fork:node | metis:mainnet-fork | metis | moonbeam::node | moonbeam:mainnet:node | moonbeam:mainnet | moonbeam:moonbase:node | moonbeam:moonbase | moonbeam:moonriver:node | moonbeam:moonriver | moonbeam:mainnet-fork:node | moonbeam:mainnet-fork | moonbeam:moonbase-fork:node | moonbeam:moonbase-fork | moonbeam:moonriver-fork:node | moonbeam:moonriver-fork | moonbeam | optimism::node | optimism:mainnet:node | optimism:mainnet | optimism:goerli:node | optimism:goerli | optimism:sepolia:node | optimism:sepolia | optimism:mainnet-fork:node | optimism:mainnet-fork | optimism:goerli-fork:node | optimism:goerli-fork | optimism:sepolia-fork:node | optimism:sepolia-fork | optimism | oort::node | oort:mainnet:node | oort:mainnet | oort:dev:node | oort:dev | oort:mainnet-fork:node | oort:mainnet-fork | oort:dev-fork:node | oort:dev-fork | oort | palm::node | palm:mainnet:node | palm:mainnet | palm:testnet:node | palm:testnet | palm:mainnet-fork:node | palm:mainnet-fork | palm:testnet-fork:node | palm:testnet-fork | palm | polygon::node | polygon:mainnet:node | polygon:mainnet | polygon:mumbai:node | polygon:mumbai | polygon:amoy:node | polygon:amoy | polygon:mainnet-fork:node | polygon:mainnet-fork | polygon:mumbai-fork:node | polygon:mumbai-fork | polygon:amoy-fork:node | polygon:amoy-fork | polygon | polygon-zkevm::node | polygon-zkevm:mainnet:node | polygon-zkevm:mainnet | polygon-zkevm:testnet:node | polygon-zkevm:testnet | polygon-zkevm:cardona:node | polygon-zkevm:cardona | polygon-zkevm:mainnet-fork:node | polygon-zkevm:mainnet-fork | polygon-zkevm:testnet-fork:node | polygon-zkevm:testnet-fork | polygon-zkevm:cardona-fork:node | polygon-zkevm:cardona-fork | polygon-zkevm | polynomial::node | polynomial:mainnet:node | polynomial:mainnet | polynomial:sepolia:node | polynomial:sepolia | polynomial:mainnet-fork:node | polynomial:mainnet-fork | polynomial:sepolia-fork:node | polynomial:sepolia-fork | polynomial | rootstock::node | rootstock:mainnet:node | rootstock:mainnet | rootstock:testnet:node | rootstock:testnet | rootstock:mainnet-fork:node | rootstock:mainnet-fork | rootstock:testnet-fork:node | rootstock:testnet-fork | rootstock | shibarium::node | shibarium:mainnet:node | shibarium:mainnet | shibarium:puppynet:node | shibarium:puppynet | shibarium:mainnet-fork:node | shibarium:mainnet-fork | shibarium:puppynet-fork:node | shibarium:puppynet-fork | shibarium | scroll::node | scroll:mainnet:node | scroll:mainnet | scroll:sepolia:node | scroll:sepolia | scroll:mainnet-fork:node | scroll:mainnet-fork | scroll:sepolia-fork:node | scroll:sepolia-fork | scroll | shape::node | shape:mainnet:node | shape:mainnet | shape:sepolia:node | shape:sepolia | shape:mainnet-fork:node | shape:mainnet-fork | shape:sepolia-fork:node | shape:sepolia-fork | shape | soneium::node | soneium:minato:node | soneium:minato | soneium:minato-fork:node | soneium:minato-fork | soneium | sonic::node | sonic:mainnet:node | sonic:mainnet | sonic:blaze:node | sonic:blaze | sonic:mainnet-fork:node | sonic:mainnet-fork | sonic:blaze-fork:node | sonic:blaze-fork | sonic | taiko::node | taiko:mainnet:node | taiko:mainnet | taiko:hekla:node | taiko:hekla | taiko:mainnet-fork:node | taiko:mainnet-fork | taiko:hekla-fork:node | taiko:hekla-fork | taiko | unichain::node | unichain:sepolia:node | unichain:sepolia | unichain:sepolia-fork:node | unichain:sepolia-fork | unichain | wemix::node | wemix:mainnet:node | wemix:mainnet | wemix:testnet:node | wemix:testnet | wemix:mainnet-fork:node | wemix:mainnet-fork | wemix:testnet-fork:node | wemix:testnet-fork | wemix | world-chain::node | world-chain:mainnet:node | world-chain:mainnet | world-chain:sepolia:node | world-chain:sepolia | world-chain:mainnet-fork:node | world-chain:mainnet-fork | world-chain:sepolia-fork:node | world-chain:sepolia-fork | world-chain | xai::node | xai:mainnet:node | xai:mainnet | xai:sepolia:node | xai:sepolia | xai:mainnet-fork:node | xai:mainnet-fork | xai:sepolia-fork:node | xai:sepolia-fork | xai | xmtp::node | xmtp:mainnet:node | xmtp:mainnet | xmtp:sepolia:node | xmtp:sepolia | xmtp:mainnet-fork:node | xmtp:mainnet-fork | xmtp:sepolia-fork:node | xmtp:sepolia-fork | xmtp | zetachain::node | zetachain:mainnet:node | zetachain:mainnet | zetachain:testnet:node | zetachain:testnet | zetachain:mainnet-fork:node | zetachain:mainnet-fork | zetachain:testnet-fork:node | zetachain:testnet-fork | zetachain | zksync::node | zksync:mainnet:node | zksync:mainnet | zksync:sepolia:node | zksync:sepolia | zksync:mainnet-fork:node | zksync:mainnet-fork | zksync:sepolia-fork:node | zksync:sepolia-fork | zksync | zora::node | zora:mainnet:node | zora:mainnet | zora:sepolia:node | zora:sepolia | zora:mainnet-fork:node | zora:mainnet-fork | zora:sepolia-fork:node | zora:sepolia-fork | zora</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-a">
+<span id="cmdoption-silverback-cluster-bots-new-account"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-a" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-g">
+<span id="cmdoption-silverback-cluster-bots-new-group"></span><span class="sig-name descname"><span class="pre">-g</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--group</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;environment&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-g" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-credential">
+<span class="sig-name descname"><span class="pre">--credential</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;credential_name&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-credential" title="Link to this definition"></a></dt>
+<dd><p>registry credentials to use to pull the image</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-c">
+<span id="cmdoption-silverback-cluster-bots-new-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-p">
+<span id="cmdoption-silverback-cluster-bots-new-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-new-arg-NAME">
+<span class="sig-name descname"><span class="pre">NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-new-arg-NAME" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-list">
+<h3>list<a class="headerlink" href="#silverback-cluster-bots-list" title="Link to this heading"></a></h3>
+<p>List all bots in a CLUSTER by network (Regardless of status)</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-list-c">
+<span id="cmdoption-silverback-cluster-bots-list-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-list-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-list-p">
+<span id="cmdoption-silverback-cluster-bots-list-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-list-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-info">
+<h3>info<a class="headerlink" href="#silverback-cluster-bots-info" title="Link to this heading"></a></h3>
+<p>Get configuration information of one or more BOT(s) in a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-info-c">
+<span id="cmdoption-silverback-cluster-bots-info-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-info-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-info-p">
+<span id="cmdoption-silverback-cluster-bots-info-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-info-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-info-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-info-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-update">
+<h3>update<a class="headerlink" href="#silverback-cluster-bots-update" title="Link to this heading"></a></h3>
+<p>Update configuration of BOT in CLUSTER</p>
+<p>NOTE: Some configuration updates will trigger a redeploy</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>update<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-new-name">
+<span class="sig-name descname"><span class="pre">--new-name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;new_name&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-new-name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-i">
+<span id="cmdoption-silverback-cluster-bots-update-image"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--image</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;image&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-i" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-n">
+<span id="cmdoption-silverback-cluster-bots-update-network"></span><span class="sig-name descname"><span class="pre">-n</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--network</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;network&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-n" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-a">
+<span id="cmdoption-silverback-cluster-bots-update-account"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-a" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-g">
+<span id="cmdoption-silverback-cluster-bots-update-group"></span><span class="sig-name descname"><span class="pre">-g</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--group</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;environment&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-g" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-clear-vars">
+<span class="sig-name descname"><span class="pre">--clear-vars</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-clear-vars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-credential">
+<span class="sig-name descname"><span class="pre">--credential</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;credential_name&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-credential" title="Link to this definition"></a></dt>
+<dd><p>registry credentials to use to pull the image</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-c">
+<span id="cmdoption-silverback-cluster-bots-update-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-p">
+<span id="cmdoption-silverback-cluster-bots-update-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-update-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-update-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-remove">
+<h3>remove<a class="headerlink" href="#silverback-cluster-bots-remove" title="Link to this heading"></a></h3>
+<p>Remove one or more BOT(s) from CLUSTER (Shutdown if running)</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>remove<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-remove-c">
+<span id="cmdoption-silverback-cluster-bots-remove-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-remove-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-remove-p">
+<span id="cmdoption-silverback-cluster-bots-remove-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-remove-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-remove-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-remove-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-health">
+<h3>health<a class="headerlink" href="#silverback-cluster-bots-health" title="Link to this heading"></a></h3>
+<p>Show current health of one or more BOT(s) in a CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>health<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-health-c">
+<span id="cmdoption-silverback-cluster-bots-health-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-health-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-health-p">
+<span id="cmdoption-silverback-cluster-bots-health-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-health-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-health-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-health-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-start">
+<h3>start<a class="headerlink" href="#silverback-cluster-bots-start" title="Link to this heading"></a></h3>
+<p>Start one or more BOT(s) running in CLUSTER (if stopped or terminated)</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>start<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-start-c">
+<span id="cmdoption-silverback-cluster-bots-start-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-start-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-start-p">
+<span id="cmdoption-silverback-cluster-bots-start-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-start-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-start-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-start-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-stop">
+<h3>stop<a class="headerlink" href="#silverback-cluster-bots-stop" title="Link to this heading"></a></h3>
+<p>Stop one or more BOT(s) from running in CLUSTER (if running)</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>stop<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-stop-c">
+<span id="cmdoption-silverback-cluster-bots-stop-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-stop-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-stop-p">
+<span id="cmdoption-silverback-cluster-bots-stop-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-stop-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-stop-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-stop-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-logs">
+<h3>logs<a class="headerlink" href="#silverback-cluster-bots-logs" title="Link to this heading"></a></h3>
+<p>Show runtime logs for BOT in CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>logs<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-logs-l">
+<span id="cmdoption-silverback-cluster-bots-logs-log-level"></span><span class="sig-name descname"><span class="pre">-l</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--log-level</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;log_level&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-logs-l" title="Link to this definition"></a></dt>
+<dd><p>Minimum log level to display.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-logs-s">
+<span id="cmdoption-silverback-cluster-bots-logs-since"></span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--since</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;since&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-logs-s" title="Link to this definition"></a></dt>
+<dd><p>Return logs since N ago.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-logs-f">
+<span id="cmdoption-silverback-cluster-bots-logs-follow"></span><span class="sig-name descname"><span class="pre">-f</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--follow</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-logs-f" title="Link to this definition"></a></dt>
+<dd><p>Stream logs as they come in</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-logs-c">
+<span id="cmdoption-silverback-cluster-bots-logs-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-logs-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-logs-p">
+<span id="cmdoption-silverback-cluster-bots-logs-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-logs-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-logs-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-logs-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-bots-errors">
+<h3>errors<a class="headerlink" href="#silverback-cluster-bots-errors" title="Link to this heading"></a></h3>
+<p>Show unacknowledged errors for one or more BOT(s) in CLUSTER</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>bots<span class="w"> </span>errors<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BOT
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-errors-c">
+<span id="cmdoption-silverback-cluster-bots-errors-cluster"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--cluster</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;WORKSPACE/NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-errors-c" title="Link to this definition"></a></dt>
+<dd><p>NAME of the cluster in WORKSPACE you wish to access</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-errors-p">
+<span id="cmdoption-silverback-cluster-bots-errors-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-errors-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-bots-errors-arg-BOT">
+<span class="sig-name descname"><span class="pre">BOT</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-bots-errors-arg-BOT" title="Link to this definition"></a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="silverback-cluster-pay">
+<h2>silverback cluster pay<a class="headerlink" href="#silverback-cluster-pay" title="Link to this heading"></a></h2>
+<p>Pay for CLUSTER with Crypto using ApePay streaming payments</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>pay<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</span></pre></div>
+</div>
+<section id="silverback-cluster-pay-create">
+<h3>create<a class="headerlink" href="#silverback-cluster-pay-create" title="Link to this heading"></a></h3>
+<p>Create a new streaming payment for a given CLUSTER</p>
+<p>NOTE: This action cannot be cancelled! Streams must exist for at least 1 hour before cancelling.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>pay<span class="w"> </span>create<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>CLUSTER_PATH
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-account">
+<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-account" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-t">
+<span id="cmdoption-silverback-cluster-pay-create-tier"></span><span class="sig-name descname"><span class="pre">-t</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--tier</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;NAME&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-t" title="Link to this definition"></a></dt>
+<dd><p>Named set of options to use for cluster as a base (Defaults to Standard)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Standard | Premium</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-c">
+<span id="cmdoption-silverback-cluster-pay-create-config"></span><span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--config</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;KEY</span> <span class="pre">VALUE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-c" title="Link to this definition"></a></dt>
+<dd><p>Config options to set for cluster (overrides values from -t/–tier selection)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-token">
+<span class="sig-name descname"><span class="pre">--token</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;ADDRESS&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-token" title="Link to this definition"></a></dt>
+<dd><p>Token Symbol or Address to use to fund stream</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-amount">
+<span class="sig-name descname"><span class="pre">--amount</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;VALUE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-amount" title="Link to this definition"></a></dt>
+<dd><p>Token amount to use to fund stream</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-time">
+<span class="sig-name descname"><span class="pre">--time</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;TIMESTAMP</span> <span class="pre">or</span> <span class="pre">TIMEDELTA&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-time" title="Link to this definition"></a></dt>
+<dd><p>Time to fund stream for</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-p">
+<span id="cmdoption-silverback-cluster-pay-create-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-create-arg-CLUSTER_PATH">
+<span class="sig-name descname"><span class="pre">CLUSTER_PATH</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-create-arg-CLUSTER_PATH" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-pay-add-time">
+<h3>add-time<a class="headerlink" href="#silverback-cluster-pay-add-time" title="Link to this heading"></a></h3>
+<p>Fund an existing streaming payment for the given CLUSTER</p>
+<p>NOTE: You can fund anyone else’s Stream!</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>pay<span class="w"> </span>add-time<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>CLUSTER
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-add-time-account">
+<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-add-time-account" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-add-time-amount">
+<span class="sig-name descname"><span class="pre">--amount</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;VALUE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-add-time-amount" title="Link to this definition"></a></dt>
+<dd><p>Token amount to use to fund stream</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-add-time-time">
+<span class="sig-name descname"><span class="pre">--time</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;TIMESTAMP</span> <span class="pre">or</span> <span class="pre">TIMEDELTA&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-add-time-time" title="Link to this definition"></a></dt>
+<dd><p>Time to fund stream for</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-add-time-p">
+<span id="cmdoption-silverback-cluster-pay-add-time-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-add-time-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-add-time-arg-CLUSTER">
+<span class="sig-name descname"><span class="pre">CLUSTER</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-add-time-arg-CLUSTER" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="silverback-cluster-pay-cancel">
+<h3>cancel<a class="headerlink" href="#silverback-cluster-pay-cancel" title="Link to this heading"></a></h3>
+<p>Shutdown CLUSTER and refund all funds to Stream owner</p>
+<p>NOTE: Only the Stream owner can perform this action!</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>cluster<span class="w"> </span>pay<span class="w"> </span>cancel<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>CLUSTER
+</span></pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-cancel-account">
+<span class="sig-name descname"><span class="pre">--account</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;account&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-cancel-account" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-cancel-p">
+<span id="cmdoption-silverback-cluster-pay-cancel-profile"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PROFILE&gt;</span></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-cancel-p" title="Link to this definition"></a></dt>
+<dd><p>The authentication profile to use (Advanced)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-silverback-cluster-pay-cancel-arg-CLUSTER">
+<span class="sig-name descname"><span class="pre">CLUSTER</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-silverback-cluster-pay-cancel-arg-CLUSTER" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="run.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Local Development</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../methoddocs/exceptions.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">silverback.exceptions</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=e2230717"></script></body>
+</html>
