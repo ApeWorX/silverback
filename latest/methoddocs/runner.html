@@ -91,6 +91,8 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#silverback.runner.BaseRunner"><code class="docutils literal notranslate"><span class="pre">BaseRunner</span></code></a><ul>
 <li><a class="reference internal" href="#silverback.runner.BaseRunner.run"><code class="docutils literal notranslate">run()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.runner.BaseRunner.shutdown"><code class="docutils literal notranslate">shutdown()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.runner.BaseRunner.startup"><code class="docutils literal notranslate">startup()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#silverback.runner.PollingRunner"><code class="docutils literal notranslate"><span class="pre">PollingRunner</span></code></a></li>
@@ -137,7 +139,7 @@ of different scenarios and trigger methods.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.runner.BaseRunner.run">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">runtime_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Task</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Task</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner.run" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner.run" title="Link to this definition"></a></dt>
 <dd><p>Run the task broker client for the assembled <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> bot.</p>
 <p>Will listen for events against the connected provider (using <cite>ManagerAccessMixin</cite> context),
 and process them by kicking events over to the configured broker.</p>
@@ -147,6 +149,28 @@ and process them by kicking events over to the configured broker.</p>
 <li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.StartupFailure" title="silverback.exceptions.StartupFailure"><strong>StartupFailure</strong></a> – If there was an exception during startup.</p></li>
 <li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.NoTasksAvailableError" title="silverback.exceptions.NoTasksAvailableError"><strong>NoTasksAvailableError</strong></a> – If there are no configured tasks to execute.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.runner.BaseRunner.shutdown">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.BaseRunner.shutdown" title="Link to this definition"></a></dt>
+<dd><p>Execute the runner shutdown sequence, including user tasks.</p>
+<p>NOTE: Must be placed into runtime before called.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="silverback.runner.BaseRunner.startup">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">startup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Coroutine</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#silverback.runner.BaseRunner.startup" title="Link to this definition"></a></dt>
+<dd><p>Execute runner startup sequence to configure the runner for runtime.</p>
+<p>NOTE: Execution will abort if startup sequence has a failure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>functions to execute as user daemon tasks</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>user_tasks (list[Coroutine])</p>
 </dd>
 </dl>
 </dd></dl>
@@ -167,7 +191,7 @@ and process them by kicking events over to the configured broker.</p>
 <p>Run a single bot against a live network using a basic in-memory queue and websockets.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.runner.WebsocketRunner.run">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">runtime_tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Task</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Task</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.WebsocketRunner.run" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#silverback.runner.WebsocketRunner.run" title="Link to this definition"></a></dt>
 <dd><p>Run the task broker client for the assembled <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> bot.</p>
 <p>Will listen for events against the connected provider (using <cite>ManagerAccessMixin</cite> context),
 and process them by kicking events over to the configured broker.</p>
