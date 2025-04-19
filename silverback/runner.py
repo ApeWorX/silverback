@@ -11,7 +11,6 @@ from ape.utils import ManagerAccessMixin
 from ape_ethereum.ecosystem import keccak
 from eth_utils import to_hex
 from ethpm_types import EventABI
-from exceptiongroup import ExceptionGroup
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from pydantic import TypeAdapter
