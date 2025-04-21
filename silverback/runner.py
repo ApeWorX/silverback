@@ -2,8 +2,10 @@ import asyncio
 import signal
 import sys
 from abc import ABC, abstractmethod
+from datetime import timedelta
 from typing import Any, Coroutine, Type
 
+import pycron  # type: ignore[import-untyped]
 import quattro
 from ape import chain
 from ape.logging import logger
@@ -14,7 +16,7 @@ from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from pydantic import TypeAdapter
-from taskiq import AsyncTaskiqDecoratedTask, AsyncTaskiqTask
+from taskiq import AsyncTaskiqDecoratedTask
 from web3 import AsyncWeb3, WebSocketProvider
 from web3.utils.subscriptions import (
     LogsSubscription,
@@ -33,7 +35,7 @@ from .exceptions import (
 from .main import SilverbackBot, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
-from .types import TaskType
+from .types import TaskType, utc_now
 from .utils import async_wrap_iter
 
 if sys.version_info < (3, 11):
@@ -89,7 +91,8 @@ class BaseRunner(ABC):
         return_type: Type | None = system_task_kicker.__annotations__.get("return")
         return TypeAdapter(return_type).validate_python(result.return_value)
 
-    async def _handle_task(self, task: AsyncTaskiqTask):
+    async def run_task(self, task_data: TaskData, *args):
+        task = await self.get_task(task_data.name).kiq(*args)
         result = await task.wait_result()
 
         if self.recorder:
@@ -104,10 +107,6 @@ class BaseRunner(ABC):
 
         if self.exceptions > self.max_exceptions or isinstance(result.error, Halt):
             result.raise_for_error()
-
-    async def run_task(self, task_data: TaskData, *args):
-        task = await self.get_task(task_data.name).kiq(*args)
-        return await self._handle_task(task)
 
     async def _checkpoint(
         self,
@@ -126,16 +125,41 @@ class BaseRunner(ABC):
         ):
             await self.datastore.save(snapshot)
 
-    @abstractmethod
-    async def _block_task(self, task_data: TaskData) -> Coroutine | None:
+    async def _cron_tasks(self, cron_tasks: list[TaskData]):
         """
-        Handle a block_handler task
+        Handle all cron tasks
+        """
+
+        while True:
+            # NOTE: Sleep until next exact time boundary (every minute)
+            current_time = utc_now()
+            wait_time = timedelta(
+                seconds=60 - 1 - current_time.second,
+                microseconds=int(1e6) - current_time.microsecond,
+            )
+            await asyncio.sleep(wait_time.total_seconds())
+            current_time += wait_time
+
+            for task_data in cron_tasks:
+                if not (cron := task_data.labels.get("cron")):
+                    logger.warning(f"Cron task missing `cron` label: '{task_data.name}'")
+                    continue
+
+                if pycron.is_now(cron, dt=current_time):
+                    self._runtime_task_group.create_task(self.run_task(task_data, current_time))
+
+            # NOTE: TaskGroup waits for all tasks to complete before continuing
+
+    @abstractmethod
+    async def _block_task(self, task_data: TaskData) -> None:
+        """
+        Set up a task block_handler task
         """
 
     @abstractmethod
-    async def _event_task(self, task_data: TaskData) -> Coroutine | None:
+    async def _event_task(self, task_data: TaskData) -> None:
         """
-        Handle an event handler task for the given contract event
+        Set up a task for the given contract event
         """
 
     async def startup(self) -> list[Coroutine]:
@@ -212,6 +236,13 @@ class BaseRunner(ABC):
             # NOTE: No need to handle results otherwise
 
         # Create our long-running event listeners
+        cron_tasks_taskdata = (
+            await self.run_system_task(TaskType.SYSTEM_USER_TASKDATA, TaskType.CRON_JOB)
+            if Version(config.sdk_version) >= Version("0.7.15")
+            # NOTE: Not supported in prior versions
+            else []
+        )
+
         new_block_tasks_taskdata = await self.run_system_task(
             TaskType.SYSTEM_USER_TASKDATA, TaskType.NEW_BLOCK
         )
@@ -224,12 +255,9 @@ class BaseRunner(ABC):
             raise NoTasksAvailableError()
 
         return [
-            task
-            for task in await quattro.gather(
-                *map(self._block_task, new_block_tasks_taskdata),
-                *map(self._event_task, event_log_tasks_taskdata),
-            )
-            if task is not None
+            self._cron_tasks(cron_tasks_taskdata),
+            *map(self._block_task, new_block_tasks_taskdata),
+            *map(self._event_task, event_log_tasks_taskdata),
         ]
 
     def _cleanup_tasks(self) -> list[Coroutine]:
@@ -276,7 +304,7 @@ class BaseRunner(ABC):
         # NOTE: Finally execute runner cleanup tasks
         await quattro.gather(*self._cleanup_tasks())
 
-    def _background_tasks(self) -> list[Coroutine]:
+    def _daemon_tasks(self) -> list[Coroutine]:
         return []
 
     async def run(self):
@@ -315,16 +343,21 @@ class BaseRunner(ABC):
 
         try:
             async with quattro.TaskGroup() as tg:
+                # NOTE: Our runtime tasks can use this to spawn more tasks
+                self._runtime_task_group = tg
+
                 # NOTE: User tasks that should run forever
                 for coro in user_tasks:
                     tg.create_task(coro)
 
                 # NOTE: It is assumed if no user tasks, there is a background task
-                for coro in self._background_tasks():
+                for coro in self._daemon_tasks():
                     tg.create_task(coro)
 
                 # NOTE: Will wait forever on this task to halt
                 tg.create_task(wait_for_graceful_shutdown())
+
+            # NOTE: If any exception raised by non-background tasks, will quit all
 
         except ExceptionGroup as eg:
             if error_str := "\n".join(str(e) for e in eg.exceptions if not isinstance(e, Halt)):
@@ -348,13 +381,12 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         self.ws_uri = ws_uri
 
-    async def _block_task(self, task_data: TaskData) -> None:
-        new_block_task_kicker = self.get_task(task_data.name)
+    async def _block_task(self, task_data: TaskData):
 
         async def block_handler(ctx: NewHeadsSubscriptionContext):
             block = self.provider.network.ecosystem.decode_block(dict(ctx.result))
             await self._checkpoint(last_block_seen=block.number)
-            await self._handle_task(await new_block_task_kicker.kiq(block))
+            await self.run_task(task_data, block)
             await self._checkpoint(last_block_processed=block.number)
 
         sub_id = await self._web3.subscription_manager.subscribe(
@@ -362,7 +394,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         )
         logger.debug(f"Handling blocks via {sub_id}")
 
-    async def _event_task(self, task_data: TaskData) -> None:
+    async def _event_task(self, task_data: TaskData):
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -371,8 +403,6 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         event_abi = EventABI.from_signature(event_signature)
 
-        event_log_task_kicker = self.get_task(task_data.name)
-
         async def log_handler(ctx: LogsSubscriptionContext):
             event = next(  # NOTE: `next` is okay since it only has one item
                 self.provider.network.ecosystem.decode_logs([ctx.result], event_abi)
@@ -380,7 +410,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             # TODO: Fix upstream w/ web3py
             event.transaction_hash = "0x" + event.transaction_hash.hex()
             await self._checkpoint(last_block_seen=event.block_number)
-            await self._handle_task(await event_log_task_kicker.kiq(event))
+            await self.run_task(task_data, event)
             await self._checkpoint(last_block_processed=event.block_number)
 
         sub_id = await self._web3.subscription_manager.subscribe(
@@ -393,7 +423,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         )
         logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
 
-    def _background_tasks(self) -> list[Coroutine]:
+    def _daemon_tasks(self) -> list[Coroutine]:
         # NOTE: Handle this as a daemon task (after startup)
         return [self._web3.subscription_manager.handle_subscriptions(run_forever=True)]
 
@@ -421,9 +451,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             "Do not use in production over long time periods unless you know what you're doing."
         )
 
-    async def _block_task(self, task_data: TaskData) -> Coroutine:
-        new_block_task_kicker = self.get_task(task_data.name)
-
+    async def _block_task(self, task_data: TaskData):
         if block_settings := self.bot.poll_settings.get("_blocks_"):
             new_block_timeout = block_settings.get("new_block_timeout")
         else:
@@ -433,20 +461,17 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def block_handler() -> None:
-            async for block in async_wrap_iter(
-                chain.blocks.poll_blocks(
-                    # NOTE: No start block because we should begin polling from head
-                    new_block_timeout=new_block_timeout,
-                )
-            ):
-                await self._checkpoint(last_block_seen=block.number)
-                await self._handle_task(await new_block_task_kicker.kiq(block))
-                await self._checkpoint(last_block_processed=block.number)
+        async for block in async_wrap_iter(
+            chain.blocks.poll_blocks(
+                # NOTE: No start block because we should begin polling from head
+                new_block_timeout=new_block_timeout,
+            )
+        ):
+            await self._checkpoint(last_block_seen=block.number)
+            await self.run_task(task_data, block)
+            await self._checkpoint(last_block_processed=block.number)
 
-        return block_handler()
-
-    async def _event_task(self, task_data: TaskData) -> Coroutine:
+    async def _event_task(self, task_data: TaskData):
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -454,8 +479,6 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             raise StartupFailure("No Event Signature provided.")
 
         event_abi = EventABI.from_signature(event_signature)
-
-        event_log_task_kicker = self.get_task(task_data.name)
 
         if address_settings := self.bot.poll_settings.get(contract_address):
             new_block_timeout = address_settings.get("new_block_timeout")
@@ -466,17 +489,14 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def event_handler() -> None:
-            async for event in async_wrap_iter(
-                self.provider.poll_logs(
-                    # NOTE: No start block because we should begin polling from head
-                    address=contract_address,
-                    new_block_timeout=new_block_timeout,
-                    events=[event_abi],
-                )
-            ):
-                await self._checkpoint(last_block_seen=event.block_number)
-                await self._handle_task(await event_log_task_kicker.kiq(event))
-                await self._checkpoint(last_block_processed=event.block_number)
-
-        return event_handler()
+        async for event in async_wrap_iter(
+            self.provider.poll_logs(
+                # NOTE: No start block because we should begin polling from head
+                address=contract_address,
+                new_block_timeout=new_block_timeout,
+                events=[event_abi],
+            )
+        ):
+            await self._checkpoint(last_block_seen=event.block_number)
+            await self.run_task(task_data, event)
+            await self._checkpoint(last_block_processed=event.block_number)

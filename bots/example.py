@@ -1,4 +1,6 @@
 import asyncio
+import random
+from datetime import datetime
 from typing import Annotated
 
 from ape import chain
@@ -88,6 +90,13 @@ async def exec_event2(log: ContractLog):
     # Do any other long running tasks...
     await asyncio.sleep(5)
     return log.amount
+
+
+# You can run cron jobs in your apps
+# (useful for functions that execute at a regular time period e.g. metrics)
+@bot.cron("*/1 * * * *")
+def sample_metric(time: datetime):
+    return random.random()
 
 
 @bot.on_(chain.blocks)
