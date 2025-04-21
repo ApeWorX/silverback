@@ -127,15 +127,15 @@ class BaseRunner(ABC):
             await self.datastore.save(snapshot)
 
     @abstractmethod
-    async def _block_task(self, task_data: TaskData) -> Coroutine | None:
+    async def _block_task(self, task_data: TaskData) -> None:
         """
-        Handle a block_handler task
+        Set up a task block_handler task
         """
 
     @abstractmethod
-    async def _event_task(self, task_data: TaskData) -> Coroutine | None:
+    async def _event_task(self, task_data: TaskData) -> None:
         """
-        Handle an event handler task for the given contract event
+        Set up a task for the given contract event
         """
 
     async def startup(self) -> list[Coroutine]:
@@ -224,12 +224,9 @@ class BaseRunner(ABC):
             raise NoTasksAvailableError()
 
         return [
-            task
-            for task in await quattro.gather(
-                *map(self._block_task, new_block_tasks_taskdata),
-                *map(self._event_task, event_log_tasks_taskdata),
-            )
-            if task is not None
+            self._cron_tasks(cron_tasks_taskdata),
+            *map(self._block_task, new_block_tasks_taskdata),
+            *map(self._event_task, event_log_tasks_taskdata),
         ]
 
     def _cleanup_tasks(self) -> list[Coroutine]:
@@ -350,7 +347,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         self.ws_uri = ws_uri
 
-    async def _block_task(self, task_data: TaskData) -> None:
+    async def _block_task(self, task_data: TaskData):
         new_block_task_kicker = self.get_task(task_data.name)
 
         async def block_handler(ctx: NewHeadsSubscriptionContext):
@@ -364,7 +361,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         )
         logger.debug(f"Handling blocks via {sub_id}")
 
-    async def _event_task(self, task_data: TaskData) -> None:
+    async def _event_task(self, task_data: TaskData):
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -423,7 +420,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             "Do not use in production over long time periods unless you know what you're doing."
         )
 
-    async def _block_task(self, task_data: TaskData) -> Coroutine:
+    async def _block_task(self, task_data: TaskData):
         new_block_task_kicker = self.get_task(task_data.name)
 
         if block_settings := self.bot.poll_settings.get("_blocks_"):
@@ -435,20 +432,17 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def block_handler() -> None:
-            async for block in async_wrap_iter(
-                chain.blocks.poll_blocks(
-                    # NOTE: No start block because we should begin polling from head
-                    new_block_timeout=new_block_timeout,
-                )
-            ):
-                await self._checkpoint(last_block_seen=block.number)
-                await self._handle_task(await new_block_task_kicker.kiq(block))
-                await self._checkpoint(last_block_processed=block.number)
+        async for block in async_wrap_iter(
+            chain.blocks.poll_blocks(
+                # NOTE: No start block because we should begin polling from head
+                new_block_timeout=new_block_timeout,
+            )
+        ):
+            await self._checkpoint(last_block_seen=block.number)
+            await self._handle_task(await new_block_task_kicker.kiq(block))
+            await self._checkpoint(last_block_processed=block.number)
 
-        return block_handler()
-
-    async def _event_task(self, task_data: TaskData) -> Coroutine:
+    async def _event_task(self, task_data: TaskData):
         if not (contract_address := task_data.labels.get("contract_address")):
             raise StartupFailure("Contract instance required.")
 
@@ -468,17 +462,14 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
         )
 
-        async def event_handler() -> None:
-            async for event in async_wrap_iter(
-                self.provider.poll_logs(
-                    # NOTE: No start block because we should begin polling from head
-                    address=contract_address,
-                    new_block_timeout=new_block_timeout,
-                    events=[event_abi],
-                )
-            ):
-                await self._checkpoint(last_block_seen=event.block_number)
-                await self._handle_task(await event_log_task_kicker.kiq(event))
-                await self._checkpoint(last_block_processed=event.block_number)
-
-        return event_handler()
+        async for event in async_wrap_iter(
+            self.provider.poll_logs(
+                # NOTE: No start block because we should begin polling from head
+                address=contract_address,
+                new_block_timeout=new_block_timeout,
+                events=[event_abi],
+            )
+        ):
+            await self._checkpoint(last_block_seen=event.block_number)
+            await self._handle_task(await event_log_task_kicker.kiq(event))
+            await self._checkpoint(last_block_processed=event.block_number)
