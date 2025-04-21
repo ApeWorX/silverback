@@ -3,6 +3,7 @@ import inspect
 from collections import defaultdict
 from datetime import timedelta
 from functools import wraps
+from types import MethodType
 from typing import Any, Awaitable, Callable
 
 from ape.api.networks import LOCAL_NETWORK_NAME
@@ -14,7 +15,7 @@ from packaging.version import Version
 from pydantic import BaseModel
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError
+from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError, NoSignerLoaded
 from .settings import Settings
 from .state import StateSnapshot
 from .types import SilverbackID, TaskType
@@ -142,6 +143,16 @@ class SilverbackBot(ManagerAccessMixin):
         atexit.register(provider_context.__exit__, None, None, None)
 
         self.signer = settings.get_signer()
+        if self.signer:
+            # NOTE: Monkeypatch `AccountAPI.call` to update bot nonce tracking state
+            original_call = self.signer.call
+
+            def call_override(account_instance, txn, *args, **kwargs):
+                self.state["system:last_nonce_used"] = txn.nonce
+                return original_call(txn, *args, **kwargs)
+
+            self.signer.__dict__["call"] = MethodType(call_override, self.signer)
+
         self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
         self.use_fork = settings.FORK_MODE and not self.provider.network.name.endswith("-fork")
 
@@ -225,6 +236,13 @@ class SilverbackBot(ManagerAccessMixin):
 
         self.state["system:last_block_seen"] = startup_state.last_block_seen
         self.state["system:last_block_processed"] = startup_state.last_block_processed
+
+        if self.signer:
+            # NOTE: 'BaseAddress.nonce` is 1 + last nonce that was used
+            self.state["system:last_nonce_used"] = max(
+                startup_state.last_nonce_used or -1, self.signer.nonce - 1
+            )
+
         # TODO: Load user custom state (should not start with `system:`)
 
     async def __create_snapshot_handler(
@@ -243,10 +261,24 @@ class SilverbackBot(ManagerAccessMixin):
             # TODO: Migrate these to parameters (remove explicitly from state)
             last_block_seen=self.state.get("system:last_block_seen", -1),
             last_block_processed=self.state.get("system:last_block_processed", -1),
+            last_nonce_used=self.state.get("system:last_nonce_used"),
         )
 
     # To ensure we don't have too many forks at once
     # HACK: Until `NetworkManager.fork` (and `ProviderContextManager`) allows concurrency
+
+    @property
+    def nonce(self) -> int:
+        if not self.signer:
+            raise NoSignerLoaded()
+
+        elif (last_nonce_used := self.state.get("system:last_nonce_used")) is None:
+            raise AttributeError(
+                "`bot.state` not fully loaded yet, please do not use during worker startup."
+            )
+
+        # NOTE: Next nonce (`.nonce` is meant to be used in next txn) is 1 + last
+        return max(last_nonce_used + 1, self.signer.nonce)
 
     def _with_fork_decorator(self, handler: Callable) -> Callable:
         # Trigger worker-side handling using fork network by wrapping handler

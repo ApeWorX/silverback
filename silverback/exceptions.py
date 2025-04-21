@@ -36,6 +36,13 @@ class SilverbackException(ApeException):
     """Base Exception for any Silverback runtime faults."""
 
 
+class NoSignerLoaded(SilverbackException):
+    def __init__(self):
+        super().__init__(
+            "No signer was made available. Please check config (e.g. `SILVERBACK_SIGNER_ALIAS=...`)"
+        )
+
+
 # TODO: `ExceptionGroup` added in Python 3.11
 class StartupFailure(SilverbackException):
     def __init__(self, *exceptions: BaseException | str | None):
@@ -45,11 +52,6 @@ class StartupFailure(SilverbackException):
             super().__init__(f"Startup failure(s):\n{error_str}")
         else:
             super().__init__("Startup failure(s) detected. See logs for details.")
-
-
-# NOTE: Subclass `click.UsageError` here so bad requests in CLI don't show stack trace
-class ClientError(SilverbackException, click.UsageError):
-    """Exception for client errors in the HTTP request."""
 
 
 class NoTasksAvailableError(SilverbackException):
@@ -67,3 +69,9 @@ class CircuitBreaker(Halt):
 
     def __init__(self, message: str):
         super(SilverbackException, self).__init__(message)
+
+
+# For Silverback Cluster client commands (CLI)
+# NOTE: Subclass `click.UsageError` here so bad requests in CLI don't show stack trace
+class ClientError(SilverbackException, click.UsageError):
+    """Exception for client errors in the HTTP request."""

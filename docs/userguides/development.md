@@ -13,7 +13,7 @@ There are 3 suggested ways to structure your project. In the root directory of y
 
 1. Create a `bot.py` file. This is the simplest way to define your bot project.
 
-2. Create a `bots/` folder. Then develop bots in this folder as separate scripts (Do not include a __init__.py file).
+2. Create a `bots/` folder. Then develop bots in this folder as separate scripts (Do not include a `__init__.py` file).
 
 3. Create a `bot/` folder with a `__init__.py` file that will include the instantiation of your `SilverbackBot()` object.
 
@@ -143,7 +143,7 @@ This function comes a parameter `state` that you can use for storing the results
 
 It's import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else. **This function will run on every worker process**.
 
-*New in 0.2.0*: These events moved from `on_startup()` and `on_shutdown()` for clarity.
+_New in 0.2.0_: These events moved from `on_startup()` and `on_shutdown()` for clarity.
 
 #### Worker State
 
@@ -180,7 +180,7 @@ def handle_on_shutdown():
     ...
 ```
 
-*Changed in 0.2.0*: The behavior of the `@bot.on_startup()` decorator and handler signature have changed. It is now executed only once upon bot startup and worker events have moved on `@bot.on_worker_startup()`.
+_Changed in 0.2.0_: The behavior of the `@bot.on_startup()` decorator and handler signature have changed. It is now executed only once upon bot startup and worker events have moved on `@bot.on_worker_startup()`.
 
 ## Bot State
 
@@ -229,6 +229,24 @@ To learn more about signing transactions with Ape, see the [documentation](https
 ```{warning}
 While not recommended, you can use keyfile accounts for automated signing.
 See [this guide](https://docs.apeworx.io/ape/stable/userguides/accounts.html#automation) to learn more about how to do that.
+```
+
+### Managing nonces
+
+Since Silverback allows handling many events in parallel, and thus can allow you to submit multiple transactions in a short timespan (in fact, prior to successful confirmation of previously broadcasted transactions), it may become vital to do "nonce management" in order to ensure that you are not producing transactions that might conflict with one another.
+The `bot.nonce` variable tracks the last-used nonce of the `bot.signer`, incrementing it every time a new transaction is signed _during the bot's operation_.
+By using this variable via `nonce=bot.nonce` in your transactions (instead of `bot.signer.nonce`, which is the default behavior when the `nonce=` transaction kwarg is omitted), you can ensure that you do not produce transactions with conflicting nonces, even at a very high rate of parallel transaction creation.
+
+```{note}
+The value of `bot.nonce` is the maximum between the internally-stored "last-used nonce", and the value given by RPC method
+```
+
+```{warning}
+Make sure to use an appropiate gas pricing algorithm in order to prevent your chain of multiple transactions from becoming "stuck" because an earlier broadcasted transaction was under-priced
+```
+
+```{warning}
+Do *not* use the same account on the same network at the same time as the one in use by your bot, as this could lead to extremely undesirable behavior, stuck transactions, or transaction failures/loss of funds
 ```
 
 ## Running your Bot
