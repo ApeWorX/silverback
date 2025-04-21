@@ -104,6 +104,7 @@ data-aria-dark="Switch to auto color mode">
 </li>
 <li><a class="reference internal" href="#bot-state">Bot State</a><ul>
 <li><a class="reference internal" href="#signing-transactions">Signing Transactions</a></li>
+<li><a class="reference internal" href="#managing-nonces">Managing nonces</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#running-your-bot">Running your Bot</a><ul>
@@ -154,7 +155,7 @@ You can install Silverback via <code class="docutils literal notranslate"><span 
 <p>There are 3 suggested ways to structure your project. In the root directory of your project:</p>
 <ol class="arabic simple">
 <li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot.py</span></code> file. This is the simplest way to define your bot project.</p></li>
-<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder. Then develop bots in this folder as separate scripts (Do not include a <strong>init</strong>.py file).</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder. Then develop bots in this folder as separate scripts (Do not include a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file).</p></li>
 <li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot/</span></code> folder with a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file that will include the instantiation of your <code class="docutils literal notranslate"><span class="pre">SilverbackBot()</span></code> object.</p></li>
 </ol>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback</span></code> cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
@@ -339,6 +340,24 @@ To learn more about signing transactions with Ape, see the <a class="reference e
 <p class="admonition-title">Warning</p>
 <p>While not recommended, you can use keyfile accounts for automated signing.
 See <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/accounts.html#automation">this guide</a> to learn more about how to do that.</p>
+</div>
+</section>
+<section id="managing-nonces">
+<h3>Managing nonces<a class="headerlink" href="#managing-nonces" title="Link to this heading"></a></h3>
+<p>Since Silverback allows handling many events in parallel, and thus can allow you to submit multiple transactions in a short timespan (in fact, prior to successful confirmation of previously broadcasted transactions), it may become vital to do “nonce management” in order to ensure that you are not producing transactions that might conflict with one another.
+The <code class="docutils literal notranslate"><span class="pre">bot.nonce</span></code> variable tracks the last-used nonce of the <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code>, incrementing it every time a new transaction is signed <em>during the bot’s operation</em>.
+By using this variable via <code class="docutils literal notranslate"><span class="pre">nonce=bot.nonce</span></code> in your transactions (instead of <code class="docutils literal notranslate"><span class="pre">bot.signer.nonce</span></code>, which is the default behavior when the <code class="docutils literal notranslate"><span class="pre">nonce=</span></code> transaction kwarg is omitted), you can ensure that you do not produce transactions with conflicting nonces, even at a very high rate of parallel transaction creation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">bot.nonce</span></code> is the maximum between the internally-stored “last-used nonce”, and the value given by RPC method</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Make sure to use an appropiate gas pricing algorithm in order to prevent your chain of multiple transactions from becoming “stuck” because an earlier broadcasted transaction was under-priced</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do <em>not</em> use the same account on the same network at the same time as the one in use by your bot, as this could lead to extremely undesirable behavior, stuck transactions, or transaction failures/loss of funds</p>
 </div>
 </section>
 </section>
