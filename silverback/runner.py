@@ -14,7 +14,7 @@ from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 from pydantic import TypeAdapter
-from taskiq import AsyncTaskiqDecoratedTask, AsyncTaskiqTask
+from taskiq import AsyncTaskiqDecoratedTask
 from web3 import AsyncWeb3, WebSocketProvider
 from web3.utils.subscriptions import (
     LogsSubscription,
@@ -89,7 +89,8 @@ class BaseRunner(ABC):
         return_type: Type | None = system_task_kicker.__annotations__.get("return")
         return TypeAdapter(return_type).validate_python(result.return_value)
 
-    async def _handle_task(self, task: AsyncTaskiqTask):
+    async def run_task(self, task_data: TaskData, *args):
+        task = await self.get_task(task_data.name).kiq(*args)
         result = await task.wait_result()
 
         if self.recorder:
@@ -104,10 +105,6 @@ class BaseRunner(ABC):
 
         if self.exceptions > self.max_exceptions or isinstance(result.error, Halt):
             result.raise_for_error()
-
-    async def run_task(self, task_data: TaskData, *args):
-        task = await self.get_task(task_data.name).kiq(*args)
-        return await self._handle_task(task)
 
     async def _checkpoint(
         self,
@@ -348,12 +345,11 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         self.ws_uri = ws_uri
 
     async def _block_task(self, task_data: TaskData):
-        new_block_task_kicker = self.get_task(task_data.name)
 
         async def block_handler(ctx: NewHeadsSubscriptionContext):
             block = self.provider.network.ecosystem.decode_block(dict(ctx.result))
             await self._checkpoint(last_block_seen=block.number)
-            await self._handle_task(await new_block_task_kicker.kiq(block))
+            await self.run_task(task_data, block)
             await self._checkpoint(last_block_processed=block.number)
 
         sub_id = await self._web3.subscription_manager.subscribe(
@@ -370,8 +366,6 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
 
         event_abi = EventABI.from_signature(event_signature)
 
-        event_log_task_kicker = self.get_task(task_data.name)
-
         async def log_handler(ctx: LogsSubscriptionContext):
             event = next(  # NOTE: `next` is okay since it only has one item
                 self.provider.network.ecosystem.decode_logs([ctx.result], event_abi)
@@ -379,7 +373,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
             # TODO: Fix upstream w/ web3py
             event.transaction_hash = "0x" + event.transaction_hash.hex()
             await self._checkpoint(last_block_seen=event.block_number)
-            await self._handle_task(await event_log_task_kicker.kiq(event))
+            await self.run_task(task_data, event)
             await self._checkpoint(last_block_processed=event.block_number)
 
         sub_id = await self._web3.subscription_manager.subscribe(
@@ -421,8 +415,6 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         )
 
     async def _block_task(self, task_data: TaskData):
-        new_block_task_kicker = self.get_task(task_data.name)
-
         if block_settings := self.bot.poll_settings.get("_blocks_"):
             new_block_timeout = block_settings.get("new_block_timeout")
         else:
@@ -439,7 +431,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             )
         ):
             await self._checkpoint(last_block_seen=block.number)
-            await self._handle_task(await new_block_task_kicker.kiq(block))
+            await self.run_task(task_data, block)
             await self._checkpoint(last_block_processed=block.number)
 
     async def _event_task(self, task_data: TaskData):
@@ -450,8 +442,6 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             raise StartupFailure("No Event Signature provided.")
 
         event_abi = EventABI.from_signature(event_signature)
-
-        event_log_task_kicker = self.get_task(task_data.name)
 
         if address_settings := self.bot.poll_settings.get(contract_address):
             new_block_timeout = address_settings.get("new_block_timeout")
@@ -471,5 +461,5 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             )
         ):
             await self._checkpoint(last_block_seen=event.block_number)
-            await self._handle_task(await event_log_task_kicker.kiq(event))
+            await self.run_task(task_data, event)
             await self._checkpoint(last_block_processed=event.block_number)
