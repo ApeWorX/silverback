@@ -1,11 +1,12 @@
 import atexit
 import inspect
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
 from types import MethodType
 from typing import Any, Awaitable, Callable
 
+import pycron  # type: ignore[import-untyped]
 from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractEventWrapper, ContractInstance
 from ape.logging import logger
@@ -300,6 +301,7 @@ class SilverbackBot(ManagerAccessMixin):
         self,
         task_type: TaskType,
         container: BlockContainer | ContractEvent | ContractEventWrapper | None = None,
+        cron_schedule: str | None = None,
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
@@ -364,6 +366,17 @@ class SilverbackBot(ManagerAccessMixin):
 
                 labels["contract_address"] = contract_address
                 labels["event_signature"] = container.abi.signature
+
+            elif task_type is TaskType.CRON_JOB:
+                # NOTE: If cron schedule has never been true over a year timeframe, it's bad
+                if not cron_schedule or not pycron.has_been(
+                    cron_schedule, datetime.now() - timedelta(days=366)
+                ):
+                    raise InvalidContainerTypeError(
+                        f"'{cron_schedule}' is not a valid cron schedule"
+                    )
+
+                labels["cron"] = cron_schedule
 
             self.tasks[task_type].append(TaskData(name=handler.__name__, labels=labels))
 
@@ -498,3 +511,12 @@ class SilverbackBot(ManagerAccessMixin):
         # TODO: Support account transaction polling
         # TODO: Support mempool polling?
         raise InvalidContainerTypeError(container)
+
+    def cron(self, cron_schedule: str) -> Callable:
+        """
+        Create task to run on a schedule.
+
+        Args:
+            cron_schedule (str): A cron-like schedule string.
+        """
+        return self.broker_task_decorator(TaskType.CRON_JOB, cron_schedule=cron_schedule)

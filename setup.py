@@ -69,6 +69,7 @@ setup(
         "eth-pydantic-types",  # Use same version as eth-ape
         "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup
         "packaging",  # Use same version as eth-ape
+        "pycron>=3.1,<4",  # Checking/triggering cron tasks
         "pydantic_settings",  # Use same version as eth-ape
         "quattro>=25.2,<26",  # Manage task groups and background tasks
         "taskiq[metrics]>=0.11.16,<0.12",

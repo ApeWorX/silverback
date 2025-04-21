@@ -21,6 +21,7 @@ class TaskType(str, Enum):
 
     # User-accessible Tasks
     STARTUP = "user:startup"
+    CRON_JOB = "user:cron-job"
     NEW_BLOCK = "user:new-block"
     EVENT_LOG = "user:event-log"
     SHUTDOWN = "user:shutdown"

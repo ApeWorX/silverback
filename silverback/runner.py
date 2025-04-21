@@ -2,8 +2,10 @@ import asyncio
 import signal
 import sys
 from abc import ABC, abstractmethod
+from datetime import timedelta
 from typing import Any, Coroutine, Type
 
+import pycron  # type: ignore[import-untyped]
 import quattro
 from ape import chain
 from ape.logging import logger
@@ -33,7 +35,7 @@ from .exceptions import (
 from .main import SilverbackBot, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
-from .types import TaskType
+from .types import TaskType, utc_now
 from .utils import async_wrap_iter
 
 if sys.version_info < (3, 11):
@@ -123,6 +125,31 @@ class BaseRunner(ABC):
         ):
             await self.datastore.save(snapshot)
 
+    async def _cron_tasks(self, cron_tasks: list[TaskData]):
+        """
+        Handle all cron tasks
+        """
+
+        while True:
+            # NOTE: Sleep until next exact time boundary (every minute)
+            current_time = utc_now()
+            wait_time = timedelta(
+                seconds=60 - 1 - current_time.second,
+                microseconds=int(1e6) - current_time.microsecond,
+            )
+            await asyncio.sleep(wait_time.total_seconds())
+            current_time += wait_time
+
+            for task_data in cron_tasks:
+                if not (cron := task_data.labels.get("cron")):
+                    logger.warning(f"Cron task missing `cron` label: '{task_data.name}'")
+                    continue
+
+                if pycron.is_now(cron, dt=current_time):
+                    self._runtime_task_group.create_task(self.run_task(task_data, current_time))
+
+            # NOTE: TaskGroup waits for all tasks to complete before continuing
+
     @abstractmethod
     async def _block_task(self, task_data: TaskData) -> None:
         """
@@ -209,6 +236,13 @@ class BaseRunner(ABC):
             # NOTE: No need to handle results otherwise
 
         # Create our long-running event listeners
+        cron_tasks_taskdata = (
+            await self.run_system_task(TaskType.SYSTEM_USER_TASKDATA, TaskType.CRON_JOB)
+            if Version(config.sdk_version) >= Version("0.7.15")
+            # NOTE: Not supported in prior versions
+            else []
+        )
+
         new_block_tasks_taskdata = await self.run_system_task(
             TaskType.SYSTEM_USER_TASKDATA, TaskType.NEW_BLOCK
         )
@@ -309,6 +343,9 @@ class BaseRunner(ABC):
 
         try:
             async with quattro.TaskGroup() as tg:
+                # NOTE: Our runtime tasks can use this to spawn more tasks
+                self._runtime_task_group = tg
+
                 # NOTE: User tasks that should run forever
                 for coro in user_tasks:
                     tg.create_task(coro)
