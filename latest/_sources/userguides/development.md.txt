@@ -121,6 +121,19 @@ Inside of `handle_token_transfer_events` you can define any logic that you want 
 Again, you can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
 Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this `transfer` event log.
 
+## Cron Tasks
+
+You may also want to run some tasks according to a schedule, either for efficiency reasons or just that the task is not related to any chain-driven events.
+You can do that with the `@cron` task decorator.
+
+```python
+@app.cron("* */1 * * *")
+def every_hour():
+    ...
+```
+
+For more information see [the linux handbook section on the crontab syntax](https://linuxhandbook.com/crontab/#understanding-crontab-syntax) or the [crontab.guru](https://crontab.guru/) generator.
+
 ## Startup and Shutdown
 
 ### Worker Events

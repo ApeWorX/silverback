@@ -94,6 +94,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#creating-a-bot">Creating a Bot</a></li>
 <li><a class="reference internal" href="#new-block-events">New Block Events</a></li>
 <li><a class="reference internal" href="#new-event-logs">New Event Logs</a></li>
+<li><a class="reference internal" href="#cron-tasks">Cron Tasks</a></li>
 <li><a class="reference internal" href="#startup-and-shutdown">Startup and Shutdown</a><ul>
 <li><a class="reference internal" href="#worker-events">Worker Events</a><ul>
 <li><a class="reference internal" href="#worker-state">Worker State</a></li>
@@ -241,6 +242,17 @@ Any errors you raise during this function will get captured by the client, and r
 <p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_token_transfer_events</span></code> you can define any logic that you want to handle each new <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event that gets emitted by <code class="docutils literal notranslate"><span class="pre">TOKEN.Transfer</span></code> detected by the silverback client.
 Again, you can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
 Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event log.</p>
+</section>
+<section id="cron-tasks">
+<h2>Cron Tasks<a class="headerlink" href="#cron-tasks" title="Link to this heading"></a></h2>
+<p>You may also want to run some tasks according to a schedule, either for efficiency reasons or just that the task is not related to any chain-driven events.
+You can do that with the <code class="docutils literal notranslate"><span class="pre">&#64;cron</span></code> task decorator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@app</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;* */1 * * *&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">every_hour</span><span class="p">():</span>
+</span><span data-line="3">    <span class="o">...</span>
+</span></pre></div>
+</div>
+<p>For more information see <a class="reference external" href="https://linuxhandbook.com/crontab/#understanding-crontab-syntax">the linux handbook section on the crontab syntax</a> or the <a class="reference external" href="https://crontab.guru/">crontab.guru</a> generator.</p>
 </section>
 <section id="startup-and-shutdown">
 <h2>Startup and Shutdown<a class="headerlink" href="#startup-and-shutdown" title="Link to this heading"></a></h2>
