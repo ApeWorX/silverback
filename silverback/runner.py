@@ -276,7 +276,7 @@ class BaseRunner(ABC):
         # NOTE: Finally execute runner cleanup tasks
         await quattro.gather(*self._cleanup_tasks())
 
-    def _background_tasks(self) -> list[Coroutine]:
+    def _daemon_tasks(self) -> list[Coroutine]:
         return []
 
     async def run(self):
@@ -320,11 +320,13 @@ class BaseRunner(ABC):
                     tg.create_task(coro)
 
                 # NOTE: It is assumed if no user tasks, there is a background task
-                for coro in self._background_tasks():
+                for coro in self._daemon_tasks():
                     tg.create_task(coro)
 
                 # NOTE: Will wait forever on this task to halt
                 tg.create_task(wait_for_graceful_shutdown())
+
+            # NOTE: If any exception raised by non-background tasks, will quit all
 
         except ExceptionGroup as eg:
             if error_str := "\n".join(str(e) for e in eg.exceptions if not isinstance(e, Halt)):
@@ -393,7 +395,7 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         )
         logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
 
-    def _background_tasks(self) -> list[Coroutine]:
+    def _daemon_tasks(self) -> list[Coroutine]:
         # NOTE: Handle this as a daemon task (after startup)
         return [self._web3.subscription_manager.handle_subscriptions(run_forever=True)]
 
