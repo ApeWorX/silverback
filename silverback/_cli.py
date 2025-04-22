@@ -158,7 +158,7 @@ def build(generate, path):
                 "This command can auto-detect 'bot.py' or 'bot/' folder in project root"
                 ", or process all '*.py' bots in  'bots/' folder."
             )
-        print(path)
+
         generate_dockerfiles(path)
 
     if not (Path.cwd() / IMAGES_FOLDER_NAME).exists():
