@@ -375,7 +375,10 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
     async def _block_task(self, task_data: TaskData):
         async def block_handler(ctx: NewHeadsSubscriptionContext):
             self._runtime_task_group.create_task(
-                self.run_task(task_data, clean_hexbytes_dict(ctx.result))
+                self.run_task(
+                    task_data,
+                    clean_hexbytes_dict(ctx.result),  # type: ignore[arg-type]
+                )
             )
 
         sub_id = await self._web3.subscription_manager.subscribe(
@@ -386,7 +389,10 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
     async def _event_task(self, task_data: TaskData):
         async def log_handler(ctx: LogsSubscriptionContext):
             self._runtime_task_group.create_task(
-                self.run_task(task_data, clean_hexbytes_dict(ctx.result))
+                self.run_task(
+                    task_data,
+                    clean_hexbytes_dict(ctx.result),  # type: ignore[arg-type]
+                )
             )
 
         contract_address = task_data.labels.get("address")
