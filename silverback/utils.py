@@ -1,24 +1,43 @@
 import asyncio
 import threading
-from typing import AsyncIterator, Iterable, Iterator
+from typing import Any, AsyncIterator, Iterator
 
 from ape.types import HexBytes
-from taskiq import AsyncTaskiqDecoratedTask, TaskiqResult
-from taskiq.kicker import AsyncKicker
+from eth_typing import HexStr
+from eth_utils import to_hex
+
+Topic = list[HexStr] | HexStr | None
 
 
-async def run_taskiq_task_wait_result(
-    task_def: AsyncTaskiqDecoratedTask | AsyncKicker, *args, **kwargs
-) -> TaskiqResult:
-    task = await task_def.kiq(*args, **kwargs)
-    return await task.wait_result()
+def encode_topics_to_string(topics: list[Topic]) -> str:
+    """Encode a topic list to a string, for TaskIQ label"""
+    # See https://web3py.readthedocs.io/en/stable/filters.html#event-log-filters
+    return ";".join(",".join(t) if isinstance(t, list) else t or "" for t in topics)
 
 
-async def run_taskiq_task_group_wait_results(
-    task_defs: Iterable[AsyncTaskiqDecoratedTask | AsyncKicker], *args, **kwargs
-) -> list[TaskiqResult]:
-    tasks = await asyncio.gather(*(task_def.kiq(*args, **kwargs) for task_def in task_defs))
-    return await asyncio.gather(*(task.wait_result() for task in tasks))
+def _simplify_topic(topic: Topic) -> Topic:
+    if isinstance(topic, list) and len(topic) == 1:
+        return topic[0]
+
+    return topic
+
+
+def _clean_trailing_nones(topics: list[Topic]) -> list[Topic]:
+    while len(topics) > 0 and topics[-1] is None:
+        topics = topics[:-1]
+
+    return topics
+
+
+def decode_topics_from_string(encoded_topics: str) -> list[Topic]:
+    """Decode a topic list from a TaskIQ label into Web3py topics"""
+    # NOTE: Should reverse the above
+    return _clean_trailing_nones(
+        [
+            _simplify_topic([to_hex(hexstr=t) for t in et.split(",")]) if et else None
+            for et in encoded_topics.split(";")
+        ]
+    )
 
 
 def async_wrap_iter(it: Iterator) -> AsyncIterator:
@@ -54,17 +73,50 @@ def async_wrap_iter(it: Iterator) -> AsyncIterator:
     return yield_queue_items()
 
 
-def hexbytes_dict(data: dict, recurse_count: int = 0) -> dict:
+# TODO: Necessary because bytes/HexBytes doesn't encode/decode well for some reason
+def clean_hexbytes_dict(data: dict, recurse_count: int = 0) -> dict:
+    """Strips `HexBtes` objects from dictionary values, as they do not encode well"""
+    fixed_data: dict[str, Any] = {}
+    for name, value in data.items():
+        if isinstance(value, bytes):
+            fixed_data[name] = to_hex(value)
+
+        elif isinstance(value, list):
+            fixed_data[name] = [to_hex(v) if isinstance(v, bytes) else v for v in value]
+
+        elif isinstance(value, dict):
+            if recurse_count > 3:
+                raise RecursionError("object is too deep")
+
+            fixed_data[name] = clean_hexbytes_dict(value, recurse_count + 1)
+
+        else:
+            fixed_data[name] = value
+
+    return fixed_data
+
+
+def parse_hexbytes_dict(data: dict, recurse_count: int = 0) -> dict:
     """Converts any hex string values in a flat dictionary to HexBytes."""
+    # NOTE: Reverses above
     fixed_data = {}
 
     for name, value in data.items():
         if isinstance(value, str) and value.startswith("0x"):
             fixed_data[name] = HexBytes(value)
+
+        elif isinstance(value, list):
+            fixed_data[name] = [
+                HexBytes(v) if isinstance(value, str) and value.startswith("0x") else v
+                for v in value
+            ]
+
         elif isinstance(value, dict):
             if recurse_count > 3:
-                raise RecursionError("Event object is too deep")
-            hexbytes_dict(value, recurse_count + 1)
+                raise RecursionError("object is too deep")
+
+            parse_hexbytes_dict(value, recurse_count + 1)
+
         else:
             fixed_data[name] = value
 
