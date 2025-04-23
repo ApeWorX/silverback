@@ -257,9 +257,6 @@ class SilverbackBot(ManagerAccessMixin):
             last_nonce_used=self.state.get("system:last_nonce_used"),
         )
 
-    # To ensure we don't have too many forks at once
-    # HACK: Until `NetworkManager.fork` (and `ProviderContextManager`) allows concurrency
-
     @property
     def nonce(self) -> int:
         if not self.signer:
@@ -331,6 +328,9 @@ class SilverbackBot(ManagerAccessMixin):
             return result
 
         return ensure_log
+
+    # To ensure we don't have too many forks at once
+    # HACK: Until `NetworkManager.fork` (and `ProviderContextManager`) allows concurrency
 
     def _with_fork_decorator(self, handler: Callable) -> Callable:
         # Trigger worker-side handling using fork network by wrapping handler
