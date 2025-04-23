@@ -19,7 +19,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError, NoSignerLoaded
 from .settings import Settings
 from .state import StateSnapshot
-from .types import SilverbackID, TaskType
+from .types import SilverbackID, TaskType, is_scalar_type
 
 
 class SystemConfig(BaseModel):
@@ -244,7 +244,12 @@ class SilverbackBot(ManagerAccessMixin):
                 startup_state.last_nonce_used or -1, self.signer.nonce - 1
             )
 
-        # TODO: Load user custom state (should not start with `system:`)
+        # Load parameters from snapshot into state
+        for parameter_name, parameter_value in startup_state.parameters.items():
+            if parameter_name.startswith("system:"):
+                logger.error(f"Cannot restore '{parameter_name}'")
+            else:
+                self.state[parameter_name] = parameter_value
 
     async def __create_snapshot_handler(
         self,
@@ -259,10 +264,15 @@ class SilverbackBot(ManagerAccessMixin):
             self.state["system:last_block_processed"] = last_block_processed
 
         return StateSnapshot(
-            # TODO: Migrate these to parameters (remove explicitly from state)
             last_block_seen=self.state.get("system:last_block_seen", -1),
             last_block_processed=self.state.get("system:last_block_processed", -1),
             last_nonce_used=self.state.get("system:last_nonce_used"),
+            parameters={
+                param_name: param_value
+                for param_name in self.parameters
+                # NOTE: Do not backup invalid parameters
+                if is_scalar_type(param_value := self.state.get(param_name))
+            },
         )
 
     # To ensure we don't have too many forks at once
