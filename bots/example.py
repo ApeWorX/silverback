@@ -19,6 +19,11 @@ ROUTER = os.environ.get("ROUTER", "0x1111111254EEB25477B68fb85Ed929f73A960582")
 # Do this first to initialize your bot
 bot = SilverbackBot()
 
+# You can use environment variables to load sensitive data
+# NOTE: Use `os.environ["<NAME>"]` if you want your bot to fail without it
+api_key = os.environ.get("SOME_SERVICE_API_KEY", "badkey")
+# NOTE: You can use `silverback cluster vars` commands to configure variable groups
+
 # Cannot call `bot.state` outside of an bot function handler
 # bot.state.something  # NOTE: raises AttributeError
 
