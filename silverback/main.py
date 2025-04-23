@@ -51,6 +51,12 @@ class TaskData(BaseModel):
         return hash(self.model_dump_json())
 
 
+class ParameterInfo(BaseModel):
+    default: ScalarType | None
+
+    # NOTE: Any other fields should have defaults
+
+
 class SharedState(defaultdict):
     """
     Class containing the bot shared state that all workers can read from and write to.
@@ -193,6 +199,9 @@ class SilverbackBot(ManagerAccessMixin):
             TaskType.SYSTEM_CREATE_SNAPSHOT, self.__create_snapshot_handler
         )
 
+        # NOTE: Parameters are create via `add_parameter`
+        self.__parameters: dict[str, ParameterInfo] = {}
+
     def __register_system_task(
         self, task_type: TaskType, task_handler: Callable
     ) -> AsyncTaskiqDecoratedTask:
@@ -249,12 +258,21 @@ class SilverbackBot(ManagerAccessMixin):
                 startup_state.last_nonce_used or -1, self.signer.nonce - 1
             )
 
+        # NOTE: We need to load defaults in case user parameters are not in the snapshot yet
+        for parameter_name, parameter_info in self.parameters.items():
+            self.state[parameter_name] = parameter_info.default
+
         # Load parameters from snapshot into state
         for parameter_name, parameter_value in startup_state.parameters.items():
             if parameter_name.startswith("system:"):
                 logger.error(f"Cannot restore '{parameter_name}'")
-            else:
-                self.state[parameter_name] = parameter_value
+                continue
+
+            elif parameter_name in self.parameters:
+                # NOTE: Keep both of these in sync (primarily for debugging)
+                self.__parameters[parameter_name].default = parameter_value
+
+            self.state[parameter_name] = parameter_value
 
     async def __create_snapshot_handler(self) -> StateSnapshot:
         return StateSnapshot(
@@ -268,6 +286,24 @@ class SilverbackBot(ManagerAccessMixin):
                 if is_scalar_type(param_value := self.state.get(param_name))
             },
         )
+
+    @property
+    def parameters(self) -> dict[str, ParameterInfo]:
+        # NOTE: makes this variable read-only
+        return self.__parameters
+
+    def add_parameter(self, param_name: str, default: ScalarType | None = None):
+        if "system:" in param_name:
+            raise ValueError("Cannot override system parameters")
+
+        if param_name in self.parameters:
+            raise ValueError(f"{param_name} already added!")
+
+        if default and not is_scalar_type(default):
+            raise ValueError(f"Default value type '{type(default)}' is not a valid scalar type.")
+
+        # Update this to track parameter existance/default value/update handler
+        self.__parameters[param_name] = ParameterInfo(default=default)
 
     @property
     def nonce(self) -> int:

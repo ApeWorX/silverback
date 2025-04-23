@@ -31,6 +31,12 @@ api_key = os.environ.get("SOME_SERVICE_API_KEY", "badkey")
 usdc = tokens["USDC"]
 
 
+# We can add "parameters", which are values in `bot.state` that are able to be updated
+# by external triggers while the bot is in runtime
+bot.add_parameter("bad_number", default=3)
+# NOTE: the value specified by `default=` is only used if no value exists in the snapshot
+
+
 @bot.on_startup()
 def bot_startup(startup_state: StateSnapshot):
     # This is called just as the bot is put into "run" state,
@@ -42,6 +48,11 @@ def bot_startup(startup_state: StateSnapshot):
     # This is a great place to set `bot.state` values
     bot.state.logs_processed = 0
     # NOTE: Can put anything here, any python object works
+    # NOTE: Non-parameter state is `None` by default
+
+    # Parameters are loaded from state snapshot (or set to the default above)
+    assert bot.state.bad_number == startup_state.bad_number or 3
+    # NOTE: parameter values are stored in the state snapshot for successive runs
 
     return {"block_number": startup_state.last_block_seen}
 
@@ -79,10 +90,10 @@ def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
 @bot.on_(usdc.Transfer)
 # NOTE: Typing isn't required, it will still be an Ape `ContractLog` type
 def exec_event1(log):
-    if log.log_index % 7 == 3:
+    if log.log_index % 7 == bot.state.bad_number:
         # If you raise any exception, Silverback will track the failure and keep running
         # NOTE: By default, if you have 3 tasks fail in a row, the bot will shutdown itself
-        raise ValueError("I don't like the number 3.")
+        raise ValueError(f"I don't like the number {bot.state.bad_number}.")
 
     # You can update state whenever you want
     bot.state.logs_processed += 1
@@ -102,7 +113,7 @@ async def handle_mints(log):
 # Any handler function can be async too
 async def exec_event2(log: ContractLog):
     token = Token.at(log.contract_address)
-    # All `bot.state` values are updated across all workers at the same time
+    # All `bot.state` values (including parameters) are updated across all workers at the same time
     bot.state.logs_processed += 1
     # Do any other long running tasks...
     await asyncio.sleep(5)
