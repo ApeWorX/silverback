@@ -52,8 +52,9 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
 
         elif task_type is TaskType.EVENT_LOG:
             log = message.args[0]
-            message.labels["txn"] = log.get("transactionHash") or log["transaction_hash"]
-            message.labels["idx"] = log.get("logIndex") or log["log_index"]
+            # NOTE: One of these two should exist as keys in `log`
+            message.labels["txn"] = log.get("transactionHash", log.get("transaction_hash"))
+            message.labels["idx"] = log.get("logIndex", log.get("log_index"))
 
         elif task_type is TaskType.CRON_JOB:
             message.labels["time"] = str(message.args[0])
