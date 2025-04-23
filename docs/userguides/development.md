@@ -341,4 +341,4 @@ TODO: Add backtesting mode w/ `silverback test`
 
 ## Deploying your Bot
 
-Check out the [Platform Deployment Userguide](./platform.html) for more information on how to deploy your bot to the [Silverback Platform](https://silverback.apeworx.io).
+Check out the [Platform Deployment Userguide](./managing.html) for more information on how to deploy your bot to the [Silverback Platform](https://silverback.apeworx.io).
