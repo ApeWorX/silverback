@@ -19,7 +19,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError, NoSignerLoaded
 from .settings import Settings
 from .state import StateSnapshot
-from .types import ScalarType, SilverbackID, TaskType, is_scalar_type
+from .types import ParamChange, ScalarType, SilverbackID, TaskType, is_scalar_type
 
 
 class SystemConfig(BaseModel):
@@ -193,6 +193,12 @@ class SilverbackBot(ManagerAccessMixin):
         self._create_snapshot = self.__register_system_task(
             TaskType.SYSTEM_CREATE_SNAPSHOT, self.__create_snapshot_handler
         )
+        self._set_param = self.__register_system_task(
+            TaskType.SYSTEM_SET_PARAM, self.__param_set_handler
+        )
+        self._batch_set_param = self.__register_system_task(
+            TaskType.SYSTEM_SET_PARAM_BATCH, self.__batch_param_set_handler
+        )
 
         # NOTE: Parameters are create via `add_parameter`
         self.__parameters: dict[str, ParameterInfo] = {}
@@ -313,6 +319,36 @@ class SilverbackBot(ManagerAccessMixin):
 
         # Update this to track parameter existance/default value/update handler
         self.__parameters[param_name] = ParameterInfo(default=default)
+
+    async def __param_set_handler(self, param_name: str, new_value: ScalarType) -> ParamChange:
+        if "system:" in param_name:
+            raise ValueError(f"Cannot update system parameter '{param_name}'")
+
+        elif param_name not in self.parameters:
+            raise ValueError(f"Unrecognized parameter '{param_name}'")
+
+        change = ParamChange(old=self.state[param_name], new=new_value)
+        logger.success(f"Update: app.state['{param_name}'] = {new_value}")
+        self.state[param_name] = new_value
+        return change
+
+    async def __batch_param_set_handler(
+        self, parameter_updates: dict[str, ScalarType]
+    ) -> dict[str, ParamChange]:
+        datapoints = {}
+        for param_name, new_value in parameter_updates.items():
+            if "system:" in param_name:
+                logger.error(f"Cannot update system parameter '{param_name}'")
+
+            elif param_name not in self.parameters:
+                logger.error(f"Unrecognized parameter '{param_name}'")
+
+            else:
+                datapoints[param_name] = ParamChange(old=self.state[param_name], new=new_value)
+                logger.success(f"Update: app.state['{param_name}'] = {new_value}")
+                self.state[param_name] = new_value
+
+        return datapoints
 
     @property
     def nonce(self) -> int:
