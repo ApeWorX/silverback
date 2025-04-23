@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 from datetime import datetime
 from typing import Annotated
@@ -14,12 +15,23 @@ from silverback import CircuitBreaker, SilverbackBot, StateSnapshot
 # Do this first to initialize your bot
 bot = SilverbackBot()
 
+# You can use environment variables to load sensitive data
+# NOTE: Use `os.environ["<NAME>"]` if you want your bot to fail without it
+api_key = os.environ.get("SOME_SERVICE_API_KEY", "badkey")
+# NOTE: You can use `silverback cluster vars` commands to configure variable groups
+
 # Cannot call `bot.state` outside of an bot function handler
 # bot.state.something  # NOTE: raises AttributeError
 
 # NOTE: Don't do any networking until after initializing bot
 USDC = tokens["USDC"]
 YFI = tokens["YFI"]
+
+
+# We can add "parameters", which are values in `bot.state` that are able to be updated
+# by external triggers while the bot is in runtime
+bot.add_parameter("bad_number", default=3)
+# NOTE: the value specified by `default=` is only used if no value exists in the snapshot
 
 
 @bot.on_startup()
@@ -33,6 +45,11 @@ def bot_startup(startup_state: StateSnapshot):
     # This is a great place to set `bot.state` values
     bot.state.logs_processed = 0
     # NOTE: Can put anything here, any python object works
+    # NOTE: Non-parameter state is `None` by default
+
+    # Parameters are loaded from state snapshot (or set to the default above)
+    assert bot.state.bad_number == startup_state.bad_number or 3
+    # NOTE: parameter values are stored in the state snapshot for successive runs
 
     return {"block_number": startup_state.last_block_seen}
 
@@ -71,10 +88,10 @@ def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
 @bot.on_(USDC.Transfer, start_block=-10, new_block_timeout=25)
 # NOTE: Typing isn't required, it will still be an Ape `ContractLog` type
 def exec_event1(log):
-    if log.log_index % 7 == 3:
+    if log.log_index % 7 == bot.state.bad_number:
         # If you raise any exception, Silverback will track the failure and keep running
         # NOTE: By default, if you have 3 tasks fail in a row, the bot will shutdown itself
-        raise ValueError("I don't like the number 3.")
+        raise ValueError(f"I don't like the number {bot.state.bad_number}.")
 
     # You can update state whenever you want
     bot.state.logs_processed += 1
@@ -85,7 +102,7 @@ def exec_event1(log):
 @bot.on_(YFI.Approval)
 # Any handler function can be async too
 async def exec_event2(log: ContractLog):
-    # All `bot.state` values are updated across all workers at the same time
+    # All `bot.state` values (including parameters) are updated across all workers at the same time
     bot.state.logs_processed += 1
     # Do any other long running tasks...
     await asyncio.sleep(5)
