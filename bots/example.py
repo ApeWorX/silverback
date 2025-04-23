@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 from datetime import datetime
 from typing import Annotated
@@ -13,6 +14,11 @@ from silverback import CircuitBreaker, SilverbackBot, StateSnapshot
 
 # Do this first to initialize your bot
 bot = SilverbackBot()
+
+# You can use environment variables to load sensitive data
+# NOTE: Use `os.environ["<NAME>"]` if you want your bot to fail without it
+api_key = os.environ.get("SOME_SERVICE_API_KEY", "badkey")
+# NOTE: You can use `silverback cluster vars` commands to configure variable groups
 
 # Cannot call `bot.state` outside of an bot function handler
 # bot.state.something  # NOTE: raises AttributeError
