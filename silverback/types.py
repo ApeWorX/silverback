@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Literal
+from typing import Any, Literal, get_args
 
 from ape.logging import get_logger
 from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
@@ -71,6 +71,14 @@ Int96 = Annotated[int, Field(ge=-(2**95), le=2**95 - 1)]
 ScalarType = bool | Int96 | float | Decimal
 # NOTE: Interesting side effect is that `int` outside the INT96 range parse as `Decimal`
 #       This is okay, preferable actually, because it means we can store ints outside that range
+
+
+def is_scalar_type(val: Any) -> bool:
+    """Check if `val` is a `ScalarType` type"""
+    return any(
+        isinstance(val, d_type.__origin__ if hasattr(d_type, "__origin__") else d_type)
+        for d_type in get_args(ScalarType)
+    )
 
 
 class ScalarDatapoint(_BaseDatapoint):
