@@ -14,7 +14,8 @@ from ape.managers.chain import BlockContainer
 from ape.types import AddressType, ContractLog
 from ape.utils import ManagerAccessMixin
 from eth_typing import HexStr
-from eth_utils import keccak, to_bytes, to_hex
+from eth_utils import keccak, to_hex
+from ethpm_types.abi import encode_topic_value
 from packaging.version import Version
 from pydantic import BaseModel
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
@@ -349,7 +350,7 @@ class SilverbackBot(ManagerAccessMixin):
 
         return fork_handler
 
-    def _convert_arg_to_hexstr(self, arg_value: Any, arg_type: str) -> HexStr:
+    def _convert_arg_to_hexstr(self, arg_value: Any, arg_type: str) -> HexStr | list[HexStr] | None:
         python_type: Any
         if "int" in arg_type:
             python_type = int
@@ -362,16 +363,13 @@ class SilverbackBot(ManagerAccessMixin):
         else:
             raise ValueError(f"Unable to support ABI Type '{arg_type}'.")
 
-        arg_value = self.conversion_manager.convert(arg_value, python_type)
+        if isinstance(arg_value, list):
+            arg_value = [self.conversion_manager.convert(v, python_type) for v in arg_value]
 
-        if arg_type in ("address",):
-            arg_value_bytes = to_bytes(hexstr=arg_value)
-        elif arg_type in ("string",):
-            arg_value_bytes = to_bytes(text=arg_value)
         else:
-            arg_value_bytes = to_bytes(arg_value)
+            arg_value = self.conversion_manager.convert(arg_value, python_type)
 
-        return to_hex(b"\x00" * (32 - len(arg_value_bytes)) + arg_value_bytes)
+        return encode_topic_value(arg_type, arg_value)  # type: ignore[return-value]
 
     def broker_task_decorator(
         self,
