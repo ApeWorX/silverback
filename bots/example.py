@@ -6,6 +6,7 @@ from typing import Annotated
 from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
+from ape.utils import ZERO_ADDRESS
 from ape_tokens import tokens  # type: ignore[import]
 from taskiq import Context, TaskiqDepends, TaskiqState
 
@@ -80,6 +81,11 @@ def exec_event1(log):
     bot.state.logs_processed += 1
 
     return {"amount": log.amount}
+
+
+@bot.on_(USDC.Transfer, sender=ZERO_ADDRESS)
+async def handle_mints(log):
+    assert log.sender == ZERO_ADDRESS
 
 
 @bot.on_(YFI.Approval)
