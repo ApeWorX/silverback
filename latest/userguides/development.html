@@ -93,7 +93,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#project-structure">Project structure</a></li>
 <li><a class="reference internal" href="#creating-a-bot">Creating a Bot</a></li>
 <li><a class="reference internal" href="#new-block-events">New Block Events</a></li>
-<li><a class="reference internal" href="#new-event-logs">New Event Logs</a></li>
+<li><a class="reference internal" href="#new-event-logs">New Event Logs</a><ul>
+<li><a class="reference internal" href="#event-log-filters">Event Log Filters</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#cron-tasks">Cron Tasks</a></li>
 <li><a class="reference internal" href="#startup-and-shutdown">Startup and Shutdown</a><ul>
 <li><a class="reference internal" href="#worker-events">Worker Events</a><ul>
@@ -201,7 +204,7 @@ If you follow these suggestions, your Silverback deployments will be easy to use
 <section id="creating-a-bot">
 <h2>Creating a Bot<a class="headerlink" href="#creating-a-bot" title="Link to this heading"></a></h2>
 <p>Creating a Silverback Bot is easy, to do so initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackBot</span></code> class:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">silverback</span><span class="w"> </span><span class="kn">import</span> <span class="n">SilverbackBot</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">silverback</span><span class="w"> </span><span class="kn">import</span> <span class="n">SilverbackBot</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
 </span></pre></div>
@@ -216,7 +219,7 @@ This method lets us specify which event will trigger the execution of our handle
 <section id="new-block-events">
 <h2>New Block Events<a class="headerlink" href="#new-block-events" title="Link to this heading"></a></h2>
 <p>To add a block handler, you will do the following:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
 </span><span data-line="4"><span class="k">def</span><span class="w"> </span><span class="nf">handle_new_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
@@ -230,7 +233,7 @@ Any errors you raise during this function will get captured by the client, and r
 <section id="new-event-logs">
 <h2>New Event Logs<a class="headerlink" href="#new-event-logs" title="Link to this heading"></a></h2>
 <p>Similarly to blocks, you can handle events emitted by a contract by adding an event handler:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">Contract</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">Contract</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">TOKEN</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="o">&lt;</span><span class="n">your</span> <span class="n">token</span> <span class="n">address</span> <span class="n">here</span><span class="o">&gt;</span><span class="p">)</span>
 </span><span data-line="4">
@@ -242,12 +245,28 @@ Any errors you raise during this function will get captured by the client, and r
 <p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_token_transfer_events</span></code> you can define any logic that you want to handle each new <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event that gets emitted by <code class="docutils literal notranslate"><span class="pre">TOKEN.Transfer</span></code> detected by the silverback client.
 Again, you can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
 Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event log.</p>
+<section id="event-log-filters">
+<h3>Event Log Filters<a class="headerlink" href="#event-log-filters" title="Link to this heading"></a></h3>
+<p>You can also filter event logs by event parameters.
+For example, if you want to handle only <code class="docutils literal notranslate"><span class="pre">Transfer</span></code> events that represent a burn (a transfer to the zero address):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">USDC</span><span class="o">.</span><span class="n">Transfer</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="s2">&quot;0x0000000000000000000000000000000000000000&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_burn</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;burned&quot;</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>In case an event parameter has a name that is an illegal keyword, we can also support a dictionary syntax:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">USDC</span><span class="o">.</span><span class="n">Transfer</span><span class="p">,</span> <span class="n">filter_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;from&quot;</span><span class="p">:</span><span class="s2">&quot;0x0000000000000000000000000000000000000000&quot;</span><span class="p">})</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_burn</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;burned&quot;</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
 </section>
 <section id="cron-tasks">
 <h2>Cron Tasks<a class="headerlink" href="#cron-tasks" title="Link to this heading"></a></h2>
 <p>You may also want to run some tasks according to a schedule, either for efficiency reasons or just that the task is not related to any chain-driven events.
 You can do that with the <code class="docutils literal notranslate"><span class="pre">&#64;cron</span></code> task decorator.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@app</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;* */1 * * *&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;* */1 * * *&quot;</span><span class="p">)</span>
 </span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">every_hour</span><span class="p">():</span>
 </span><span data-line="3">    <span class="o">...</span>
 </span></pre></div>
@@ -259,7 +278,7 @@ You can do that with the <code class="docutils literal notranslate"><span class=
 <section id="worker-events">
 <h3>Worker Events<a class="headerlink" href="#worker-events" title="Link to this heading"></a></h3>
 <p>If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Connect to DB, set initial state, etc</span>
 </span><span data-line="4">    <span class="o">...</span>
@@ -277,7 +296,7 @@ You can do that with the <code class="docutils literal notranslate"><span class=
 <h4>Worker State<a class="headerlink" href="#worker-state" title="Link to this heading"></a></h4>
 <p>The <code class="docutils literal notranslate"><span class="pre">state</span></code> variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses. Each distributed worker has its own instance of state.</p>
 <p>To access the state from a handler, you must annotate <code class="docutils literal notranslate"><span class="pre">context</span></code> as a dependency like so:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
 </span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">taskiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
@@ -291,7 +310,7 @@ You can do that with the <code class="docutils literal notranslate"><span class=
 <section id="bot-events">
 <h3>Bot Events<a class="headerlink" href="#bot-events" title="Link to this heading"></a></h3>
 <p>You can also add an bot startup and shutdown handler that will be <strong>executed once upon every bot startup</strong>. This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Process missed events, etc</span>
 </span><span data-line="4">    <span class="c1"># process_history(start_block=startup_state.last_block_seen)</span>
@@ -316,7 +335,7 @@ Silverback provides <code class="docutils literal notranslate"><span class="pre"
 <p>For example, you might want to pre-populate a large dataframe into state on startup, keeping that dataframe in sync with the chain through event logs,
 and then use that data to determine a signal under which you want trigger transactions to commit back to the chain.
 Such an bot might look like this:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">create_table</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="n">df</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">start_block</span><span class="o">=</span><span class="n">startup_state</span><span class="o">.</span><span class="n">last_block_processed</span><span class="p">)</span>
 </span><span data-line="4">    <span class="o">...</span>  <span class="c1"># Do some further processing on df</span>
@@ -387,7 +406,7 @@ To run your bot locally, we have included a really useful cli command <a class="
 </div>
 <p>It’s important to note that signers are optional, if not configured in the bot then <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
 You can use this in your bot to enable a “test execution” mode, something like this:</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Compute some metric that might lead to creating a transaction</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Compute some metric that might lead to creating a transaction</span>
 </span><span data-line="2"><span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">:</span>
 </span><span data-line="3">    <span class="c1"># Execute a transaction via `sender=bot.signer`</span>
 </span><span data-line="4"><span class="k">else</span><span class="p">:</span>
