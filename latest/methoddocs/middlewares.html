@@ -92,7 +92,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware</span></code></a><ul>
 <li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.post_execute"><code class="docutils literal notranslate">post_execute()</span></code></a></li>
 <li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.pre_execute"><code class="docutils literal notranslate">pre_execute()</span></code></a></li>
-<li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.pre_send"><code class="docutils literal notranslate">pre_send()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -157,22 +156,6 @@ executes in the worker process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>message</strong> – incoming parsed taskiq message.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>modified message.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware.pre_send">
-<span class="sig-name descname"><span class="pre">pre_send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TaskiqMessage</span></span></span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.pre_send" title="Link to this definition"></a></dt>
-<dd><p>Hook that executes before sending the task to worker.</p>
-<p>This is a client-side hook, that executes right before
-the message is sent to broker.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>message</strong> – message to send.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>modified message.</p>

@@ -90,7 +90,10 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#silverback.utils.async_wrap_iter"><code class="docutils literal notranslate"><span class="pre">async_wrap_iter()</span></code></a></li>
-<li><a class="reference internal" href="#silverback.utils.hexbytes_dict"><code class="docutils literal notranslate"><span class="pre">hexbytes_dict()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.utils.clean_hexbytes_dict"><code class="docutils literal notranslate"><span class="pre">clean_hexbytes_dict()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.utils.decode_topics_from_string"><code class="docutils literal notranslate"><span class="pre">decode_topics_from_string()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.utils.encode_topics_to_string"><code class="docutils literal notranslate"><span class="pre">encode_topics_to_string()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.utils.parse_hexbytes_dict"><code class="docutils literal notranslate"><span class="pre">parse_hexbytes_dict()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -129,8 +132,26 @@ data-aria-dark="Switch to auto color mode">
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="silverback.utils.hexbytes_dict">
-<span class="sig-prename descclassname"><span class="pre">silverback.utils.</span></span><span class="sig-name descname"><span class="pre">hexbytes_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#silverback.utils.hexbytes_dict" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="silverback.utils.clean_hexbytes_dict">
+<span class="sig-prename descclassname"><span class="pre">silverback.utils.</span></span><span class="sig-name descname"><span class="pre">clean_hexbytes_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#silverback.utils.clean_hexbytes_dict" title="Link to this definition"></a></dt>
+<dd><p>Strips <cite>HexBtes</cite> objects from dictionary values, as they do not encode well</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="silverback.utils.decode_topics_from_string">
+<span class="sig-prename descclassname"><span class="pre">silverback.utils.</span></span><span class="sig-name descname"><span class="pre">decode_topics_from_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoded_topics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">HexStr</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">HexStr</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#silverback.utils.decode_topics_from_string" title="Link to this definition"></a></dt>
+<dd><p>Decode a topic list from a TaskIQ label into Web3py topics</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="silverback.utils.encode_topics_to_string">
+<span class="sig-prename descclassname"><span class="pre">silverback.utils.</span></span><span class="sig-name descname"><span class="pre">encode_topics_to_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">HexStr</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">HexStr</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#silverback.utils.encode_topics_to_string" title="Link to this definition"></a></dt>
+<dd><p>Encode a topic list to a string, for TaskIQ label</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="silverback.utils.parse_hexbytes_dict">
+<span class="sig-prename descclassname"><span class="pre">silverback.utils.</span></span><span class="sig-name descname"><span class="pre">parse_hexbytes_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#silverback.utils.parse_hexbytes_dict" title="Link to this definition"></a></dt>
 <dd><p>Converts any hex string values in a flat dictionary to HexBytes.</p>
 </dd></dl>
 
