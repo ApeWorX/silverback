@@ -444,8 +444,9 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
     async def _event_task(self, task_data: TaskData):
         contract_address = task_data.labels.get("address")
         event = EventABI.from_signature(task_data.labels["event"])
+        topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
         async for log in async_wrap_iter(
             # NOTE: No start block because we should begin polling from head
-            self.provider.poll_logs(address=contract_address, events=[event])
+            self.provider.poll_logs(address=contract_address, events=[event], topics=topics)
         ):
             self._runtime_task_group.create_task(self.run_task(task_data, log))

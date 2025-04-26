@@ -11,9 +11,11 @@ from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractEventWrapper, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
-from ape.types import ContractLog
+from ape.types import AddressType, ContractLog
 from ape.utils import ManagerAccessMixin
+from eth_typing import HexStr
 from eth_utils import keccak, to_hex
+from ethpm_types.abi import encode_topic_value
 from packaging.version import Version
 from pydantic import BaseModel
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
@@ -348,11 +350,33 @@ class SilverbackBot(ManagerAccessMixin):
 
         return fork_handler
 
+    def _convert_arg_to_hexstr(self, arg_value: Any, arg_type: str) -> HexStr | list[HexStr] | None:
+        python_type: Any
+        if "int" in arg_type:
+            python_type = int
+        elif "bytes" in arg_type:
+            python_type = bytes
+        elif arg_type == "address":
+            python_type = AddressType
+        elif arg_type == "string":
+            python_type = str
+        else:
+            raise ValueError(f"Unable to support ABI Type '{arg_type}'.")
+
+        if isinstance(arg_value, list):
+            arg_value = [self.conversion_manager.convert(v, python_type) for v in arg_value]
+
+        else:
+            arg_value = self.conversion_manager.convert(arg_value, python_type)
+
+        return encode_topic_value(arg_type, arg_value)  # type: ignore[return-value]
+
     def broker_task_decorator(
         self,
         task_type: TaskType,
         container: BlockContainer | ContractEvent | ContractEventWrapper | None = None,
         cron_schedule: str | None = None,
+        filter_args: dict[str, Any] | None = None,
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
@@ -411,17 +435,36 @@ class SilverbackBot(ManagerAccessMixin):
             elif task_type is TaskType.EVENT_LOG:
                 assert container is not None and isinstance(container, ContractEvent)
                 # NOTE: allows broad capture filters (matching multiple addresses)
-                if contract_address := getattr(container.contract, "address", None):
-                    labels["address"] = contract_address
+                if contract := getattr(container, "contract", None):
+                    labels["address"] = contract.address
+
                 labels["event"] = container.abi.signature
-                labels["topics"] = encode_topics_to_string(
-                    [
-                        # Topic 0: event_id
-                        to_hex(keccak(text=container.abi.selector)),
-                        # Topic 1-4: event args ([..., ...] represent OR)
-                        # TODO: Add filter args
-                    ]
-                )
+
+                topics: list[list[HexStr] | HexStr | None] = [
+                    # Topic 0: event_id
+                    to_hex(keccak(text=container.abi.selector))
+                ]
+
+                # Topic 1-3: event args ([..., ...] represent OR)
+                if filter_args:
+                    for arg in container.abi.inputs:
+                        if not arg.indexed:
+                            break  # Inputs should be ordered indexed first
+
+                        if arg_value := filter_args.pop(arg.name, None):
+                            topics.append(self._convert_arg_to_hexstr(arg_value, arg.type))
+
+                        else:
+                            # Skip this indexed argument (`None` is wildcard match)
+                            topics.append(None)
+                            # NOTE: Will clean up extra Nones in `encode_topics_to_string`
+
+                    if unmatched_args := "', '".join(filter_args):
+                        raise InvalidContainerTypeError(
+                            f"Args are not available for filtering: '{unmatched_args}'."
+                        )
+
+                labels["topics"] = encode_topics_to_string(topics)
 
                 handler = self._ensure_log(container, handler)
 
@@ -518,6 +561,8 @@ class SilverbackBot(ManagerAccessMixin):
         # TODO: possibly remove these
         new_block_timeout: int | None = None,
         start_block: int | None = None,
+        filter_args: dict[str, Any] | None = None,
+        **filter_kwargs: dict[str, Any],
     ):
         """
         Create task to handle events created by the `container` trigger.
@@ -565,7 +610,14 @@ class SilverbackBot(ManagerAccessMixin):
                 else:
                     self.poll_settings[key] = {"start_block": start_block}
 
-            return self.broker_task_decorator(TaskType.EVENT_LOG, container=container)
+            if filter_args:
+                filter_kwargs.update(filter_args)
+
+            return self.broker_task_decorator(
+                TaskType.EVENT_LOG,
+                container=container,
+                filter_args=filter_kwargs,
+            )
 
         # TODO: Support account transaction polling
         # TODO: Support mempool polling?
