@@ -11,7 +11,9 @@ from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractEventWrapper, ContractInstance
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
+from ape.types import ContractLog
 from ape.utils import ManagerAccessMixin
+from eth_utils import keccak, to_hex
 from packaging.version import Version
 from pydantic import BaseModel
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
@@ -20,6 +22,7 @@ from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError, N
 from .settings import Settings
 from .state import StateSnapshot
 from .types import SilverbackID, TaskType
+from .utils import encode_topics_to_string, parse_hexbytes_dict
 
 
 class SystemConfig(BaseModel):
@@ -34,7 +37,7 @@ class SystemConfig(BaseModel):
 class TaskData(BaseModel):
     # NOTE: Data we need to know how to call a task via kicker
     name: str  # Name of user function
-    labels: dict[str, Any]
+    labels: dict[str, str]
 
     # NOTE: Any other items here must have a default value
 
@@ -246,27 +249,13 @@ class SilverbackBot(ManagerAccessMixin):
 
         # TODO: Load user custom state (should not start with `system:`)
 
-    async def __create_snapshot_handler(
-        self,
-        last_block_seen: int | None = None,
-        last_block_processed: int | None = None,
-    ) -> StateSnapshot:
-        # Task that updates state checkpoints before/after every non-system runtime task/at shutdown
-        if last_block_seen is not None:
-            self.state["system:last_block_seen"] = last_block_seen
-
-        if last_block_processed is not None:
-            self.state["system:last_block_processed"] = last_block_processed
-
+    async def __create_snapshot_handler(self) -> StateSnapshot:
         return StateSnapshot(
             # TODO: Migrate these to parameters (remove explicitly from state)
             last_block_seen=self.state.get("system:last_block_seen", -1),
             last_block_processed=self.state.get("system:last_block_processed", -1),
             last_nonce_used=self.state.get("system:last_nonce_used"),
         )
-
-    # To ensure we don't have too many forks at once
-    # HACK: Until `NetworkManager.fork` (and `ProviderContextManager`) allows concurrency
 
     @property
     def nonce(self) -> int:
@@ -280,6 +269,68 @@ class SilverbackBot(ManagerAccessMixin):
 
         # NOTE: Next nonce (`.nonce` is meant to be used in next txn) is 1 + last
         return max(last_nonce_used + 1, self.signer.nonce)
+
+    def _checkpoint(
+        self,
+        last_block_seen: int | None = None,
+        last_block_processed: int | None = None,
+    ):
+        # Task that updates state checkpoints before/after every non-system runtime task/at shutdown
+        if last_block_seen is not None:
+            self.state["system:last_block_seen"] = last_block_seen
+
+        if last_block_processed is not None:
+            self.state["system:last_block_processed"] = last_block_processed
+
+    def _ensure_block(self, handler: Callable) -> Callable:
+        @wraps(handler)
+        async def ensure_block(block, *args, **kwargs):
+            # NOTE: With certain runners, `block` may be raw or in it's final form
+            if isinstance(block, dict):
+                block = self.provider.network.ecosystem.decode_block(parse_hexbytes_dict(block))
+
+            self._checkpoint(last_block_seen=block.number)
+            result = handler(block, *args, **kwargs)
+            self._checkpoint(last_block_processed=block.number)
+
+            if inspect.isawaitable(result):
+                return await result
+
+            return result
+
+        return ensure_block
+
+    def _ensure_log(self, event: ContractEvent, handler: Callable) -> Callable:
+        @wraps(handler)
+        async def ensure_log(log, *args, **kwargs):
+            # NOTE: With certain runners, `log` may be raw or in it's final form
+            if isinstance(log, dict):
+                if "event_arguments" in log:
+                    # This is an Ape object, simply initialize it
+                    log = ContractLog(**log)
+
+                else:  # This is a raw web3py object
+                    log = next(  # NOTE: `next` is okay since it only has one item
+                        self.provider.network.ecosystem.decode_logs(
+                            [parse_hexbytes_dict(log)], event.abi
+                        )
+                    )
+                    # TODO: Fix upstream w/ web3py
+                    log.transaction_hash = "0x" + log.transaction_hash.hex()
+
+            self._checkpoint(last_block_seen=log.block.number)
+            result = handler(log, *args, **kwargs)
+            self._checkpoint(last_block_processed=log.block.number)
+
+            if inspect.isawaitable(result):
+                return await result
+
+            return result
+
+        return ensure_log
+
+    # To ensure we don't have too many forks at once
+    # HACK: Until `NetworkManager.fork` (and `ProviderContextManager`) allows concurrency
 
     def _with_fork_decorator(self, handler: Callable) -> Callable:
         # Trigger worker-side handling using fork network by wrapping handler
@@ -352,20 +403,27 @@ class SilverbackBot(ManagerAccessMixin):
         def add_taskiq_task(
             handler: Callable[..., Any | Awaitable[Any]]
         ) -> AsyncTaskiqDecoratedTask:
-            labels = {"task_type": str(task_type)}
+            labels: dict[str, str] = dict()
 
-            # NOTE: Do *not* do `if container` because that does a `len(container)` call,
-            #       which for ContractEvent queries *every single log* ever emitted, and really
-            #       we only want to determine if it is not None
-            if container is not None and isinstance(container, ContractEvent):
-                # Address is almost a certainty if the container is being used as a filter here.
-                if not (contract_address := getattr(container.contract, "address", None)):
-                    raise InvalidContainerTypeError(
-                        "Please provide a contract event from a valid contract instance."
-                    )
+            if task_type is TaskType.NEW_BLOCK:
+                handler = self._ensure_block(handler)
 
-                labels["contract_address"] = contract_address
-                labels["event_signature"] = container.abi.signature
+            elif task_type is TaskType.EVENT_LOG:
+                assert container is not None and isinstance(container, ContractEvent)
+                # NOTE: allows broad capture filters (matching multiple addresses)
+                if contract_address := getattr(container.contract, "address", None):
+                    labels["address"] = contract_address
+                labels["event"] = container.abi.signature
+                labels["topics"] = encode_topics_to_string(
+                    [
+                        # Topic 0: event_id
+                        to_hex(keccak(text=container.abi.selector)),
+                        # Topic 1-4: event args ([..., ...] represent OR)
+                        # TODO: Add filter args
+                    ]
+                )
+
+                handler = self._ensure_log(container, handler)
 
             elif task_type is TaskType.CRON_JOB:
                 # NOTE: If cron schedule has never been true over a year timeframe, it's bad
@@ -386,6 +444,7 @@ class SilverbackBot(ManagerAccessMixin):
             return self.broker.register_task(
                 handler,
                 task_name=handler.__name__,
+                task_type=str(task_type),
                 **labels,
             )
 

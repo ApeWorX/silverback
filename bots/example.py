@@ -99,12 +99,12 @@ def sample_metric(time: datetime):
     return random.random()
 
 
-@bot.on_(chain.blocks)
+@bot.cron("*/5 * * * *")
 # NOTE: You can have multiple handlers for any trigger we support
-def check_logs(log):
-    if bot.state.logs_processed > 20:
-        # If you ever want the bot to immediately shutdown under some scenario, raise this exception
-        raise CircuitBreaker("Oopsie!")
+def stop_running_now(time):
+    # If you ever want the bot to immediately shutdown under some scenario,
+    # raise this exception (or a subclass of it)
+    raise CircuitBreaker("Oopsie!")
 
 
 # A final job to execute on Silverback shutdown

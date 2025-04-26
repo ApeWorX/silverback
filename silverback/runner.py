@@ -10,8 +10,7 @@ import quattro
 from ape import chain
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
-from ape_ethereum.ecosystem import keccak
-from eth_utils import to_hex
+from eth_utils import to_checksum_address
 from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
@@ -36,7 +35,7 @@ from .main import SilverbackBot, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
 from .types import TaskType, utc_now
-from .utils import async_wrap_iter
+from .utils import async_wrap_iter, clean_hexbytes_dict, decode_topics_from_string
 
 if sys.version_info < (3, 11):
     from exceptiongroup import ExceptionGroup
@@ -108,20 +107,13 @@ class BaseRunner(ABC):
         if self.exceptions > self.max_exceptions or isinstance(result.error, Halt):
             result.raise_for_error()
 
-    async def _checkpoint(
-        self,
-        last_block_seen: int | None = None,
-        last_block_processed: int | None = None,
-    ):
-        """Set latest checkpoint block number"""
+    async def _checkpoint(self):
+        """Fetch latest snapshot from worker"""
         if not self._snapshotting_supported:
             return  # Can't support this feature
 
         elif snapshot := await self.run_system_task(
-            TaskType.SYSTEM_CREATE_SNAPSHOT,
-            last_block_seen,
-            last_block_processed,
-            raise_on_error=False,
+            TaskType.SYSTEM_CREATE_SNAPSHOT, raise_on_error=False
         ):
             await self.datastore.save(snapshot)
 
@@ -148,7 +140,8 @@ class BaseRunner(ABC):
                 if pycron.is_now(cron, dt=current_time):
                     self._runtime_task_group.create_task(self.run_task(task_data, current_time))
 
-            # NOTE: TaskGroup waits for all tasks to complete before continuing
+            # NOTE: Run this every minute (just in case of an unhandled shutdown)
+            self._runtime_task_group.create_task(self._checkpoint())
 
     @abstractmethod
     async def _block_task(self, task_data: TaskData) -> None:
@@ -269,6 +262,8 @@ class BaseRunner(ABC):
 
         NOTE: Must be placed into runtime before called.
         """
+        # Execute one final checkpoint before shutting down
+        await self._checkpoint()
 
         # Execute all shutdown task(s) before shutting down the broker and bot
         try:
@@ -293,10 +288,6 @@ class BaseRunner(ABC):
             ):
                 # NOTE: Just log errors to avoid exception during shutdown
                 logger.error(f"Errors while shutting down:\n{errors_str}")
-
-        # NOTE: Do one last checkpoint to save a snapshot of final state
-        if self._snapshotting_supported:
-            await self._checkpoint()
 
         # NOTE: Will trigger worker shutdown function(s)
         await self.bot.broker.shutdown()
@@ -382,12 +373,13 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         self.ws_uri = ws_uri
 
     async def _block_task(self, task_data: TaskData):
-
         async def block_handler(ctx: NewHeadsSubscriptionContext):
-            block = self.provider.network.ecosystem.decode_block(dict(ctx.result))
-            await self._checkpoint(last_block_seen=block.number)
-            await self.run_task(task_data, block)
-            await self._checkpoint(last_block_processed=block.number)
+            self._runtime_task_group.create_task(
+                self.run_task(
+                    task_data,
+                    clean_hexbytes_dict(ctx.result),  # type: ignore[arg-type]
+                )
+            )
 
         sub_id = await self._web3.subscription_manager.subscribe(
             NewHeadsSubscription(label=task_data.name, handler=block_handler)
@@ -395,33 +387,27 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
         logger.debug(f"Handling blocks via {sub_id}")
 
     async def _event_task(self, task_data: TaskData):
-        if not (contract_address := task_data.labels.get("contract_address")):
-            raise StartupFailure("Contract instance required.")
-
-        if not (event_signature := task_data.labels.get("event_signature")):
-            raise StartupFailure("No Event Signature provided.")
-
-        event_abi = EventABI.from_signature(event_signature)
-
         async def log_handler(ctx: LogsSubscriptionContext):
-            event = next(  # NOTE: `next` is okay since it only has one item
-                self.provider.network.ecosystem.decode_logs([ctx.result], event_abi)
+            self._runtime_task_group.create_task(
+                self.run_task(
+                    task_data,
+                    clean_hexbytes_dict(ctx.result),  # type: ignore[arg-type]
+                )
             )
-            # TODO: Fix upstream w/ web3py
-            event.transaction_hash = "0x" + event.transaction_hash.hex()
-            await self._checkpoint(last_block_seen=event.block_number)
-            await self.run_task(task_data, event)
-            await self._checkpoint(last_block_processed=event.block_number)
 
+        contract_address = task_data.labels.get("address")
+        topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
         sub_id = await self._web3.subscription_manager.subscribe(
             LogsSubscription(
                 label=task_data.name,
-                address=contract_address,
-                topics=[to_hex(keccak(text=event_abi.selector))],
+                address=to_checksum_address(contract_address) if contract_address else None,
+                topics=topics,  # type: ignore[arg-type]
                 handler=log_handler,
             )
         )
-        logger.debug(f"Handling '{contract_address}:{event_abi.name}' logs via {sub_id}")
+        logger.debug(
+            f"Handling '{contract_address or ''}:{topics[0] if topics else ''}' logs via {sub_id}"
+        )
 
     def _daemon_tasks(self) -> list[Coroutine]:
         # NOTE: Handle this as a daemon task (after startup)
@@ -452,51 +438,14 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         )
 
     async def _block_task(self, task_data: TaskData):
-        if block_settings := self.bot.poll_settings.get("_blocks_"):
-            new_block_timeout = block_settings.get("new_block_timeout")
-        else:
-            new_block_timeout = None
-
-        new_block_timeout = (
-            new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
-        )
-
-        async for block in async_wrap_iter(
-            chain.blocks.poll_blocks(
-                # NOTE: No start block because we should begin polling from head
-                new_block_timeout=new_block_timeout,
-            )
-        ):
-            await self._checkpoint(last_block_seen=block.number)
-            await self.run_task(task_data, block)
-            await self._checkpoint(last_block_processed=block.number)
+        async for block in async_wrap_iter(chain.blocks.poll_blocks()):
+            self._runtime_task_group.create_task(self.run_task(task_data, block))
 
     async def _event_task(self, task_data: TaskData):
-        if not (contract_address := task_data.labels.get("contract_address")):
-            raise StartupFailure("Contract instance required.")
-
-        if not (event_signature := task_data.labels.get("event_signature")):
-            raise StartupFailure("No Event Signature provided.")
-
-        event_abi = EventABI.from_signature(event_signature)
-
-        if address_settings := self.bot.poll_settings.get(contract_address):
-            new_block_timeout = address_settings.get("new_block_timeout")
-        else:
-            new_block_timeout = None
-
-        new_block_timeout = (
-            new_block_timeout if new_block_timeout is not None else self.bot.new_block_timeout
-        )
-
-        async for event in async_wrap_iter(
-            self.provider.poll_logs(
-                # NOTE: No start block because we should begin polling from head
-                address=contract_address,
-                new_block_timeout=new_block_timeout,
-                events=[event_abi],
-            )
+        contract_address = task_data.labels.get("address")
+        event = EventABI.from_signature(task_data.labels["event"])
+        async for log in async_wrap_iter(
+            # NOTE: No start block because we should begin polling from head
+            self.provider.poll_logs(address=contract_address, events=[event])
         ):
-            await self._checkpoint(last_block_seen=event.block_number)
-            await self.run_task(task_data, event)
-            await self._checkpoint(last_block_processed=event.block_number)
+            self._runtime_task_group.create_task(self.run_task(task_data, log))
