@@ -293,7 +293,7 @@ def cluster_client(show_login: bool = True):
             elif value is None or "/" not in value:
                 if not profile.default_workspace:
                     raise click.UsageError(
-                        "Must provide `-c CLUSTER`, or set `profile.<profile-name>.default-workspace` "
+                        "Must add `-c CLUSTER`, or set `profile.<profile-name>.default-workspace` "
                         f"in your `~/{PROFILE_PATH.relative_to(Path.home())}`"
                     )
 
