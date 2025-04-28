@@ -45,8 +45,40 @@ Lastly, if you ever feel like you want to delete your Cluster, you can cancel th
 If you are the owner of the Stream, you can do this via the [`silverback cluster pay cancel`][silverback-cluster-pay-cancel] command.
 Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.
 
+## Model Context Server
+
+The Silverback package ships with an MCP ([Model Context Protocol](https://modelcontextprotocol.io/quickstart/user)) which you can use via the [`silverback cluster mcp`][silverback-cluster-mcp] command.
+This MCP server must be configured to run locally, and the easiest way to do so is to configure it in your LLM of choice.
+The config for using this with Claude Desktop is as follows:
+
+`~/.config/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    ...  # Other MCP servers go here
+    "silverback": {
+      "command": "<path to `uvx` or `uv` binary>",
+      "args": [
+        "silverback[mcp]",
+        "cluster",
+        "mcp"
+        # Add args `--cluster <cluster name>` to use a Cluster other than your default
+      ]
+    }
+  }
+}
+```
+
+Once that has been configured, you can ask your LLM to do things like check the status of your cluster, summarize logs of running bots, and restart bots just be commanding it through a chat interface!
+
+```{notice}
+The MCP will use the context from [`silverback login`][silverback-login] to execute, so be sure to log in before starting.
+```
+
 [silverback-cluster-info]: ../commands/cluster.html#silverback-cluster-info
 [silverback-cluster-list]: ../commands/cluster.html#silverback-cluster-list
+[silverback-cluster-mcp]: ../commands/cluster.html#silverback-cluster-mcp
 [silverback-cluster-new]: ../commands/cluster.html#silverback-cluster-new
 [silverback-cluster-pay-add-time]: ../commands/cluster.html#silverback-cluster-pay-add-time
 [silverback-cluster-pay-cancel]: ../commands/cluster.html#silverback-cluster-pay-cancel

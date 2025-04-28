@@ -9,7 +9,7 @@ CLI commands for interacting with the Silverback Platform.
 .. click:: silverback._cli:cluster
     :prog: silverback cluster
     :nested: full
-    :commands: new, update, list, info, health
+    :commands: new, update, list, info, health, mcp
 
 .. click:: silverback._cli:workspaces
     :prog: silverback cluster workspaces

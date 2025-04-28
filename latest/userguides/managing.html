@@ -94,6 +94,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#deploying-a-cluster">Deploying a Cluster</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#model-context-server">Model Context Server</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -161,6 +162,30 @@ Note that your data collection will stay available for up to 30 days allowing yo
 If you are the owner of the Stream, you can do this via the <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-cancel"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">cancel</span></code></a> command.
 Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.</p>
 </section>
+</section>
+<section id="model-context-server">
+<h2>Model Context Server<a class="headerlink" href="#model-context-server" title="Link to this heading"></a></h2>
+<p>The Silverback package ships with an MCP (<a class="reference external" href="https://modelcontextprotocol.io/quickstart/user">Model Context Protocol</a>) which you can use via the <a class="reference external" href="../commands/cluster.html#silverback-cluster-mcp"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">mcp</span></code></a> command.
+This MCP server must be configured to run locally, and the easiest way to do so is to configure it in your LLM of choice.
+The config for using this with Claude Desktop is as follows:</p>
+<p><code class="docutils literal notranslate"><span class="pre">~/.config/Claude/claude_desktop_config.json</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">  </span><span class="nt">&quot;mcpServers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="3"><span class="w">    </span><span class="err">...</span><span class="w">  </span><span class="err">#</span><span class="w"> </span><span class="err">O</span><span class="kc">t</span><span class="err">her</span><span class="w"> </span><span class="err">MCP</span><span class="w"> </span><span class="err">servers</span><span class="w"> </span><span class="err">go</span><span class="w"> </span><span class="err">here</span>
+</span><span data-line="4"><span class="w">    </span><span class="nt">&quot;silverback&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="5"><span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;path to `uvx` or `uv` binary&gt;&quot;</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">      </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span data-line="7"><span class="w">        </span><span class="s2">&quot;silverback[mcp]&quot;</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">        </span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
+</span><span data-line="9"><span class="w">        </span><span class="s2">&quot;mcp&quot;</span>
+</span><span data-line="10"><span class="w">        </span><span class="err">#</span><span class="w"> </span><span class="err">Add</span><span class="w"> </span><span class="err">args</span><span class="w"> </span><span class="err">`</span><span class="mi">--</span><span class="err">clus</span><span class="kc">ter</span><span class="w"> </span><span class="err">&lt;clus</span><span class="kc">ter</span><span class="w"> </span><span class="kc">na</span><span class="err">me&gt;`</span><span class="w"> </span><span class="kc">t</span><span class="err">o</span><span class="w"> </span><span class="err">use</span><span class="w"> </span><span class="err">a</span><span class="w"> </span><span class="err">Clus</span><span class="kc">ter</span><span class="w"> </span><span class="err">o</span><span class="kc">t</span><span class="err">her</span><span class="w"> </span><span class="kc">t</span><span class="err">ha</span><span class="kc">n</span><span class="w"> </span><span class="err">your</span><span class="w"> </span><span class="err">de</span><span class="kc">fault</span>
+</span><span data-line="11"><span class="w">      </span><span class="p">]</span>
+</span><span data-line="12"><span class="w">    </span><span class="p">}</span>
+</span><span data-line="13"><span class="w">  </span><span class="p">}</span>
+</span><span data-line="14"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>Once that has been configured, you can ask your LLM to do things like check the status of your cluster, summarize logs of running bots, and restart bots just be commanding it through a chat interface!</p>
 </section>
 </section>
 
