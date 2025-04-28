@@ -36,6 +36,14 @@ def cluster_is_okay() -> str:
 
 
 @server.tool()
+def cluster_url(ctx: Context) -> str:
+    """Get the name of the Cluster"""
+    cluster: ClusterClient = ctx.request_context.lifespan_context
+
+    return str(cluster.base_url)
+
+
+@server.tool()
 def cluster_version(ctx: Context) -> str:
     """Get the software version of the Cluster"""
     cluster: ClusterClient = ctx.request_context.lifespan_context
