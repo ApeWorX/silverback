@@ -182,17 +182,6 @@ class SectionedHelpGroup(OrderedCommands):
                     formatter.write_dl(rows)
 
 
-def display_login_message(auth: FiefAuth, host: str):
-    userinfo = auth.current_user()
-    user_id = userinfo["sub"]
-    username = userinfo["fields"].get("username")
-    click.echo(
-        f"{click.style('INFO', fg='blue')}: "
-        f"Logged in to '{click.style(host, bold=True)}' as "
-        f"'{click.style(username if username else user_id, bold=True)}'"
-    )
-
-
 def profile_option(f):
     expose_value = "profile" in f.__annotations__
 
@@ -241,112 +230,128 @@ def auth_required(f):
     return update_wrapper(add_auth, f)
 
 
-def platform_client(f):
-    expose_value = "platform" in f.__annotations__
+def platform_client(show_login: bool = True):
+    def add_platform_client(f):
+        expose_value = "platform" in f.__annotations__
 
-    @auth_required
-    @click.pass_context
-    def get_platform_client(ctx: click.Context, *args, **kwargs):
-        ctx.obj = ctx.obj or {}
-        if not isinstance(profile := ctx.obj.get("profile"), PlatformProfile):
-            if not expose_value:
-                return ctx.invoke(f, *args, **kwargs)
+        @auth_required
+        @click.pass_context
+        def get_platform_client(ctx: click.Context, *args, **kwargs):
+            ctx.obj = ctx.obj or {}
+            if not isinstance(profile := ctx.obj.get("profile"), PlatformProfile):
+                if not expose_value:
+                    return ctx.invoke(f, *args, **kwargs)
 
-            raise click.UsageError("This command only works with the Silverback Platform")
+                raise click.UsageError("This command only works with the Silverback Platform")
 
-        # NOTE: `auth` should be set if `profile` is set and is `PlatformProfile`
-        auth: FiefAuth = ctx.obj["auth"]
-
-        try:
-            display_login_message(auth, profile.host)
-        except FiefAuthNotAuthenticatedError as e:
-            raise click.UsageError("Not authenticated, please use `silverback login` first.") from e
-
-        from silverback.cluster.client import PlatformClient
-
-        ctx.obj["platform"] = PlatformClient(
-            base_url=profile.host,
-            cookies=dict(session=auth.access_token_info()["access_token"]),
-        )
-
-        if expose_value:
-            kwargs["platform"] = ctx.obj["platform"]
-
-        return ctx.invoke(f, *args, **kwargs)
-
-    return update_wrapper(get_platform_client, f)
-
-
-def cluster_client(f):
-
-    def inject_cluster(ctx, param, value: str | None):
-        ctx.obj = ctx.obj or {}
-        if not (profile := ctx.obj.get("profile")):
-            raise AssertionError("Shouldn't happen, fix cli")
-
-        elif isinstance(profile, ClusterProfile):
-            return value  # Ignore processing this for cluster clients
-
-        elif value is None or "/" not in value:
-            if not profile.default_workspace:
+            # NOTE: `auth` should be set if `profile` is set and is `PlatformProfile`
+            auth: FiefAuth = ctx.obj["auth"]
+            try:
+                userinfo = auth.current_user()
+            except FiefAuthNotAuthenticatedError as e:
                 raise click.UsageError(
-                    "Must provide `-c CLUSTER`, or set `profile.<profile-name>.default-workspace` "
-                    f"in your `~/{PROFILE_PATH.relative_to(Path.home())}`"
+                    "Not authenticated, please use `silverback login` first."
+                ) from e
+
+            if show_login:
+                user_id = userinfo["sub"]
+                username = userinfo["fields"].get("username")
+                click.echo(
+                    f"{click.style('INFO', fg='blue')}: "
+                    f"Logged in to '{click.style(profile.host, bold=True)}' as "
+                    f"'{click.style(username if username else user_id, bold=True)}'"
                 )
 
-            if value is None and profile.default_workspace not in profile.default_cluster:
-                raise click.UsageError(
-                    "Must provide `-c CLUSTER`, or set "
-                    "`profile.<profile-name>.default-cluster.<workspace-name>` "
-                    f"in your `~/{PROFILE_PATH.relative_to(Path.home())}`"
-                )
+            from silverback.cluster.client import PlatformClient
 
-            parts = [
-                profile.default_workspace,
-                # NOTE: `value` works as cluster selector, if set
-                value or profile.default_cluster[profile.default_workspace],
-            ]
-
-        elif len(parts := value.split("/")) > 2:
-            raise click.BadParameter(
-                param=param,
-                message="CLUSTER should be in format `WORKSPACE/NAME`",
-            )
-
-        ctx.obj["cluster_path"] = parts
-        return parts
-
-    @click.option(
-        "-c",
-        "--cluster",
-        "cluster_path",
-        metavar="WORKSPACE/NAME",
-        expose_value=False,  # We don't actually need this exposed
-        callback=inject_cluster,
-        help="NAME of the cluster in WORKSPACE you wish to access",
-    )
-    @platform_client
-    @click.pass_context
-    def get_cluster_client(ctx: click.Context, *args, **kwargs):
-        ctx.obj = ctx.obj or {}
-        if isinstance(profile := ctx.obj.get("profile"), ClusterProfile):
-            from silverback.cluster.client import ClusterClient
-
-            kwargs["cluster"] = ClusterClient(
+            ctx.obj["platform"] = PlatformClient(
                 base_url=profile.host,
-                headers={"X-API-Key": profile.api_key},
+                cookies=dict(session=auth.access_token_info()["access_token"]),
             )
 
-        elif isinstance(profile, PlatformProfile):
-            platform: "PlatformClient" = ctx.obj["platform"]
-            kwargs["cluster"] = platform.get_cluster_client(*ctx.obj["cluster_path"])
+            if expose_value:
+                kwargs["platform"] = ctx.obj["platform"]
 
-        else:
-            raise AssertionError("Profile not set, something wrong")
+            return ctx.invoke(f, *args, **kwargs)
 
-        return ctx.invoke(f, *args, **kwargs)
+        return update_wrapper(get_platform_client, f)
 
-    return update_wrapper(get_cluster_client, f)
+    return add_platform_client
+
+
+def cluster_client(show_login: bool = True):
+    def add_cluster_client(f):
+
+        def inject_cluster(ctx, param, value: str | None):
+            ctx.obj = ctx.obj or {}
+            if not (profile := ctx.obj.get("profile")):
+                raise AssertionError("Shouldn't happen, fix cli")
+
+            elif isinstance(profile, ClusterProfile):
+                return value  # Ignore processing this for cluster clients
+
+            elif value is None or "/" not in value:
+                if not profile.default_workspace:
+                    raise click.UsageError(
+                        "Must add `-c CLUSTER`, or set `profile.<profile-name>.default-workspace` "
+                        f"in your `~/{PROFILE_PATH.relative_to(Path.home())}`"
+                    )
+
+                if value is None and profile.default_workspace not in profile.default_cluster:
+                    raise click.UsageError(
+                        "Must provide `-c CLUSTER`, or set "
+                        "`profile.<profile-name>.default-cluster.<workspace-name>` "
+                        f"in your `~/{PROFILE_PATH.relative_to(Path.home())}`"
+                    )
+
+                parts = [
+                    profile.default_workspace,
+                    # NOTE: `value` works as cluster selector, if set
+                    value or profile.default_cluster[profile.default_workspace],
+                ]
+
+            elif len(parts := value.split("/")) > 2:
+                raise click.BadParameter(
+                    param=param,
+                    message="CLUSTER should be in format `WORKSPACE/NAME`",
+                )
+
+            ctx.obj["cluster_path"] = parts
+            return parts
+
+        @click.option(
+            "-c",
+            "--cluster",
+            "cluster_path",
+            metavar="WORKSPACE/NAME",
+            expose_value=False,  # We don't actually need this exposed
+            callback=inject_cluster,
+            help="NAME of the cluster in WORKSPACE you wish to access",
+        )
+        @platform_client(show_login=show_login)
+        @click.pass_context
+        def get_cluster_client(ctx: click.Context, *args, **kwargs):
+            ctx.obj = ctx.obj or {}
+            if isinstance(profile := ctx.obj.get("profile"), ClusterProfile):
+                from silverback.cluster.client import ClusterClient
+
+                kwargs["cluster"] = ClusterClient(
+                    base_url=profile.host,
+                    headers={"X-API-Key": profile.api_key},
+                )
+
+            elif isinstance(profile, PlatformProfile):
+                platform: "PlatformClient" = ctx.obj["platform"]
+                kwargs["cluster"] = platform.get_cluster_client(*ctx.obj["cluster_path"])
+
+            else:
+                raise AssertionError("Profile not set, something wrong")
+
+            return ctx.invoke(f, *args, **kwargs)
+
+        return update_wrapper(get_cluster_client, f)
+
+    return add_cluster_client
 
 
 def bot_path_callback(ctx: click.Context, param: click.Parameter, path: str | None):
