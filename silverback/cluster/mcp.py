@@ -4,7 +4,13 @@ from contextlib import asynccontextmanager
 from fastmcp import Context, FastMCP
 
 from silverback.cluster.client import ClusterClient
-from silverback.cluster.types import BotInfo, ClusterConfiguration, ClusterHealth, VariableGroupInfo
+from silverback.cluster.types import (
+    BotInfo,
+    BotLogEntry,
+    ClusterConfiguration,
+    ClusterHealth,
+    VariableGroupInfo,
+)
 
 # NOTE: Only work with one client at a time (to reduce # of tools)
 # TODO: figure out a less janky way to do this
@@ -178,14 +184,14 @@ def remove_bot(ctx: Context, bot_name: str):
 
 
 @server.tool()
-def bot_logs(ctx: Context, bot_name: str) -> list[str]:
+def bot_logs(ctx: Context, bot_name: str) -> list[BotLogEntry]:
     """Get logs from a running bot by name in the Cluster"""
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (bot := cluster.bots.get(bot_name)):
         raise RuntimeError("Unknown bot")
 
-    return [log.message for log in bot.logs]
+    return bot.logs
 
 
 @server.tool()
