@@ -26,7 +26,6 @@ from ._click_ext import (
     bot_path_callback,
     cls_import_callback,
     cluster_client,
-    display_login_message,
     parse_globbed_arg,
     platform_client,
     timedelta_callback,
@@ -198,7 +197,14 @@ def login(auth: "FiefAuth"):
     """Login to ApeWorX Authorization Service (https://account.apeworx.io)"""
 
     auth.authorize()
-    display_login_message(auth, auth.client.base_url)
+    userinfo = auth.current_user()
+    user_id = userinfo["sub"]
+    username = userinfo["fields"].get("username")
+    click.echo(
+        f"{click.style('INFO', fg='blue')}: "
+        f"Logged in to '{click.style(auth.client.base_url, bold=True)}' as "
+        f"'{click.style(username if username else user_id, bold=True)}'"
+    )
 
 
 @cli.group(cls=SectionedHelpGroup, section="Cloud Commands (https://silverback.apeworx.io)")
@@ -215,7 +221,7 @@ def workspaces():
 
 
 @workspaces.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
-@platform_client
+@platform_client()
 def list_workspaces(platform: "PlatformClient"):
     """List available workspaces for your account"""
 
@@ -233,7 +239,7 @@ def list_workspaces(platform: "PlatformClient"):
 
 @workspaces.command(name="info", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
-@platform_client
+@platform_client()
 def workspace_info(platform: "PlatformClient", workspace: str):
     """Get Configuration information about a WORKSPACE"""
 
@@ -261,7 +267,7 @@ def workspace_info(platform: "PlatformClient", workspace: str):
     "workspace_slug",
     help="Slug for new workspace",
 )
-@platform_client
+@platform_client()
 def new_workspace(
     platform: "PlatformClient",
     workspace_name: str | None,
@@ -303,7 +309,7 @@ def new_workspace(
     help="Update slug for workspace",
 )
 @click.argument("workspace")
-@platform_client
+@platform_client()
 def update_workspace(
     platform: "PlatformClient",
     workspace: str,
@@ -331,7 +337,7 @@ def update_workspace(
 
 @workspaces.command(name="delete", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
-@platform_client
+@platform_client()
 def delete_workspace(platform: "PlatformClient", workspace: str):
     """Delete an empty Workspace on the Silverback Platform"""
 
@@ -347,7 +353,7 @@ def delete_workspace(platform: "PlatformClient", workspace: str):
 
 @cluster.command(name="list", section="Platform Commands (https://silverback.apeworx.io)")
 @click.argument("workspace")
-@platform_client
+@platform_client()
 def list_clusters(platform: "PlatformClient", workspace: str):
     """List available clusters in a WORKSPACE"""
 
@@ -376,7 +382,7 @@ def list_clusters(platform: "PlatformClient", workspace: str):
     help="Slug for new cluster (Defaults to `name.lower()`)",
 )
 @click.argument("workspace")
-@platform_client
+@platform_client()
 def new_cluster(
     platform: "PlatformClient",
     workspace: str,
@@ -429,7 +435,7 @@ def new_cluster(
     help="Update slug for cluster",
 )
 @click.argument("cluster_path")
-@platform_client
+@platform_client()
 def update_cluster(
     platform: "PlatformClient",
     cluster_path: str,
@@ -468,7 +474,7 @@ def update_cluster(
 @cluster.command(name="migrate", section="Platform Commands (https://silverback.apeworx.io)")
 @click.option("--version", default=None)
 @click.argument("cluster_path")
-@platform_client
+@platform_client()
 def migrate_cluster(
     platform: "PlatformClient",
     cluster_path: str,
@@ -563,7 +569,7 @@ def _tier_choices():
     default=None,
     help="Time to fund stream for",
 )
-@platform_client
+@platform_client()
 def create_payment_stream(
     platform: "PlatformClient",
     network: "NetworkAPI",
@@ -707,7 +713,7 @@ def create_payment_stream(
     default=None,
     help="Time to fund stream for",
 )
-@platform_client
+@platform_client()
 def fund_payment_stream(
     platform: "PlatformClient",
     network: "NetworkAPI",
@@ -780,7 +786,7 @@ def fund_payment_stream(
 @pay.command(name="cancel", cls=ConnectedProviderCommand)
 @account_option()
 @click.argument("cluster_path", metavar="CLUSTER")
-@platform_client
+@platform_client()
 def cancel_payment_stream(
     platform: "PlatformClient",
     network: "NetworkAPI",
@@ -816,7 +822,7 @@ def cancel_payment_stream(
 
 
 @cluster.command(name="info")
-@cluster_client
+@cluster_client()
 def cluster_info(cluster: "ClusterClient"):
     """Get configuration information about a CLUSTER"""
 
@@ -825,7 +831,7 @@ def cluster_info(cluster: "ClusterClient"):
 
 
 @cluster.command(name="health")
-@cluster_client
+@cluster_client()
 def cluster_health(cluster: "ClusterClient"):
     """Get health information about a CLUSTER"""
 
@@ -838,7 +844,7 @@ def registry():
 
 
 @registry.command(name="list")
-@cluster_client
+@cluster_client()
 def credentials_list(cluster: "ClusterClient"):
     """List container registry credentials in CLUSTER"""
 
@@ -851,7 +857,7 @@ def credentials_list(cluster: "ClusterClient"):
 
 @registry.command(name="info")
 @click.argument("name")
-@cluster_client
+@cluster_client()
 def credentials_info(cluster: "ClusterClient", name: str):
     """Show info about credential NAME in CLUSTER's registry"""
 
@@ -864,7 +870,7 @@ def credentials_info(cluster: "ClusterClient", name: str):
 @registry.command(name="new")
 @click.argument("name")
 @click.argument("registry")
-@cluster_client
+@cluster_client()
 def credentials_new(cluster: "ClusterClient", name: str, registry: str):
     """Add registry access credential NAME to CLUSTER's registry.
 
@@ -884,7 +890,7 @@ def credentials_new(cluster: "ClusterClient", name: str, registry: str):
 @registry.command(name="update")
 @click.argument("name")
 @click.option("-r", "--registry")
-@cluster_client
+@cluster_client()
 def credentials_update(cluster: "ClusterClient", name: str, registry: str | None = None):
     """Update credential NAME in CLUSTER's registry
 
@@ -903,7 +909,7 @@ def credentials_update(cluster: "ClusterClient", name: str, registry: str | None
 
 @registry.command(name="remove")
 @click.argument("name")
-@cluster_client
+@cluster_client()
 def credentials_remove(cluster: "ClusterClient", name: str):
     """Remove credential NAME from CLUSTER's registry"""
     if not (creds := cluster.credentials.get(name)):
@@ -940,7 +946,7 @@ def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
     help="Environment variable key and value to add (Multiple allowed)",
 )
 @click.argument("name")
-@cluster_client
+@cluster_client()
 def new_vargroup(cluster: "ClusterClient", variables: dict, name: str):
     """Create a new group of environment variables in a CLUSTER"""
 
@@ -952,7 +958,7 @@ def new_vargroup(cluster: "ClusterClient", variables: dict, name: str):
 
 
 @vars.command(name="list")
-@cluster_client
+@cluster_client()
 def list_vargroups(cluster: "ClusterClient"):
     """List latest revisions of all variable groups in a CLUSTER"""
 
@@ -965,7 +971,7 @@ def list_vargroups(cluster: "ClusterClient"):
 
 @vars.command(name="info")
 @click.argument("name")
-@cluster_client
+@cluster_client()
 def vargroup_info(cluster: "ClusterClient", name: str):
     """Show information about a variable GROUP in a CLUSTER"""
 
@@ -996,7 +1002,7 @@ def vargroup_info(cluster: "ClusterClient", name: str):
     help="Environment variable name to delete (Multiple allowed)",
 )
 @click.argument("name")
-@cluster_client
+@cluster_client()
 def update_vargroup(
     cluster: "ClusterClient",
     name: str,
@@ -1031,7 +1037,7 @@ def update_vargroup(
 
 @vars.command(name="remove")
 @click.argument("name")
-@cluster_client
+@cluster_client()
 def remove_vargroup(cluster: "ClusterClient", name: str):
     """
     Remove a variable GROUP from a CLUSTER
@@ -1061,7 +1067,7 @@ def bots():
     help="registry credentials to use to pull the image",
 )
 @click.argument("name")
-@cluster_client
+@cluster_client()
 def new_bot(
     cluster: "ClusterClient",
     image: str,
@@ -1121,7 +1127,7 @@ def new_bot(
 
 
 @bots.command(name="list", section="Configuration Commands")
-@cluster_client
+@cluster_client()
 def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER by network (Regardless of status)"""
 
@@ -1143,7 +1149,7 @@ def list_bots(cluster: "ClusterClient"):
 
 @bots.command(name="info", section="Configuration Commands")
 @click.argument("name", metavar="BOT", default="*")
-@cluster_client
+@cluster_client()
 def bot_info(cluster: "ClusterClient", name: str):
     """Get configuration information of one or more BOT(s) in a CLUSTER"""
 
@@ -1185,7 +1191,7 @@ def bot_info(cluster: "ClusterClient", name: str):
     help="registry credentials to use to pull the image",
 )
 @click.argument("name", metavar="BOT")
-@cluster_client
+@cluster_client()
 def update_bot(
     cluster: "ClusterClient",
     new_name: str | None,
@@ -1311,7 +1317,7 @@ def update_bot(
 
 @bots.command(name="remove", section="Configuration Commands")
 @click.argument("name", metavar="BOT", default="*")
-@cluster_client
+@cluster_client()
 def remove_bot(cluster: "ClusterClient", name: str):
     """Remove one or more BOT(s) from CLUSTER (Shutdown if running)"""
 
@@ -1323,7 +1329,7 @@ def remove_bot(cluster: "ClusterClient", name: str):
 
 @bots.command(name="health", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT", default="*")
-@cluster_client
+@cluster_client()
 def bot_health(cluster: "ClusterClient", name: str):
     """Show current health of one or more BOT(s) in a CLUSTER"""
 
@@ -1338,7 +1344,7 @@ def bot_health(cluster: "ClusterClient", name: str):
 
 @bots.command(name="start", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT", default="*")
-@cluster_client
+@cluster_client()
 def start_bot(cluster: "ClusterClient", name: str):
     """Start one or more BOT(s) running in CLUSTER (if stopped or terminated)"""
 
@@ -1353,7 +1359,7 @@ def start_bot(cluster: "ClusterClient", name: str):
 
 @bots.command(name="stop", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT", default="*")
-@cluster_client
+@cluster_client()
 def stop_bot(cluster: "ClusterClient", name: str):
     """Stop one or more BOT(s) from running in CLUSTER (if running)"""
 
@@ -1389,7 +1395,7 @@ def stop_bot(cluster: "ClusterClient", name: str):
     is_flag=True,
     default=False,
 )
-@cluster_client
+@cluster_client()
 def show_bot_logs(
     cluster: "ClusterClient",
     name: str,
@@ -1417,7 +1423,7 @@ def show_bot_logs(
 
 @bots.command(name="errors", section="Bot Operation Commands")
 @click.argument("name", metavar="BOT", default="*")
-@cluster_client
+@cluster_client()
 def show_bot_errors(cluster: "ClusterClient", name: str):
     """Show unacknowledged errors for one or more BOT(s) in CLUSTER"""
 
@@ -1428,7 +1434,7 @@ def show_bot_errors(cluster: "ClusterClient", name: str):
 
 
 @cluster.command(name="mcp", section="Platform Commands (https://silverback.apeworx.io)")
-@cluster_client
+@cluster_client(show_login=False)
 def run_mcp_server(cluster: "ClusterClient"):
     """Run MCP (Model Context Protocol) Server"""
 
@@ -1441,4 +1447,4 @@ def run_mcp_server(cluster: "ClusterClient"):
 
     # NOTE: Need to inject this into context so it has access
     mcp.client = cluster
-    mcp.server.run(transport="sse")
+    mcp.server.run()
