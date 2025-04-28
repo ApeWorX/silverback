@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from mcp.server.fastmcp import Context, FastMCP  # type: ignore[import-not-found]
+from fastmcp import Context, FastMCP
 
 from silverback.cluster.client import ClusterClient
 from silverback.cluster.types import BotInfo, ClusterConfiguration, ClusterHealth, VariableGroupInfo

@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 extras_require = {
     "mcp": [
-        "mcp[cli]",  # MCP Server & AI Computer Use
+        "fastmcp",  # MCP Server & AI Computer Use
     ],
     "test": [  # `test` GitHub Action jobs uses this
         "pytest>=6.0",  # Core testing package
