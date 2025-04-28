@@ -35,10 +35,6 @@ def cluster_is_okay() -> str:
     return "What is the health of my Silverback cluster?"
 
 
-# TODO: Refactor to using resources when the following are implemented:
-#       - https://github.com/modelcontextprotocol/python-sdk/pull/248
-#       - https://github.com/pydantic/pydantic-ai/issues/1273
-# @server.resource("silverback://version")
 @server.tool()
 def cluster_version(ctx: Context) -> str:
     """Get the software version of the Cluster"""
@@ -47,7 +43,6 @@ def cluster_version(ctx: Context) -> str:
     return cluster.version
 
 
-# @server.resource("silverback://configuration")
 @server.tool()
 def cluster_configuration(ctx: Context) -> ClusterConfiguration | None:
     """Get the software version of the Cluster"""
@@ -68,7 +63,6 @@ def cluster_health(ctx: Context) -> ClusterHealth:
 # NOTE: Do now allow MCP to transmit API keys and such (therefore no new vargroups)
 
 
-# @server.resource("silverback://variable-groups")
 @server.tool()
 def list_variable_groups(ctx: Context) -> list[str]:
     """List all bots in the Cluster"""
@@ -77,7 +71,6 @@ def list_variable_groups(ctx: Context) -> list[str]:
     return list(cluster.variable_groups)
 
 
-# @server.resource("silverback://variable-groups/{vargroup_name}")
 @server.tool()
 def variable_group_info(ctx: Context, vargroup_name: str) -> VariableGroupInfo:
     """List all bots in the Cluster"""
@@ -117,7 +110,6 @@ def new_bot(
     )
 
 
-# @server.resource("silverback://bots")
 @server.tool()
 def list_bots(ctx: Context) -> list[str]:
     """List all bots in the Cluster"""
@@ -126,7 +118,6 @@ def list_bots(ctx: Context) -> list[str]:
     return list(cluster.bots)
 
 
-# @server.resource("silverback://bots/{bot_name}")
 @server.tool()
 def bot_info(ctx: Context, bot_name: str) -> BotInfo:
     """Get information about a particular bot in the Cluster"""
