@@ -926,7 +926,16 @@ def vars():
 
 def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
     def parse_envar(item: str):
-        if not ("=" in item and len(item.split("=")) == 2):
+
+        if "=" not in item:
+            if not (envvar := os.environ.get(item)):
+                raise click.UsageError(
+                    f"Environment variable '{item}' has no value in your environment"
+                )
+
+            return item, envvar
+
+        elif len(item.split("=")) != 2:
             raise click.UsageError(f"Value '{item}' must be in form `NAME=VAL`")
 
         return item.split("=")
