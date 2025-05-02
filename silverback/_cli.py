@@ -950,9 +950,9 @@ def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
     "variables",
     multiple=True,
     type=str,
-    metavar="NAME=VAL",
+    metavar="NAME[=VAL]",
     callback=parse_envvars,
-    help="Environment variable key and value to add (Multiple allowed)",
+    help="Environment variable name or key and value to add (Multiple allowed)",
 )
 @click.argument("name")
 @cluster_client()
@@ -997,9 +997,9 @@ def vargroup_info(cluster: "ClusterClient", name: str):
     "updated_vars",
     multiple=True,
     type=str,
-    metavar="NAME=VAL",
+    metavar="NAME[=VAL]",
     callback=parse_envvars,
-    help="Environment variable key and value to add/update (Multiple allowed)",
+    help="Environment variable name or key and value to add/update (Multiple allowed)",
 )
 @click.option(
     "-d",
