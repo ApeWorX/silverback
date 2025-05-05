@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 from datetime import datetime
 from typing import Annotated
@@ -7,10 +8,13 @@ from ape import chain
 from ape.api import BlockAPI
 from ape.types import ContractLog
 from ape.utils import ZERO_ADDRESS
-from ape_tokens import tokens  # type: ignore[import]
+from ape_tokens import Token, tokens  # type: ignore[import-not-found]
 from taskiq import Context, TaskiqDepends, TaskiqState
 
 from silverback import CircuitBreaker, SilverbackBot, StateSnapshot
+
+# You can load things from your bot's environment
+ROUTER = os.environ.get("ROUTER", "0x1111111254EEB25477B68fb85Ed929f73A960582")
 
 # Do this first to initialize your bot
 bot = SilverbackBot()
@@ -19,8 +23,7 @@ bot = SilverbackBot()
 # bot.state.something  # NOTE: raises AttributeError
 
 # NOTE: Don't do any networking until after initializing bot
-USDC = tokens["USDC"]
-YFI = tokens["YFI"]
+usdc = tokens["USDC"]
 
 
 @bot.on_startup()
@@ -69,7 +72,7 @@ def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
 
 # This is how we trigger off of events including logs from previous blocks
 # NOTE: Set new_block_timeout to adjust the expected block time.
-@bot.on_(USDC.Transfer, start_block=-10, new_block_timeout=25)
+@bot.on_(usdc.Transfer, start_block=-10, new_block_timeout=25)
 # NOTE: Typing isn't required, it will still be an Ape `ContractLog` type
 def exec_event1(log):
     if log.log_index % 7 == 3:
@@ -83,19 +86,23 @@ def exec_event1(log):
     return {"amount": log.amount}
 
 
-@bot.on_(USDC.Transfer, sender=ZERO_ADDRESS)
+# You can add event arguments to target only logs that match this filter
+@bot.on_(usdc.Transfer, sender=ZERO_ADDRESS)
 async def handle_mints(log):
     assert log.sender == ZERO_ADDRESS
 
 
-@bot.on_(YFI.Approval)
+# You can use generic `ContractContainer.EventType`s, to get matching logs from any contract
+@bot.on_(Token.Approval, spender=ROUTER)
 # Any handler function can be async too
 async def exec_event2(log: ContractLog):
+    token = Token.at(log.contract_address)
     # All `bot.state` values are updated across all workers at the same time
     bot.state.logs_processed += 1
     # Do any other long running tasks...
     await asyncio.sleep(5)
-    return log.amount
+    # If you return a dict, the dict keys become global metrics (instead of the function name)
+    return {token.symbol(): log.amount}
 
 
 # You can run cron jobs in your apps
