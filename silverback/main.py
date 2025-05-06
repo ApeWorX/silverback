@@ -329,6 +329,8 @@ class SilverbackBot(ManagerAccessMixin):
 
             return result
 
+        # NOTE: Avoid processing w/ TaskIQ's automatic `BaseModel` parser
+        ensure_log.__annotations__["log"] = dict
         return ensure_log
 
     # To ensure we don't have too many forks at once
@@ -435,7 +437,9 @@ class SilverbackBot(ManagerAccessMixin):
             elif task_type is TaskType.EVENT_LOG:
                 assert container is not None and isinstance(container, ContractEvent)
                 # NOTE: allows broad capture filters (matching multiple addresses)
-                if contract := getattr(container, "contract", None):
+                if (contract := getattr(container, "contract", None)) and hasattr(
+                    contract, "address"
+                ):
                     labels["address"] = contract.address
 
                 labels["event"] = container.abi.signature
@@ -593,22 +597,20 @@ class SilverbackBot(ManagerAccessMixin):
 
             return self.broker_task_decorator(TaskType.NEW_BLOCK, container=container)
 
-        elif isinstance(container, ContractEvent) and isinstance(
-            container.contract, ContractInstance
-        ):
-            key = container.contract.address
+        elif isinstance(container, ContractEvent):
+            if isinstance(container.contract, ContractInstance):
+                key = container.contract.address
+                if new_block_timeout is not None:
+                    if key in self.poll_settings:
+                        self.poll_settings[key]["new_block_timeout"] = new_block_timeout
+                    else:
+                        self.poll_settings[key] = {"new_block_timeout": new_block_timeout}
 
-            if new_block_timeout is not None:
-                if key in self.poll_settings:
-                    self.poll_settings[key]["new_block_timeout"] = new_block_timeout
-                else:
-                    self.poll_settings[key] = {"new_block_timeout": new_block_timeout}
-
-            if start_block is not None:
-                if key in self.poll_settings:
-                    self.poll_settings[key]["start_block"] = start_block
-                else:
-                    self.poll_settings[key] = {"start_block": start_block}
+                if start_block is not None:
+                    if key in self.poll_settings:
+                        self.poll_settings[key]["start_block"] = start_block
+                    else:
+                        self.poll_settings[key] = {"start_block": start_block}
 
             if filter_args:
                 filter_kwargs.update(filter_args)
