@@ -73,7 +73,7 @@ class BaseRecorder(ABC):
     """
 
     @abstractmethod
-    async def init(self, app_id: SilverbackID):
+    async def init(self, bot_id: SilverbackID):
         """
         Handle any async initialization from Silverback settings (e.g. migrations).
         """
@@ -88,15 +88,15 @@ class JSONLineRecorder(BaseRecorder):
     Very basic implementation of BaseRecorder used to handle results by appending to a file
     containing newline-separated JSON entries (https://jsonlines.org/).
 
-    The file structure that this Recorder uses leverages the value of `SILVERBACK_APP_NAME`
+    The file structure that this Recorder uses leverages the value of `SILVERBACK_BOT_NAME`
     as well as the configured network to determine the location where files get saved:
 
         ./.silverback-sessions/
-          <app-name>/
+          <bot-name>/
             <network choice>/
-              session-<timestamp>.json  # start time of each app session
+              session-<timestamp>.json  # start time of each bot session
 
-    Each app "session" (everytime the Runner is started up via `silverback run`) is recorded
+    Each bot "session" (everytime the Runner is started up via `silverback run`) is recorded
     in a separate file with the timestamp of the first handled task in its filename.
 
     Note that this format can be read by basic means (even in a JS frontend), or read
@@ -110,15 +110,15 @@ class JSONLineRecorder(BaseRecorder):
 
     - `SILVERBACK_RECORDER_CLASS`: `"silverback.recorder:JSONLineRecorder"`
 
-    You may also want to give your app a unique name so the data does not get overwritten,
-    if you are using multiple apps from the same directory:
+    You may also want to give your bot a unique name so the data does not get overwritten,
+    if you are using multiple bots from the same directory:
 
-    - `SILVERBACK_APP_NAME`: Any alphabetical string valid as a folder name
+    - `SILVERBACK_BOT_NAME`: Any alphabetical string valid as a folder name
     """
 
-    async def init(self, app_id: SilverbackID):
+    async def init(self, bot_id: SilverbackID):
         data_folder = (
-            Path.cwd() / ".silverback-sessions" / app_id.name / app_id.ecosystem / app_id.network
+            Path.cwd() / ".silverback-sessions" / bot_id.name / bot_id.ecosystem / bot_id.network
         )
         data_folder.mkdir(parents=True, exist_ok=True)
 
