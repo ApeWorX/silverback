@@ -71,11 +71,15 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/cluster.html">silverback.cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/main.html">silverback.main</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/recorder.html">silverback.recorder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../methoddocs/subscriptions.html">silverback.subscriptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/settings.html">silverback.settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/state.html">silverback.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/types.html">silverback.types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
 </ul>
 
@@ -98,6 +102,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#cron-tasks">Cron Tasks</a></li>
+<li><a class="reference internal" href="#defining-metrics">Defining Metrics</a></li>
 <li><a class="reference internal" href="#startup-and-shutdown">Startup and Shutdown</a><ul>
 <li><a class="reference internal" href="#worker-events">Worker Events</a><ul>
 <li><a class="reference internal" href="#worker-state">Worker State</a></li>
@@ -112,6 +117,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#running-your-bot">Running your Bot</a><ul>
+<li><a class="reference internal" href="#metrics-collection">Metrics Collection</a></li>
 <li><a class="reference internal" href="#distributed-execution">Distributed Execution</a></li>
 </ul>
 </li>
@@ -273,6 +279,29 @@ You can do that with the <code class="docutils literal notranslate"><span class=
 </div>
 <p>For more information see <a class="reference external" href="https://linuxhandbook.com/crontab/#understanding-crontab-syntax">the linux handbook section on the crontab syntax</a> or the <a class="reference external" href="https://crontab.guru/">crontab.guru</a> generator.</p>
 </section>
+<section id="defining-metrics">
+<h2>Defining Metrics<a class="headerlink" href="#defining-metrics" title="Link to this heading"></a></h2>
+<p>Silverback has a built-in metrics collection system which can capture measurements made by your bots, which can assist you in debugging or performance monitoring.
+To capture a measurement of a metric datapoint, simply return boolean values or numeric data from your function handlers, or use any of our defined <a class="reference external" href="../methoddocs/types">Datapoint types</a>.
+When you return a datapoint measurement directly, the datapoint is stored using the label of it’s function handler to append to a timeseries for the metric.
+When you return a dictionary containing multiple measurements, the string key corresponds to label of the metric you are capturing a datapoint for.</p>
+<p>Note that metric labels are tracked globally across your bot.
+If you generate metrics in two different function handlers that have the same string keys in the dictionary, they will both be appended to the same metric timeseries.</p>
+<p>For example, both of the following handlers <code class="docutils literal notranslate"><span class="pre">handlerA</span></code> and <code class="docutils literal notranslate"><span class="pre">handlerB</span></code> generate the <code class="docutils literal notranslate"><span class="pre">block_time</span></code> metric, along with the <code class="docutils literal notranslate"><span class="pre">block_time</span></code> handler which also generates a matching metric of the same name (because it does not return a dict):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">my_contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handlerA</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">block_time</span><span class="o">=</span><span class="n">log</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="nd">@bot</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;* * * * *&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handlerB</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+</span><span data-line="7">    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;block_time&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())}</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="10"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">block_time</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+</span><span data-line="11">    <span class="k">return</span> <span class="n">block</span><span class="o">.</span><span class="n">timestamp</span>
+</span></pre></div>
+</div>
+</section>
 <section id="startup-and-shutdown">
 <h2>Startup and Shutdown<a class="headerlink" href="#startup-and-shutdown" title="Link to this heading"></a></h2>
 <section id="worker-events">
@@ -423,6 +452,13 @@ Always test your bots throughly before deploying, and always use a dedicated key
 <p>It is highly suggested to use a dedicated cloud signer plugin, such as <a class="reference external" href="https://github.com/ApeWorX/ape-aws"><code class="docutils literal notranslate"><span class="pre">ape-aws</span></code></a> for signing transactions in a cloud environment.
 Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.</p>
 </div>
+<section id="metrics-collection">
+<h3>Metrics Collection<a class="headerlink" href="#metrics-collection" title="Link to this heading"></a></h3>
+<p>To configure your bot for metrics collection, define the <code class="docutils literal notranslate"><span class="pre">SILVERBACK_RECORDER_CLASS=...</span></code> environment variable.
+All recorders should be a subclass of the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.BaseRecorder"><code class="docutils literal notranslate"><span class="pre">silverback.recorder.BaseRecorder</span></code></a> abstract base class.
+Currently, the only available Recorder class is the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.JSONLineRecorder"><code class="docutils literal notranslate"><span class="pre">silverback.recorder.JSONLineRecorder</span></code></a> class, which journals your bot session’s results to disk under timestamped files in <code class="docutils literal notranslate"><span class="pre">./.silverback-sessions/&lt;bot</span> <span class="pre">name&gt;/&lt;ecosystem&gt;/&lt;network&gt;/</span></code>.
+To assist in loading the metrics for things like analyzing them with Dataframe libraries, use the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.get_metrics"><code class="docutils literal notranslate"><span class="pre">silverback.recorder.get_metrics</span></code></a> function.</p>
+</section>
 <section id="distributed-execution">
 <h3>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Link to this heading"></a></h3>
 <p>Using only the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code> command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.

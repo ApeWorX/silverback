@@ -153,6 +153,32 @@ def every_hour():
 
 For more information see [the linux handbook section on the crontab syntax](https://linuxhandbook.com/crontab/#understanding-crontab-syntax) or the [crontab.guru](https://crontab.guru/) generator.
 
+## Defining Metrics
+
+Silverback has a built-in metrics collection system which can capture measurements made by your bots, which can assist you in debugging or performance monitoring.
+To capture a measurement of a metric datapoint, simply return boolean values or numeric data from your function handlers, or use any of our defined [Datapoint types](../methoddocs/types).
+When you return a datapoint measurement directly, the datapoint is stored using the label of it's function handler to append to a timeseries for the metric.
+When you return a dictionary containing multiple measurements, the string key corresponds to label of the metric you are capturing a datapoint for.
+
+Note that metric labels are tracked globally across your bot.
+If you generate metrics in two different function handlers that have the same string keys in the dictionary, they will both be appended to the same metric timeseries.
+
+For example, both of the following handlers `handlerA` and `handlerB` generate the `block_time` metric, along with the `block_time` handler which also generates a matching metric of the same name (because it does not return a dict):
+
+```python
+@bot.on_(my_contract.MyEvent)
+async def handlerA(log):
+    return dict(block_time=log.timestamp)
+
+@bot.cron("* * * * *")
+async def handlerB(time):
+    return {"block_time": int(time.timestamp())}
+
+@bot.on_(chain.blocks)
+async def block_time(block):
+    return block.timestamp
+```
+
 ## Startup and Shutdown
 
 ### Worker Events
@@ -315,6 +341,13 @@ Always test your bots throughly before deploying, and always use a dedicated key
 It is highly suggested to use a dedicated cloud signer plugin, such as [`ape-aws`](https://github.com/ApeWorX/ape-aws) for signing transactions in a cloud environment.
 Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.
 ```
+
+### Metrics Collection
+
+To configure your bot for metrics collection, define the `SILVERBACK_RECORDER_CLASS=...` environment variable.
+All recorders should be a subclass of the [`silverback.recorder.BaseRecorder`](../methoddocs/recorder#silverback.recorder.BaseRecorder) abstract base class.
+Currently, the only available Recorder class is the [`silverback.recorder.JSONLineRecorder`](../methoddocs/recorder#silverback.recorder.JSONLineRecorder) class, which journals your bot session's results to disk under timestamped files in `./.silverback-sessions/<bot name>/<ecosystem>/<network>/`.
+To assist in loading the metrics for things like analyzing them with Dataframe libraries, use the [`silverback.recorder.get_metrics`](../methoddocs/recorder#silverback.recorder.get_metrics) function.
 
 ### Distributed Execution
 
