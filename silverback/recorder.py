@@ -35,7 +35,7 @@ class TaskResult(BaseModel):
             return Datapoints(root={})
 
         elif not isinstance(return_value, dict):
-            return_value = {"return_value": return_value}
+            return_value = {task_name: return_value}
 
         return Datapoints(root=return_value)
 
@@ -51,9 +51,9 @@ class TaskResult(BaseModel):
     @classmethod
     def from_taskiq(
         cls,
+        task_name: str,
         result: TaskiqResult,
     ) -> Self:
-        task_name = result.labels.pop("task_name", "<unknown>")
         return cls(
             task_name=task_name,
             execution_time=result.execution_time,

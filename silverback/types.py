@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
@@ -51,8 +52,12 @@ UTCTimestamp = Annotated[
 ]
 
 
-class _BaseDatapoint(BaseModel):
+class _BaseDatapoint(BaseModel, ABC):
     type: str  # discriminator
+
+    @abstractmethod
+    def render(self) -> str:
+        """Render Datapoint for viewing in logs"""
 
 
 # NOTE: Maximum supported parquet integer type: https://parquet.apache.org/docs/file-format/types
@@ -66,6 +71,9 @@ ScalarType = bool | Int96 | float | Decimal
 class ScalarDatapoint(_BaseDatapoint):
     type: Literal["scalar"] = "scalar"
     data: ScalarType
+
+    def render(self) -> str:
+        return str(self.data)
 
 
 # NOTE: Other datapoint types must be explicitly defined as subclasses of `_BaseDatapoint`

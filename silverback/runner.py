@@ -92,20 +92,31 @@ class BaseRunner(ABC):
 
     async def run_task(self, task_data: TaskData, *args):
         task = await self.get_task(task_data.name).kiq(*args)
-        result = await task.wait_result()
+        task_result = await task.wait_result()
+        task_error = task_result.error
+        result = TaskResult.from_taskiq(task_data.name, task_result)
 
-        if self.recorder:
-            await self.recorder.add_result(TaskResult.from_taskiq(result))
+        if metrics_str := "\n  ".join(
+            f"{metric_name}: {datapoint.render()}"
+            for metric_name, datapoint in result.metrics.items()
+        ):  # Display metrics in logs to help debug
+            logger.info(f"{task_data.name} - Metrics collected\n  {metrics_str}")
 
-        if not result.is_err:
+        if self.recorder:  # Recorder configured to record
+            await self.recorder.add_result(result)
+
+        if not task_error:
             # NOTE: Reset exception counter
             self.exceptions = 0
             return
 
         self.exceptions += 1
 
-        if self.exceptions > self.max_exceptions or isinstance(result.error, Halt):
-            result.raise_for_error()
+        if isinstance(task_error, Halt):
+            raise task_error
+
+        elif self.exceptions > self.max_exceptions:
+            raise Halt() from task_error
 
     async def _checkpoint(self):
         """Fetch latest snapshot from worker"""
