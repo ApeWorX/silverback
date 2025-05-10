@@ -94,7 +94,7 @@ class BaseRunner(ABC):
         task = await self.get_task(task_data.name).kiq(*args)
         task_result = await task.wait_result()
         task_error = task_result.error
-        result = TaskResult.from_taskiq(task_result)
+        result = TaskResult.from_taskiq(task_data.name, task_result)
 
         if metrics_str := "\n  ".join(
             f"{metric_name}: {datapoint.render()}"
