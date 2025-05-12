@@ -24,17 +24,21 @@ def dockerfile_template(
         "USER harambe",
     ]
 
+    if has_requirements_txt or has_pyproject_toml:
+        dockerfile.append("RUN pip install --upgrade pip")
+
     if has_requirements_txt:
         dockerfile.append("COPY requirements.txt .")
-        dockerfile.append("RUN pip install --upgrade pip && pip install -r requirements.txt")
+        dockerfile.append("RUN pip install -r requirements.txt")
 
-    # TODO: Figure out how to avoid build issues w/ pip
-    # if has_pyproject_toml:
-    #     dockerfile.append("COPY pyproject.toml /app")
-    #     dockerfile.append("RUN pip install --upgrade pip && pip install .")
+    if has_pyproject_toml:
+        dockerfile.append("COPY pyproject.toml .")
+        dockerfile.append("RUN  pip install .")
 
     if has_ape_config_yaml:
-        dockerfile.append("COPY ape-config.yaml /app")
+        dockerfile.append("COPY ape-config.yaml .")
+
+    if has_pyproject_toml or has_ape_config_yaml:
         dockerfile.append("RUN ape plugins install -U .")
 
     if contracts_folder:
