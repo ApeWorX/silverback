@@ -116,12 +116,22 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
         )
 
 
-def build_docker_images():
-    for dockerfile in (Path.cwd() / IMAGES_FOLDER_NAME).glob("Dockerfile.*"):
-        command = f"docker build -f {dockerfile.relative_to(Path.cwd())} ."
-        click.secho(f"{command}", fg="green")
+def build_docker_images(
+    tag_base: str | None = None,
+    version: str = "latest",
+):
+    build_root = Path.cwd()
+    for dockerfile in (build_root / IMAGES_FOLDER_NAME).glob("Dockerfile.*"):
+        bot_name = dockerfile.suffix.lstrip(".") or "bot"
+        tag = (
+            f"{tag_base.lower()}-{bot_name.lower()}:{version}"
+            if tag_base is not None
+            else f"{build_root.name.lower()}-{bot_name.lower()}:{version}"
+        )
+        command = ["docker", "build", "-f", str(dockerfile.relative_to(build_root)), "-t", tag, "."]
 
+        click.secho(" ".join(command), fg="green")
         try:
-            subprocess.run(command, shell=True, check=True)
+            subprocess.run(command, check=True)
         except subprocess.CalledProcessError as e:
             raise click.ClickException(str(e))
