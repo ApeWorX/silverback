@@ -10,11 +10,11 @@ IMAGES_FOLDER_NAME = ".silverback-images"
 def dockerfile_template(
     bot_path: Path,
     sdk_version: str = "stable",
-    include_bot_dir: bool = False,
-    has_requirements_txt: bool = False,
+    requirements_txt_fname: str | None = None,
     has_pyproject_toml: bool = False,
     has_ape_config_yaml: bool = False,
     contracts_folder: str | None = None,
+    include_bot_dir: bool = False,
 ):
     dockerfile = [
         f"FROM ghcr.io/apeworx/silverback:{sdk_version}",
@@ -24,19 +24,21 @@ def dockerfile_template(
         "USER harambe",
     ]
 
-    if has_requirements_txt or has_pyproject_toml:
-        dockerfile.append("RUN pip install --upgrade pip")
-
-    if has_requirements_txt:
-        dockerfile.append("COPY requirements.txt .")
-        dockerfile.append("RUN pip install -r requirements.txt")
+    if requirements_txt_fname:
+        dockerfile.append(f"COPY {requirements_txt_fname} requirements.txt")
 
     if has_pyproject_toml:
         dockerfile.append("COPY pyproject.toml .")
-        dockerfile.append("RUN  pip install .")
 
     if has_ape_config_yaml:
         dockerfile.append("COPY ape-config.yaml .")
+
+    if requirements_txt_fname or has_pyproject_toml:
+        dockerfile.append("RUN pip install --upgrade pip")
+
+        # NOTE: Only install project via `pyproject.toml` if `requirements-bot].txt` DNE
+        install_arg = "-r requirements.txt" if requirements_txt_fname else "."
+        dockerfile.append(f"RUN pip install {install_arg}")
 
     if has_pyproject_toml or has_ape_config_yaml:
         dockerfile.append("RUN ape plugins install -U .")
@@ -63,6 +65,14 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
             .get("contracts_folder", contracts_folder)
         )
 
+    if not (
+        # NOTE: Use this first so we can avoid using legitimate `requirements.txt`
+        (Path.cwd() / (requirements_txt_fname := "requirements-bot.txt")).exists()
+        or (Path.cwd() / (requirements_txt_fname := "requirements.txt")).exists()
+    ):
+        # NOTE: Doesn't exist so make it not be `requirements.txt`
+        requirements_txt_fname = None
+
     assert contracts_folder  # make mypy happy
     if not ((Path.cwd() / contracts_folder)).exists():
         contracts_folder = None
@@ -75,7 +85,7 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
                     bot,
                     include_bot_dir=True,
                     sdk_version=sdk_version,
-                    has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
+                    requirements_txt_fname=requirements_txt_fname,
                     has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
                     has_ape_config_yaml=has_ape_config_yaml,
                     contracts_folder=contracts_folder,
@@ -87,7 +97,7 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
             dockerfile_template(
                 path,
                 sdk_version=sdk_version,
-                has_requirements_txt=(Path.cwd() / "requirements.txt").exists(),
+                requirements_txt_fname=requirements_txt_fname,
                 has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
                 has_ape_config_yaml=has_ape_config_yaml,
                 contracts_folder=contracts_folder,
