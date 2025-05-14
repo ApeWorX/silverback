@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 
 import click
+import tomlkit
 import yaml
 
 IMAGES_FOLDER_NAME = ".silverback-images"
@@ -60,8 +61,18 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
     contracts_folder: str | None = "contracts"
     if has_ape_config_yaml := (ape_config_path := Path.cwd() / "ape-config.yaml").exists():
         contracts_folder = (
-            yaml.safe_load(ape_config_path.read_text())
+            yaml.safe_load(ape_config_path.read_text()).get("compiler", {})
+            # NOTE: Should fall through to this last `.get` and use initial default if config DNE
+            .get("contracts_folder", contracts_folder)
+        )
+
+    if has_pyproject_toml := (pyproject_path := Path.cwd() / "pyproject.toml").exists():
+        contracts_folder = (
+            tomlkit.loads(pyproject_path.read_text())
+            .get("tool", {})
+            .get("ape", {})
             .get("compiler", {})
+            # NOTE: Should fall through to this last `.get` and use initial default if config DNE
             .get("contracts_folder", contracts_folder)
         )
 
@@ -86,7 +97,7 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
                     include_bot_dir=True,
                     sdk_version=sdk_version,
                     requirements_txt_fname=requirements_txt_fname,
-                    has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
+                    has_pyproject_toml=has_pyproject_toml,
                     has_ape_config_yaml=has_ape_config_yaml,
                     contracts_folder=contracts_folder,
                 )
@@ -98,7 +109,7 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
                 path,
                 sdk_version=sdk_version,
                 requirements_txt_fname=requirements_txt_fname,
-                has_pyproject_toml=(Path.cwd() / "pyproject.toml").exists(),
+                has_pyproject_toml=has_pyproject_toml,
                 has_ape_config_yaml=has_ape_config_yaml,
                 contracts_folder=contracts_folder,
             )
