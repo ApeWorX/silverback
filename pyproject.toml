@@ -41,3 +41,18 @@ extend_skip = ["version.py"]
 
 [tool.mdformat]
 number = true
+
+[[tool.ape.plugins]]
+name = "etherscan"
+[[tool.ape.plugins]]
+name = "tokens"
+
+# Ensure we are configured for fork mode correct for example
+[tool.ape.ethereum.mainnet-fork]
+default_provider = "foundry"
+
+[tool.ape.tokens]
+default = "CoinGecko"
+required = [
+  {name = "CoinGecko", uri = "https://tokens.coingecko.com/uniswap/all.json"},
+]
