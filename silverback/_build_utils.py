@@ -119,7 +119,9 @@ def generate_dockerfiles(path: Path, sdk_version: str = "stable"):
 def build_docker_images(
     tag_base: str | None = None,
     version: str = "latest",
+    push: bool = False,
 ):
+    built_tags = []
     build_root = Path.cwd()
     for dockerfile in (build_root / IMAGES_FOLDER_NAME).glob("Dockerfile.*"):
         bot_name = dockerfile.suffix.lstrip(".") or "bot"
@@ -135,3 +137,9 @@ def build_docker_images(
             subprocess.run(command, check=True)
         except subprocess.CalledProcessError as e:
             raise click.ClickException(str(e))
+
+        built_tags.append(tag)
+
+    if push:
+        for tag in built_tags:
+            subprocess.run(["docker", "push", tag])
