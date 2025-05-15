@@ -38,7 +38,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     ENABLE_METRICS: bool = False
 
-    RESULT_BACKEND_CLASS: str = ""
+    RESULT_BACKEND_CLASS: str = "taskiq.brokers.inmemory_broker:InmemoryResultBackend"
     RESULT_BACKEND_URI: str = ""  # To be deprecated in 0.6
     RESULT_BACKEND_KWARGS: dict[str, Any] = dict()
 
