@@ -131,10 +131,48 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, debug, b
 
 
 @cli.command(section="Local Commands")
-@click.option("--generate", is_flag=True, default=False)
+@click.option(
+    "-g",
+    "--generate",
+    is_flag=True,
+    default=False,
+    help="Generate Dockerfiles first. Defaults to false.",
+)
+@click.option(
+    "-t",
+    "--tag-base",
+    default=None,
+    help=(
+        "The base to use to tag the image. "
+        "The bot name (or 'bot') is appended to it, following a '-' separator. "
+        "Defaults to using the name of the folder you are building from."
+    ),
+)
+@click.option(
+    "--version",
+    default="latest",
+    metavar="VERSION",
+    help="Version to use in tag. Defaults to 'latest'.",
+)
+@click.option(
+    "--push",
+    is_flag=True,
+    default=False,
+    help="Push image to logged-in registry. Defaults to false.",
+)
 @click.argument("path", required=False, default=None)
-def build(generate, path):
-    """Generate Dockerfiles and build bot container images"""
+def build(generate, tag_base, version, push, path):
+    """
+    Generate Dockerfiles and build bot container images
+
+    When '--tag-base' is used, you can control the base of the tag for the image.
+    For example, '--tag-base project' with bots 'botA.py' and 'botB.py' (under 'bots/') produces
+    '-t project-bota:latest' and '-t project-botb:latest' respectively.
+
+    For building to push to a specific image registry, use '--tag-base' to correctly tag images.
+    Using '--tag-base ghcr.io/myorg/myproject' with the previous example
+    '-t ghcr.io/myorg/project-bota:latest' and '-t ghcr.io/myorg/project-botb:latest' respectively.
+    """
     from silverback._build_utils import (
         IMAGES_FOLDER_NAME,
         build_docker_images,
@@ -166,7 +204,7 @@ def build(generate, path):
             "You can run `silverback build --generate` to generate it and build."
         )
 
-    build_docker_images()
+    build_docker_images(tag_base=tag_base, version=version, push=push)
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
