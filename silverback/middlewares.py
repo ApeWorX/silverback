@@ -60,7 +60,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
             message.labels["time"] = str(message.args[0])
 
         msg = f"{self._create_label(message, task_type)} - Started"
-        if message.task_name.startswith("system:"):
+        if ":" in message.task_name:
             logger.debug(msg)
         else:
             logger.info(msg)
@@ -87,7 +87,7 @@ class SilverbackMiddleware(TaskiqMiddleware, ManagerAccessMixin):
         )
         if result.is_err:
             logger.error(msg)
-        elif message.task_name.startswith("system:"):
+        elif ":" in message.task_name:
             logger.debug(msg)
         else:
             logger.success(msg)
