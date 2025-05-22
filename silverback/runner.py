@@ -260,7 +260,12 @@ class BaseRunner(ABC):
             TaskType.SYSTEM_USER_TASKDATA, TaskType.EVENT_LOG
         )
 
-        if len(new_block_tasks_taskdata) == len(event_log_tasks_taskdata) == 0:
+        if (
+            len(cron_tasks_taskdata)
+            == len(new_block_tasks_taskdata)
+            == len(event_log_tasks_taskdata)
+            == 0
+        ):
             raise NoTasksAvailableError()
 
         return [
