@@ -90,10 +90,12 @@ class BaseRunner(ABC):
         return_type: Type | None = system_task_kicker.__annotations__.get("return")
         return TypeAdapter(return_type).validate_python(result.return_value)
 
-    async def run_task(self, task_data: TaskData, *args):
+    async def run_task(self, task_data: TaskData, *args, raise_on_error: bool = False):
         task = await self.get_task(task_data.name).kiq(*args)
         task_result = await task.wait_result()
-        task_error = task_result.error
+        if (task_error := task_result.error) and raise_on_error:
+            raise task_error
+
         result = TaskResult.from_taskiq(task_data.name, task_result)
 
         if metrics_str := "\n  ".join(
@@ -228,7 +230,10 @@ class BaseRunner(ABC):
             TaskType.SYSTEM_USER_TASKDATA, TaskType.STARTUP
         ):
             exceptions_or_none = await quattro.gather(
-                *map(lambda td: self.run_task(td, startup_state), startup_tasks_taskdata),
+                *map(
+                    lambda td: self.run_task(td, startup_state, raise_on_error=True),
+                    startup_tasks_taskdata,
+                ),
                 # NOTE: Any propagated failure in here should be handled so shutdown tasks run
                 return_exceptions=True,
             )
