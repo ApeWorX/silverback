@@ -135,7 +135,7 @@ class BaseRunner(ABC):
         Handle all cron tasks
         """
 
-        while True:
+        while not self.shutdown_event.is_set():
             # NOTE: Sleep until next exact time boundary (every minute)
             current_time = utc_now()
             wait_time = timedelta(
@@ -333,11 +333,11 @@ class BaseRunner(ABC):
                 If there are no configured tasks to execute.
         """
 
-        # NOTE: No need to display startup text, obvious from loading settings
-        user_tasks = await self.startup()
-
         # NOTE: After startup, we need to gracefully shutdown
         self.shutdown_event = asyncio.Event()
+
+        # NOTE: No need to display startup text, obvious from loading settings
+        user_tasks = await self.startup()
 
         def exit_handler(signum, _frame):
             logger.info(f"{signal.Signals(signum).name} signal received")
