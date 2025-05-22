@@ -23,7 +23,7 @@ from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError, NoSignerLoaded
 from .settings import Settings
 from .state import StateSnapshot
-from .types import SilverbackID, TaskType
+from .types import ScalarType, SilverbackID, TaskType
 from .utils import encode_topics_to_string, parse_hexbytes_dict
 
 
@@ -377,8 +377,10 @@ class SilverbackBot(ManagerAccessMixin):
         self,
         task_type: TaskType,
         container: BlockContainer | ContractEvent | ContractEventWrapper | None = None,
-        cron_schedule: str | None = None,
         filter_args: dict[str, Any] | None = None,
+        cron_schedule: str | None = None,
+        metric_name: str | None = None,
+        value_threshold: dict[str, ScalarType] | None = None,
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Dynamically create a new broker task that handles tasks of ``task_type``.
@@ -482,6 +484,16 @@ class SilverbackBot(ManagerAccessMixin):
                     )
 
                 labels["cron"] = cron_schedule
+
+            elif task_type is TaskType.METRIC_VALUE:
+                # NOTE: This shouldn't happen to users
+                assert metric_name, "Must supply `metric_name=`."
+                labels["metric"] = metric_name
+
+                if value_threshold:
+                    labels.update(
+                        {f"value:{lbl}": str(val) for lbl, val in value_threshold.items()}
+                    )
 
             self.tasks[task_type].append(TaskData(name=handler.__name__, labels=labels))
 
@@ -633,3 +645,55 @@ class SilverbackBot(ManagerAccessMixin):
             cron_schedule (str): A cron-like schedule string.
         """
         return self.broker_task_decorator(TaskType.CRON_JOB, cron_schedule=cron_schedule)
+
+    def on_metric(
+        self,
+        metric_name: str,
+        ge: ScalarType | None = None,
+        gt: ScalarType | None = None,
+        le: ScalarType | None = None,
+        lt: ScalarType | None = None,
+        eq: ScalarType | None = None,
+        ne: ScalarType | None = None,
+        # TODO: Support `rate_[ge|gt|le|...]` too?
+    ) -> Callable:
+        """
+        Create a task that runs when the value of a specified metric has tripped a threshold.
+
+        ```{notice}
+        If no keyword args provided to this decorator, it will trigger on every update of metric.
+        ```
+
+        ```{notice}
+        Multiple keyword args provided to this decorator means logical AND of all of them.
+        ```
+
+        Args:
+            metric_name (str): The name of the metric to monitor for threshold exceedence.
+            ge (ScalarType | None): trigger when metric value is greater than or equal to value.
+            gt (ScalarType | None): trigger when metric value is greater than value.
+            le (ScalarType | None): trigger when metric value is less than or equal to value.
+            lt (ScalarType | None): trigger when metric value is less than value.
+            eq (ScalarType | None): trigger when metric value is equal to value.
+            ne (ScalarType | None): trigger when metric value is not equal to value.
+        """
+        value_threshold: dict[str, ScalarType] = {}
+        if ge is not None:
+            value_threshold["ge"] = ge
+        if gt is not None:
+            value_threshold["gt"] = gt
+        if le is not None:
+            value_threshold["le"] = le
+        if lt is not None:
+            value_threshold["lt"] = lt
+        if eq is not None:
+            value_threshold["eq"] = eq
+        if ne is not None:
+            value_threshold["ne"] = ne
+
+        return self.broker_task_decorator(
+            TaskType.METRIC_VALUE,
+            metric_name=metric_name,
+            # NOTE: When empty, allow all values
+            value_threshold=value_threshold or None,
+        )

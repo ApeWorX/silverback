@@ -25,6 +25,7 @@ class TaskType(str, Enum):
     CRON_JOB = "user:cron-job"
     NEW_BLOCK = "user:new-block"
     EVENT_LOG = "user:event-log"
+    METRIC_VALUE = "user:metric-value"
     SHUTDOWN = "user:shutdown"
 
     def __str__(self) -> str:

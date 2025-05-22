@@ -107,9 +107,15 @@ async def exec_event2(log: ContractLog):
 
 # You can run cron jobs in your apps
 # (useful for functions that execute at a regular time period e.g. metrics)
-@bot.cron("*/1 * * * *")
+@bot.cron("* * * * *")
 def sample_metric(time: datetime):
     return random.random()
+
+
+# You can trigger tasks when metrics returned by other tasks exceed a threshold
+@bot.on_metric("sample_metric", gt=0.5)
+def metric_too_high(value: float):
+    raise ValueError("The metric is too damn high!")
 
 
 @bot.cron("*/5 * * * *")
