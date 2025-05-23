@@ -102,7 +102,10 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#cron-tasks">Cron Tasks</a></li>
-<li><a class="reference internal" href="#defining-metrics">Defining Metrics</a></li>
+<li><a class="reference internal" href="#defining-metrics">Defining Metrics</a><ul>
+<li><a class="reference internal" href="#metric-callbacks">Metric Callbacks</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#startup-and-shutdown">Startup and Shutdown</a><ul>
 <li><a class="reference internal" href="#worker-events">Worker Events</a><ul>
 <li><a class="reference internal" href="#worker-state">Worker State</a></li>
@@ -301,6 +304,38 @@ If you generate metrics in two different function handlers that have the same st
 </span><span data-line="11">    <span class="k">return</span> <span class="n">block</span><span class="o">.</span><span class="n">timestamp</span>
 </span></pre></div>
 </div>
+<section id="metric-callbacks">
+<h3>Metric Callbacks<a class="headerlink" href="#metric-callbacks" title="Link to this heading"></a></h3>
+<p>A special feature of Silverback’s metrics system is the ability to trigger tasks to execute when your metrics are produced.
+For example, say that you have a metric <code class="docutils literal notranslate"><span class="pre">current_price</span></code> that is computed every so often using a <code class="docutils literal notranslate"><span class="pre">cron</span></code> task trigger:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;* * * * *&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">current_price</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">current_price</span> <span class="o">=</span> <span class="o">...</span>
+</span><span data-line="4">    <span class="k">return</span> <span class="n">current_price</span>
+</span></pre></div>
+</div>
+<p>You can then define a metric callback that is triggered whenever that metric is produced:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_metric</span><span class="p">(</span><span class="s2">&quot;current_price&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_current_price</span><span class="p">(</span><span class="n">current_price</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Do something with the price</span>
+</span></pre></div>
+</div>
+<p>This can be particularly handy for definining conditions that trigger whenever a metric is conditionally produced.
+Let’s say that you want to record a metric <code class="docutils literal notranslate"><span class="pre">pool_delta</span></code> whenever a particular trade is made using an event trigger:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">Swap</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">check_pool_balance</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">reserve0</span> <span class="o">&gt;</span> <span class="n">log</span><span class="o">.</span><span class="n">reserve1</span><span class="p">:</span>
+</span><span data-line="4">        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pool_delta</span><span class="o">=</span><span class="n">log</span><span class="o">.</span><span class="n">reserve0</span> <span class="o">-</span> <span class="n">log</span><span class="o">.</span><span class="n">reserve1</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Then you want to trigger off of that metric, but only if it’s value is <em>larger than a threshold</em>.
+We can use <code class="docutils literal notranslate"><span class="pre">gt=&lt;threshold&gt;</span></code> to do this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_metric</span><span class="p">(</span><span class="s2">&quot;pool_delta&quot;</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="n">MIN_DELTA</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">perform_rebalance</span><span class="p">(</span><span class="n">pool_delta</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">pool</span><span class="o">.</span><span class="n">rebalance</span><span class="p">(</span><span class="n">amount</span><span class="o">=</span><span class="n">pool_delta</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
 </section>
 <section id="startup-and-shutdown">
 <h2>Startup and Shutdown<a class="headerlink" href="#startup-and-shutdown" title="Link to this heading"></a></h2>
