@@ -179,6 +179,51 @@ async def block_time(block):
     return block.timestamp
 ```
 
+### Metric Callbacks
+
+A special feature of Silverback's metrics system is the ability to trigger tasks to execute when your metrics are produced.
+For example, say that you have a metric `current_price` that is computed every so often using a `cron` task trigger:
+
+```python
+@bot.cron("* * * * *")
+async def current_price(time):
+    current_price = ...
+    return current_price
+```
+
+You can then define a metric callback that is triggered whenever that metric is produced:
+
+```python
+@bot.on_metric("current_price")
+async def on_current_price(current_price: float):
+    ...  # Do something with the price
+```
+
+This can be particularly handy for definining conditions that trigger whenever a metric is conditionally produced.
+Let's say that you want to record a metric `pool_delta` whenever a particular trade is made using an event trigger:
+
+```python
+@bot.on_(pool.Swap)
+async def check_pool_balance(log):
+    if log.reserve0 > log.reserve1:
+        return dict(pool_delta=log.reserve0 - log.reserve1)
+```
+
+Then you want to trigger off of that metric, but only if it's value is _larger than a threshold_.
+We can use `gt=<threshold>` to do this:
+
+```python
+@bot.on_metric("pool_delta", gt=MIN_DELTA)
+async def perform_rebalance(pool_delta: int):
+    pool.rebalance(amount=pool_delta, ..., sender=bot.signer)
+```
+
+```{notice}
+`.on_metric` supports 6 different value comparisons (`gt`, `ge`, `lt`, `le`, `ne`, and `eq`).
+When multiple comparisons are present, they are treated as a logical AND (meaning they must all be true for the task to execute).
+If you need a separate task to execute on different compound conditions, simply define extra tasks.
+```
+
 ## Startup and Shutdown
 
 ### Worker Events

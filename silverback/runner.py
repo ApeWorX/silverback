@@ -1,9 +1,12 @@
 import asyncio
+import operator
 import signal
 import sys
 from abc import ABC, abstractmethod
-from datetime import timedelta
-from typing import Any, Coroutine, Type
+from collections import defaultdict
+from datetime import datetime, timedelta
+from decimal import Decimal
+from typing import Any, Callable, Coroutine, Type
 
 import pycron  # type: ignore[import-untyped]
 import quattro
@@ -34,7 +37,7 @@ from .exceptions import (
 from .main import SilverbackBot, TaskData
 from .recorder import BaseRecorder, TaskResult
 from .state import Datastore, StateSnapshot
-from .types import TaskType, utc_now
+from .types import Datapoint, ScalarDatapoint, ScalarType, TaskType, utc_now
 from .utils import async_wrap_iter, clean_hexbytes_dict, decode_topics_from_string
 
 if sys.version_info < (3, 11):
@@ -57,6 +60,9 @@ class BaseRunner(ABC):
         # TODO: Allow configuring datastore class
         self.datastore = Datastore()
         self.recorder = recorder
+        self.metric_handlers: dict[str, list[Callable[[Datapoint, datetime], Coroutine]]] = (
+            defaultdict(list)
+        )
 
         self.max_exceptions = max_exceptions
         self.exceptions = 0
@@ -104,6 +110,11 @@ class BaseRunner(ABC):
         ):  # Display metrics in logs to help debug
             logger.info(f"{task_data.name} - Metrics collected\n  {metrics_str}")
 
+            # Trigger checks for metric values
+            for metric_name, datapoint in result.metrics.items():
+                for handler in self.metric_handlers[metric_name]:
+                    self._runtime_task_group.create_task(handler(datapoint, result.completed))
+
         if self.recorder:  # Recorder configured to record
             await self.recorder.add_result(result)
 
@@ -135,7 +146,7 @@ class BaseRunner(ABC):
         Handle all cron tasks
         """
 
-        while True:
+        while not self.shutdown_event.is_set():
             # NOTE: Sleep until next exact time boundary (every minute)
             current_time = utc_now()
             wait_time = timedelta(
@@ -155,6 +166,25 @@ class BaseRunner(ABC):
 
             # NOTE: Run this every minute (just in case of an unhandled shutdown)
             self._runtime_task_group.create_task(self._checkpoint())
+
+    async def _metric_task(self, task_data: TaskData) -> None:
+        metric_name = task_data.labels["metric"]
+        value_thresholds = {
+            op: Decimal(val)  # NOTE: Decimal is most flexible at handling strings
+            for lbl, val in task_data.labels.items()
+            if lbl.startswith("value:") and (op := getattr(operator, lbl.lstrip("value:"), None))
+        }
+
+        def exceeds_value_threshold(data: ScalarType) -> bool:
+            return all(op(Decimal(data), value) for op, value in value_thresholds.items())
+
+        async def check_value(datapoint: Datapoint, updated: datetime):
+            if isinstance(datapoint, ScalarDatapoint) and exceeds_value_threshold(datapoint.data):
+                self._runtime_task_group.create_task(self.run_task(task_data, datapoint.data))
+
+        self.metric_handlers[metric_name].append(check_value)
+
+        # TODO: Support rate threshold checks?
 
     @abstractmethod
     async def _block_task(self, task_data: TaskData) -> None:
@@ -260,10 +290,15 @@ class BaseRunner(ABC):
             TaskType.SYSTEM_USER_TASKDATA, TaskType.EVENT_LOG
         )
 
+        metric_value_tasks_taskdata = await self.run_system_task(
+            TaskType.SYSTEM_USER_TASKDATA, TaskType.METRIC_VALUE
+        )
+
         if (
             len(cron_tasks_taskdata)
             == len(new_block_tasks_taskdata)
             == len(event_log_tasks_taskdata)
+            # NOTE: Skip metric value tasks, because they require other tasks to function
             == 0
         ):
             raise NoTasksAvailableError()
@@ -272,6 +307,7 @@ class BaseRunner(ABC):
             self._cron_tasks(cron_tasks_taskdata),
             *map(self._block_task, new_block_tasks_taskdata),
             *map(self._event_task, event_log_tasks_taskdata),
+            *map(self._metric_task, metric_value_tasks_taskdata),
         ]
 
     def _cleanup_tasks(self) -> list[Coroutine]:
@@ -333,11 +369,11 @@ class BaseRunner(ABC):
                 If there are no configured tasks to execute.
         """
 
-        # NOTE: No need to display startup text, obvious from loading settings
-        user_tasks = await self.startup()
-
         # NOTE: After startup, we need to gracefully shutdown
         self.shutdown_event = asyncio.Event()
+
+        # NOTE: No need to display startup text, obvious from loading settings
+        user_tasks = await self.startup()
 
         def exit_handler(signum, _frame):
             logger.info(f"{signal.Signals(signum).name} signal received")
