@@ -79,6 +79,7 @@ setup(
         "taskiq[metrics]>=0.11.16,<0.12",
         "tomlkit>=0.12,<1",  # For reading/writing global platform profile
         "fief_client @ git+https://github.com/ApeWorX/fief-python@fix/support-ory#egg=fief_client[cli]",  # for platform auth/cluster login
+        "yaspin",  # NOTE: Required by fief-client
         "web3>=7.7,<8",  # TODO: Remove when Ape v0.9 is released (Ape v0.8 allows web3 v6)
     ],
     entry_points={
