@@ -255,7 +255,15 @@ def platform_client(show_login: bool = True):
 
             if show_login:
                 user_id = userinfo["sub"]
-                username = userinfo["fields"].get("username")
+                # TODO: Refactor once migration is completed
+                username = (
+                    # Ory (new)
+                    userinfo.get("preferred_username")
+                    # Fief (current)
+                    or userinfo.get("fields", {}).get("username")
+                    # Fallback (for both)
+                    or userinfo["sub"]
+                )
                 click.echo(
                     f"{click.style('INFO', fg='blue')}: "
                     f"Logged in to '{click.style(profile.host, bold=True)}' as "
