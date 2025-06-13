@@ -72,14 +72,15 @@ setup(
         "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
         "eth-pydantic-types",  # Use same version as eth-ape
         "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup
+        "httpx>=0.28,<1",  # Use for Cluster client, auth
+        "jwcrypto>=1.4,<2",  # Use for auth
         "packaging",  # Use same version as eth-ape
         "pycron>=3.1,<4",  # Checking/triggering cron tasks
         "pydantic_settings",  # Use same version as eth-ape
         "quattro>=25.2,<26",  # Manage task groups and background tasks
         "taskiq[metrics]>=0.11.16,<0.12",
         "tomlkit>=0.12,<1",  # For reading/writing global platform profile
-        "fief_client @ git+https://github.com/ApeWorX/fief-python@fix/support-ory#egg=fief_client[cli]",  # for platform auth/cluster login  # noqa: E501
-        "yaspin",  # NOTE: Required by fief-client
+        "yaspin>=3.1,<4",  # Display a nice spinner when logging in
         "web3>=7.7,<8",  # TODO: Remove when Ape v0.9 is released (Ape v0.8 allows web3 v6)
     ],
     entry_points={

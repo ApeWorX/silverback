@@ -37,9 +37,9 @@ from .exceptions import ClientError
 if TYPE_CHECKING:
     from ape.api import AccountAPI, EcosystemAPI, NetworkAPI, ProviderAPI
     from ape.contracts import ContractInstance
-    from fief_client.integrations.cli import FiefAuth
 
-    from silverback.cluster.client import Bot, ClusterClient, PlatformClient
+    from .cluster.auth import Auth
+    from .cluster.client import Bot, ClusterClient, PlatformClient
 
 LOCAL_DATETIME = "%Y-%m-%d %H:%M:%S %Z"
 
@@ -232,7 +232,7 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, b
 
 @cli.command(section="Cloud Commands (https://silverback.apeworx.io)")
 @auth_required
-def login(auth: "FiefAuth"):
+def login(auth: "Auth"):
     """Login to ApeWorX Authorization Service (https://account.apeworx.io)"""
 
     state = secrets.token_urlsafe()
