@@ -16,6 +16,7 @@ RUN pip wheel . --wheel-dir=/wheels --no-deps
 # Install from wheels
 FROM ghcr.io/apeworx/ape:${BASE_APE_IMAGE_TAG:-latest}
 USER root
+RUN apt-get update && apt-get install -y wget git  # for temporary fork install
 COPY --from=builder /wheels/*.whl /wheels
 RUN pip install --upgrade pip \
     && pip install \

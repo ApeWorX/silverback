@@ -1,5 +1,6 @@
 import asyncio
 import os
+import secrets
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -234,14 +235,22 @@ def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, b
 def login(auth: "FiefAuth"):
     """Login to ApeWorX Authorization Service (https://account.apeworx.io)"""
 
-    auth.authorize()
+    state = secrets.token_urlsafe()
+    # NOTE: Should verify state, but doesn't (need it for auth though)
+    auth.authorize(scope=["profile"], extras_params=dict(state=state))
     userinfo = auth.current_user()
-    user_id = userinfo["sub"]
-    username = userinfo["fields"].get("username")
+    # TODO: Refactor once migration is completed
+    username = (
+        # Ory (new)
+        userinfo.get("preferred_username")
+        # Fief (current)
+        or userinfo.get("fields", {}).get("username")
+        # Fallback (for both)
+        or userinfo["sub"]
+    )
     click.echo(
-        f"{click.style('INFO', fg='blue')}: "
-        f"Logged in to '{click.style(auth.client.base_url, bold=True)}' as "
-        f"'{click.style(username if username else user_id, bold=True)}'"
+        f"{click.style('INFO', fg='blue')}: Logged in to "
+        f"'{click.style(auth.client.base_url, bold=True)}' as '{click.style(username, bold=True)}'"
     )
 
 
