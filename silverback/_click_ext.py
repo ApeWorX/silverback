@@ -5,17 +5,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import click
-from fief_client import Fief
-from fief_client.integrations.cli import FiefAuth, FiefAuthNotAuthenticatedError
 
-from silverback.cluster.settings import (
+from .cluster.auth import Auth, AuthClient, NotAuthenticatedError
+from .cluster.settings import (
     PROFILE_PATH,
     BaseProfile,
     ClusterProfile,
     PlatformProfile,
     ProfileSettings,
 )
-from silverback.exceptions import ImportFromStringError
+from .exceptions import ImportFromStringError
 
 if TYPE_CHECKING:
     from ape.contracts import ContractInstance
@@ -219,8 +218,8 @@ def auth_required(f):
 
         if isinstance(profile, PlatformProfile):
             auth_info = settings.auth[profile.auth]
-            fief = Fief(auth_info.host, auth_info.client_id)
-            ctx.obj["auth"] = FiefAuth(fief, str(PROFILE_PATH.parent / f"{profile.auth}.json"))
+            client = AuthClient(auth_info.host, auth_info.client_id)
+            ctx.obj["auth"] = Auth(client, str(PROFILE_PATH.parent / f"{profile.auth}.json"))
 
             if expose_value:
                 kwargs["auth"] = ctx.obj["auth"]
@@ -245,10 +244,10 @@ def platform_client(show_login: bool = True):
                 raise click.UsageError("This command only works with the Silverback Platform")
 
             # NOTE: `auth` should be set if `profile` is set and is `PlatformProfile`
-            auth: FiefAuth = ctx.obj["auth"]
+            auth: Auth = ctx.obj["auth"]
             try:
                 userinfo = auth.current_user()
-            except FiefAuthNotAuthenticatedError as e:
+            except NotAuthenticatedError as e:
                 raise click.UsageError(
                     "Not authenticated, please use `silverback login` first."
                 ) from e
