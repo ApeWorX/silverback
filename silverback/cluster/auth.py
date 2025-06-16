@@ -13,7 +13,6 @@ import uuid
 import webbrowser
 from collections.abc import Mapping
 from enum import Enum
-from string import Template
 from typing import Any, Optional, TypedDict, Union
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
@@ -587,14 +586,7 @@ class CallbackHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 </svg>"""
     """SVG to display error icon"""
 
-    PAGE_TEMPLATE = Template(
-        """
-<html lang="$lang">
-<head>
-  <title>$title</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="charset" content="utf-8">
-  <style>
+    CSS_STYLE = """
     * {
       margin: 0;
       padding: 0;
@@ -678,32 +670,7 @@ class CallbackHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
       -webkit-animation: colored-circle 0.6s ease-in-out 0.7s backwards;
       animation: colored-circle 0.6s ease-in-out 0.7s backwards;
     }
-  </style>
-  </head>
-
-  <body>
-    <div class="message">
-      <div class="animation-ctn">
-        <div class="icon">
-          $svg
-        </div>
-      </div>
-
-      <h1>$title</h1>
-      <p>$message</p>
-    </div>
-  </body>
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {{
-      setTimeout(() => {{
-        window.close();
-      }}, 5000);
-    }});
-  </script>
-</html>
     """
-    )
-    """Template for callback HTML page"""
 
     # NOTE: Rest of this code borrowed from `fief-python[cli]`
     # https://github.com/fief-dev/fief-python/blob/main/fief_client/integrations/cli.py
@@ -720,21 +687,60 @@ class CallbackHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         pass
 
     def render_success_page(self, lang="en") -> str:
-        return self.PAGE_TEMPLATE.substitute(
-            lang=lang,
-            title="Authentication Successful",
-            message="Done! You can go back to your terminal! This page will auto-close in 5 secs.",
-            svg=self.SUCCESS_SVG,
-        )
+        return f"""
+<html lang="{lang}">
+<head>
+  <title>Authentication Success | Silverback</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="charset" content="utf-8">
+  <style>{self.CSS_STYLE}</style>
+  </head>
+
+  <body>
+    <div class="message">
+      <div class="animation-ctn">
+        <div class="icon">{self.SUCCESS_SVG}</div>
+      </div>
+
+      <h1>Authentication Successful</h1>
+      <p>Done! You can go back to your terminal! This page will auto-close in 5 secs.</p>
+    </div>
+  </body>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {{
+      setTimeout(() => {{
+        window.close();
+      }}, 5000);
+    }});
+  </script>
+</html>
+    """
 
     def render_error_page(self, query_params: dict[str, typing.Any], lang="en") -> str:
-        return self.PAGE_TEMPLATE.substitute(
-            lang=lang,
-            title="Authentication Failed",
-            message=f"""Something went wrong trying to authenticate your. Please try again.
-    Error detail: {json.dumps(query_params)}""",
-            svg=self.ERROR_SVG,
-        )
+        return f"""
+<html lang="{lang}">
+<head>
+  <title>Authentication Failed | Silverback</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="charset" content="utf-8">
+  <style>{self.CSS_STYLE}</style>
+  </head>
+
+  <body>
+    <div class="message">
+      <div class="animation-ctn">
+        <div class="icon">{self.ERROR_SVG}</div>
+      </div>
+
+      <h1>Authentication Failed</h1>
+      <p>
+        Something went wrong trying to authenticate you.
+        Please try again. Error detail: {json.dumps(query_params)}
+      </p>
+    </div>
+  </body>
+</html>
+    """
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
