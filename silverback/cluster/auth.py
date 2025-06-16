@@ -731,7 +731,7 @@ class CallbackHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         return self.PAGE_TEMPLATE.substitute(
             lang=lang,
             title="Authentication Failed",
-            message="""Something went wrong trying to authenticate your. Please try again.
+            message=f"""Something went wrong trying to authenticate your. Please try again.
     Error detail: {json.dumps(query_params)}""",
             svg=self.ERROR_SVG,
         )
