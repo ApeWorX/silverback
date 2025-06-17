@@ -12,7 +12,7 @@ class AuthenticationConfig(BaseModel):
     """Authentication host configuration information (~/.silverback/profile.toml)"""
 
     host: str = "https://account.apeworx.io"
-    client_id: str = Field(default="lcylrp34lnggGO-E-KKlMJgvAI4Q2Jhf6U2G6CB5uMg", alias="client-id")
+    client_id: str = Field(default="c9f9be0e-1f0a-474c-b79e-319778b37ae6", alias="client-id")
 
 
 class BaseProfile(BaseModel):
