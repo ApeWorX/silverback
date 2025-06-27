@@ -20,7 +20,12 @@ from packaging.version import Version
 from pydantic import BaseModel
 from taskiq import AsyncTaskiqDecoratedTask, TaskiqEvents
 
-from .exceptions import ContainerTypeMismatchError, InvalidContainerTypeError, NoSignerLoaded
+from .exceptions import (
+    ContainerTypeMismatchError,
+    InvalidContainerConfigurationError,
+    InvalidContainerTypeError,
+    NoSignerLoaded,
+)
 from .settings import Settings
 from .state import StateSnapshot
 from .types import ScalarType, SilverbackID, TaskType
@@ -402,6 +407,8 @@ class SilverbackBot(ManagerAccessMixin):
             :class:`~silverback.exceptions.ContainerTypeMismatchError`:
                 If there is a mismatch between `task_type` and the `container`
                 type it should handle.
+            :class:`~silverback.exceptions.ContainerConfigurationError`:
+                If there is an issue with the arguments provided.
         """
         if (
             (task_type is TaskType.NEW_BLOCK and not isinstance(container, BlockContainer))
@@ -422,9 +429,10 @@ class SilverbackBot(ManagerAccessMixin):
 
         elif isinstance(container, ContractEventWrapper):
             if len(container.events) != 1:
-                raise InvalidContainerTypeError(
+                raise InvalidContainerConfigurationError(
                     f"Requires exactly 1 event to unwrap: {container.events}"
                 )
+
             container = container.events[0]
 
         # Register user function as task handler with our broker
@@ -466,7 +474,7 @@ class SilverbackBot(ManagerAccessMixin):
                             # NOTE: Will clean up extra Nones in `encode_topics_to_string`
 
                     if unmatched_args := "', '".join(filter_args):
-                        raise InvalidContainerTypeError(
+                        raise InvalidContainerConfigurationError(
                             f"Args are not available for filtering: '{unmatched_args}'."
                         )
 
@@ -479,7 +487,7 @@ class SilverbackBot(ManagerAccessMixin):
                 if not cron_schedule or not pycron.has_been(
                     cron_schedule, datetime.now() - timedelta(days=366)
                 ):
-                    raise InvalidContainerTypeError(
+                    raise InvalidContainerConfigurationError(
                         f"'{cron_schedule}' is not a valid cron schedule"
                     )
 
