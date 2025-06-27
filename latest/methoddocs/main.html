@@ -203,8 +203,11 @@ Silverback application, meant to be used to expose method handlers and other fun
 <dd class="field-odd"><p>Callable[[Callable], <code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncTaskiqDecoratedTask</span></code>]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="exceptions.html#silverback.exceptions.ContainerTypeMismatchError" title="silverback.exceptions.ContainerTypeMismatchError"><strong>ContainerTypeMismatchError</strong></a> – If there is a mismatch between <cite>task_type</cite> and the <cite>container</cite>
-    type it should handle.</p>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="exceptions.html#silverback.exceptions.ContainerTypeMismatchError" title="silverback.exceptions.ContainerTypeMismatchError"><strong>ContainerTypeMismatchError</strong></a> – If there is a mismatch between <cite>task_type</cite> and the <cite>container</cite>
+    type it should handle.</p></li>
+<li><p><strong>ContainerConfigurationError</strong> – If there is an issue with the arguments provided.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
