@@ -45,7 +45,7 @@ def dockerfile_template(
         dockerfile.append("RUN ape plugins install -U .")
 
     if contracts_folder:
-        dockerfile.append(f"COPY {contracts_folder} /app")
+        dockerfile.append(f"COPY {contracts_folder} /app/{contracts_folder}")
         dockerfile.append("RUN ape compile")
 
     bot_src = f"{bot_path.parent}/{bot_path.name}" if include_bot_dir else bot_path.name
