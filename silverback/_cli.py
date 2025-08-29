@@ -743,6 +743,35 @@ def create_payment_stream(
     )
 
 
+@pay.command(name="info")
+@click.argument("cluster_path", metavar="CLUSTER")
+@platform_client()
+def get_payment_info(platform: "PlatformClient", cluster_path: str):
+    """Display streaming payment information for the given CLUSTER"""
+    from silverback.cluster.types import ResourceStatus
+
+    if "/" not in cluster_path or len(cluster_path.split("/")) > 2:
+        raise click.BadArgumentUsage(f"Invalid cluster path: '{cluster_path}'")
+
+    workspace_name, cluster_name = cluster_path.split("/")
+    if not (workspace_client := platform.workspaces.get(workspace_name)):
+        raise click.BadArgumentUsage(f"Unknown workspace: '{workspace_name}'")
+
+    elif not (cluster := workspace_client.clusters.get(cluster_name)):
+        raise click.BadArgumentUsage(
+            f"Unknown cluster in workspace '{workspace_name}': '{cluster_name}'"
+        )
+
+    elif cluster.status != ResourceStatus.RUNNING:
+        raise click.UsageError(f"Cannot fund '{cluster.name}': cluster is not running.")
+
+    elif stream_info := workspace_client.get_stream_info(cluster):
+        click.echo(f"Cluster is funded via '{stream_info}'.")
+
+    else:
+        click.echo("Cluster is not funded via ApePay Stream")
+
+
 @pay.command(name="add-time", cls=ConnectedProviderCommand)
 @account_option()
 @click.argument("cluster_path", metavar="CLUSTER")
