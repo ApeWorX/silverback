@@ -121,3 +121,14 @@ def parse_hexbytes_dict(data: dict, recurse_count: int = 0) -> dict:
             fixed_data[name] = value
 
     return fixed_data
+
+
+def get_chain_info(chain_id: int) -> tuple[str, str]:
+    from evmchains import PUBLIC_CHAIN_META
+
+    for ecosystem_name in PUBLIC_CHAIN_META:
+        for network_name, chain_info in PUBLIC_CHAIN_META[ecosystem_name].items():
+            if chain_info["chainId"] == chain_id:
+                return ecosystem_name, network_name
+
+    raise AssertionError  # should be unreachable

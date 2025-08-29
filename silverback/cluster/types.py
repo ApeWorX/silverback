@@ -247,6 +247,9 @@ class StreamInfo(BaseModel):
     manager: AddressType
     stream_id: int
 
+    def __str__(self) -> str:
+        return f"eip155:{self.chain_id}:{self.manager}/{self.stream_id}"
+
 
 class ClusterInfo(BaseModel):
     # NOTE: Raw API object (gets exported)

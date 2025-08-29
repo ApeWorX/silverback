@@ -6,7 +6,7 @@ import httpx
 from ape import Contract
 from ape.contracts import ContractInstance
 from ape.logging import LogLevel
-from apepay import Stream, StreamManager
+from apepay import StreamManager
 from pydantic import computed_field
 
 from silverback.exceptions import ClientError
@@ -446,7 +446,7 @@ class Workspace(WorkspaceInfo):
         )
         handle_error_with_response(response)
 
-    def get_payment_stream(self, cluster: ClusterInfo, chain_id: int) -> Stream | None:
+    def get_stream_info(self, cluster: ClusterInfo) -> StreamInfo | None:
         response = self.client.get(
             f"/clusters/{cluster.id}/stream",
             params=dict(workspace=str(self.id)),
@@ -456,12 +456,7 @@ class Workspace(WorkspaceInfo):
         if not (raw_stream_info := response.json()):
             return None
 
-        stream_info = StreamInfo.model_validate(raw_stream_info)
-
-        if not stream_info.chain_id == chain_id:
-            return None
-
-        return Stream(manager=StreamManager(stream_info.manager), id=stream_info.stream_id)
+        return StreamInfo.model_validate(raw_stream_info)
 
     def update(
         self,
