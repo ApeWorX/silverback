@@ -94,7 +94,6 @@ def timedelta_callback(
     elif " " in timestamp_or_str:
         units_value = {}
         for time_units in map(lambda s: s.strip(), timestamp_or_str.split(",")):
-
             time, units = time_units.split(" ")
             if not units.endswith("s"):
                 units += "s"
@@ -116,6 +115,49 @@ def timedelta_callback(
         ctx=ctx,
         param=param,
     )
+
+
+def env_file_callback(
+    ctx: click.Context, param: click.Parameter, paths: tuple[Path, ...] | None
+) -> None:
+    if not paths:
+        return None
+
+    from itertools import chain
+
+    from dotenv import load_dotenv
+
+    def allowed_name(name: str) -> bool:
+        n = name.lower()
+        return n.endswith(".env") or (n.startswith(".env.") and len(n) > len(".env."))
+
+    for path in paths:
+        if not allowed_name(path.name):
+            parent = path.parent
+
+            candidates = {p.name for p in chain(parent.glob("*.env"), parent.glob(".env.*"))}
+            if (parent / ".env").exists():
+                candidates.add(".env")
+
+            similar = sorted(candidates)
+            if similar:
+                suggestions = ", ".join(similar[:3])
+                raise click.BadParameter(
+                    f"Invalid env file: {path.name}. Did you mean: {suggestions}?",
+                    ctx=ctx,
+                    param=param,
+                )
+
+            raise click.BadParameter(
+                f"Refusing to load non-.env file: {path}. "
+                "Allowed: '.env', '.env.<suffix>' and '<prefix>.env'.",
+                ctx=ctx,
+                param=param,
+            )
+
+        load_dotenv(path, override=True)
+
+    return None
 
 
 class OrderedCommands(click.Group):
@@ -288,7 +330,6 @@ def platform_client(show_login: bool = True):
 
 def cluster_client(show_login: bool = True):
     def add_cluster_client(f):
-
         def inject_cluster(ctx, param, value: str | None):
             ctx.obj = ctx.obj or {}
             if not (profile := ctx.obj.get("profile")):
