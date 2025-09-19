@@ -116,10 +116,7 @@ def _network_callback(ctx, param, val):
     callback=env_file_callback,
     is_eager=True,
     expose_value=False,
-    help=(
-        "Path to a .env file (repeatable; last wins). "
-        "Allowed: .env, .env.<suffix>, and <prefix>.env."
-    ),
+    help=("Path to .env file(s) (multiple allowed; values override). "),
 )
 @click.argument("bot", required=False, callback=bot_path_callback)
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, debug, bot):
@@ -241,10 +238,7 @@ def build(generate, tag_base, version, push, path):
     callback=env_file_callback,
     is_eager=True,
     expose_value=False,
-    help=(
-        "Path to a .env file (repeatable; last wins). "
-        "Allowed: .env, .env.<suffix>, and <prefix>.env."
-    ),
+    help=("Path to .env file(s) (multiple allowed; values override). "),
 )
 @click.argument("bot", required=False, callback=bot_path_callback)
 def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, bot):

@@ -127,12 +127,8 @@ def env_file_callback(
 
     from dotenv import load_dotenv
 
-    def allowed_name(name: str) -> bool:
-        n = name.lower()
-        return n.endswith(".env") or (n.startswith(".env.") and len(n) > len(".env."))
-
     for path in paths:
-        if not allowed_name(path.name):
+        if ".env" not in path.name.lower():
             parent = path.parent
 
             candidates = {p.name for p in chain(parent.glob("*.env"), parent.glob(".env.*"))}
@@ -150,7 +146,7 @@ def env_file_callback(
 
             raise click.BadParameter(
                 f"Refusing to load non-.env file: {path}. "
-                "Allowed: '.env', '.env.<suffix>' and '<prefix>.env'.",
+                "Allowed: any filename containing '.env' ",
                 ctx=ctx,
                 param=param,
             )
