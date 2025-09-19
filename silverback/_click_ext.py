@@ -121,7 +121,7 @@ def env_file_callback(
     ctx: click.Context, param: click.Parameter, paths: tuple[Path, ...] | None
 ) -> None:
     if not paths:
-        return None
+        return
 
     from itertools import chain
 
@@ -152,8 +152,6 @@ def env_file_callback(
             )
 
         load_dotenv(path, override=True)
-
-    return None
 
 
 class OrderedCommands(click.Group):
