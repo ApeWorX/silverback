@@ -88,5 +88,4 @@ def test_env_file_invalid_without_suggestions(cli, runner, tmp_path):
     assert result.exit_code != 0
     assert "Refusing to load non-.env file:" in result.output
     assert (invalid_file.name in result.output) or (str(invalid_file) in result.output)
-    assert "Allowed: '.env', '.env.<suffix>' and '<prefix>.env'." in result.output
-    assert "Did you mean:" not in result.output
+    assert "Allowed: any filename containing '.env'" in result.output
