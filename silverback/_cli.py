@@ -28,6 +28,7 @@ from ._click_ext import (
     bot_path_callback,
     cls_import_callback,
     cluster_client,
+    env_file_callback,
     parse_globbed_arg,
     platform_client,
     timedelta_callback,
@@ -108,6 +109,15 @@ def _network_callback(ctx, param, val):
 )
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("--debug", is_flag=True, default=False)
+@click.option(
+    "--env-file",
+    multiple=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True, resolve_path=True, path_type=Path),
+    callback=env_file_callback,
+    is_eager=True,
+    expose_value=False,
+    help=("Path to .env file(s) (multiple allowed; values override). "),
+)
 @click.argument("bot", required=False, callback=bot_path_callback)
 def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, debug, bot):
     """Run Silverback bot"""
@@ -221,6 +231,15 @@ def build(generate, tag_base, version, push, path):
 @click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
 @click.option("--debug", is_flag=True, default=False)
+@click.option(
+    "--env-file",
+    multiple=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True, resolve_path=True, path_type=Path),
+    callback=env_file_callback,
+    is_eager=True,
+    expose_value=False,
+    help=("Path to .env file(s) (multiple allowed; values override). "),
+)
 @click.argument("bot", required=False, callback=bot_path_callback)
 def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, bot):
     """Run Silverback task workers (advanced)"""
@@ -863,7 +882,7 @@ def fund_payment_stream(
 
     click.echo(
         f"Funding Stream for Cluster '{cluster_path}' with "
-        f"{token_amount / 10**stream.token.decimals():0.4f} {stream.token.symbol()}"
+        f"{token_amount / 10 ** stream.token.decimals():0.4f} {stream.token.symbol()}"
     )
     stream.add_funds(token_amount, sender=account)
 
@@ -1022,7 +1041,6 @@ def vars():
 
 def parse_envvars(ctx, name, value: list[str]) -> dict[str, str]:
     def parse_envar(item: str):
-
         if "=" not in item:
             if not (envvar := os.environ.get(item)):
                 raise click.UsageError(

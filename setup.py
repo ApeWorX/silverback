@@ -77,6 +77,7 @@ setup(
         "packaging",  # Use same version as eth-ape
         "pycron>=3.1,<4",  # Checking/triggering cron tasks
         "pydantic_settings",  # Use same version as eth-ape
+        "python-dotenv>=1.1.1,<2",  # Load --env-file values
         "quattro>=25.2,<26",  # Manage task groups and background tasks
         "taskiq[metrics]>=0.11.16,<0.12",
         "tomlkit>=0.12,<1",  # For reading/writing global platform profile
