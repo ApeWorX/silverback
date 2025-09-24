@@ -109,13 +109,15 @@ class SilverbackBot(ManagerAccessMixin):
         ...  # Connection has been initialized, can call broker methods e.g. `bot.on_(...)`
     """
 
-    def __init__(self, settings: Settings | None = None):
+    def __init__(self, settings: Settings | None = None, signer_required: bool = False):
         """
         Create bot
 
         Args:
             settings (~:class:`silverback.settings.Settings` | None): Settings override.
                 Defaults to environment settings.
+            signer_required (bool): If True, raise at startup when no signer is configured.
+                Defaults to False.
         """
         if not settings:
             settings = Settings()
@@ -153,7 +155,11 @@ class SilverbackBot(ManagerAccessMixin):
 
         atexit.register(provider_context.__exit__, None, None, None)
 
+        self.signer_required = signer_required
         self.signer = settings.get_signer()
+        if self.signer_required and not self.signer:
+            raise NoSignerLoaded()
+
         if self.signer:
             # NOTE: Monkeypatch `AccountAPI.call` to update bot nonce tracking state
             original_call = self.signer.call
@@ -437,7 +443,7 @@ class SilverbackBot(ManagerAccessMixin):
 
         # Register user function as task handler with our broker
         def add_taskiq_task(
-            handler: Callable[..., Any | Awaitable[Any]]
+            handler: Callable[..., Any | Awaitable[Any]],
         ) -> AsyncTaskiqDecoratedTask:
             labels: dict[str, str] = dict()
 
