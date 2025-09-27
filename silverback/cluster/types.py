@@ -10,7 +10,7 @@ from ape.logging import CLICK_STYLE_KWARGS, LogLevel
 from ape.types import AddressType, HexBytes
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.hmac import HMAC, hashes
-from eth_utils import to_bytes, to_int
+from faster_eth_utils import to_bytes, to_int
 from pydantic import BaseModel, Field, computed_field, field_validator
 from typing_extensions import Self
 
