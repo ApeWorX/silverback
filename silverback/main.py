@@ -14,7 +14,7 @@ from ape.managers.chain import BlockContainer
 from ape.types import AddressType, ContractLog
 from ape.utils import ManagerAccessMixin
 from eth_typing import HexStr
-from eth_utils import keccak, to_hex
+from faster_eth_utils import keccak, to_hex
 from ethpm_types.abi import encode_topic_value
 from packaging.version import Version
 from pydantic import BaseModel
