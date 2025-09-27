@@ -4,7 +4,7 @@ from typing import Any, AsyncIterator, Iterator
 
 from ape.types import HexBytes
 from eth_typing import HexStr
-from eth_utils import to_hex
+from faster_eth_utils import to_hex
 
 Topic = list[HexStr] | HexStr | None
 
