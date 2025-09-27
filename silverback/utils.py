@@ -34,9 +34,13 @@ def decode_topics_from_string(encoded_topics: str) -> list[Topic]:
     # NOTE: Should reverse the above
     return _clean_trailing_nones(
         [
-            _simplify_topic(
-                [to_hex(hexstr=t) for t in et.split(",")]  # type: ignore [arg-type]
-            ) if et else None
+            (
+                _simplify_topic(
+                    [to_hex(hexstr=t) for t in et.split(",")]  # type: ignore [arg-type]
+                )
+                if et
+                else None
+            )
             for et in encoded_topics.split(";")
         ]
     )
