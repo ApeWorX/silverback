@@ -155,9 +155,8 @@ class SilverbackBot(ManagerAccessMixin):
 
         atexit.register(provider_context.__exit__, None, None, None)
 
-        self.signer_required = signer_required
         self.signer = settings.get_signer()
-        if self.signer_required and not self.signer:
+        if signer_required and not self.signer:
             raise NoSignerLoaded()
 
         if self.signer:
