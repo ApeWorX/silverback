@@ -60,7 +60,7 @@ def signer():
 
 
 @pytest.fixture
-def settings():
+def create_settings():
     def _make(signer=None):
         return Settings(signer=signer)
 
