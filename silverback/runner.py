@@ -13,7 +13,7 @@ import quattro
 from ape import chain
 from ape.logging import logger
 from ape.utils import ManagerAccessMixin
-from eth_utils import to_checksum_address
+from cchecksum import to_checksum_address
 from ethpm_types import EventABI
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version

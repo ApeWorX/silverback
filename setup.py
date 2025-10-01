@@ -67,11 +67,13 @@ setup(
     include_package_data=True,
     install_requires=[
         "apepay>=0.3.5,<1",
+        "cchecksum>=0.0.3",  # lower pin only, `eth-ape` governs upper pin
         "click",  # Use same version as eth-ape
         "eth-ape>=0.8.31,<1",
         "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
         "eth-pydantic-types",  # Use same version as eth-ape
         "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup
+        "faster-eth-utils>=2.1.0",  # lower pin only, `eth-ape` governs upper pin
         "httpx>=0.28,<1",  # Use for Cluster client, auth
         "jwcrypto>=1.4,<2",  # Use for auth
         "packaging",  # Use same version as eth-ape

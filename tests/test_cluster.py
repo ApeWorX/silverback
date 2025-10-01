@@ -1,4 +1,4 @@
-from eth_utils import to_checksum_address
+from cchecksum import to_checksum_address
 from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis_jsonschema import from_schema
