@@ -10,7 +10,7 @@ def test_run_no_bots(cli, runner):
         "Usage: cli run [OPTIONS] [BOT]\n"
         "Try 'cli run --help' for help.\n\n"
         "Error: Invalid value for '[BOT]': "
-        "Nothing to run: No bot argument(s) given and no bots module found.\n"
+        "Bot module 'bot:bot' not found.\n"
     )
     assert result.output == expected
 
