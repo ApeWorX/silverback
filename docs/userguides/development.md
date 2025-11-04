@@ -418,7 +418,8 @@ Any failures detected during shutdown tasks do not prevent the execution of any 
 (including system-level shutdown tasks internal to the SDK).
 ```
 
-Lastly, you can insert a request during runtime to kill your bot manually by performing `ctrl+C`, or by sending a SIGKILL signal to the runtime process.
+Lastly, you can insert a request during runtime to kill your bot manually by performing `ctrl+C`,
+or by sending a SIGTERM or SIGINT signal to the runtime process.
 This will trigger the same halting behavior immediately triggering your bot to move into the shutdown mode, and execute all shutdown tasks before exiting.
 
 ### Metrics Collection
