@@ -65,7 +65,7 @@ class BaseRunner(ABC):
         )
 
         self.max_exceptions = max_exceptions
-        self.exceptions = 0
+        self.exceptions: dict[TaskData, int] = defaultdict(lambda: 0)
 
         logger.info(f"Using {self.__class__.__name__}: max_exceptions={self.max_exceptions}")
 
@@ -120,15 +120,15 @@ class BaseRunner(ABC):
 
         if not task_error:
             # NOTE: Reset exception counter
-            self.exceptions = 0
+            self.exceptions[task_data] = 0
             return
 
-        self.exceptions += 1
+        self.exceptions[task_data] += 1
 
         if isinstance(task_error, Halt):
             raise task_error
 
-        elif self.exceptions > self.max_exceptions:
+        elif sum(self.exceptions.values()) > self.max_exceptions:
             raise Halt() from task_error
 
     async def _checkpoint(self):
