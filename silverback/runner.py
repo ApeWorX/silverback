@@ -376,7 +376,7 @@ class BaseRunner(ABC):
         user_tasks = await self.startup()
 
         def exit_handler(signum, _frame):
-            logger.info(f"{signal.Signals(signum).name} signal received")
+            logger.warning(f"{signal.Signals(signum).name} signal received")
             self.shutdown_event.set()
 
         # Make sure we handle various ways that OS might kill process
