@@ -408,8 +408,9 @@ class BaseRunner(ABC):
             # NOTE: If any exception raised by non-background tasks, will quit all
 
         except ExceptionGroup as eg:
-            if error_str := "\n".join(str(e) for e in eg.exceptions if not isinstance(e, Halt)):
-                logger.error(error_str)
+            for err in eg.exceptions:
+                if not isinstance(err, Halt):
+                    logger.log_error(err)
 
         logger.warning("Shutdown started")
         await self.shutdown()
