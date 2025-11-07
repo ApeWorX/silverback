@@ -376,7 +376,7 @@ class BaseRunner(ABC):
         user_tasks = await self.startup()
 
         def exit_handler(signum, _frame):
-            logger.info(f"{signal.Signals(signum).name} signal received")
+            logger.warning(f"{signal.Signals(signum).name} signal received")
             self.shutdown_event.set()
 
         # Make sure we handle various ways that OS might kill process
@@ -408,8 +408,9 @@ class BaseRunner(ABC):
             # NOTE: If any exception raised by non-background tasks, will quit all
 
         except ExceptionGroup as eg:
-            if error_str := "\n".join(str(e) for e in eg.exceptions if not isinstance(e, Halt)):
-                logger.error(error_str)
+            for err in eg.exceptions:
+                if not isinstance(err, Halt):
+                    logger.log_error(err)
 
         logger.warning("Shutdown started")
         await self.shutdown()
