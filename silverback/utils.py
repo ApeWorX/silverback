@@ -1,5 +1,4 @@
 import asyncio
-import threading
 from typing import Any, AsyncIterator, Iterator
 
 from ape.types import HexBytes
@@ -40,37 +39,21 @@ def decode_topics_from_string(encoded_topics: str) -> list[Topic]:
     )
 
 
-def async_wrap_iter(it: Iterator) -> AsyncIterator:
+class async_wrap_iter:
     """Wrap blocking iterator into an asynchronous one"""
-    loop = asyncio.get_event_loop()
-    q: asyncio.Queue = asyncio.Queue(1)
-    exception = None
-    _END = object()
 
-    async def yield_queue_items():
-        while True:
-            next_item = await q.get()
-            if next_item is _END:
-                break
-            yield next_item
-        if exception is not None:
-            # the iterator has raised, propagate the exception
-            raise exception
+    def __init__(self, it: Iterator):
+        self.it = it
 
-    def iter_to_queue():
-        nonlocal exception
+    def __aiter__(self) -> AsyncIterator:
+        return self
+
+    async def __anext__(self):
         try:
-            for item in it:
-                # This runs outside the event loop thread, so we
-                # must use thread-safe API to talk to the queue.
-                asyncio.run_coroutine_threadsafe(q.put(item), loop).result()
-        except Exception as e:
-            exception = e
-        finally:
-            asyncio.run_coroutine_threadsafe(q.put(_END), loop).result()
+            return await asyncio.to_thread(next, self.it)
 
-    threading.Thread(target=iter_to_queue).start()
-    return yield_queue_items()
+        except StopIteration:
+            raise StopAsyncIteration
 
 
 # TODO: Necessary because bytes/HexBytes doesn't encode/decode well for some reason
