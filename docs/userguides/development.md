@@ -179,7 +179,7 @@ async def block_time(block):
     return block.timestamp
 ```
 
-```{notice}
+```{note}
 To enable collection of metric data into session-based cache files during local deployment, you
 need to enable the recording functionality on [`silverback run`](../commands/run#silverback-run)
 command via the option `--record`. This will record session data inside of
@@ -228,7 +228,7 @@ async def perform_rebalance(pool_delta: int):
     pool.rebalance(amount=pool_delta, ..., sender=bot.signer)
 ```
 
-```{notice}
+```{note}
 `.on_metric` supports 6 different value comparisons (`gt`, `ge`, `lt`, `le`, `ne`, and `eq`).
 When multiple comparisons are present, they are treated as a logical AND (meaning they must all be true for the task to execute).
 If you need a separate task to execute on different compound conditions, simply define extra tasks.
