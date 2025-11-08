@@ -156,6 +156,12 @@ def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, 
 
 @cli.command(section="Local Commands")
 @click.option(
+    "--use-docker",
+    is_flag=True,
+    default=False,
+    help="Override podman detection and use docker to build instead.",
+)
+@click.option(
     "-g",
     "--generate",
     is_flag=True,
@@ -185,7 +191,7 @@ def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, 
     help="Push image to logged-in registry. Defaults to false.",
 )
 @click.argument("path", required=False, default=None)
-def build(generate, tag_base, version, push, path):
+def build(use_docker, generate, tag_base, version, push, path):
     """
     Generate Dockerfiles and build bot container images
 
@@ -228,7 +234,7 @@ def build(generate, tag_base, version, push, path):
             "You can run `silverback build --generate` to generate it and build."
         )
 
-    build_container_images(tag_base=tag_base, version=version, push=push)
+    build_container_images(use_docker=use_docker, tag_base=tag_base, version=version, push=push)
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")

@@ -117,11 +117,15 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
 
 
 def build_container_images(
+    use_docker: bool = False,
     tag_base: str | None = None,
     version: str = "latest",
     push: bool = False,
 ):
-    if (result := subprocess.run(["podman", "--version"], capture_output=True)).returncode == 0:
+    if (
+        not use_docker
+        and (result := subprocess.run(["podman", "--version"], capture_output=True)).returncode == 0
+    ):
         click.echo(f"Using {result.stdout.decode()}")
         builder_name = "podman"
 
