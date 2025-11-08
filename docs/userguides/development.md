@@ -179,6 +179,16 @@ async def block_time(block):
     return block.timestamp
 ```
 
+```{notice}
+To enable collection of metric data into session-based cache files during local deployment, you
+need to enable the recording functionality on [`silverback run`](../commands/run#silverback-run)
+command via the option `--record`. This will record session data inside of
+`./.silverback-sessions/<ecosystem>/<network>/session-<start-time>.jsonl` files.
+
+You can use the utility function [`get_metrics`](../methoddocs/recordersilverback.recorder.get_metrics)
+to load metrics from that particular session into a DataFrame from such a file.
+```
+
 ### Metric Callbacks
 
 A special feature of Silverback's metrics system is the ability to trigger tasks to execute when your metrics are produced.
