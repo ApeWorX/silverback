@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -134,11 +135,47 @@ class JSONLineRecorder(BaseRecorder):
             writer.write("\n")
 
 
-def get_metrics(session: Path, task_name: str | None = None) -> pd.DataFrame:
+def get_metrics(sessions_path: Path | str, task_name: str | None = None) -> pd.DataFrame:
     """
-    Useful function for fetching metrics from a bot session and loading them into a dataframe
+    Useful function for fetching metrics from bot session(s) and loading them into a dataframe.
+
+    Args:
+        sessions_path: (Path | str):
+            A file path to a newline-delimited JSON file,
+            or folder containing one or more such files.
+        task_name: (str | None): A task_name to filter the loaded metrics by.
+
+    Returns:
+        class:`~pandas.DataFrame`:
+            A dataframe containing all metrics recorded during the applicable session(s).
+
+    ```{notice}
+    This function "strips" system-level task information from the resulting dataframe,
+    and is indexed by task completion time.
+    ```
     """
-    df = pd.read_json(session, lines=True).set_index("completed")
+
+    if not (sessions_path := Path(sessions_path)).exists():
+        raise RuntimeError(f"'{sessions_path}' does not exist.")
+
+    elif sessions_path.is_dir() and (session_files := list(sessions_path.glob("*.jsonl"))):
+        # NOTE: Make sure all sessions are in sorted order
+        sessions = sorted(
+            session_files,
+            key=lambda file: datetime.fromisoformat(file.stem.lstrip("session-")),
+        )
+
+    elif sessions_path.is_file() and sessions_path.suffix == "jsonl":
+        sessions = [sessions_path]
+
+    else:
+        raise RuntimeError(
+            "Can only handle a newline-delimited JSON file or folder containing such file(s)."
+        )
+
+    df = pd.concat(
+        [pd.read_json(session, lines=True).set_index("completed") for session in sessions]
+    )
     df.index = pd.to_datetime(df.index)
 
     # Filter by task name, if given
@@ -151,8 +188,8 @@ def get_metrics(session: Path, task_name: str | None = None) -> pd.DataFrame:
     # Drop tasks that ended in errors (they don't produce metrics)
     df = df[df["error"].isnull()].drop("error", axis=1)
 
-    # Drop `block_number` column (it doesn't matter for this)
-    df = df.drop("block_number", axis=1)
+    # Drop other task-level columns (we only want the relevant custom metrics)
+    df = df.drop("block_number", axis=1).drop("execution_time", axis=1)
 
     # convert metrics fields to columns
     metrics = (
