@@ -120,6 +120,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#running-your-bot">Running your Bot</a><ul>
+<li><a class="reference internal" href="#runtime-exceptions">Runtime Exceptions</a></li>
 <li><a class="reference internal" href="#metrics-collection">Metrics Collection</a></li>
 <li><a class="reference internal" href="#distributed-execution">Distributed Execution</a></li>
 </ul>
@@ -494,6 +495,38 @@ Always test your bots throughly before deploying, and always use a dedicated key
 <p>It is highly suggested to use a dedicated cloud signer plugin, such as <a class="reference external" href="https://github.com/ApeWorX/ape-aws"><code class="docutils literal notranslate"><span class="pre">ape-aws</span></code></a> for signing transactions in a cloud environment.
 Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.</p>
 </div>
+<section id="runtime-exceptions">
+<h3>Runtime Exceptions<a class="headerlink" href="#runtime-exceptions" title="Link to this heading"></a></h3>
+<p>It is important to note that when running your bot with Silverback,
+a failure in one of your tasks while running <strong>does not necessarily cause it to shutdown immediately</strong>.
+This is done to support handling occasional failures and unexpected scenarios that might happen during the runtime of your bot in practice.
+The way it works is that during runtime (after the startup phase has completed successfully),
+the silverback runner will track the number of failures that occurs in <em>any</em> task;
+and, if there is more than the configured amount of exceptions occuring across all of your tasks,
+only then will trigger a runtime Halt that will stop your bot from running (and trigger your shutdown tasks).</p>
+<p>You can configure this behavior when running with the <a class="reference external" href="../commands/run#silverback-run"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code></a> command by changing the value of the <code class="docutils literal notranslate"><span class="pre">--max-exceptions</span></code> option.
+A higher number will take more failures in order to trigger a complete shutdown of the bot,
+whereas a lower number will make it more sensistive to intermittent failures you are likely to find in practice.
+The default is chosen as a good balance between sensitivity and operational robustness.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Any failures that occur in <strong>any of your startup tasks</strong> (including system-level startup tasks internal to the SDK) will cause an immediate failure,
+and prevent the bot from transitioning into runtime mode, where failure persistence becomes active.</p>
+</div>
+<p>This error tracking behavior in the runtime mode will occur handling any Python exception that your code is likely to raise.
+However, by raising the <a class="reference external" href="../methoddocs/exceptions#silverback.exceptions.CircuitBreaker"><code class="docutils literal notranslate"><span class="pre">CircuitBreaker</span></code></a> exception (or a subclass of it),
+you can cause your bot to <strong>immediately shutdown</strong> in response to application-specific faults you might detect.
+This might be useful if you know of a situation or invariant that you want to make sure to maintain during the operation of your bot no matter what,
+or if you detect that you no longer wish to run the bot any more for any desired reason (and want to handle it programmatically).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Any failures detected during shutdown tasks do not prevent the execution of any other shutdown tasks
+(including system-level shutdown tasks internal to the SDK).</p>
+</div>
+<p>Lastly, you can insert a request during runtime to kill your bot manually by performing <code class="docutils literal notranslate"><span class="pre">ctrl+C</span></code>,
+or by sending a SIGTERM or SIGINT signal to the runtime process.
+This will trigger the same halting behavior immediately triggering your bot to move into the shutdown mode, and execute all shutdown tasks before exiting.</p>
+</section>
 <section id="metrics-collection">
 <h3>Metrics Collection<a class="headerlink" href="#metrics-collection" title="Link to this heading"></a></h3>
 <p>To enable collection of metric data into session-based cache files, you need to enable the recording
