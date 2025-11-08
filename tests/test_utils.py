@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from silverback._build_utils import dockerfile_template
+from silverback._build_utils import containerfile_template
 from silverback.utils import decode_topics_from_string, encode_topics_to_string
 
 
@@ -33,19 +33,19 @@ def test_topic_encoding(topics):
         dict(include_bot_dir=True),
     ],
 )
-def test_dockerfile_generation(build_args):
-    dockerfile = dockerfile_template(
+def test_containerfile_generation(build_args):
+    containerfile = containerfile_template(
         Path(__file__).parent.parent / "bots" / "example.py", **build_args
     )
-    assert "example.py" in dockerfile
-    assert build_args.get("sdk_version", "stable") in dockerfile
+    assert "example.py" in containerfile
+    assert build_args.get("sdk_version", "stable") in containerfile
     if requirements_txt_fname := build_args.get("requirements_txt_fname"):
-        assert requirements_txt_fname in dockerfile
+        assert requirements_txt_fname in containerfile
     if build_args.get("has_pyproject_toml"):
-        assert "pyproject.toml" in dockerfile
+        assert "pyproject.toml" in containerfile
     if build_args.get("has_ape_config_yaml"):
-        assert "ape-config.yaml" in dockerfile
+        assert "ape-config.yaml" in containerfile
     if contracts_folder := build_args.get("contracts_folder"):
-        assert contracts_folder in dockerfile
+        assert contracts_folder in containerfile
     if build_args.get("include_bot_dir"):
-        assert "bots/" in dockerfile
+        assert "bots/" in containerfile
