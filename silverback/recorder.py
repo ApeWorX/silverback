@@ -155,9 +155,11 @@ def get_metrics(session: Path, task_name: str | None = None) -> pd.DataFrame:
     df = df.drop("block_number", axis=1)
 
     # convert metrics fields to columns
-    # TODO: Support any datapoint type with a conversion function
     metrics = (
-        df["metrics"].apply(lambda d: {f"{k}": v["data"] for k, v in d.items()}).apply(pd.Series)
+        df["metrics"]
+        .apply(Datapoints.model_validate)
+        .apply(lambda pts: {name: pt.as_row() for name, pt in pts.items()})
+        .apply(pd.Series)
     )
     df = pd.concat([df.drop("metrics", axis=1), metrics], axis=1)
 
