@@ -245,7 +245,6 @@ def build(use_docker, generate, tag_base, version, push, path):
 )
 @click.option("--account", type=AccountAliasPromptChoice(), callback=_account_callback)
 @click.option("-w", "--workers", type=int, default=2)
-@click.option("-x", "--max-exceptions", type=int, default=3)
 @click.option("-s", "--shutdown_timeout", type=int, default=90)
 @click.option("--debug", is_flag=True, default=False)
 @click.option(
@@ -258,7 +257,7 @@ def build(use_docker, generate, tag_base, version, push, path):
     help=("Path to .env file(s) (multiple allowed; values override). "),
 )
 @click.argument("bot", required=False, callback=bot_path_callback)
-def worker(cli_ctx, account, workers, max_exceptions, shutdown_timeout, debug, bot):
+def worker(cli_ctx, account, workers, shutdown_timeout, debug, bot):
     """Run Silverback task workers (advanced)"""
     from silverback.worker import run_worker
 

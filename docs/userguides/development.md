@@ -387,6 +387,41 @@ It is highly suggested to use a dedicated cloud signer plugin, such as [`ape-aws
 Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.
 ```
 
+### Runtime Exceptions
+
+It is important to note that when running your bot with Silverback,
+a failure in one of your tasks while running **does not necessarily cause it to shutdown immediately**.
+This is done to support handling occasional failures and unexpected scenarios that might happen during the runtime of your bot in practice.
+The way it works is that during runtime (after the startup phase has completed successfully),
+the silverback runner will track the number of failures that occurs in _any_ task;
+and, if there is more than the configured amount of exceptions occuring across all of your tasks,
+only then will trigger a runtime Halt that will stop your bot from running (and trigger your shutdown tasks).
+
+You can configure this behavior when running with the [`silverback run ...`](../commands/run#silverback-run) command by changing the value of the `--max-exceptions` option.
+A higher number will take more failures in order to trigger a complete shutdown of the bot,
+whereas a lower number will make it more sensistive to intermittent failures you are likely to find in practice.
+The default is chosen as a good balance between sensitivity and operational robustness.
+
+```{warning}
+Any failures that occur in **any of your startup tasks** (including system-level startup tasks internal to the SDK) will cause an immediate failure,
+and prevent the bot from transitioning into runtime mode, where failure persistence becomes active.
+```
+
+This error tracking behavior in the runtime mode will occur handling any Python exception that your code is likely to raise.
+However, by raising the [`CircuitBreaker`](../methoddocs/exceptions#silverback.exceptions.CircuitBreaker) exception (or a subclass of it),
+you can cause your bot to **immediately shutdown** in response to application-specific faults you might detect.
+This might be useful if you know of a situation or invariant that you want to make sure to maintain during the operation of your bot no matter what,
+or if you detect that you no longer wish to run the bot any more for any desired reason (and want to handle it programmatically).
+
+```{note}
+Any failures detected during shutdown tasks do not prevent the execution of any other shutdown tasks
+(including system-level shutdown tasks internal to the SDK).
+```
+
+Lastly, you can insert a request during runtime to kill your bot manually by performing `ctrl+C`,
+or by sending a SIGTERM or SIGINT signal to the runtime process.
+This will trigger the same halting behavior immediately triggering your bot to move into the shutdown mode, and execute all shutdown tasks before exiting.
+
 ### Metrics Collection
 
 To enable collection of metric data into session-based cache files, you need to enable the recording
