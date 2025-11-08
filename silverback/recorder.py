@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, cast
 
+# TODO: Refactor to Narwhals when supported in Ape
+import pandas as pd
 from ape.logging import get_logger
 from pydantic import BaseModel, Field
 from taskiq import TaskiqResult
@@ -132,20 +134,31 @@ class JSONLineRecorder(BaseRecorder):
             writer.write("\n")
 
 
-def get_metrics(session: Path, task_name: str) -> Iterator[dict]:
+def get_metrics(session: Path, task_name: str | None = None) -> pd.DataFrame:
     """
-    Useful function for fetching results and loading them for display.
+    Useful function for fetching metrics from a bot session and loading them into a dataframe
     """
-    with open(session, "r") as file:
-        for line in file:
-            if (
-                (result := TaskResult.model_validate_json(line))
-                and result.task_name == task_name
-                and not result.error
-            ):
-                yield {
-                    "block_number": result.block_number,
-                    "execution_time": result.execution_time,
-                    "completed": result.completed,
-                    **{name: datapoint.data for name, datapoint in result.metrics.items()},
-                }
+    df = pd.read_json(session, lines=True).set_index("completed")
+    df.index = pd.to_datetime(df.index)
+
+    # Filter by task name, if given
+    if task_name is not None:
+        df = df[df["task_name"].str.match(task_name)]
+
+    # Drop task name column (basically "merging" all metrics together from diff tasks)
+    df = df.drop("task_name", axis=1)
+
+    # Drop tasks that ended in errors (they don't produce metrics)
+    df = df[df["error"].isnull()].drop("error", axis=1)
+
+    # Drop `block_number` column (it doesn't matter for this)
+    df = df.drop("block_number", axis=1)
+
+    # convert metrics fields to columns
+    # TODO: Support any datapoint type with a conversion function
+    metrics = (
+        df["metrics"].apply(lambda d: {f"{k}": v["data"] for k, v in d.items()}).apply(pd.Series)
+    )
+    df = pd.concat([df.drop("metrics", axis=1), metrics], axis=1)
+
+    return cast(pd.DataFrame, df)
