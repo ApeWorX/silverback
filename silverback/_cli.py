@@ -22,6 +22,8 @@ from ape.logging import LogLevel
 from ape.types import AddressType
 from apepay import Stream, StreamManager
 
+from silverback.recorder import JSONLineRecorder
+
 from ._click_ext import (
     SectionedHelpGroup,
     auth_required,
@@ -101,6 +103,12 @@ def _network_callback(ctx, param, val):
     callback=cls_import_callback,
 )
 @click.option(
+    "--record",
+    is_flag=True,
+    default=False,
+    help="Record this session into a session file (under `.silverback-sessions/`)",
+)
+@click.option(
     "--recorder",
     "recorder_class",
     metavar="CLASS_REF",
@@ -119,7 +127,7 @@ def _network_callback(ctx, param, val):
     help=("Path to .env file(s) (multiple allowed; values override). "),
 )
 @click.argument("bot", required=False, callback=bot_path_callback)
-def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, debug, bot):
+def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, debug, bot):
     """Run Silverback bot"""
     from silverback.runner import PollingRunner, WebsocketRunner
 
@@ -135,9 +143,12 @@ def run(cli_ctx, account, runner_class, recorder_class, max_exceptions, debug, b
                 message="Network choice cannot support running bot",
             )
 
+    if record and not recorder_class:
+        recorder_class = JSONLineRecorder
+
     runner = runner_class(
         bot,
-        recorder=recorder_class() if recorder_class else None,
+        recorder=recorder_class() if record else None,
         max_exceptions=max_exceptions,
     )
     asyncio.run(runner.run(), debug=debug)

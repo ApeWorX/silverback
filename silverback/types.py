@@ -60,6 +60,10 @@ class _BaseDatapoint(BaseModel, ABC):
     def render(self) -> str:
         """Render Datapoint for viewing in logs"""
 
+    @abstractmethod
+    def as_row(self) -> "ScalarType | dict":
+        """Convert into a type suitable for a dataframe"""
+
 
 # NOTE: Maximum supported parquet integer type: https://parquet.apache.org/docs/file-format/types
 Int96 = Annotated[int, Field(ge=-(2**95), le=2**95 - 1)]
@@ -75,6 +79,9 @@ class ScalarDatapoint(_BaseDatapoint):
 
     def render(self) -> str:
         return str(self.data)
+
+    def as_row(self) -> ScalarType:
+        return self.data
 
 
 # NOTE: Other datapoint types must be explicitly defined as subclasses of `_BaseDatapoint`

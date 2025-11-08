@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, cast
 
+# TODO: Refactor to Narwhals when supported in Ape
+import pandas as pd  # type: ignore[import-untyped]
 from ape.logging import get_logger
 from pydantic import BaseModel, Field
 from taskiq import TaskiqResult
@@ -132,20 +135,69 @@ class JSONLineRecorder(BaseRecorder):
             writer.write("\n")
 
 
-def get_metrics(session: Path, task_name: str) -> Iterator[dict]:
+def get_metrics(sessions_path: Path | str, task_name: str | None = None) -> pd.DataFrame:
     """
-    Useful function for fetching results and loading them for display.
+    Useful function for fetching metrics from bot session(s) and loading them into a dataframe.
+
+    Args:
+        sessions_path: (Path | str):
+            A file path to a newline-delimited JSON file,
+            or folder containing one or more such files.
+        task_name: (str | None): A task_name to filter the loaded metrics by.
+
+    Returns:
+        class:`~pandas.DataFrame`:
+            A dataframe containing all metrics recorded during the applicable session(s).
+
+    ```{notice}
+    This function "strips" system-level task information from the resulting dataframe,
+    and is indexed by task completion time.
+    ```
     """
-    with open(session, "r") as file:
-        for line in file:
-            if (
-                (result := TaskResult.model_validate_json(line))
-                and result.task_name == task_name
-                and not result.error
-            ):
-                yield {
-                    "block_number": result.block_number,
-                    "execution_time": result.execution_time,
-                    "completed": result.completed,
-                    **{name: datapoint.data for name, datapoint in result.metrics.items()},
-                }
+
+    if not (sessions_path := Path(sessions_path)).exists():
+        raise RuntimeError(f"'{sessions_path}' does not exist.")
+
+    elif sessions_path.is_dir() and (session_files := list(sessions_path.glob("*.jsonl"))):
+        # NOTE: Make sure all sessions are in sorted order
+        sessions = sorted(
+            session_files,
+            key=lambda file: datetime.fromisoformat(file.stem.lstrip("session-")),
+        )
+
+    elif sessions_path.is_file() and sessions_path.suffix == "jsonl":
+        sessions = [sessions_path]
+
+    else:
+        raise RuntimeError(
+            "Can only handle a newline-delimited JSON file or folder containing such file(s)."
+        )
+
+    df = pd.concat(
+        [pd.read_json(session, lines=True).set_index("completed") for session in sessions]
+    )
+    df.index = pd.to_datetime(df.index)
+
+    # Filter by task name, if given
+    if task_name is not None:
+        df = df[df["task_name"].str.match(task_name)]
+
+    # Drop task name column (basically "merging" all metrics together from diff tasks)
+    df = df.drop("task_name", axis=1)
+
+    # Drop tasks that ended in errors (they don't produce metrics)
+    df = df[df["error"].isnull()].drop("error", axis=1)
+
+    # Drop other task-level columns (we only want the relevant custom metrics)
+    df = df.drop("block_number", axis=1).drop("execution_time", axis=1)
+
+    # convert metrics fields to columns
+    metrics = (
+        df["metrics"]
+        .apply(Datapoints.model_validate)
+        .apply(lambda pts: {name: pt.as_row() for name, pt in pts.items()})
+        .apply(pd.Series)
+    )
+    df = pd.concat([df.drop("metrics", axis=1), metrics], axis=1)
+
+    return cast(pd.DataFrame, df)
