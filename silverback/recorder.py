@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, cast
 
 # TODO: Refactor to Narwhals when supported in Ape
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped]
 from ape.logging import get_logger
 from pydantic import BaseModel, Field
 from taskiq import TaskiqResult
