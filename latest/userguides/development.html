@@ -336,6 +336,12 @@ We can use <code class="docutils literal notranslate"><span class="pre">gt=&lt;t
 </span><span data-line="3">    <span class="n">pool</span><span class="o">.</span><span class="n">rebalance</span><span class="p">(</span><span class="n">amount</span><span class="o">=</span><span class="n">pool_delta</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">)</span>
 </span></pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">.on_metric</span></code> supports 6 different value comparisons (<code class="docutils literal notranslate"><span class="pre">gt</span></code>, <code class="docutils literal notranslate"><span class="pre">ge</span></code>, <code class="docutils literal notranslate"><span class="pre">lt</span></code>, <code class="docutils literal notranslate"><span class="pre">le</span></code>, <code class="docutils literal notranslate"><span class="pre">ne</span></code>, and <code class="docutils literal notranslate"><span class="pre">eq</span></code>).
+When multiple comparisons are present, they are treated as a logical AND (meaning they must all be true for the task to execute).
+If you need a separate task to execute on different compound conditions, simply define extra tasks.</p>
+</div>
 </section>
 </section>
 <section id="startup-and-shutdown">
@@ -490,10 +496,17 @@ Use segregated keys and limit your risk by controlling the amount of funds that 
 </div>
 <section id="metrics-collection">
 <h3>Metrics Collection<a class="headerlink" href="#metrics-collection" title="Link to this heading"></a></h3>
-<p>To configure your bot for metrics collection, define the <code class="docutils literal notranslate"><span class="pre">SILVERBACK_RECORDER_CLASS=...</span></code> environment variable.
-All recorders should be a subclass of the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.BaseRecorder"><code class="docutils literal notranslate"><span class="pre">silverback.recorder.BaseRecorder</span></code></a> abstract base class.
-Currently, the only available Recorder class is the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.JSONLineRecorder"><code class="docutils literal notranslate"><span class="pre">silverback.recorder.JSONLineRecorder</span></code></a> class, which journals your bot session’s results to disk under timestamped files in <code class="docutils literal notranslate"><span class="pre">./.silverback-sessions/&lt;bot</span> <span class="pre">name&gt;/&lt;ecosystem&gt;/&lt;network&gt;/</span></code>.
-To assist in loading the metrics for things like analyzing them with Dataframe libraries, use the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.get_metrics"><code class="docutils literal notranslate"><span class="pre">silverback.recorder.get_metrics</span></code></a> function.</p>
+<p>To enable collection of metric data into session-based cache files, you need to enable the recording
+functionality on <a class="reference external" href="../commands/run#silverback-run"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span></code></a> command via the <code class="docutils literal notranslate"><span class="pre">--record</span></code> flag.
+By default, <code class="docutils literal notranslate"><span class="pre">--record</span></code> uses the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.JSONLineRecorder"><code class="docutils literal notranslate"><span class="pre">JSONLineRecorder</span></code></a>
+class, which journals your bot session’s results to disk under timestamped files in
+<code class="docutils literal notranslate"><span class="pre">./.silverback-sessions/&lt;bot</span> <span class="pre">name&gt;/&lt;ecosystem&gt;/&lt;network&gt;/</span></code>.</p>
+<p>To assist you in loading the metrics from these files for things like analyzing them with DataFrame libraries,
+use the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.get_metrics"><code class="docutils literal notranslate"><span class="pre">get_metrics</span></code></a> function.</p>
+<p>You can supply a custom class for recording via the <code class="docutils literal notranslate"><span class="pre">--recorder</span> <span class="pre">&lt;path.to.module:ClassName&gt;</span></code> option to the run command,
+or by supplying the <code class="docutils literal notranslate"><span class="pre">SILVERBACK_RECORDER_CLASS=&lt;path.to.module:ClassName&gt;</span></code> environment variable.
+All recorders should be a subclass of the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.BaseRecorder"><code class="docutils literal notranslate"><span class="pre">BaseRecorder</span></code></a>
+abstract base class.</p>
 </section>
 <section id="distributed-execution">
 <h3>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Link to this heading"></a></h3>

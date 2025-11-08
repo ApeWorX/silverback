@@ -72,7 +72,7 @@ The config for using this with Claude Desktop is as follows:
 
 Once that has been configured, you can ask your LLM to do things like check the status of your cluster, summarize logs of running bots, and restart bots just be commanding it through a chat interface!
 
-```{notice}
+```{note}
 The MCP will use the context from [`silverback login`][silverback-login] to execute, so be sure to log in before starting.
 ```
 
