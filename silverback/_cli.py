@@ -199,8 +199,8 @@ def build(generate, tag_base, version, push, path):
     """
     from silverback._build_utils import (
         IMAGES_FOLDER_NAME,
-        build_docker_images,
-        generate_dockerfiles,
+        build_container_images,
+        generate_containerfiles,
     )
 
     if generate:
@@ -220,15 +220,15 @@ def build(generate, tag_base, version, push, path):
                 ", or process all '*.py' bots in  'bots/' folder."
             )
 
-        generate_dockerfiles(path)
+        generate_containerfiles(path)
 
     if not (Path.cwd() / IMAGES_FOLDER_NAME).exists():
         raise click.ClickException(
-            f"The dockerfile cache folder '{IMAGES_FOLDER_NAME}' does not exist. "
+            f"The container image cache folder '{IMAGES_FOLDER_NAME}' does not exist. "
             "You can run `silverback build --generate` to generate it and build."
         )
 
-    build_docker_images(tag_base=tag_base, version=version, push=push)
+    build_container_images(tag_base=tag_base, version=version, push=push)
 
 
 @cli.command(cls=ConnectedProviderCommand, section="Local Commands")
