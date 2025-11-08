@@ -179,16 +179,6 @@ async def block_time(block):
     return block.timestamp
 ```
 
-```{note}
-To enable collection of metric data into session-based cache files during local deployment, you
-need to enable the recording functionality on [`silverback run`](../commands/run#silverback-run)
-command via the option `--record`. This will record session data inside of
-`./.silverback-sessions/<ecosystem>/<network>/session-<start-time>.jsonl` files.
-
-You can use the utility function [`get_metrics`](../methoddocs/recordersilverback.recorder.get_metrics)
-to load metrics from that particular session into a DataFrame from such a file.
-```
-
 ### Metric Callbacks
 
 A special feature of Silverback's metrics system is the ability to trigger tasks to execute when your metrics are produced.
@@ -399,10 +389,19 @@ Use segregated keys and limit your risk by controlling the amount of funds that 
 
 ### Metrics Collection
 
-To configure your bot for metrics collection, define the `SILVERBACK_RECORDER_CLASS=...` environment variable.
-All recorders should be a subclass of the [`silverback.recorder.BaseRecorder`](../methoddocs/recorder#silverback.recorder.BaseRecorder) abstract base class.
-Currently, the only available Recorder class is the [`silverback.recorder.JSONLineRecorder`](../methoddocs/recorder#silverback.recorder.JSONLineRecorder) class, which journals your bot session's results to disk under timestamped files in `./.silverback-sessions/<bot name>/<ecosystem>/<network>/`.
-To assist in loading the metrics for things like analyzing them with Dataframe libraries, use the [`silverback.recorder.get_metrics`](../methoddocs/recorder#silverback.recorder.get_metrics) function.
+To enable collection of metric data into session-based cache files, you need to enable the recording
+functionality on [`silverback run`](../commands/run#silverback-run) command via the `--record` flag.
+By default, `--record` uses the [`JSONLineRecorder`](../methoddocs/recorder#silverback.recorder.JSONLineRecorder)
+class, which journals your bot session's results to disk under timestamped files in
+`./.silverback-sessions/<bot name>/<ecosystem>/<network>/`.
+
+To assist you in loading the metrics from these files for things like analyzing them with DataFrame libraries,
+use the [`get_metrics`](../methoddocs/recorder#silverback.recorder.get_metrics) function.
+
+You can supply a custom class for recording via the `--recorder <path.to.module:ClassName>` option to the run command,
+or by supplying the `SILVERBACK_RECORDER_CLASS=<path.to.module:ClassName>` environment variable.
+All recorders should be a subclass of the [`BaseRecorder`](../methoddocs/recorder#silverback.recorder.BaseRecorder)
+abstract base class.
 
 ### Distributed Execution
 
