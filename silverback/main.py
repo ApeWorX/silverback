@@ -8,7 +8,7 @@ from typing import Any, Awaitable, Callable
 
 import pycron  # type: ignore[import-untyped]
 from ape.api.networks import LOCAL_NETWORK_NAME
-from ape.contracts import ContractEvent, ContractEventWrapper, ContractInstance
+from ape.contracts import ContractEvent, ContractEventWrapper
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
 from ape.types import AddressType, ContractLog
@@ -436,12 +436,20 @@ class SilverbackBot(ManagerAccessMixin):
             raise ContainerTypeMismatchError(task_type, container)
 
         elif isinstance(container, ContractEventWrapper):
-            if len(container.events) != 1:
-                raise InvalidContainerConfigurationError(
-                    f"Requires exactly 1 event to unwrap: {container.events}"
-                )
+            if len(container.events) != 1 and filter_args:
+                for event in container.events:
+                    if all(f"indexed {argname}" in event.abi.signature for argname in filter_args):
+                        container = event
+                        break
 
-            container = container.events[0]
+                else:
+                    raise InvalidContainerConfigurationError(
+                        f"Requires exactly 1 event to unwrap: {container.events}"
+                    )
+
+            else:  # Just pick the last event, all are duplicates anyways
+                # NOTE: More likely to pick generic package-based `.at` types e.g. `ape_tokens.ERC20`
+                container = container.events[-1]
 
         # Register user function as task handler with our broker
         def add_taskiq_task(
@@ -625,20 +633,24 @@ class SilverbackBot(ManagerAccessMixin):
 
             return self.broker_task_decorator(TaskType.NEW_BLOCK, container=container)
 
-        elif isinstance(container, ContractEvent):
-            if isinstance(container.contract, ContractInstance):
+        elif isinstance(container, (ContractEvent, ContractEventWrapper)):
+            if isinstance(container, ContractEvent):
                 key = container.contract.address
-                if new_block_timeout is not None:
-                    if key in self.poll_settings:
-                        self.poll_settings[key]["new_block_timeout"] = new_block_timeout
-                    else:
-                        self.poll_settings[key] = {"new_block_timeout": new_block_timeout}
 
-                if start_block is not None:
-                    if key in self.poll_settings:
-                        self.poll_settings[key]["start_block"] = start_block
-                    else:
-                        self.poll_settings[key] = {"start_block": start_block}
+            else:  # isinstance(container, ContractEventWrapper):
+                key = container.events[0].contract.address
+
+            if new_block_timeout is not None:
+                if key in self.poll_settings:
+                    self.poll_settings[key]["new_block_timeout"] = new_block_timeout
+                else:
+                    self.poll_settings[key] = {"new_block_timeout": new_block_timeout}
+
+            if start_block is not None:
+                if key in self.poll_settings:
+                    self.poll_settings[key]["start_block"] = start_block
+                else:
+                    self.poll_settings[key] = {"start_block": start_block}
 
             if filter_args:
                 filter_kwargs.update(filter_args)
