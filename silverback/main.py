@@ -448,7 +448,8 @@ class SilverbackBot(ManagerAccessMixin):
                     )
 
             else:  # Just pick the last event, all are duplicates anyways
-                # NOTE: More likely to pick generic package-based `.at` types e.g. `ape_tokens.ERC20`
+                # NOTE: More likely to pick generic `ContractContainer.at` instances
+                #       (e.g. `Token.at` from `ape_tokens`)
                 container = container.events[-1]
 
         # Register user function as task handler with our broker
