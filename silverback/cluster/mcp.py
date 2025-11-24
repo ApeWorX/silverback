@@ -44,6 +44,10 @@ def cluster_is_okay() -> str:
 @server.tool()
 def cluster_url(ctx: Context) -> str:
     """Get the name of the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     return str(cluster.base_url)
@@ -52,6 +56,10 @@ def cluster_url(ctx: Context) -> str:
 @server.tool()
 def cluster_version(ctx: Context) -> str:
     """Get the software version of the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     return cluster.version
@@ -60,6 +68,10 @@ def cluster_version(ctx: Context) -> str:
 @server.tool()
 def cluster_configuration(ctx: Context) -> ClusterConfiguration | None:
     """Get the software version of the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     return cluster.configuration
@@ -68,6 +80,10 @@ def cluster_configuration(ctx: Context) -> ClusterConfiguration | None:
 @server.tool()
 def cluster_health(ctx: Context) -> ClusterHealth:
     """Obtain the health of Bots and Networks in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     return cluster.health
@@ -80,6 +96,10 @@ def cluster_health(ctx: Context) -> ClusterHealth:
 @server.tool()
 def list_variable_groups(ctx: Context) -> list[str]:
     """List all bots in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     return list(cluster.variable_groups)
@@ -88,6 +108,10 @@ def list_variable_groups(ctx: Context) -> list[str]:
 @server.tool()
 def variable_group_info(ctx: Context, vargroup_name: str) -> VariableGroupInfo:
     """List all bots in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (vg := cluster.variable_groups.get(vargroup_name)):
@@ -111,6 +135,10 @@ def new_bot(
     environment: list[str] | None = None,
 ) -> BotInfo:
     """Create a new bot using the given configration, and start running it"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     return cluster.new_bot(
@@ -127,6 +155,10 @@ def new_bot(
 @server.tool()
 def list_bots(ctx: Context) -> list[str]:
     """List all bots in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     return list(cluster.bots)
@@ -135,6 +167,10 @@ def list_bots(ctx: Context) -> list[str]:
 @server.tool()
 def bot_info(ctx: Context, bot_name: str) -> BotInfo:
     """Get information about a particular bot in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (bot := cluster.bots.get(bot_name)):
@@ -156,6 +192,10 @@ def update_bot(
     new_environment: list[str] | None = None,
 ) -> BotInfo:
     """Remove a particular bot from the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (bot := cluster.bots.get(bot_name)):
@@ -175,6 +215,10 @@ def update_bot(
 @server.tool()
 def remove_bot(ctx: Context, bot_name: str):
     """Remove a particular bot from the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (bot := cluster.bots.get(bot_name)):
@@ -186,6 +230,10 @@ def remove_bot(ctx: Context, bot_name: str):
 @server.tool()
 def bot_logs(ctx: Context, bot_name: str) -> list[BotLogEntry]:
     """Get logs from a running bot by name in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (bot := cluster.bots.get(bot_name)):
@@ -197,6 +245,10 @@ def bot_logs(ctx: Context, bot_name: str) -> list[BotLogEntry]:
 @server.tool()
 def start_bot(ctx: Context, bot_name: str):
     """Start a bot by name in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (bot := cluster.bots.get(bot_name)):
@@ -208,6 +260,10 @@ def start_bot(ctx: Context, bot_name: str):
 @server.tool()
 def stop_bot(ctx: Context, bot_name: str):
     """Stop a bot by name in the Cluster"""
+    if not ctx.request_context:
+        # Should be initialized by lifespan manager
+        raise RuntimeError("lifespan not initialized")
+
     cluster: ClusterClient = ctx.request_context.lifespan_context
 
     if not (bot := cluster.bots.get(bot_name)):
