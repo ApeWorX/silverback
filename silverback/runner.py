@@ -172,7 +172,7 @@ class BaseRunner(ABC):
         value_thresholds = {
             op: Decimal(val)  # NOTE: Decimal is most flexible at handling strings
             for lbl, val in task_data.labels.items()
-            if lbl.startswith("value:") and (op := getattr(operator, lbl.lstrip("value:"), None))
+            if lbl.startswith("value:") and (op := getattr(operator, lbl[6:]))
         }
 
         def exceeds_value_threshold(data: ScalarType) -> bool:
