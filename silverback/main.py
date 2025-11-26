@@ -524,6 +524,10 @@ class SilverbackBot(ManagerAccessMixin):
         Code that will be exected by one worker after worker startup, but before the
         bot is put into the "run" state by the Runner.
 
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
+
         Usage example::
 
             @bot.on_startup()
@@ -536,6 +540,10 @@ class SilverbackBot(ManagerAccessMixin):
         """
         Code that will be exected by one worker before worker shutdown, after the
         Runner has decided to put the bot into the "shutdown" state.
+
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
 
         Usage example::
 
@@ -555,6 +563,10 @@ class SilverbackBot(ManagerAccessMixin):
         such as database connections, ML models, etc.
         ```
 
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
+
         Usage example::
 
             @bot.on_worker_startup()
@@ -573,6 +585,10 @@ class SilverbackBot(ManagerAccessMixin):
         worker startup.
         ```
 
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
+
         Usage example::
 
             @bot.on_worker_shutdown()
@@ -586,16 +602,21 @@ class SilverbackBot(ManagerAccessMixin):
         container: BlockContainer | ContractEvent,
         filter_args: dict[str, Any] | None = None,
         **filter_kwargs: dict[str, Any],
-    ):
+    ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Create task to handle events created by the `container` trigger.
 
         Args:
             container: (BlockContainer | ContractEvent): The event source to watch.
-            new_block_timeout: (int | None): Override for block timeout that is acceptable.
-                Defaults to whatever the bot's settings are for default polling timeout are.
-            start_block (int | None): block number to start processing events from.
-                Defaults to whatever the latest block is.
+            filter_args: (dict[str, Any] | None):
+                Arguments to use for event log filter. Gets combined with ``filter_kwargs``.
+                Is useful for when an event argument name is a Python keyword.
+            **filter_kwargs: dict[str, Any]:
+                Arguments to use for event log filter. Gets combined with ``filter_args``.
+
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
 
         Raises:
             :class:`~silverback.exceptions.InvalidContainerTypeError`:
@@ -618,12 +639,16 @@ class SilverbackBot(ManagerAccessMixin):
         # TODO: Support mempool polling?
         raise InvalidContainerTypeError(container)
 
-    def cron(self, cron_schedule: str) -> Callable:
+    def cron(self, cron_schedule: str) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Create task to run on a schedule.
 
         Args:
             cron_schedule (str): A cron-like schedule string.
+
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
         """
         return self.broker_task_decorator(TaskType.CRON_JOB, cron_schedule=cron_schedule)
 
@@ -637,7 +662,7 @@ class SilverbackBot(ManagerAccessMixin):
         eq: ScalarType | None = None,
         ne: ScalarType | None = None,
         # TODO: Support `rate_[ge|gt|le|...]` too?
-    ) -> Callable:
+    ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
         """
         Create a task that runs when the value of a specified metric has tripped a threshold.
 
@@ -657,6 +682,10 @@ class SilverbackBot(ManagerAccessMixin):
             lt (ScalarType | None): trigger when metric value is less than value.
             eq (ScalarType | None): trigger when metric value is equal to value.
             ne (ScalarType | None): trigger when metric value is not equal to value.
+
+        Returns:
+            Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
+                A function wrapper that will register the task handler.
         """
         value_threshold: dict[str, ScalarType] = {}
         if ge is not None:
