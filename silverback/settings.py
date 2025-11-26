@@ -45,8 +45,6 @@ class Settings(BaseSettings, ManagerAccessMixin):
     NETWORK_CHOICE: str = ""
     SIGNER_ALIAS: str = ""
 
-    NEW_BLOCK_TIMEOUT: int | None = None
-
     # Used for recorder
     RECORDER_CLASS: str | None = None
 
