@@ -7,7 +7,6 @@ from types import MethodType
 from typing import Any, Awaitable, Callable
 
 import pycron  # type: ignore[import-untyped]
-from ape.api.networks import LOCAL_NETWORK_NAME
 from ape.contracts import ContractEvent, ContractEventWrapper
 from ape.logging import logger
 from ape.managers.chain import BlockContainer
@@ -135,13 +134,6 @@ class SilverbackBot(ManagerAccessMixin):
             ecosystem=self.provider.network.ecosystem.name,
         )
 
-        # Adjust defaults from connection
-        if settings.NEW_BLOCK_TIMEOUT is None and (
-            self.provider.network.name.endswith("-fork")
-            or self.provider.network.name == LOCAL_NETWORK_NAME
-        ):
-            settings.NEW_BLOCK_TIMEOUT = int(timedelta(days=1).total_seconds())
-
         settings_str = "\n  ".join(
             f'{key}="{val}"' for key, val in settings.model_dump().items() if val
         )
@@ -154,7 +146,6 @@ class SilverbackBot(ManagerAccessMixin):
             # NOTE: Dont track system tasks
             if not str(task_type).startswith("system:")
         }
-        self.poll_settings: dict[str, dict] = {}
 
         atexit.register(provider_context.__exit__, None, None, None)
 
@@ -172,20 +163,14 @@ class SilverbackBot(ManagerAccessMixin):
 
             self.signer.__dict__["call"] = MethodType(call_override, self.signer)
 
-        self.new_block_timeout = settings.NEW_BLOCK_TIMEOUT
         self.use_fork = settings.FORK_MODE and not self.provider.network.name.endswith("-fork")
-
-        signer_str = f"\n  SIGNER={repr(self.signer)}"
-        new_block_timeout_str = (
-            f"\n  NEW_BLOCK_TIMEOUT={self.new_block_timeout}" if self.new_block_timeout else ""
-        )
 
         network_choice = f"{self.identifier.ecosystem}:{self.identifier.network}"
         logger.success(
             "Loaded Silverback Bot:\n"
             f'  NETWORK="{network_choice}"\n'
-            f"  FORK_MODE={self.use_fork}"
-            f"{signer_str}{new_block_timeout_str}"
+            f"  FORK_MODE={self.use_fork}\n"
+            f"  SIGNER={repr(self.signer)}"
         )
 
         # NOTE: Runner must call this to configure itself for all SDK hooks
@@ -599,9 +584,6 @@ class SilverbackBot(ManagerAccessMixin):
     def on_(
         self,
         container: BlockContainer | ContractEvent,
-        # TODO: possibly remove these
-        new_block_timeout: int | None = None,
-        start_block: int | None = None,
         filter_args: dict[str, Any] | None = None,
         **filter_kwargs: dict[str, Any],
     ):
@@ -620,39 +602,9 @@ class SilverbackBot(ManagerAccessMixin):
                 If the type of `container` is not configurable for the bot.
         """
         if isinstance(container, BlockContainer):
-            if new_block_timeout is not None:
-                if "_blocks_" in self.poll_settings:
-                    self.poll_settings["_blocks_"]["new_block_timeout"] = new_block_timeout
-                else:
-                    self.poll_settings["_blocks_"] = {"new_block_timeout": new_block_timeout}
-
-            if start_block is not None:
-                if "_blocks_" in self.poll_settings:
-                    self.poll_settings["_blocks_"]["start_block"] = start_block
-                else:
-                    self.poll_settings["_blocks_"] = {"start_block": start_block}
-
             return self.broker_task_decorator(TaskType.NEW_BLOCK, container=container)
 
         elif isinstance(container, (ContractEvent, ContractEventWrapper)):
-            if isinstance(container, ContractEvent):
-                key = container.contract.address
-
-            else:  # isinstance(container, ContractEventWrapper):
-                key = container.events[0].contract.address
-
-            if new_block_timeout is not None:
-                if key in self.poll_settings:
-                    self.poll_settings[key]["new_block_timeout"] = new_block_timeout
-                else:
-                    self.poll_settings[key] = {"new_block_timeout": new_block_timeout}
-
-            if start_block is not None:
-                if key in self.poll_settings:
-                    self.poll_settings[key]["start_block"] = start_block
-                else:
-                    self.poll_settings[key] = {"start_block": start_block}
-
             if filter_args:
                 filter_kwargs.update(filter_args)
 
