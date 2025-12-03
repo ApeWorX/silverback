@@ -352,6 +352,43 @@ Make sure to use an appropiate gas pricing algorithm in order to prevent your ch
 Do *not* use the same account on the same network at the same time as the one in use by your bot, as this could lead to extremely undesirable behavior, stuck transactions, or transaction failures/loss of funds
 ```
 
+## Cluster Access
+
+Sometimes, there are scenarios where you want to create a bot that has the capability to control other bots.
+This might make sense if you are having one bot that monitors a particular contract and interacts with all their events,
+and a version of that contract is deployed by another Factory contract.
+Another example is if you want a bot that monitors the performance of another bot,
+and then stops it if it discovers any issues encountered while monitoring it.
+
+Creating this type of setup allows a sort of "agentic scaling" where you can quickly scale up your bot cluster's
+on-chain "footprint" and cover more ground by having multiple other bots handling situations you encounter.
+This also can more effectively distribute the cluster load when you have large quantities of events to be handled,
+and need to dynamically scale in order to add more capacity in response to on-chain conditions.
+
+```py
+@bot.on_(factory.NewPool)
+async def deploy_arb_bot(log):
+    vg = bot.cluster.new_variable_group(
+        name=f"{log.token0}-{log.token1}-pool",
+        variables={"POOL": log.pool_address},
+    )
+    bot = bot.cluster.new_bot(
+        name=f"{log.token0}-{log.token1}-arb",
+        ...,
+        environment=[vg.name, ...],
+    )
+```
+
+```{important}
+Testing cluster access is not practical without deploying on the [Silverback Platform](./platform.html).
+The cluster implements additional authorization checks based on the `--cluster-access` flag provided
+with the [`silverback cluster bots new`](../commands/cluster#silverback-cluster-bots-new)
+and [`silverback cluster bots update`](../commands/cluster#silverback-cluster-bots-update) commands.
+```
+
+_Added in Silverback SDK [v0.7.35](https://github.com/ApeWorX/silverback/releases/tag/v0.7.35)_
+_Support added in Silverback Cluster [v0.7.0](https://silverback.apeworx.io/changelog#cluster-v0-7-0)_
+
 ## Running your Bot
 
 Once you have programmed your bot, it's really useful to be able to run it locally and validate that it does what you expect it to do.
