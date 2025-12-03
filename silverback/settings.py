@@ -1,4 +1,4 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ape.api import AccountAPI, ProviderContextManager
 from ape.utils import ManagerAccessMixin
@@ -15,6 +15,9 @@ from taskiq import (
 from ._importer import import_from_string
 from .middlewares import SilverbackMiddleware
 from .recorder import BaseRecorder
+
+if TYPE_CHECKING:
+    from .cluster.client import ClusterClient
 
 
 class Settings(BaseSettings, ManagerAccessMixin):
@@ -47,6 +50,10 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     # Used for recorder
     RECORDER_CLASS: str | None = None
+
+    # Used for cluster access
+    CLUSTER_URI: str | None = None
+    CLUSTER_API_KEY: str | None = None
 
     model_config = SettingsConfigDict(env_prefix="SILVERBACK_", case_sensitive=True)
 
@@ -132,3 +139,14 @@ class Settings(BaseSettings, ManagerAccessMixin):
             signer.set_autosign(True)
 
         return signer
+
+    def get_cluster_client(self) -> "ClusterClient | None":
+        from .cluster.client import ClusterClient
+
+        if self.CLUSTER_URI and self.CLUSTER_API_KEY:
+            return ClusterClient(
+                base_url=self.CLUSTER_URI,
+                headers={"X-API-Key": self.CLUSTER_API_KEY},
+            )
+
+        return None

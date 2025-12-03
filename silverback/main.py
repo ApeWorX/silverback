@@ -128,6 +128,8 @@ class SilverbackBot(ManagerAccessMixin):
         # NOTE: This allows using connected ape methods e.g. `Contract`
         self.provider = provider_context.__enter__()
 
+        self.cluster = settings.get_cluster_client()
+
         self.identifier = SilverbackID(
             name=settings.BOT_NAME,
             network=self.provider.network.name,
