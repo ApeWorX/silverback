@@ -485,7 +485,6 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
     Run a single bot against a live network using a basic in-memory queue.
     """
 
-    # TODO: Move block_timeout settings to Ape core config
     # TODO: Merge polling/websocket subscriptions downstream in Ape core
 
     def __init__(self, bot: SilverbackBot, *args, **kwargs):

@@ -70,9 +70,8 @@ def exec_block(block: BlockAPI, context: Annotated[Context, TaskiqDepends()]):
     return len(block.transactions)
 
 
-# This is how we trigger off of events including logs from previous blocks
-# NOTE: Set new_block_timeout to adjust the expected block time.
-@bot.on_(usdc.Transfer, start_block=-10, new_block_timeout=25)
+# This is how we trigger off of events from a contract instance
+@bot.on_(usdc.Transfer)
 # NOTE: Typing isn't required, it will still be an Ape `ContractLog` type
 def exec_event1(log):
     if log.log_index % 7 == 3:
@@ -93,6 +92,7 @@ async def handle_mints(log):
 
 
 # You can use generic `ContractContainer.EventType`s, to get matching logs from any contract
+# NOTE: This will match based on `event_id := keccak(event.selector)`, so any matching will work
 @bot.on_(Token.Approval, spender=ROUTER)
 # Any handler function can be async too
 async def exec_event2(log: ContractLog):
