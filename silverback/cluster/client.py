@@ -131,6 +131,7 @@ class Bot(BotInfo):
         provider: str | None = None,
         account: str | None = "<no-change>",
         environment: list[str] | None = None,
+        cluster_access: bool | None = None,
     ) -> "Bot":
         form: dict = dict(
             name=name,
@@ -141,6 +142,7 @@ class Bot(BotInfo):
             provider=provider,
             account=account,
             environment=environment,
+            cluster_access=cluster_access,
         )
 
         response = self.cluster.patch(
@@ -327,6 +329,7 @@ class ClusterClient(httpx.Client):
         account: str | None = None,
         environment: list[str] | None = None,
         credential_name: str | None = None,
+        cluster_access: bool = False,
     ) -> Bot:
         form: dict = dict(
             name=name,
@@ -337,6 +340,7 @@ class ClusterClient(httpx.Client):
             account=account,
             environment=environment or [],
             credential_name=credential_name,
+            cluster_access=cluster_access,
         )
 
         response = self.post(

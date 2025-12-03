@@ -1205,6 +1205,12 @@ def bots():
     "credential_name",
     help="registry credentials to use to pull the image",
 )
+@click.option(
+    "--cluster-access/--no-cluster-access",
+    is_flag=True,
+    default=False,
+    help="Give bot access to CLUSTER (Advanced)",
+)
 @click.argument("name")
 @cluster_client()
 def new_bot(
@@ -1216,6 +1222,7 @@ def new_bot(
     account: str | None,
     environment: list[str],
     credential_name: str | None,
+    cluster_access: bool,
     name: str,
 ):
     """Create a new bot in a CLUSTER with the given configuration"""
@@ -1249,6 +1256,14 @@ def new_bot(
     if credential_name is not None:
         click.echo(f"Registry credentials: {credential_name}")
 
+    if cluster_access and not click.confirm(
+        click.style(
+            f"Are you sure you want to give this bot admin access to cluster '{cluster.base_url}'?",
+            fg="red",
+        )
+    ):
+        return
+
     if not click.confirm("Do you want to create and start running this bot?"):
         return
 
@@ -1261,6 +1276,7 @@ def new_bot(
         account=account,
         environment=environment,
         credential_name=credential_name,
+        cluster_access=cluster_access,
     )
     click.secho(f"Bot '{bot.name}' ({bot.id}) deploying...", fg="green", bold=True)
 
@@ -1329,6 +1345,12 @@ def bot_info(cluster: "ClusterClient", name: str):
     default="<no-change>",
     help="registry credentials to use to pull the image",
 )
+@click.option(
+    "--cluster-access/--no-cluster-access",
+    is_flag=True,
+    default=None,
+    help="Give bot access to CLUSTER. Defaults to no change (Advanced)",
+)
 @click.argument("name", metavar="BOT")
 @cluster_client()
 def update_bot(
@@ -1340,6 +1362,7 @@ def update_bot(
     environment: list[str],
     clear_environment: bool,
     credential_name: str | None,
+    cluster_access: bool | None,
     name: str,
 ):
     """Update configuration of BOT in CLUSTER
@@ -1411,6 +1434,15 @@ def update_bot(
 
     redeploy_required |= clear_environment
 
+    if cluster_access and not click.confirm(
+        click.style(
+            f"Are you sure you want to give this bot admin access to cluster '{cluster.base_url}'?",
+            fg="red",
+        )
+    ):
+        return
+    redeploy_required |= cluster_access is not None
+
     if not click.confirm(
         f"Do you want to update '{name}'?"
         if not redeploy_required
@@ -1427,6 +1459,7 @@ def update_bot(
         account=account,
         environment=environment if environment or clear_environment else None,
         credential_name=credential_name,
+        cluster_access=cluster_access,
     )
 
     # NOTE: Skip machine `.id`
