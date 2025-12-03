@@ -315,7 +315,7 @@ class BotTaskStatus(BaseModel):
 
 
 class BotInfo(BaseModel):
-    id: uuid.UUID  # TODO: Change `.instance_id` field to `id: UUID`
+    id: uuid.UUID
     name: str
     created: datetime
 
@@ -326,6 +326,9 @@ class BotInfo(BaseModel):
     provider: str
     account: str | None
     environment: list[str]
+    cluster_access: bool = False
+
+    # NOTE: New fields should have defaults
 
 
 class BotLogEntry(BaseModel):
