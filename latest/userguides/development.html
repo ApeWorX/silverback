@@ -119,6 +119,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#managing-nonces">Managing nonces</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#cluster-access">Cluster Access</a></li>
 <li><a class="reference internal" href="#running-your-bot">Running your Bot</a><ul>
 <li><a class="reference internal" href="#runtime-exceptions">Runtime Exceptions</a></li>
 <li><a class="reference internal" href="#metrics-collection">Metrics Collection</a></li>
@@ -463,6 +464,40 @@ By using this variable via <code class="docutils literal notranslate"><span clas
 <p>Do <em>not</em> use the same account on the same network at the same time as the one in use by your bot, as this could lead to extremely undesirable behavior, stuck transactions, or transaction failures/loss of funds</p>
 </div>
 </section>
+</section>
+<section id="cluster-access">
+<h2>Cluster Access<a class="headerlink" href="#cluster-access" title="Link to this heading"></a></h2>
+<p>Sometimes, there are scenarios where you want to create a bot that has the capability to control other bots.
+This might make sense if you are having one bot that monitors a particular contract and interacts with all their events,
+and a version of that contract is deployed by another Factory contract.
+Another example is if you want a bot that monitors the performance of another bot,
+and then stops it if it discovers any issues encountered while monitoring it.</p>
+<p>Creating this type of setup allows a sort of “agentic scaling” where you can quickly scale up your bot cluster’s
+on-chain “footprint” and cover more ground by having multiple other bots handling situations you encounter.
+This also can more effectively distribute the cluster load when you have large quantities of events to be handled,
+and need to dynamically scale in order to add more capacity in response to on-chain conditions.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">factory</span><span class="o">.</span><span class="n">NewPool</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">deploy_arb_bot</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">vg</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">new_variable_group</span><span class="p">(</span>
+</span><span data-line="4">        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token0</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token1</span><span class="si">}</span><span class="s2">-pool&quot;</span><span class="p">,</span>
+</span><span data-line="5">        <span class="n">variables</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;POOL&quot;</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">pool_address</span><span class="p">},</span>
+</span><span data-line="6">    <span class="p">)</span>
+</span><span data-line="7">    <span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">new_bot</span><span class="p">(</span>
+</span><span data-line="8">        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token0</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token1</span><span class="si">}</span><span class="s2">-arb&quot;</span><span class="p">,</span>
+</span><span data-line="9">        <span class="o">...</span><span class="p">,</span>
+</span><span data-line="10">        <span class="n">environment</span><span class="o">=</span><span class="p">[</span><span class="n">vg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+</span><span data-line="11">    <span class="p">)</span>
+</span></pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Testing cluster access is not practical without deploying on the <a class="reference external" href="./platform.html">Silverback Platform</a>.
+The cluster implements additional authorization checks based on the <code class="docutils literal notranslate"><span class="pre">--cluster-access</span></code> flag provided
+with the <a class="reference external" href="../commands/cluster#silverback-cluster-bots-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">new</span></code></a>
+and <a class="reference external" href="../commands/cluster#silverback-cluster-bots-update"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">update</span></code></a> commands.</p>
+</div>
+<p><em>Added in Silverback SDK <a class="reference external" href="https://github.com/ApeWorX/silverback/releases/tag/v0.7.35">v0.7.35</a></em>
+<em>Support added in Silverback Cluster <a class="reference external" href="https://silverback.apeworx.io/changelog#cluster-v0-7-0">v0.7.0</a></em></p>
 </section>
 <section id="running-your-bot">
 <h2>Running your Bot<a class="headerlink" href="#running-your-bot" title="Link to this heading"></a></h2>
