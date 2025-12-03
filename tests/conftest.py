@@ -18,8 +18,9 @@ def cli():
 
 
 class Settings:
-    def __init__(self, signer=None):
+    def __init__(self, signer=None, cluster=None):
         self._signer = signer
+        self._cluster = cluster
         self.BOT_NAME = "bot"
         self.NEW_BLOCK_TIMEOUT = None
         self.FORK_MODE = False
@@ -49,6 +50,9 @@ class Settings:
 
     def get_signer(self):
         return self._signer
+
+    def get_cluster_client(self):
+        return self._cluster
 
     def model_dump(self):
         return {}
