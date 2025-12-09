@@ -131,41 +131,54 @@ data-aria-dark="Switch to auto color mode">
         <article class="yue" role="main">
           <section id="silverback-platform">
 <h1>Silverback Platform<a class="headerlink" href="#silverback-platform" title="Link to this heading"></a></h1>
-<p>In this guide, we are going to show you more details on how to manage get set up locally with the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a> to get your bots to production.</p>
-<p>You can signup for Silverback to get full access for free at <a class="reference external" href="https://silverback.apeworx.io">https://silverback.apeworx.io</a>.</p>
+<p>In this guide, we are going to show you more details on how to deploy and host your bots in the cloud with the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The Platform UI will let you create and manage Workspaces and Clusters using a graphical experience, which may be preferred.
-The CLI experience is for those working locally who don’t want to visit the website, or are locally developing their bots.</p>
+The CLI experience is for those working locally who don’t want to visit the website, or for use locally when developing bots.</p>
 </div>
 <p>Once you have signed up, you can actually create (and pay for) your Clusters from the Silverback CLI utility by first
 logging in to the Platform using <a class="reference external" href="../commands/cluster.html#silverback-login"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">login</span></code></a>.</p>
 <section id="managing-a-workspace">
 <h2>Managing a Workspace<a class="headerlink" href="#managing-a-workspace" title="Link to this heading"></a></h2>
-<p>A Workspace is an area for one or more people to co-manage a set of clusters together. You can manage workspaces from the Silverback CLI using <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">workspaces</span></code></a>.</p>
-<p>Using the Silverback CLI you can <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-list">list workspaces</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-new">make new ones</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-info">view their configuration information</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-update">update their metadata</a>, as well as <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-delete">delete them</a>.</p>
+<p>A Workspace is an area for one or more people to co-manage a set of clusters together.
+You can manage workspaces from the Silverback CLI using <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">workspaces</span></code></a>.</p>
+<p>Using the Silverback CLI you can <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-list">list workspaces</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-new">make new ones</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-info">view their configuration information</a>, <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-update">update that information</a>, as well as <a class="reference external" href="../commands/cluster.html#silverback-cluster-workspaces-delete">delete them</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You need at least one workspace to deploy a cluster.
+It is recommended that you create a personal workspace first.</p>
+</div>
 </section>
 <section id="managing-a-cluster">
 <h2>Managing a Cluster<a class="headerlink" href="#managing-a-cluster" title="Link to this heading"></a></h2>
-<p>The Silverback Platform runs your Bots on dedicated managed Clusters.
+<p>The Silverback Platform runs your Bots on dedicated Clusters.
 These Clusters will take care to orchestrate infrastructure, monitor, run triggers, and collect metrics for all of your bots you have added to them.
-Each Cluster is bespoke for an individual or organization, and isolates your bots from other users by virtual of running on different infrastructure.</p>
-<p>Once you have a workspace, you can create (and pay for) your Clusters from the Silverback CLI using <a class="reference external" href="../commands/cluster.html#silverback-cluster-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">new</span></code></a> to follow the steps necessary to deploy it. You can also use the Silverback CLI to <a class="reference external" href="../commands/cluster.html#silverback-cluster-list">list</a> and <a class="reference external" href="../commands/cluster.html#silverback-cluster-update">update</a> existing clusters.</p>
+Each Cluster is run on bespoke infrastructure, which isolates your bots from those of other users by virtue of running in a segregated deployment.</p>
+<p>Once you have a workspace, you can create new Clusters from the Silverback CLI using <a class="reference external" href="../commands/cluster.html#silverback-cluster-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">new</span></code></a>.
+Just follow the steps it gives you to finish deploying it, and (if needed) pay for it.</p>
+<p>You can also use the Silverback CLI to <a class="reference external" href="../commands/cluster.html#silverback-cluster-list">list</a> and <a class="reference external" href="../commands/cluster.html#silverback-cluster-update">update</a> existing clusters.</p>
 <section id="deploying-a-cluster">
 <h3>Deploying a Cluster<a class="headerlink" href="#deploying-a-cluster" title="Link to this heading"></a></h3>
-<p>Once you have created your Cluster, you have to fund it so it is made available for your use.
+<p>Once you have created your Cluster, you will likely have to fund it so it is made available for your use.
 To do that, use the <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-create"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">create</span></code></a> command to fund your newly created cluster.
 Please note that provisioning your cluster will take time, and it may take up to an hour for it to be ready.
-Check back after 10-15 minutes using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-info"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">info</span></code></a> command to see when it’s ready.</p>
-<p>At any point after the Cluster is funded, you can fund it with more funds via <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-add-time"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">add-time</span></code></a>
-command to extend the timeline that the Cluster is kept around for.
+Check back after 5-15 minutes using the <a class="reference external" href="../commands/cluster.html#silverback-cluster-info"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">info</span></code></a> command to see when it’s ready for use.</p>
+<p>At any point after the Cluster is funded, you can fund it for more time via <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-add-time"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">add-time</span></code></a>
+command to extend the timeline that the Cluster is hosted for.
 Note that it is possible for anyone to add more time to the Cluster, at any time and for any amount.</p>
-<p>If that timeline expires, the Platform will automatically de-provision your infrastructure, and it is not possible to reverse this!
-The Platform may send you notifications when your Stream is close to expiring, but it is up to you to remember to fill it so it doesn’t.
-Note that your data collection will stay available for up to 30 days allowing you the ability to download any data you need.</p>
-<p>Lastly, if you ever feel like you want to delete your Cluster, you can cancel the funding for it and get a refund of the remaining funds.
-If you are the owner of the Stream, you can do this via the <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-cancel"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">cancel</span></code></a> command.
-Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If that hosting time expires, the Platform will automatically de-provision your infrastructure. <strong>It is not possible to reverse this!</strong>
+The Platform may send you notifications when your Stream is close to expiring, but it is up to you to remember to fill it so it doesn’t expire.
+Note that your collected data will stay available for up to 30 days allowing you the ability to download any data you need after it’s been removed.</p>
+</div>
+<p>Lastly, if you ever feel like you want to delete your Cluster, you can cancel the funding for it and instantly get a refund for the remaining time.
+If you are the owner of the Stream, you can do this via the <a class="reference external" href="../commands/cluster.html#silverback-cluster-pay-cancel"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">pay</span> <span class="pre">cancel</span></code></a> command.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only the owner may do this, so if you are not the owner you should contact them to have them do that action for you.</p>
+</div>
 </section>
 </section>
 <section id="model-context-server">
@@ -183,14 +196,14 @@ The config for using this with Claude Desktop is as follows:</p>
 </span><span data-line="7"><span class="w">        </span><span class="s2">&quot;silverback[mcp]&quot;</span><span class="p">,</span>
 </span><span data-line="8"><span class="w">        </span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span>
 </span><span data-line="9"><span class="w">        </span><span class="s2">&quot;mcp&quot;</span>
-</span><span data-line="10"><span class="w">        </span><span class="err">#</span><span class="w"> </span><span class="err">Add</span><span class="w"> </span><span class="err">args</span><span class="w"> </span><span class="err">`</span><span class="mi">--</span><span class="err">clus</span><span class="kc">ter</span><span class="w"> </span><span class="err">&lt;clus</span><span class="kc">ter</span><span class="w"> </span><span class="kc">na</span><span class="err">me&gt;`</span><span class="w"> </span><span class="kc">t</span><span class="err">o</span><span class="w"> </span><span class="err">use</span><span class="w"> </span><span class="err">a</span><span class="w"> </span><span class="err">Clus</span><span class="kc">ter</span><span class="w"> </span><span class="err">o</span><span class="kc">t</span><span class="err">her</span><span class="w"> </span><span class="kc">t</span><span class="err">ha</span><span class="kc">n</span><span class="w"> </span><span class="err">your</span><span class="w"> </span><span class="err">de</span><span class="kc">fault</span>
+</span><span data-line="10"><span class="w">        </span><span class="err">#</span><span class="w"> </span><span class="err">Add</span><span class="w"> </span><span class="err">args</span><span class="w"> </span><span class="err">`</span><span class="mi">--</span><span class="err">clus</span><span class="kc">ter</span><span class="w"> </span><span class="err">&lt;clus</span><span class="kc">ter</span><span class="w"> </span><span class="kc">na</span><span class="err">me&gt;`</span><span class="w"> </span><span class="kc">t</span><span class="err">o</span><span class="w"> </span><span class="err">use</span><span class="w"> </span><span class="err">a</span><span class="w"> </span><span class="err">Clus</span><span class="kc">ter</span><span class="w"> </span><span class="err">o</span><span class="kc">t</span><span class="err">her</span><span class="w"> </span><span class="kc">t</span><span class="err">ha</span><span class="kc">n</span><span class="w"> </span><span class="err">your</span><span class="w"> </span><span class="err">pro</span><span class="kc">f</span><span class="err">ile</span><span class="w"> </span><span class="err">de</span><span class="kc">fault</span>
 </span><span data-line="11"><span class="w">      </span><span class="p">]</span>
 </span><span data-line="12"><span class="w">    </span><span class="p">}</span>
 </span><span data-line="13"><span class="w">  </span><span class="p">}</span>
 </span><span data-line="14"><span class="p">}</span>
 </span></pre></div>
 </div>
-<p>Once that has been configured, you can ask your LLM to do things like check the status of your cluster, summarize logs of running bots, and restart bots just be commanding it through a chat interface!</p>
+<p>Once that has been configured, you can ask your LLM to do things like check the status of your cluster, summarize logs of running bots, and restart bots just talking to it!</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The MCP will use the context from <a class="reference external" href="../commands/cluster.html#silverback-login"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">login</span></code></a> to execute, so be sure to log in before starting.</p>
