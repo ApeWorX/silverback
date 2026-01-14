@@ -57,6 +57,35 @@ dependencies = [
 mcp = [
     "fastmcp",  # MCP Server & AI Computer Use
 ]
+# Built into released container image (slim & full)
+build = [
+    # Needed for Silverback Cluster use
+    "taskiq-aio-pika>=0.5,<1",
+    "taskiq-redis>=1.2,<2",
+]
+# Recommended to use with Silverback (built into full container image)
+recommended-plugins = [
+    # Supported ecosystems
+    "ape-arbitrum",
+    "ape-avalanche",
+    "ape-base",
+    "ape-bsc",
+    "ape-optimism",
+    "ape-polygon",
+    "ape-sonic",
+    # Useful utility plugins
+    "ape-etherscan",
+    "ape-ens",
+    "ape-tokens",
+    # Hosted RPCs plugins
+    "ape-alchemy",
+    "ape-infura",
+    # Other RPC types (multiplexers)
+    "ape-drpc",
+    "ape-erpc",
+    # Cloud Signer plugins
+    "ape-aws",
+]
 
 [project.scripts]
 silverback = "silverback._cli:cli"
