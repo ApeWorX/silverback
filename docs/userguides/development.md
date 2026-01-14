@@ -394,6 +394,47 @@ as this could lead to extremely undesirable behavior, stuck transactions, transa
 or **loss of funds**.
 ```
 
+### Managed Parameters
+
+Silverback has support for defining numeric/boolean values in `bot.state` that can be updated during runtime operation of the bot.
+This is very useful for implementing features in your bot such as operational modes, parametrized signal processing algorithms that can be adjusted in real-time, or otherwise allowing the operational behavior of your bot to become configurable above and beyond what is possible through simple environment variables.
+Further, these parameters are backed up and stored through Silverback's state snapshotting feature, which means they retain their changes during bot resets and new deployments on the [Silverback Platform](./managing.html).
+
+To use this feature in your bot, you will use the `bot.add_parameter` function to define your parameter's name and default value (the value that is loaded in `bot.state.<your_parameter>` if no value is detected in the state snapshot on loading).
+Here's an example:
+
+```py
+...
+
+bot = SilverbackBot()
+
+bot.add_parameter("my_parameter", default=0.1)
+```
+
+You can then access this value inside of any bot handler functions via `bot.state.my_parameter` or `bot.state["my_parameter"]`:
+
+```py
+...
+
+@bot.on_(chain.blocks)
+async def measure_something(block):
+    bot.state.measurement *= bot.state.my_parameter * block.base_fee
+
+...
+```
+
+```{warning}
+Since parameters are loaded into `bot.state`, they are not accessible outside of your bot's handler functions.
+It is also recommended that you do not modify them dynamically, although that behavior is allowed.
+```
+
+```{note}
+Parameter definitions are defined under `bot.parameters` but do not contain their current value, which must be accessed through `bot.state`.
+However, this can be useful if you need to access your parameter's properties such as the default value.
+```
+
+If you want to test modifying your parameter when testing locally, first set your model up using [Distributed Execution](#distributed-execution), and then use the [`silverback set-param`](../commands/run.html#silverback-set-param) command.
+
 ## Running your Bot
 
 Once you have programmed your bot,

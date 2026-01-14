@@ -27,7 +27,7 @@ from .exceptions import (
 )
 from .settings import Settings
 from .state import StateSnapshot
-from .types import ScalarType, SilverbackID, TaskType
+from .types import ParamChange, ScalarType, SilverbackID, TaskType, is_scalar_type
 from .utils import encode_topics_to_string, parse_hexbytes_dict
 
 
@@ -49,6 +49,12 @@ class TaskData(BaseModel):
 
     def __hash__(self) -> int:
         return hash(self.model_dump_json())
+
+
+class ParameterInfo(BaseModel):
+    default: ScalarType | None
+
+    # NOTE: Any other fields should have defaults
 
 
 class SharedState(defaultdict):
@@ -192,6 +198,15 @@ class SilverbackBot(ManagerAccessMixin):
         self._create_snapshot = self.__register_system_task(
             TaskType.SYSTEM_CREATE_SNAPSHOT, self.__create_snapshot_handler
         )
+        self._set_param = self.__register_system_task(
+            TaskType.SYSTEM_SET_PARAM, self.__param_set_handler
+        )
+        self._batch_set_param = self.__register_system_task(
+            TaskType.SYSTEM_SET_PARAM_BATCH, self.__batch_param_set_handler
+        )
+
+        # NOTE: Parameters are create via `add_parameter`
+        self.__parameters: dict[str, ParameterInfo] = {}
 
     def __register_system_task(
         self, task_type: TaskType, task_handler: Callable
@@ -249,15 +264,82 @@ class SilverbackBot(ManagerAccessMixin):
                 startup_state.last_nonce_used or -1, self.signer.nonce - 1
             )
 
-        # TODO: Load user custom state (should not start with `system:`)
+        # NOTE: We need to load defaults in case user parameters are not in the snapshot yet
+        for parameter_name, parameter_info in self.parameters.items():
+            self.state[parameter_name] = parameter_info.default
+
+        # Load parameters from snapshot into state
+        for parameter_name, parameter_value in startup_state.parameters.items():
+            if parameter_name.startswith("system:"):
+                logger.error(f"Cannot restore '{parameter_name}'")
+                continue
+
+            elif parameter_name in self.parameters:
+                # NOTE: Keep both of these in sync (primarily for debugging)
+                self.__parameters[parameter_name].default = parameter_value
+
+            self.state[parameter_name] = parameter_value
 
     async def __create_snapshot_handler(self) -> StateSnapshot:
         return StateSnapshot(
-            # TODO: Migrate these to parameters (remove explicitly from state)
             last_block_seen=self.state.get("system:last_block_seen", -1),
             last_block_processed=self.state.get("system:last_block_processed", -1),
             last_nonce_used=self.state.get("system:last_nonce_used"),
+            parameters={
+                param_name: param_value
+                for param_name in self.parameters
+                # NOTE: Do not backup invalid parameters
+                if is_scalar_type(param_value := self.state.get(param_name))
+            },
         )
+
+    @property
+    def parameters(self) -> dict[str, ParameterInfo]:
+        # NOTE: makes this variable read-only
+        return self.__parameters
+
+    def add_parameter(self, param_name: str, default: ScalarType | None = None):
+        if "system:" in param_name:
+            raise ValueError("Cannot override system parameters")
+
+        if param_name in self.parameters:
+            raise ValueError(f"{param_name} already added!")
+
+        if default and not is_scalar_type(default):
+            raise ValueError(f"Default value type '{type(default)}' is not a valid scalar type.")
+
+        # Update this to track parameter existance/default value/update handler
+        self.__parameters[param_name] = ParameterInfo(default=default)
+
+    async def __param_set_handler(self, param_name: str, new_value: ScalarType) -> ParamChange:
+        if "system:" in param_name:
+            raise ValueError(f"Cannot update system parameter '{param_name}'")
+
+        elif param_name not in self.parameters:
+            raise ValueError(f"Unrecognized parameter '{param_name}'")
+
+        change = ParamChange(old=self.state[param_name], new=new_value)
+        logger.success(f"Update: app.state['{param_name}'] = {new_value}")
+        self.state[param_name] = new_value
+        return change
+
+    async def __batch_param_set_handler(
+        self, parameter_updates: dict[str, ScalarType]
+    ) -> dict[str, ParamChange]:
+        datapoints = {}
+        for param_name, new_value in parameter_updates.items():
+            if "system:" in param_name:
+                logger.error(f"Cannot update system parameter '{param_name}'")
+
+            elif param_name not in self.parameters:
+                logger.error(f"Unrecognized parameter '{param_name}'")
+
+            else:
+                datapoints[param_name] = ParamChange(old=self.state[param_name], new=new_value)
+                logger.success(f"Update: app.state['{param_name}'] = {new_value}")
+                self.state[param_name] = new_value
+
+        return datapoints
 
     @property
     def nonce(self) -> int:
