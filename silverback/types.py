@@ -99,6 +99,12 @@ class ParamChange(_BaseDatapoint):
     old: ScalarType | None
     new: ScalarType
 
+    def render(self) -> str:
+        return str(self.as_row())
+
+    def as_row(self) -> dict:
+        return dict(old=self.old, new=self.new)
+
 
 # NOTE: Other datapoint types must be explicitly defined as subclasses of `_BaseDatapoint`
 #       Users will have to import and use these directly
