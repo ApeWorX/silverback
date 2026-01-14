@@ -2,12 +2,12 @@
 <html lang="en" data-accent-color="lime" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Developing Bots - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Silverback Platform" href="managing.html" /><link rel="prev" title="Quick Start" href="quickstart.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Developing Bots - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Deploying Bots" href="deploying.html" /><link rel="prev" title="Overview" href="quickstart.html" />
       <link rel="canonical" href="silverback/userguides/development.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=14737038" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,10 +59,11 @@ data-aria-dark="Switch to auto color mode">
       <div class="sy-scrollbar p-6">
         <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developing Bots</a></li>
-<li class="toctree-l1"><a class="reference internal" href="managing.html">Silverback Platform</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deploying.html">Deploying Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing.html">Silverback Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced Topics</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
 <ul>
@@ -93,9 +94,8 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li><a class="reference internal" href="#project-structure">Project structure</a></li>
-<li><a class="reference internal" href="#creating-a-bot">Creating a Bot</a></li>
+<li><a class="reference internal" href="#bot-structure">Bot Structure</a><ul>
 <li><a class="reference internal" href="#new-block-events">New Block Events</a></li>
 <li><a class="reference internal" href="#new-event-logs">New Event Logs</a><ul>
 <li><a class="reference internal" href="#event-log-filters">Event Log Filters</a></li>
@@ -106,28 +106,22 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#metric-callbacks">Metric Callbacks</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#startup-and-shutdown">Startup and Shutdown</a><ul>
-<li><a class="reference internal" href="#worker-events">Worker Events</a><ul>
-<li><a class="reference internal" href="#worker-state">Worker State</a></li>
+<li><a class="reference internal" href="#bot-lifecycle-events">Bot Lifecycle Events</a><ul>
+<li><a class="reference internal" href="#bot-startup-and-shutdown">Bot Startup and Shutdown</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bot-events">Bot Events</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#bot-state">Bot State</a><ul>
-<li><a class="reference internal" href="#signing-transactions">Signing Transactions</a></li>
+<li><a class="reference internal" href="#bot-state">Bot State</a></li>
+<li><a class="reference internal" href="#signing-transactions">Signing Transactions</a><ul>
 <li><a class="reference internal" href="#managing-nonces">Managing nonces</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#cluster-access">Cluster Access</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#running-your-bot">Running your Bot</a><ul>
 <li><a class="reference internal" href="#runtime-exceptions">Runtime Exceptions</a></li>
 <li><a class="reference internal" href="#metrics-collection">Metrics Collection</a></li>
-<li><a class="reference internal" href="#distributed-execution">Distributed Execution</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#testing-your-bot">Testing your Bot</a></li>
-<li><a class="reference internal" href="#deploying-your-bot">Deploying your Bot</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -156,144 +150,222 @@ data-aria-dark="Switch to auto color mode">
     </div>
   </div>
 </div><div class="flex flex-col break-words justify-between">
-      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
-        <article class="yue" role="main">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="silverback/_sources/userguides/development.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="silverback/_sources/userguides/development.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="silverback/_sources/userguides/development.md.txt" target="_blank" rel="nofollow"><iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span></a><a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20silverback/_sources/userguides/development.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a><a role="menuitem" href="https://claude.ai/new?q=Read%20silverback/_sources/userguides/development.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a></div>
+    </div>
+  </div>
+</div><article class="yue" role="main">
           <section id="developing-bots">
 <h1>Developing Bots<a class="headerlink" href="#developing-bots" title="Link to this heading"></a></h1>
 <p>In this guide, we are going to show you more details on how to build an bot with Silverback.</p>
-<section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
-<p>You should have a python project with Silverback installed.
-You can install Silverback via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">silverback</span></code></p>
-</section>
 <section id="project-structure">
 <h2>Project structure<a class="headerlink" href="#project-structure" title="Link to this heading"></a></h2>
-<p>There are 3 suggested ways to structure your project. In the root directory of your project:</p>
+<p>There are 3 suggested ways to structure your bot project.
+In the root directory of your project, do one of the following:</p>
 <ol class="arabic simple">
-<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot.py</span></code> file. This is the simplest way to define your bot project.</p></li>
-<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder. Then develop bots in this folder as separate scripts (Do not include a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file).</p></li>
-<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot/</span></code> folder with a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file that will include the instantiation of your <code class="docutils literal notranslate"><span class="pre">SilverbackBot()</span></code> object.</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot.py</span></code> file. This is the simplest way to define your bot project and is suggested if the bot implementation is the entire project you wish to build. You can then run it without adding any name to your command. (e.g. <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">--network</span> <span class="pre">...</span></code>)</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder. You can add multiple bots to this folder as separate scripts. This is the suggested way if the bots fit into a larger system or protocol design monorepo. You would need to add the selected bot’s name in your commands. (e.g. <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">example</span> <span class="pre">--network</span> <span class="pre">...</span></code>)</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">bot/</span></code> python module, with a <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> in it. This is recommended if you have significant complex logic in your bot and wish to modularize more code under <code class="docutils literal notranslate"><span class="pre">bot/</span></code>. You will be able to run it without adding any name to your command. (e.g. <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">--network</span> <span class="pre">...</span></code>)</p></li>
 </ol>
-<p>The <code class="docutils literal notranslate"><span class="pre">silverback</span></code> cli automatically searches for python scripts to run as bots in specific locations relative to the root of your project.
-It will also be able to detect the scripts inside your <code class="docutils literal notranslate"><span class="pre">bots/</span></code> directory and let you run those by name (in case you have multiple bots in your project).</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">silverback</span></code> finds a module named <code class="docutils literal notranslate"><span class="pre">bot</span></code> in the root directory of the project, then it will use that by default.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">silverback</span></code> cli automatically searches for python scripts in these specific locations relative to the root of your project.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It is suggested that you create the instance of your <code class="docutils literal notranslate"><span class="pre">SilverbackBot()</span></code> object by naming the variable <code class="docutils literal notranslate"><span class="pre">bot</span></code>, since <code class="docutils literal notranslate"><span class="pre">silverback</span></code> will autodetect that variable name when loading your script file.</p>
+<p>If you have multiple bots, we suggest using the <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder approach as it easily supports multi-bot workflows.
+Silverback will automatically register files in this folder as separate bots that can be run via the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span></code> command.
+This is especially useful for simulating a more complex protocol you are developing which requires multiple roles
+(that you wish to publish as bots).</p>
+<p>Treat this folder like a scripts folder: do not include an <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> in it.</p>
 </div>
-<p>Another way you can structure your bot is to create a <code class="docutils literal notranslate"><span class="pre">bot</span></code> folder and define a runner inside of that folder as <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>.</p>
-<p>If you have a more complicated project that requires multiple bots, naming each bot their own individual name is okay to do, and we encourage you to locate them under the <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder relative to the root of your project.
-This will work fairly seamlessly with the rest of the examples shown in this guide.</p>
-<p>To run a bot, as long as your project directory follows the suggestions above by using a <code class="docutils literal notranslate"><span class="pre">bot</span></code> module, you can run it easily with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
-</span></pre></div>
-</div>
-<p>If your bot’s module name is <code class="docutils literal notranslate"><span class="pre">example.py</span></code> (for example), you can run it like this:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
-</span></pre></div>
-</div>
-<p>If the variable that you call the <code class="docutils literal notranslate"><span class="pre">SilverbackBot()</span></code> object is something other than <code class="docutils literal notranslate"><span class="pre">bot</span></code>, you can specific that by adding <code class="docutils literal notranslate"><span class="pre">:{variable-name}</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>example:my_bot<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
-</span></pre></div>
-</div>
-<p>We will automatically detect all scripts under the <code class="docutils literal notranslate"><span class="pre">bots/</span></code> folder automatically, but if your bot resides in a location other than <code class="docutils literal notranslate"><span class="pre">bots/</span></code> then you can use this to run it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>folder.example:bot<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
-</span></pre></div>
-</div>
-<p>Note that with a <code class="docutils literal notranslate"><span class="pre">bot/__init__.py</span></code> setup, silverback will also autodetect it, and you can run it with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>your:network:of:choice
-</span></pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>It is suggested that you develop your bots as scripts to keep your deployments simple.
-If you have a deep understanding of containerization, and have specific needs, you can set your bots up however you’d like, and then create your own container definitions for deployments to publish to your reqistry of choice.
-For the most streamlined experience, develop your bots as scripts, and avoid relying on local packages
-(e.g. do not include an <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file inside your <code class="docutils literal notranslate"><span class="pre">bots/</span></code> directory, and do not use local modules inside <code class="docutils literal notranslate"><span class="pre">bots/</span></code> for reusable code).
-If you follow these suggestions, your Silverback deployments will be easy to use and require almost no thought.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Name your <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> instance <code class="docutils literal notranslate"><span class="pre">bot</span></code>.
+Silverback automatically searches for this object name when running.
+If you do not name it <code class="docutils literal notranslate"><span class="pre">bot</span></code>, ensure you add <code class="docutils literal notranslate"><span class="pre">:&lt;instance</span> <span class="pre">name&gt;</span></code> to your command.
+(e.g. <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">my_bot:my_instance</span> <span class="pre">--network</span> <span class="pre">...</span></code>)</p>
 </div>
 </section>
-<section id="creating-a-bot">
-<h2>Creating a Bot<a class="headerlink" href="#creating-a-bot" title="Link to this heading"></a></h2>
-<p>Creating a Silverback Bot is easy, to do so initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackBot</span></code> class:</p>
+<section id="bot-structure">
+<h2>Bot Structure<a class="headerlink" href="#bot-structure" title="Link to this heading"></a></h2>
+<p>Creating a Silverback Bot is easy, simply import and initialize the <code class="docutils literal notranslate"><span class="pre">silverback.SilverbackBot</span></code> class:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">silverback</span><span class="w"> </span><span class="kn">import</span> <span class="n">SilverbackBot</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
 </span></pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> class handles state and configuration.
-Through this class, we can hook up event handlers to be executed each time we encounter a new block or each time a specific event is emitted.
-Initializing the bot creates a network connection using the Ape configuration of your local project, making it easy to add a Silverback bot to your project in order to perform automation of necessary on-chain interactions required.</p>
-<p>However, by default an bot has no configured event handlers, so it won’t be very useful.
+<p>The <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> class automatically handles state and configuration.
+Through this class we can hook up “event handlers”,
+which are custom Python functions that are called each time the associated event occurs.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Initializing the <code class="docutils literal notranslate"><span class="pre">SilverbackBot</span></code> class creates a network connection using the local Ape configuration,
+making it easy to add a Silverback bot to your Ape project.
+It is required to put any global logic which requires a network connection
+(such as loading contracts using a connected explorer) after initializing this class.</p>
+</div>
+<p>By default a bot has no configured event handlers, so it won’t be very useful.
 This is where adding event handlers is useful via the <code class="docutils literal notranslate"><span class="pre">bot.on_</span></code> method.
-This method lets us specify which event will trigger the execution of our handler as well as which handler to execute.</p>
-</section>
+This method lets us specify blockchain events that we want to handle with custom Python logic.</p>
 <section id="new-block-events">
-<h2>New Block Events<a class="headerlink" href="#new-block-events" title="Link to this heading"></a></h2>
-<p>To add a block handler, you will do the following:</p>
+<h3>New Block Events<a class="headerlink" href="#new-block-events" title="Link to this heading"></a></h3>
+<p>To add a handler that triggers whenever the connected network produces a new block,
+you need to do the following:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
-</span><span data-line="2">
-</span><span data-line="3"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
-</span><span data-line="4"><span class="k">def</span><span class="w"> </span><span class="nf">handle_new_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
-</span><span data-line="5">    <span class="o">...</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">silverback</span><span class="w"> </span><span class="kn">import</span> <span class="n">SilverbackBot</span>
+</span><span data-line="3">
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
+</span><span data-line="6">
+</span><span data-line="7">
+</span><span data-line="8"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="9"><span class="k">def</span><span class="w"> </span><span class="nf">handle_new_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+</span><span data-line="10">    <span class="o">...</span>  <span class="c1"># Define your logic here</span>
 </span></pre></div>
 </div>
-<p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_new_block</span></code> you can define any logic that you want to handle each new <code class="docutils literal notranslate"><span class="pre">block</span></code> detected by the silverback client.
-You can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
+<p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_new_block</span></code> you can define any logic that you need to handle each new <code class="docutils literal notranslate"><span class="pre">block</span></code> created by the network.
 Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this <code class="docutils literal notranslate"><span class="pre">block</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Listening for new blocks is susceptible to chain re-organizations (aka “re-orgs”).
+See <a class="reference external" href="./advanced.html#handling-reorgs">Handling Reorgs</a> for more guidance on dealing with them.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If needed, you can have multiple handlers that trigger on new blocks.
+Just add them as a new decorated function.</p>
+</div>
 </section>
 <section id="new-event-logs">
-<h2>New Event Logs<a class="headerlink" href="#new-event-logs" title="Link to this heading"></a></h2>
-<p>Similarly to blocks, you can handle events emitted by a contract by adding an event handler:</p>
+<h3>New Event Logs<a class="headerlink" href="#new-event-logs" title="Link to this heading"></a></h3>
+<p>Similarly to new blocks, you can handle when event logs emitted by a contract by adding an event log handler:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape</span><span class="w"> </span><span class="kn">import</span> <span class="n">Contract</span>
-</span><span data-line="2">
-</span><span data-line="3"><span class="n">TOKEN</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="o">&lt;</span><span class="n">your</span> <span class="n">token</span> <span class="n">address</span> <span class="n">here</span><span class="o">&gt;</span><span class="p">)</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">silverback</span><span class="w"> </span><span class="kn">import</span> <span class="n">SilverbackBot</span>
+</span><span data-line="3">
 </span><span data-line="4">
-</span><span data-line="5"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">TOKEN</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
-</span><span data-line="6"><span class="k">def</span><span class="w"> </span><span class="nf">handle_token_transfer_events</span><span class="p">(</span><span class="n">transfer</span><span class="p">):</span>
-</span><span data-line="7">    <span class="o">...</span>
+</span><span data-line="5"><span class="n">bot</span> <span class="o">=</span> <span class="n">SilverbackBot</span><span class="p">()</span>
+</span><span data-line="6"><span class="n">TOKEN</span> <span class="o">=</span> <span class="n">Contract</span><span class="p">(</span><span class="s2">&quot;&lt;token address&gt;&quot;</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8">
+</span><span data-line="9"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">TOKEN</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
+</span><span data-line="10"><span class="k">def</span><span class="w"> </span><span class="nf">handle_token_transfer</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="11">    <span class="o">...</span>  <span class="c1"># Define your logic here</span>
 </span></pre></div>
 </div>
-<p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_token_transfer_events</span></code> you can define any logic that you want to handle each new <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event that gets emitted by <code class="docutils literal notranslate"><span class="pre">TOKEN.Transfer</span></code> detected by the silverback client.
-Again, you can return any serializable data structure from this function and that will be stored in the results database as a trackable metric for the execution of this handler.
-Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this <code class="docutils literal notranslate"><span class="pre">transfer</span></code> event log.</p>
+<p>Inside of <code class="docutils literal notranslate"><span class="pre">handle_token_transfer</span></code> you can define any logic that you need to handle each new <code class="docutils literal notranslate"><span class="pre">Transfer</span></code> log emitted by <code class="docutils literal notranslate"><span class="pre">TOKEN</span></code>.
+Any errors you raise during this function will get captured by the client, and recorded as a failure to handle this <code class="docutils literal notranslate"><span class="pre">Transfer</span></code> log.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Listening for contract event logs is susceptible to chain re-organizations (aka “re-orgs”).
+See <a class="reference external" href="./advanced.html#handling-reorgs">Handling Reorgs</a> for more guidance on dealing with them.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If needed, you can have multiple handlers that trigger on new event logs.
+Just add them as a new decorated function.</p>
+</div>
 <section id="event-log-filters">
-<h3>Event Log Filters<a class="headerlink" href="#event-log-filters" title="Link to this heading"></a></h3>
-<p>You can also filter event logs by event parameters.
-For example, if you want to handle only <code class="docutils literal notranslate"><span class="pre">Transfer</span></code> events that represent a burn (a transfer to the zero address):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">USDC</span><span class="o">.</span><span class="n">Transfer</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="s2">&quot;0x0000000000000000000000000000000000000000&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_burn</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
-</span><span data-line="3">    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;burned&quot;</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+<h4>Event Log Filters<a class="headerlink" href="#event-log-filters" title="Link to this heading"></a></h4>
+<p>You can also filter event logs by using event parameters.
+For example, if you only want to trigger on <code class="docutils literal notranslate"><span class="pre">Transfer</span></code> logs that represent a “burn”
+(a transfer to the zero address according to the ERC20 specification), then you can do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">ape.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZERO_ADDRESS</span>
+</span><span data-line="2"><span class="o">...</span>
+</span><span data-line="3">
+</span><span data-line="4">
+</span><span data-line="5"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">USDC</span><span class="o">.</span><span class="n">Transfer</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">ZERO_ADDRESS</span><span class="p">)</span>
+</span><span data-line="6"><span class="k">def</span><span class="w"> </span><span class="nf">handle_burn</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="7">    <span class="o">...</span>  <span class="c1"># Define your logic here</span>
 </span></pre></div>
 </div>
-<p>In case an event parameter has a name that is an illegal keyword, we can also support a dictionary syntax:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">USDC</span><span class="o">.</span><span class="n">Transfer</span><span class="p">,</span> <span class="n">filter_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;from&quot;</span><span class="p">:</span><span class="s2">&quot;0x0000000000000000000000000000000000000000&quot;</span><span class="p">})</span>
+<p>In case an event parameter has the name of a Python keyword, we also support filtering by dict:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">USDC</span><span class="o">.</span><span class="n">Transfer</span><span class="p">,</span> <span class="n">filter_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;from&quot;</span><span class="p">:</span> <span class="n">ZERO_ADDRESS</span><span class="p">})</span>
 </span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_burn</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
-</span><span data-line="3">    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;burned&quot;</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Define your logic here</span>
 </span></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Using filter args performs matching using <strong>the loaded contract instance’s ABI</strong>,
+which could be different depending on your Ape environment and how you loaded the contract originally.</p>
+<p>When in doubt, delete the corresponding entries from <code class="docutils literal notranslate"><span class="pre">~/.ape/&lt;ecosystem&gt;/&lt;network&gt;/**/&lt;address&gt;.json</span></code>.
+This is especially important when considering containerizing your bot for cloud use.</p>
 </div>
 </section>
 </section>
 <section id="cron-tasks">
-<h2>Cron Tasks<a class="headerlink" href="#cron-tasks" title="Link to this heading"></a></h2>
-<p>You may also want to run some tasks according to a schedule, either for efficiency reasons or just that the task is not related to any chain-driven events.
-You can do that with the <code class="docutils literal notranslate"><span class="pre">&#64;cron</span></code> task decorator.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;* */1 * * *&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">every_hour</span><span class="p">():</span>
-</span><span data-line="3">    <span class="o">...</span>
+<h3>Cron Tasks<a class="headerlink" href="#cron-tasks" title="Link to this heading"></a></h3>
+<p>You may also want to run some handlers according to a schedule,
+either for efficiency reasons or just that the task is not related to any blockchain activity.
+You can do that easily with the <code class="docutils literal notranslate"><span class="pre">&#64;bot.cron</span></code> task decorator:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;0 * * * *&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">every_hour</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Define your logic here</span>
 </span></pre></div>
 </div>
-<p>For more information see <a class="reference external" href="https://linuxhandbook.com/crontab/#understanding-crontab-syntax">the linux handbook section on the crontab syntax</a> or the <a class="reference external" href="https://crontab.guru/">crontab.guru</a> generator.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The function is called by giving a <code class="docutils literal notranslate"><span class="pre">datetime.datetime</span></code> object representing the “current” time.
+Silverback bots can be executed in a “historical mode” (for backtesting purposes),
+allowing you to test functionality of your bot by mimicking past operation on historical data.
+It is important to use this argument for any time-specific operation in your handler,
+and not use context-dependent functionality like <code class="docutils literal notranslate"><span class="pre">datetime.now()</span></code> which could bias your response.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For more information on desiging crons, see the
+<a class="reference external" href="https://linuxhandbook.com/crontab/#understanding-crontab-syntax">linux handbook for crontab syntax</a>
+or the <a class="reference external" href="https://crontab.guru">crontab.guru</a> generator.</p>
+</div>
 </section>
 <section id="defining-metrics">
-<h2>Defining Metrics<a class="headerlink" href="#defining-metrics" title="Link to this heading"></a></h2>
-<p>Silverback has a built-in metrics collection system which can capture measurements made by your bots, which can assist you in debugging or performance monitoring.
-To capture a measurement of a metric datapoint, simply return boolean values or numeric data from your function handlers, or use any of our defined <a class="reference external" href="../methoddocs/types">Datapoint types</a>.
-When you return a datapoint measurement directly, the datapoint is stored using the label of it’s function handler to append to a timeseries for the metric.
-When you return a dictionary containing multiple measurements, the string key corresponds to label of the metric you are capturing a datapoint for.</p>
-<p>Note that metric labels are tracked globally across your bot.
-If you generate metrics in two different function handlers that have the same string keys in the dictionary, they will both be appended to the same metric timeseries.</p>
-<p>For example, both of the following handlers <code class="docutils literal notranslate"><span class="pre">handlerA</span></code> and <code class="docutils literal notranslate"><span class="pre">handlerB</span></code> generate the <code class="docutils literal notranslate"><span class="pre">block_time</span></code> metric, along with the <code class="docutils literal notranslate"><span class="pre">block_time</span></code> handler which also generates a matching metric of the same name (because it does not return a dict):</p>
+<h3>Defining Metrics<a class="headerlink" href="#defining-metrics" title="Link to this heading"></a></h3>
+<p>Silverback has a built-in metrics collection system which lets you capture measurements of important metrics using your bot,
+which can assist you in a variety of tasks such as debugging or monitoring it’s performance.
+To capture a measurement, simply return boolean values or numeric values from your function handlers,
+or use any of our supported <a class="reference external" href="../methoddocs/types.html#silverback.types.Datapoint">Datapoint types</a>.
+The series of metric measurements will also be captured and appended to a timeseries, when enabled to run in this mode.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Metrics are tracked globally across your bot.
+If you generate metric measurements in two different function handlers using the same metric name,
+they will both be appended to the same metric timeseries.</p>
+</div>
+<p>When you return a datapoint measurement directly, the metric’s name is the name of the function handler that produced it.
+However, when you return a dictionary containing multiple measurements,
+the string key corresponds to metric’s name you are capturing a datapoint for.</p>
+<p>For example, both of the following handlers <code class="docutils literal notranslate"><span class="pre">handlerA</span></code> and <code class="docutils literal notranslate"><span class="pre">handlerB</span></code> generate the <code class="docutils literal notranslate"><span class="pre">block_time</span></code> metric,
+along with the <code class="docutils literal notranslate"><span class="pre">block_time</span></code> handler which also generates a matching metric of the same name (because it does not return a dict):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">my_contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="p">)</span>
 </span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handlerA</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
 </span><span data-line="3">    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">block_time</span><span class="o">=</span><span class="n">log</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
@@ -307,9 +379,10 @@ If you generate metrics in two different function handlers that have the same st
 </span><span data-line="11">    <span class="k">return</span> <span class="n">block</span><span class="o">.</span><span class="n">timestamp</span>
 </span></pre></div>
 </div>
+<p>This can be really useful if you have a complex metric which might occur under several conditions.</p>
 <section id="metric-callbacks">
-<h3>Metric Callbacks<a class="headerlink" href="#metric-callbacks" title="Link to this heading"></a></h3>
-<p>A special feature of Silverback’s metrics system is the ability to trigger tasks to execute when your metrics are produced.
+<h4>Metric Callbacks<a class="headerlink" href="#metric-callbacks" title="Link to this heading"></a></h4>
+<p>A special feature of Silverback’s metrics system is the ability to trigger tasks to execute when new measurements are produced.
 For example, say that you have a metric <code class="docutils literal notranslate"><span class="pre">current_price</span></code> that is computed every so often using a <code class="docutils literal notranslate"><span class="pre">cron</span></code> task trigger:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;* * * * *&quot;</span><span class="p">)</span>
 </span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">current_price</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
@@ -317,21 +390,21 @@ For example, say that you have a metric <code class="docutils literal notranslat
 </span><span data-line="4">    <span class="k">return</span> <span class="n">current_price</span>
 </span></pre></div>
 </div>
-<p>You can then define a metric callback that is triggered whenever that metric is produced:</p>
+<p>You can then define a “metric callback” that is triggered whenever a new measurement of that metric occurs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_metric</span><span class="p">(</span><span class="s2">&quot;current_price&quot;</span><span class="p">)</span>
 </span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_current_price</span><span class="p">(</span><span class="n">current_price</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
 </span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Do something with the price</span>
 </span></pre></div>
 </div>
-<p>This can be particularly handy for definining conditions that trigger whenever a metric is conditionally produced.
-Let’s say that you want to record a metric <code class="docutils literal notranslate"><span class="pre">pool_delta</span></code> whenever a particular trade is made using an event trigger:</p>
+<p>This can be particularly handy for definining conditions that trigger whenever a metric has been measured conditionally.
+Let’s say that you want to measure a metric <code class="docutils literal notranslate"><span class="pre">pool_delta</span></code> only when a trade is made in another handler:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">Swap</span><span class="p">)</span>
 </span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">check_pool_balance</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
 </span><span data-line="3">    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">reserve0</span> <span class="o">&gt;</span> <span class="n">log</span><span class="o">.</span><span class="n">reserve1</span><span class="p">:</span>
 </span><span data-line="4">        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pool_delta</span><span class="o">=</span><span class="n">log</span><span class="o">.</span><span class="n">reserve0</span> <span class="o">-</span> <span class="n">log</span><span class="o">.</span><span class="n">reserve1</span><span class="p">)</span>
 </span></pre></div>
 </div>
-<p>Then you want to trigger off of that metric, but only if it’s value is <em>larger than a threshold</em>.
+<p>Then you want to trigger off updates to that metric, but only if a measurement is <em>larger than a threshold</em>.
 We can use <code class="docutils literal notranslate"><span class="pre">gt=&lt;threshold&gt;</span></code> to do this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_metric</span><span class="p">(</span><span class="s2">&quot;pool_delta&quot;</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="n">MIN_DELTA</span><span class="p">)</span>
 </span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">perform_rebalance</span><span class="p">(</span><span class="n">pool_delta</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
@@ -342,225 +415,215 @@ We can use <code class="docutils literal notranslate"><span class="pre">gt=&lt;t
 <p class="admonition-title">Note</p>
 <p><code class="docutils literal notranslate"><span class="pre">.on_metric</span></code> supports 6 different value comparisons (<code class="docutils literal notranslate"><span class="pre">gt</span></code>, <code class="docutils literal notranslate"><span class="pre">ge</span></code>, <code class="docutils literal notranslate"><span class="pre">lt</span></code>, <code class="docutils literal notranslate"><span class="pre">le</span></code>, <code class="docutils literal notranslate"><span class="pre">ne</span></code>, and <code class="docutils literal notranslate"><span class="pre">eq</span></code>).
 When multiple comparisons are present, they are treated as a logical AND (meaning they must all be true for the task to execute).
-If you need a separate task to execute on different compound conditions, simply define extra tasks.</p>
+If you need a separate task to execute on different compound conditions, simply define extra handlers.</p>
 </div>
 </section>
 </section>
-<section id="startup-and-shutdown">
-<h2>Startup and Shutdown<a class="headerlink" href="#startup-and-shutdown" title="Link to this heading"></a></h2>
-<section id="worker-events">
-<h3>Worker Events<a class="headerlink" href="#worker-events" title="Link to this heading"></a></h3>
-<p>If you have heavier resources you want to load during startup, or want to initialize things like database connections, you can add a worker startup function like so:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
-</span><span data-line="3">    <span class="c1"># Connect to DB, set initial state, etc</span>
-</span><span data-line="4">    <span class="o">...</span>
-</span><span data-line="5">
-</span><span data-line="6"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
-</span><span data-line="7"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
-</span><span data-line="8">    <span class="c1"># cleanup resources, close connections cleanly, etc</span>
-</span><span data-line="9">    <span class="o">...</span>
-</span></pre></div>
+<section id="bot-lifecycle-events">
+<h3>Bot Lifecycle Events<a class="headerlink" href="#bot-lifecycle-events" title="Link to this heading"></a></h3>
+<p>In addition to “runtime triggers” (new blocks, event logs, crons, and metric callback triggers),
+we also have the ability to trigger on bot startup and shutdown.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Bot lifecycle and bot runtime triggers are handled distinctly and can be trusted not to execute at the same time.</p>
 </div>
-<p>This function comes a parameter <code class="docutils literal notranslate"><span class="pre">state</span></code> that you can use for storing the results of your startup computation or resources that you have provisioned.</p>
-<p>It’s import to note that this is useful for ensuring that your workers (of which there can be multiple) have the resources necessary to properly handle any updates you want to make in your handler functions, such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else. <strong>This function will run on every worker process</strong>.</p>
-<p><em>New in 0.2.0</em>: These events moved from <code class="docutils literal notranslate"><span class="pre">on_startup()</span></code> and <code class="docutils literal notranslate"><span class="pre">on_shutdown()</span></code> for clarity.</p>
-<section id="worker-state">
-<h4>Worker State<a class="headerlink" href="#worker-state" title="Link to this heading"></a></h4>
-<p>The <code class="docutils literal notranslate"><span class="pre">state</span></code> variable is also useful as this can be made available to each handler method so other stateful quantities can be maintained for other uses. Each distributed worker has its own instance of state.</p>
-<p>To access the state from a handler, you must annotate <code class="docutils literal notranslate"><span class="pre">context</span></code> as a dependency like so:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
-</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">taskiq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span>
-</span><span data-line="3">
-</span><span data-line="4"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
-</span><span data-line="5"><span class="k">def</span><span class="w"> </span><span class="nf">block_handler</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span><span class="p">()]):</span>
-</span><span data-line="6">    <span class="c1"># Access state via context.state</span>
-</span><span data-line="7">    <span class="o">...</span>
-</span></pre></div>
-</div>
-</section>
-</section>
-<section id="bot-events">
-<h3>Bot Events<a class="headerlink" href="#bot-events" title="Link to this heading"></a></h3>
-<p>You can also add an bot startup and shutdown handler that will be <strong>executed once upon every bot startup</strong>. This may be useful for things like processing historical events since the bot was shutdown or other one-time actions to perform at startup.</p>
+<section id="bot-startup-and-shutdown">
+<h4>Bot Startup and Shutdown<a class="headerlink" href="#bot-startup-and-shutdown" title="Link to this heading"></a></h4>
+<p>You can add a handler that you want to be <strong>executed only once</strong> upon every bot startup or shutdown lifecycle event.
+This might be useful for things like backfilling historical data to prime the bot’s operation,
+or performing a final action like sending a notification or transaction to undo a potentially dangerous offline state.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
 </span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
 </span><span data-line="3">    <span class="c1"># Process missed events, etc</span>
 </span><span data-line="4">    <span class="c1"># process_history(start_block=startup_state.last_block_seen)</span>
 </span><span data-line="5">    <span class="c1"># ...or startup_state.last_block_processed</span>
-</span><span data-line="6">    <span class="o">...</span>
-</span><span data-line="7">
-</span><span data-line="8">
-</span><span data-line="9"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
-</span><span data-line="10"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_shutdown</span><span class="p">():</span>
-</span><span data-line="11">    <span class="c1"># Record final state, etc</span>
-</span><span data-line="12">    <span class="o">...</span>
-</span></pre></div>
-</div>
-<p><em>Changed in 0.2.0</em>: The behavior of the <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_startup()</span></code> decorator and handler signature have changed. It is now executed only once upon bot startup and worker events have moved on <code class="docutils literal notranslate"><span class="pre">&#64;bot.on_worker_startup()</span></code>.</p>
-</section>
-</section>
-<section id="bot-state">
-<h2>Bot State<a class="headerlink" href="#bot-state" title="Link to this heading"></a></h2>
-<p>Sometimes it is very useful to have access to values in a shared state across your workers.
-For example you might have a value or complex reference type that you wish to update during one of your tasks, and read during another.
-Silverback provides <code class="docutils literal notranslate"><span class="pre">bot.state</span></code> to help with these use cases.</p>
-<p>For example, you might want to pre-populate a large dataframe into state on startup, keeping that dataframe in sync with the chain through event logs,
-and then use that data to determine a signal under which you want trigger transactions to commit back to the chain.
-Such an bot might look like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">create_table</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
-</span><span data-line="3">    <span class="n">df</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">start_block</span><span class="o">=</span><span class="n">startup_state</span><span class="o">.</span><span class="n">last_block_processed</span><span class="p">)</span>
-</span><span data-line="4">    <span class="o">...</span>  <span class="c1"># Do some further processing on df</span>
-</span><span data-line="5">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">df</span>
 </span><span data-line="6">
 </span><span data-line="7">
-</span><span data-line="8"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="p">)</span>
-</span><span data-line="9"><span class="k">def</span><span class="w"> </span><span class="nf">update_table</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
-</span><span data-line="10">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Update using stuff from `log`</span>
-</span><span data-line="11">
-</span><span data-line="12">
-</span><span data-line="13"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
-</span><span data-line="14"><span class="k">def</span><span class="w"> </span><span class="nf">use_table</span><span class="p">(</span><span class="n">blk</span><span class="p">):</span>
-</span><span data-line="15">    <span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">():</span>
-</span><span data-line="16">        <span class="c1"># Trigger your bot to send a transaction from `bot.signer`</span>
-</span><span data-line="17">        <span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">)</span>
-</span><span data-line="18">    <span class="o">...</span>
-</span></pre></div>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>You can use <code class="docutils literal notranslate"><span class="pre">bot.state</span></code> to store any python variable type, however note that the item is not networked nor threadsafe so it is not recommended to have multiple tasks write to the same value in state at the same time.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Bot startup and bot runtime event triggers (e.g. block or event container) are handled distinctly and can be trusted not to execute at the same time.</p>
-</div>
-<section id="signing-transactions">
-<h3>Signing Transactions<a class="headerlink" href="#signing-transactions" title="Link to this heading"></a></h3>
-<p>If configured, your bot with have <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> which is an Ape account that can sign arbitrary transactions you ask it to.
-To learn more about signing transactions with Ape, see the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/transactions.html">documentation</a>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>While not recommended, you can use keyfile accounts for automated signing.
-See <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/accounts.html#automation">this guide</a> to learn more about how to do that.</p>
-</div>
-</section>
-<section id="managing-nonces">
-<h3>Managing nonces<a class="headerlink" href="#managing-nonces" title="Link to this heading"></a></h3>
-<p>Since Silverback allows handling many events in parallel, and thus can allow you to submit multiple transactions in a short timespan (in fact, prior to successful confirmation of previously broadcasted transactions), it may become vital to do “nonce management” in order to ensure that you are not producing transactions that might conflict with one another.
-The <code class="docutils literal notranslate"><span class="pre">bot.nonce</span></code> variable tracks the last-used nonce of the <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code>, incrementing it every time a new transaction is signed <em>during the bot’s operation</em>.
-By using this variable via <code class="docutils literal notranslate"><span class="pre">nonce=bot.nonce</span></code> in your transactions (instead of <code class="docutils literal notranslate"><span class="pre">bot.signer.nonce</span></code>, which is the default behavior when the <code class="docutils literal notranslate"><span class="pre">nonce=</span></code> transaction kwarg is omitted), you can ensure that you do not produce transactions with conflicting nonces, even at a very high rate of parallel transaction creation.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The value of <code class="docutils literal notranslate"><span class="pre">bot.nonce</span></code> is the maximum between the internally-stored “last-used nonce”, and the value given by RPC method</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Make sure to use an appropiate gas pricing algorithm in order to prevent your chain of multiple transactions from becoming “stuck” because an earlier broadcasted transaction was under-priced</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Do <em>not</em> use the same account on the same network at the same time as the one in use by your bot, as this could lead to extremely undesirable behavior, stuck transactions, or transaction failures/loss of funds</p>
-</div>
-</section>
-</section>
-<section id="cluster-access">
-<h2>Cluster Access<a class="headerlink" href="#cluster-access" title="Link to this heading"></a></h2>
-<p>Sometimes, there are scenarios where you want to create a bot that has the capability to control other bots.
-This might make sense if you are having one bot that monitors a particular contract and interacts with all their events,
-and a version of that contract is deployed by another Factory contract.
-Another example is if you want a bot that monitors the performance of another bot,
-and then stops it if it discovers any issues encountered while monitoring it.</p>
-<p>Creating this type of setup allows a sort of “agentic scaling” where you can quickly scale up your bot cluster’s
-on-chain “footprint” and cover more ground by having multiple other bots handling situations you encounter.
-This also can more effectively distribute the cluster load when you have large quantities of events to be handled,
-and need to dynamically scale in order to add more capacity in response to on-chain conditions.</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">factory</span><span class="o">.</span><span class="n">NewPool</span><span class="p">)</span>
-</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">deploy_arb_bot</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
-</span><span data-line="3">    <span class="n">vg</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">new_variable_group</span><span class="p">(</span>
-</span><span data-line="4">        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token0</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token1</span><span class="si">}</span><span class="s2">-pool&quot;</span><span class="p">,</span>
-</span><span data-line="5">        <span class="n">variables</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;POOL&quot;</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">pool_address</span><span class="p">},</span>
-</span><span data-line="6">    <span class="p">)</span>
-</span><span data-line="7">    <span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">new_bot</span><span class="p">(</span>
-</span><span data-line="8">        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token0</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token1</span><span class="si">}</span><span class="s2">-arb&quot;</span><span class="p">,</span>
-</span><span data-line="9">        <span class="o">...</span><span class="p">,</span>
-</span><span data-line="10">        <span class="n">environment</span><span class="o">=</span><span class="p">[</span><span class="n">vg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-</span><span data-line="11">    <span class="p">)</span>
+</span><span data-line="8"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
+</span><span data-line="9"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_shutdown</span><span class="p">():</span>
+</span><span data-line="10">    <span class="c1"># Record final state, send a de-leverage transaction, etc.</span>
 </span></pre></div>
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>Testing cluster access is not practical without deploying on the <a class="reference external" href="./platform.html">Silverback Platform</a>.
-The cluster implements additional authorization checks based on the <code class="docutils literal notranslate"><span class="pre">--cluster-access</span></code> flag provided
-with the <a class="reference external" href="../commands/cluster#silverback-cluster-bots-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">new</span></code></a>
-and <a class="reference external" href="../commands/cluster#silverback-cluster-bots-update"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">update</span></code></a> commands.</p>
-</div>
-<p><em>Added in Silverback SDK <a class="reference external" href="https://github.com/ApeWorX/silverback/releases/tag/v0.7.35">v0.7.35</a></em>
-<em>Support added in Silverback Cluster <a class="reference external" href="https://silverback.apeworx.io/changelog#cluster-v0-7-0">v0.7.0</a></em></p>
-</section>
-<section id="running-your-bot">
-<h2>Running your Bot<a class="headerlink" href="#running-your-bot" title="Link to this heading"></a></h2>
-<p>Once you have programmed your bot, it’s really useful to be able to run it locally and validate that it does what you expect it to do.
-To run your bot locally, we have included a really useful cli command <a class="reference external" href="../commands/run"><code class="docutils literal notranslate"><span class="pre">run</span></code></a> that takes care of connecting to the proper network, configuring signers (using your local Ape accounts), and starting up the bot client and in-memory task queue workers.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Run your bot on the Ethereum Sepolia testnet, with your own signer:</span>
-</span><span data-line="2">$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span>my_bot<span class="w"> </span>--network<span class="w"> </span>:sepolia<span class="w"> </span>--account<span class="w"> </span>acct-name
-</span></pre></div>
+<p><code class="docutils literal notranslate"><span class="pre">.on_startup()</span></code> handlers will <strong>only trigger once</strong> during the startup sequence,
+and any failures will cause the bot not to transition into the runtime mode.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><code class="docutils literal notranslate"><span class="pre">my_bot:bot</span></code> is not required for silverback run if you follow the suggested folder structure at the start of this page, you can just call it via <code class="docutils literal notranslate"><span class="pre">my_bot</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">.on_shutdown()</span></code> handlers will <strong>only trigger once</strong> during the shutdown sequence,
+which only executes if the bot was previously in the runtime mode.
+Any failures that occur will <strong>not</strong> impact the shutdown of the bot in any way.</p>
 </div>
-<p>It’s important to note that signers are optional, if not configured in the bot then <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
-You can use this in your bot to enable a “test execution” mode, something like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Compute some metric that might lead to creating a transaction</span>
-</span><span data-line="2"><span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">:</span>
-</span><span data-line="3">    <span class="c1"># Execute a transaction via `sender=bot.signer`</span>
-</span><span data-line="4"><span class="k">else</span><span class="p">:</span>
-</span><span data-line="5">    <span class="c1"># Log what the transaction *would* have done, had a signer been enabled</span>
+</section>
+</section>
+<section id="bot-state">
+<h3>Bot State<a class="headerlink" href="#bot-state" title="Link to this heading"></a></h3>
+<p>Sometimes it is very useful to have access to values in a shared state across your bot.
+For example you might have a value that you wish to update during execution of one of your handlers,
+and then read during the execution of another.
+Silverback provides <code class="docutils literal notranslate"><span class="pre">bot.state</span></code> to help with these use cases.</p>
+<p>For example, you might want to pre-populate a large dataframe into state using a startup handler,
+keep that dataframe in sync with the chain through several event log handlers,
+and then process that data to produce a custom metric every couple of minutes,
+which may trigger sending a transaction.</p>
+<p>Such an bot might look like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">load_df</span><span class="p">(</span><span class="n">startup_state</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">start_block</span><span class="o">=</span><span class="n">startup_state</span><span class="o">.</span><span class="n">last_block_processed</span><span class="p">)</span>
+</span><span data-line="4">    <span class="o">...</span>  <span class="c1"># Do some further processing on `bot.state.df`</span>
+</span><span data-line="5">
+</span><span data-line="6">
+</span><span data-line="7"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">MyEvent</span><span class="p">)</span>
+</span><span data-line="8"><span class="k">def</span><span class="w"> </span><span class="nf">update_df</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="9">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Add a row using stuff from `log`</span>
+</span><span data-line="10">
+</span><span data-line="11">
+</span><span data-line="12"><span class="nd">@bot</span><span class="o">.</span><span class="n">cron</span><span class="p">(</span><span class="s2">&quot;0 * * * *&quot;</span><span class="p">)</span>
+</span><span data-line="13"><span class="k">def</span><span class="w"> </span><span class="nf">measure_metric</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+</span><span data-line="14">    <span class="n">metric</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Use `bot.state.df` to produce a metric</span>
+</span><span data-line="15">    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="n">metric</span><span class="p">}</span>
+</span><span data-line="16">
+</span><span data-line="17">
+</span><span data-line="18"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_metric</span><span class="p">(</span><span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="n">MIN_THRESHOLD</span><span class="p">)</span>
+</span><span data-line="19"><span class="k">def</span><span class="w"> </span><span class="nf">use_table</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
+</span><span data-line="20">    <span class="c1"># Trigger your bot to send a transaction from `bot.signer`</span>
+</span><span data-line="21">    <span class="n">contract</span><span class="o">.</span><span class="n">myMethod</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>If you configure your bot to use a signer, and that signer signs anything given to it, remember that you can lose substational amounts of funds if you deploy this to a production network.
-Always test your bots throughly before deploying, and always use a dedicated key for production signing with your bot in a remote setting.</p>
+<p>While you can use <code class="docutils literal notranslate"><span class="pre">bot.state</span></code> to store any python variable type,
+note that the item is not networked nor threadsafe,
+so it is not recommended to have multiple tasks write to the same value in state at the same time.</p>
+</div>
+</section>
+<section id="signing-transactions">
+<h3>Signing Transactions<a class="headerlink" href="#signing-transactions" title="Link to this heading"></a></h3>
+<p>If configured, your bot with have <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> which is an Ape account that can sign arbitrary transactions you ask it to.
+To learn more about signing transactions with Ape,
+see the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/transactions.html">documentation</a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>For local development, you can use keyfile accounts for automated signing.
+Silverback will prompt you to unlock the keyfile and then set “autosign” mode, which will sign all transactions your bot triggers.
+See <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/accounts.html#automation">this guide</a> to learn more about autosign mode.</p>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>For cloud deployment, it is <strong>not</strong> recommended to use keyfile accounts.
+Instead, it is recommended to use a dedicated cloud signer plugin such as <a class="reference external" href="https://github.com/ApeWorX/ape-aws"><code class="docutils literal notranslate"><span class="pre">aws</span></code></a>.</p>
+<p>Using keyfiles in a cloud setting could lead to <strong>permanent fund loss</strong> if the keyfile (and it’s passphrase) leak,
+and it is also not very helpful for others wishing to run your bots.
+Using a dedicated service-based signer plugin adds extra security to your deployment,
+and makes it possible for anyone to run your bot by bringing <strong>their managed own keys</strong>.</p>
+</div>
+<section id="managing-nonces">
+<h4>Managing nonces<a class="headerlink" href="#managing-nonces" title="Link to this heading"></a></h4>
+<p>Since Silverback allows handling many events in parallel,
+it can allow you to submit multiple transactions in a short timespan
+(in fact, prior to successful confirmation of previously broadcasted transactions)
+It may become vital to do “nonce management” in order to ensure that you are not producing transactions
+that might conflict with one another.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">bot.nonce</span></code> variable tracks the last-used nonce of the <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code>,
+incrementing it every time a new transaction is signed <em>during the bot’s operation</em>.
+By using this variable (via <code class="docutils literal notranslate"><span class="pre">nonce=bot.nonce</span></code> in your transactions),
+you can ensure that you do not produce transactions with conflicting nonces,
+even at a very high rate of parallel transaction creation.
+Do this instead of using <code class="docutils literal notranslate"><span class="pre">bot.signer.nonce</span></code>, which is the default behavior when the <code class="docutils literal notranslate"><span class="pre">nonce=</span></code> transaction kwarg is omitted.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">bot.nonce</span></code> is the maximum between the internally-stored “last-used nonce”,
+and the value given by <code class="docutils literal notranslate"><span class="pre">eth_getNonce</span></code> RPC method, so it should never get “out of sync” in practice.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Make sure to use appropiate gas pricing in order to prevent chains of multiple transactions
+from becoming “stuck”, because an earlier broadcasted transaction was under-priced.</p>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Do <em>not</em> use the same account on the same network at the same time as the one in use by your bot,
+as this could lead to extremely undesirable behavior, stuck transactions, transaction failures,
+or <strong>loss of funds</strong>.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="running-your-bot">
+<h2>Running your Bot<a class="headerlink" href="#running-your-bot" title="Link to this heading"></a></h2>
+<p>Once you have programmed your bot,
+it’s really useful to be able to run it locally and validate that it does what you expect it to do.
+To run your bot locally, we have included the cli command <a class="reference external" href="../commands/run"><code class="docutils literal notranslate"><span class="pre">run</span></code></a>
+that takes care of connecting to the proper network, configuring signers (using your local Ape accounts),
+and starting up the bot runtime and worker clients.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Run `bot.py` on the Ethereum Sepolia testnet, with your own signer:</span>
+</span><span data-line="2">$<span class="w"> </span>silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>:sepolia<span class="w"> </span>--account<span class="w"> </span>acct-name
+</span></pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>It is highly suggested to use a dedicated cloud signer plugin, such as <a class="reference external" href="https://github.com/ApeWorX/ape-aws"><code class="docutils literal notranslate"><span class="pre">ape-aws</span></code></a> for signing transactions in a cloud environment.
-Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.</p>
+<p><code class="docutils literal notranslate"><span class="pre">bot:bot</span></code> is not required for silverback run if you follow the suggested folder structure at the start of this page,
+you can just omit it as an argument.</p>
+</div>
+<p>It’s important to note that signers are optional, if not configured in the bot then <code class="docutils literal notranslate"><span class="pre">bot.signer</span></code> will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+You can use this in your bot to enable a “test execution” mode, something like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_metric</span><span class="p">(</span><span class="s2">&quot;metric-name&quot;</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="n">THRESHOLD</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">execute_trade</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span>
+</span><span data-line="3">    <span class="k">if</span> <span class="n">bot</span><span class="o">.</span><span class="n">signer</span><span class="p">:</span>
+</span><span data-line="4">        <span class="o">...</span> <span class="c1"># Execute a transaction via `sender=bot.signer`</span>
+</span><span data-line="5">
+</span><span data-line="6">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="7">        <span class="o">...</span> <span class="c1"># simulate what the transaction *would* have done</span>
+</span></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you configure your bot to use a signer, that signer will sign anything given to it,
+so remember that you can lose substational amounts of funds if you deploy this to a production network.</p>
+<p>Always test your bots throughly before deploying, and always use a dedicated key for production use with proper safety precautions.</p>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>It is highly suggested to use a dedicated cloud signer plugin,
+such as <a class="reference external" href="https://github.com/ApeWorX/ape-aws"><code class="docutils literal notranslate"><span class="pre">ape-aws</span></code></a> for signing transactions in a cloud environment.</p>
+<p>Use segregated keys and limit your risk by controlling the amount of funds that key has access to at any given time.</p>
 </div>
 <section id="runtime-exceptions">
 <h3>Runtime Exceptions<a class="headerlink" href="#runtime-exceptions" title="Link to this heading"></a></h3>
 <p>It is important to note that when running your bot with Silverback,
 a failure in one of your tasks while running <strong>does not necessarily cause it to shutdown immediately</strong>.
-This is done to support handling occasional failures and unexpected scenarios that might happen during the runtime of your bot in practice.
-The way it works is that during runtime (after the startup phase has completed successfully),
+This is done to support handling occasional failures and unexpected scenarios that might happen during the runtime of your bot in practice.</p>
+<p>The way it works is that during runtime (after the startup phase has completed successfully),
 the silverback runner will track the number of failures that occurs in <em>any</em> task;
 and, if there is more than the configured amount of exceptions occuring across all of your tasks,
-only then will trigger a runtime Halt that will stop your bot from running (and trigger your shutdown tasks).</p>
-<p>You can configure this behavior when running with the <a class="reference external" href="../commands/run#silverback-run"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code></a> command by changing the value of the <code class="docutils literal notranslate"><span class="pre">--max-exceptions</span></code> option.
+only then will it Halt the runtime mode and stop your bot from running (as well as trigger your shutdown handlers).</p>
+<p>You can configure this behavior when running with the <a class="reference external" href="../commands/run#silverback-run"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code></a>
+command by changing the value of the <code class="docutils literal notranslate"><span class="pre">--max-exceptions</span></code> option.
 A higher number will take more failures in order to trigger a complete shutdown of the bot,
-whereas a lower number will make it more sensistive to intermittent failures you are likely to find in practice.
-The default is chosen as a good balance between sensitivity and operational robustness.</p>
+whereas a lower number will make it more sensistive to intermittent failures you are likely to find in production use.
+The default is chosen as a good balance between error sensitivity and operational robustness.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Any failures that occur in <strong>any of your startup tasks</strong> (including system-level startup tasks internal to the SDK) will cause an immediate failure,
-and prevent the bot from transitioning into runtime mode, where failure persistence becomes active.</p>
+<p>Any failures that occur in <strong>any of your startup tasks</strong> (including system-level startup tasks internal to the SDK)
+will cause an immediate failure, and prevent the bot from transitioning into runtime mode,
+where failure persistence monitoring becomes active.</p>
 </div>
 <p>This error tracking behavior in the runtime mode will occur handling any Python exception that your code is likely to raise.
-However, by raising the <a class="reference external" href="../methoddocs/exceptions#silverback.exceptions.CircuitBreaker"><code class="docutils literal notranslate"><span class="pre">CircuitBreaker</span></code></a> exception (or a subclass of it),
-you can cause your bot to <strong>immediately shutdown</strong> in response to application-specific faults you might detect.
-This might be useful if you know of a situation or invariant that you want to make sure to maintain during the operation of your bot no matter what,
-or if you detect that you no longer wish to run the bot any more for any desired reason (and want to handle it programmatically).</p>
+However, by raising a <a class="reference external" href="../methoddocs/exceptions#silverback.exceptions.CircuitBreaker"><code class="docutils literal notranslate"><span class="pre">CircuitBreaker</span></code></a> exception
+(or a subclass of it), you can cause your bot to <strong>immediately shutdown</strong> in response to an application-specific fault.</p>
+<p>This might be useful if you know of a situation or invariant that you want to make sure to maintain
+during the operation of your bot no matter what, or if you detect that you no longer wish to run the
+bot any more for any desired reason (and want to handle it programmatically).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Any failures detected during shutdown tasks do not prevent the execution of any other shutdown tasks
 (including system-level shutdown tasks internal to the SDK).</p>
 </div>
 <p>Lastly, you can insert a request during runtime to kill your bot manually by performing <code class="docutils literal notranslate"><span class="pre">ctrl+C</span></code>,
-or by sending a SIGTERM or SIGINT signal to the runtime process.
-This will trigger the same halting behavior immediately triggering your bot to move into the shutdown mode, and execute all shutdown tasks before exiting.</p>
+or by sending a SIGTERM or SIGINT signal to the runtime process (from your task manager or orchestration runtime).
+This will trigger the same halting behavior immediately triggering your bot to move into the shutdown mode,
+and execute all shutdown tasks before exiting the process completely.</p>
 </section>
 <section id="metrics-collection">
 <h3>Metrics Collection<a class="headerlink" href="#metrics-collection" title="Link to this heading"></a></h3>
@@ -576,45 +639,6 @@ or by supplying the <code class="docutils literal notranslate"><span class="pre"
 All recorders should be a subclass of the <a class="reference external" href="../methoddocs/recorder#silverback.recorder.BaseRecorder"><code class="docutils literal notranslate"><span class="pre">BaseRecorder</span></code></a>
 abstract base class.</p>
 </section>
-<section id="distributed-execution">
-<h3>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Link to this heading"></a></h3>
-<p>Using only the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code> command in a default configuration executes everything in one process and the job queue is completely in-memory with a shared state.
-In some high volume environments, you may want to deploy your Silverback bot in a distributed configuration using multiple processes to handle the messages at a higher rate.</p>
-<p>The primary components are the client and workers. The client handles Silverback events (blocks and contract event logs) and creates jobs for the workers to process in an asynchronous manner.</p>
-<p>For this to work, you must configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#broker">TaskIQ broker</a> capable of distributed processing.
-Additonally, it is highly suggested you should also configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#result-backend">TaskIQ result backend</a> in order to process and store the results of executing tasks.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Without configuring a result backend, Silverback may not work as expected since your tasks will now suddenly return <code class="docutils literal notranslate"><span class="pre">None</span></code> instead of the actual result.</p>
-</div>
-<p>For instance, with <a class="reference external" href="https://github.com/taskiq-python/taskiq-redis"><code class="docutils literal notranslate"><span class="pre">taskiq_redis</span></code></a> you could do something like this for the client:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
-</span><span data-line="2"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;queue_name&quot;: &quot;taskiq&quot;, &quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
-</span><span data-line="3"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:RedisAsyncResultBackend&quot;</span>
-</span><span data-line="4"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
-</span><span data-line="5">
-</span><span data-line="6">silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
-</span></pre></div>
-</div>
-<p>And then the worker process with 2 worker subprocesses:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
-</span><span data-line="2"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
-</span><span data-line="3"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:RedisAsyncResultBackend&quot;</span>
-</span><span data-line="4"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
-</span><span data-line="5">
-</span><span data-line="6">silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w"> </span><span class="m">2</span>
-</span></pre></div>
-</div>
-<p>The client will send tasks to the 2 worker subprocesses, and all task queue and results data will be go through Redis.</p>
-</section>
-</section>
-<section id="testing-your-bot">
-<h2>Testing your Bot<a class="headerlink" href="#testing-your-bot" title="Link to this heading"></a></h2>
-<p>TODO: Add backtesting mode w/ <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">test</span></code></p>
-</section>
-<section id="deploying-your-bot">
-<h2>Deploying your Bot<a class="headerlink" href="#deploying-your-bot" title="Link to this heading"></a></h2>
-<p>Check out the <a class="reference external" href="./platform.html">Platform Deployment Userguide</a> for more information on how to deploy your bot to the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.</p>
 </section>
 </section>
 
@@ -627,13 +651,13 @@ Additonally, it is highly suggested you should also configure a <a class="refere
     <a href="quickstart.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">Quick Start</div></div>
+        <span>Previous</span><div class="title">Overview</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="managing.html">
+    <a href="deploying.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">Silverback Platform</div>
+        <div class="title">Deploying Bots</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>
@@ -644,7 +668,7 @@ Additonally, it is highly suggested you should also configure a <a class="refere
 <footer class="sy-foot">
   <div class="sy-foot-inner sy-container mx-auto">
     <div class="sy-foot-reserved md:flex justify-between items-center">
-      <div class="sy-foot-copyright"><p>2024, ApeWorX LTD</p>
+      <div class="sy-foot-copyright"><p>2026, ApeWorX LTD</p>
   
   <p>
     Made with
@@ -664,5 +688,5 @@ Additonally, it is highly suggested you should also configure a <a class="refere
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=c1cf1a6b"></script></body>
+      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
 </html>
