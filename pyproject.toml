@@ -36,7 +36,7 @@ requires-python = ">=3.10,<4"
 dependencies = [
     "apepay>=0.3.5,<1",  # For payments
     "click",  # Use same version as eth-ape
-    "eth-ape>=0.8.31,<1",
+    "eth-ape>=0.8.38,<1",  # Bumps lower pin on web3py
     "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
     "eth-pydantic-types",  # Use same version as eth-ape
     "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup
@@ -50,7 +50,6 @@ dependencies = [
     "taskiq[metrics]>=0.11.6,<0.12",  # TODO: Upgrade to v0.12
     "tomlkit>=0.12,<1",  # For reading/writing global platform profile
     "yaspin>=3.1,<4",  # Display a nice spinner when logging in
-    "web3>=7.7,<8",  # TODO: Remove when Ape v0.9 is released (Ape v0.8 allows web3 v6)
 ]
 
 [project.optional-dependencies]
