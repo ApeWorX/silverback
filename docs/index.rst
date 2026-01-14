@@ -2,8 +2,9 @@
     :userguides:
         - quickstart
         - development
-        - managing
         - deploying
+        - managing
+        - advanced
     :commands:
         - run
         - cluster
