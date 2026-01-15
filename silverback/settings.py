@@ -36,13 +36,11 @@ class Settings(BaseSettings, ManagerAccessMixin):
     FORK_MODE: bool = False
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
-    BROKER_URI: str = ""  # To be deprecated in 0.6
     BROKER_KWARGS: dict[str, Any] = dict()
 
     ENABLE_METRICS: bool = False
 
     RESULT_BACKEND_CLASS: str = "taskiq.brokers.inmemory_broker:InmemoryResultBackend"
-    RESULT_BACKEND_URI: str = ""  # To be deprecated in 0.6
     RESULT_BACKEND_KWARGS: dict[str, Any] = dict()
 
     NETWORK_CHOICE: str = ""
@@ -75,13 +73,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
             return None
 
         result_backend_cls = import_from_string(self.RESULT_BACKEND_CLASS)
-
-        if self.RESULT_BACKEND_URI:
-            # TODO: Maybe add a deprecation warning here for v0.6
-            return result_backend_cls(self.RESULT_BACKEND_URI)
-
-        backend_kwargs = self.RESULT_BACKEND_KWARGS
-        return result_backend_cls(**backend_kwargs)
+        return result_backend_cls(**self.RESULT_BACKEND_KWARGS)
 
     def get_broker(self) -> AsyncBroker:
         broker_class = import_from_string(self.BROKER_CLASS)
@@ -89,13 +81,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
             broker = broker_class()
 
         else:
-            broker_kwargs = self.BROKER_KWARGS
-
-            if self.BROKER_URI:
-                # TODO: Maybe add a deprecation warning here for v0.6
-                broker_kwargs["url"] = self.BROKER_URI
-
-            broker = broker_class(**broker_kwargs)
+            broker = broker_class(**self.BROKER_KWARGS)
 
         if middlewares := self.get_middlewares():
             broker = broker.with_middlewares(*middlewares)
@@ -112,8 +98,7 @@ class Settings(BaseSettings, ManagerAccessMixin):
         if not (recorder_cls_str := self.RECORDER_CLASS):
             return None
 
-        recorder_class = import_from_string(recorder_cls_str)
-        return recorder_class()
+        return import_from_string(recorder_cls_str)
 
     def get_provider_context(self) -> ProviderContextManager:
         # NOTE: Bit of a workaround for adhoc connections:

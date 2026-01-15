@@ -147,8 +147,7 @@ def env_file_callback(
                 )
 
             raise click.BadParameter(
-                f"Refusing to load non-.env file: {path}. "
-                "Allowed: any filename containing '.env' ",
+                f"Refusing to load non-.env file: {path}. Allowed: any filename containing '.env' ",
                 ctx=ctx,
                 param=param,
             )

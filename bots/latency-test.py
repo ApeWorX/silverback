@@ -25,21 +25,18 @@ You can measure this latency via the following scripts in Ape console:
     >>> txn_conf_block = [tx.block for tx in txs]
     # Time when transaction was created by worker
     >>> txn_creation_time = [
-    ...     datetime.fromtimestamp(tx.value % 10**10, tz=timezone.utc)
-    ...     for tx in txs
+    ...     datetime.fromtimestamp(tx.value % 10**10, tz=timezone.utc) for tx in txs
     ... ]
     # Time between block that triggered transaction vs. broadcasting next one
     >>> task_start_latency = [
     ...     (txn_submit - recv_blk.datetime)
-    ...     for recv_blk, txn_submit
-    ...     in zip(task_recv_block, txn_creation_time)
+    ...     for recv_blk, txn_submit in zip(task_recv_block, txn_creation_time)
     ... ]
     # Time between broadcasting txn and block being mined with txn in it
     >>> broadcasted_task_metric = pd.DataFrame.fromdict()["broadcast"]
     >>> txn_broadcast_latency = [
     ...     (conf_blk.datetime - broadcasted)
-    ...     for conf_blk, broadcasted
-    ...     in zip(txn_conf_block, broadcasted_task_metric)
+    ...     for conf_blk, broadcasted in zip(txn_conf_block, broadcasted_task_metric)
     ... ]
 
 """

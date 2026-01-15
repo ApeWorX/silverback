@@ -232,7 +232,7 @@ class SilverbackBot(ManagerAccessMixin):
         return self.tasks.get(task_type, [])
 
     def __get_user_all_taskdata_handler(self) -> list[TaskData]:
-        return [v for k, l in self.tasks.items() if str(k).startswith("user:") for v in l]
+        return [v for k, ls in self.tasks.items() if str(k).startswith("user:") for v in ls]
 
     async def __load_snapshot_handler(self, startup_state: StateSnapshot):
         # NOTE: *DO NOT USE* in Runner, as it will not be updated by the bot
@@ -533,8 +533,9 @@ class SilverbackBot(ManagerAccessMixin):
         Usage example::
 
             @bot.on_startup()
-            def do_something_on_startup(startup_state: StateSnapshot):
-                ...  # Reprocess missed events or blocks
+            def do_something_on_startup(
+                startup_state: StateSnapshot,
+            ): ...  # Reprocess missed events or blocks
         """
         return self.broker_task_decorator(TaskType.STARTUP)
 
@@ -550,8 +551,7 @@ class SilverbackBot(ManagerAccessMixin):
         Usage example::
 
             @bot.on_shutdown()
-            def do_something_on_shutdown():
-                ...  # Record final state of bot
+            def do_something_on_shutdown(): ...  # Record final state of bot
         """
         return self.broker_task_decorator(TaskType.SHUTDOWN)
 

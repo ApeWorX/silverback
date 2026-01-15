@@ -1,9 +1,138 @@
 [build-system]
-requires = ["setuptools>=51.1.1", "wheel", "setuptools_scm[toml]>=5.0"]
+requires = ["setuptools>=75.6", "wheel", "setuptools_scm[toml]>=5"]
+build-backend = "setuptools.build_meta"
 
-[tool.mypy]
-exclude = ["build/", "dist/", "docs/"]
-plugins = ["pydantic.mypy"]
+[project.urls]
+Homepage = "https://silverback.apeworx.io"
+Repository = "https://github.com/ApeWorX/silverback.git"
+Issues = "https://github.com/ApeWorX/silverback/issues"
+Documentation = "https://docs.apeworx.io/silverback"
+Funding = "https://github.com/sponsors/ApeWorX"
+"Twitter / X" =  "https://x.com/ApeFramework"
+
+[project]
+name = "silverback"
+dynamic = [ "version" ]
+license = "Apache-2.0"
+description = "Listen and respond to on-chain events in real-time"
+keywords = ["silverback", "bots", "crypto", "ethereum", "automation", "defi"]
+readme = "README.md"
+authors = [
+    { name = "ApeWorX Ltd.", email="admin@apeworx.io"},
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.10,<4"
+dependencies = [
+    "apepay>=0.3.5,<1",  # For payments
+    "click",  # Use same version as eth-ape
+    "eth-ape>=0.8.38,<1",  # Bumps lower pin on web3py
+    "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
+    "eth-pydantic-types",  # Use same version as eth-ape
+    "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup
+    "httpx>=0.28,<1",  # Use for Cluster client, auth
+    "jwcrypto>=1.4,<2",  # Use for auth
+    "packaging",  # Use same version as eth-ape
+    "pycron>=3.1,<4",  # Checking/triggering cron tasks
+    "pydantic_settings",  # Use same version as eth-ape
+    "python-dotenv>=1.1.1,<2",  # Load --env-file values
+    "quattro>=25.2,<26",  # Manage task groups and background tasks
+    "taskiq[metrics]>=0.12.1,<0.13",  # Broker subsystem
+    "tomlkit>=0.12,<1",  # For reading/writing global platform profile
+    "yaspin>=3.1,<4",  # Display a nice spinner when logging in
+]
+
+[project.optional-dependencies]
+# If you want to use the MCP (optional)
+mcp = [
+    "fastmcp",  # MCP Server & AI Computer Use
+]
+# Built into released container image (slim & full)
+build = [
+    # Needed for Silverback Cluster use
+    "taskiq-aio-pika>=0.5,<1",
+    "taskiq-redis>=1.2,<2",
+]
+# Recommended to use with Silverback (built into full container image)
+recommended-plugins = [
+    # Supported ecosystems
+    "ape-arbitrum",
+    "ape-avalanche",
+    "ape-base",
+    "ape-bsc",
+    "ape-optimism",
+    "ape-polygon",
+    "ape-sonic",
+    # Useful utility plugins
+    "ape-etherscan",
+    "ape-ens",
+    "ape-tokens",
+    # Hosted RPCs plugins
+    "ape-alchemy",
+    "ape-infura",
+    # Other RPC types (multiplexers)
+    "ape-drpc",
+    "ape-erpc",
+    # Cloud Signer plugins
+    "ape-aws",
+]
+
+[project.scripts]
+silverback = "silverback._cli:cli"
+
+# Dev dependencies
+[dependency-groups]
+# NOTE: `lint` Github Action job uses this
+lint = [
+    "ruff>=0.14,<1",  # Auto-formatter and linter
+    "mypy>=1.13.0,<2",  # Static type analyzer
+    "types-PyYAML",  # Needed for PyYAML
+    "types-setuptools",  # Needed for mypy type shed
+    "mdformat>=0.7.19",  # Auto-formatter for markdown
+    "mdformat-gfm>=0.3.6",  # Needed for formatting GitHub-flavored markdown
+    "mdformat-frontmatter>=2.0",  # Needed for frontmatters-style headers in issue templates
+    "mdformat-pyproject>=0.0.2",  # Allows configuring in pyproject.toml
+]
+# NOTE: `test` GitHub Action jobs use this
+test = [
+    "pytest>=6.0",  # Core testing package
+    "pytest-xdist",  # Multi-process runner
+    "pytest-cov",  # Coverage analyzer plugin
+    "hypothesis",  # Strategy-based fuzzer
+    "hypothesis-jsonschema",  # Generate strategies for pydantic models
+]
+# NOTE: `docs` GitHub Action job uses this
+docs = [
+    "sphinx-ape",
+]
+# NOTE: Recommended for local dev (`uv sync --group dev`)
+dev =  [
+    # NOTE: Include all groups for local development
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "docs"},
+    "commitlint",  # Semantic commit linting
+    "pre-commit",  # Ensure that linters are run prior to committing
+    "pytest-watch",  # `ptw` test watcher/runner
+    "IPython",  # Console for interacting
+    "ipdb",  # Debugger (Must use `export PYTHONBREAKPOINT=ipdb.set_trace`)
+]
+
+
+[tool.setuptools]
+packages = [ "silverback" ]
+[tool.setuptools.package-data]
+"silverback" = [ "py.typed" ]
 
 [tool.setuptools_scm]
 write_to = "silverback/version.py"
@@ -13,10 +142,25 @@ write_to = "silverback/version.py"
 # verbose regular expressions by Black.  Use [ ] to denote a significant space
 # character.
 
-[tool.black]
+[tool.ruff]
+target-version = "py310"
 line-length = 100
-target-version = ['py310', 'py311', 'py312']
-include = '\.pyi?$'
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "auto"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["silverback"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+exclude = ["build/", "dist/", "docs/"]
+plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 addopts = """
@@ -30,14 +174,6 @@ addopts = """
 python_files = "test_*.py"
 testpaths = "tests"
 markers = "fuzzing: Run Hypothesis fuzz test suite"
-
-[tool.isort]
-line_length = 100
-force_grid_wrap = 0
-include_trailing_comma = true
-multi_line_output = 3
-use_parentheses = true
-extend_skip = ["version.py"]
 
 [tool.mdformat]
 number = true

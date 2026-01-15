@@ -61,7 +61,8 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
     contracts_folder: str | None = "contracts"
     if has_ape_config_yaml := (ape_config_path := Path.cwd() / "ape-config.yaml").exists():
         contracts_folder = (
-            yaml.safe_load(ape_config_path.read_text()).get("compiler", {})
+            yaml.safe_load(ape_config_path.read_text())
+            .get("compiler", {})
             # NOTE: Should fall through to this last `.get` and use initial default if config DNE
             .get("contracts_folder", contracts_folder)
         )
@@ -85,7 +86,7 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
         requirements_txt_fname = None
 
     assert contracts_folder  # make mypy happy
-    if not ((Path.cwd() / contracts_folder)).exists():
+    if not (Path.cwd() / contracts_folder).exists():
         contracts_folder = None
 
     if path.is_dir() and path.name == "bots":
