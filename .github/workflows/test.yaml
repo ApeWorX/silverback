@@ -44,7 +44,7 @@ jobs:
               python-version: "3.10"
 
         - name: Run MyPy
-          run: uv run --group lint --group test mypy .
+          run: uv run --group lint --group test --extra mcp mypy .
 
     functional:
         runs-on: ${{ matrix.os }}
