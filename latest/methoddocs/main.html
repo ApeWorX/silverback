@@ -338,8 +338,7 @@ Runner has decided to put the bot into the “shutdown” state.</p>
 </dl>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_shutdown</span><span class="p">():</span>
-</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Record final state of bot</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_shutdown</span><span class="p">():</span> <span class="o">...</span>  <span class="c1"># Record final state of bot</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -359,8 +358,9 @@ bot is put into the “run” state by the Runner.</p>
 </dl>
 <p>Usage example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_startup</span><span class="p">()</span>
-</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_startup</span><span class="p">(</span><span class="n">startup_state</span><span class="p">:</span> <span class="n">StateSnapshot</span><span class="p">):</span>
-</span><span data-line="3">    <span class="o">...</span>  <span class="c1"># Reprocess missed events or blocks</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">do_something_on_startup</span><span class="p">(</span>
+</span><span data-line="3">    <span class="n">startup_state</span><span class="p">:</span> <span class="n">StateSnapshot</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">):</span> <span class="o">...</span>  <span class="c1"># Reprocess missed events or blocks</span>
 </span></pre></div>
 </div>
 </dd></dl>
