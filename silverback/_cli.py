@@ -1167,9 +1167,7 @@ def update_vargroup(
             vg.update(
                 **updated_vars,
                 **{v: None for v in deleted_vars},
-            ).model_dump(
-                exclude={"id"}
-            )  # NOTE: Skip machine `.id`
+            ).model_dump(exclude={"id"})  # NOTE: Skip machine `.id`
         )
     )
 

@@ -94,12 +94,10 @@ silverback = "silverback._cli:cli"
 [dependency-groups]
 # NOTE: `lint` Github Action job uses this
 lint = [
-    "black>=24.10.0,<25",  # Auto-formatter and linter
+    "ruff>=0.14,<1",  # Auto-formatter and linter
     "mypy>=1.13.0,<2",  # Static type analyzer
     "types-PyYAML",  # Needed for PyYAML
     "types-setuptools",  # Needed for mypy type shed
-    "flake8>=7.1.1,<8",  # Style linter
-    "isort>=5.13.2,<6",  # Import sorting linter
     "mdformat>=0.7.19",  # Auto-formatter for markdown
     "mdformat-gfm>=0.3.6",  # Needed for formatting GitHub-flavored markdown
     "mdformat-frontmatter>=2.0",  # Needed for frontmatters-style headers in issue templates
@@ -136,10 +134,6 @@ packages = [ "silverback" ]
 [tool.setuptools.package-data]
 "silverback" = [ "py.typed" ]
 
-[tool.mypy]
-exclude = ["build/", "dist/", "docs/"]
-plugins = ["pydantic.mypy"]
-
 [tool.setuptools_scm]
 write_to = "silverback/version.py"
 
@@ -148,10 +142,25 @@ write_to = "silverback/version.py"
 # verbose regular expressions by Black.  Use [ ] to denote a significant space
 # character.
 
-[tool.black]
+[tool.ruff]
+target-version = "py310"
 line-length = 100
-target-version = ['py310', 'py311', 'py312']
-include = '\.pyi?$'
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "auto"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["silverback"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+exclude = ["build/", "dist/", "docs/"]
+plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 addopts = """
@@ -165,14 +174,6 @@ addopts = """
 python_files = "test_*.py"
 testpaths = "tests"
 markers = "fuzzing: Run Hypothesis fuzz test suite"
-
-[tool.isort]
-line_length = 100
-force_grid_wrap = 0
-include_trailing_comma = true
-multi_line_output = 3
-use_parentheses = true
-extend_skip = [ "version.py" ]
 
 [tool.mdformat]
 number = true

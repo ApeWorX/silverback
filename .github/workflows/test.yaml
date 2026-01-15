@@ -22,14 +22,11 @@ jobs:
               # NOTE: Use min python version
               python-version: "3.10"
 
-        - name: Run Black
-          run: uv run --group lint black --check .
+        - name: Run Ruff formatter
+          run: uv run --group lint ruff format --check .
 
-        - name: Run isort
-          run: uv run --group lint isort --check-only .
-
-        - name: Run flake8
-          run: uv run --group lint flake8 .
+        - name: Run Ruff linter
+          run: uv run --group lint ruff check .
 
         - name: Run mdformat
           run: uv run --group lint mdformat --check *.md docs/**/*.md
