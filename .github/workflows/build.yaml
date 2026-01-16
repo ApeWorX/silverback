@@ -117,7 +117,7 @@ jobs:
           file: ./Dockerfile
           target: ${{ matrix.target }}
           build-args: |
-            APE_BASE_IMAGE=ghcr.io/apeworx/ape:${{ matrix.python-version }}-stable-slim
+            PYTHON_VERSION=${{ matrix.python-version }}
             VERSION=${{ steps.version.outputs.version }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
