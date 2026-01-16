@@ -19,10 +19,6 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/
 # NOTE: In CI, you need to cache `uv.lock` (or create it if it doesn't exist)
 COPY pyproject.toml uv.lock ./
 
-# NOTE: Needed to mock version for `setuptools-scm` (pass at build time)
-ARG VERSION
-ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SILVERBACK=${VERSION}
-
 # NOTE: link mode "copy" silences warnings about hard links in other commands
 ENV UV_LINK_MODE=copy
 
@@ -30,6 +26,10 @@ ENV UV_LINK_MODE=copy
 # NOTE: --compile-bytecode improves load speed of dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable --compile-bytecode --no-install-project
+
+# NOTE: Needed to mock version for `setuptools-scm` (pass at build time)
+ARG VERSION
+ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SILVERBACK=${VERSION}
 
 # Now copy Silverback's source code over
 COPY silverback silverback
