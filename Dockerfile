@@ -50,7 +50,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --extra build
 
 # TODO: Figure out why `cluster/` subfolder isn't copying over from above command
-RUN cp -r silverback/cluster .venv/lib/python3.11/site-packages/silverback/cluster
+RUN SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])") && \
+    cp -r silverback/cluster $SITE_PACKAGES/silverback/cluster
 
 # Stage 2: Slim image (Based on Ape slim)
 
