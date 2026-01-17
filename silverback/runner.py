@@ -108,7 +108,11 @@ class BaseRunner(ABC):
             f"{metric_name}: {datapoint.render()}"
             for metric_name, datapoint in result.metrics.items()
         ):  # Display metrics in logs to help debug
-            logger.info(f"{task_data.name} - Metrics collected\n  {metrics_str}")
+            # NOTE: Mimic behavior of displaying task start/completion in `middlewares.py`
+            if ":" in task_data.name:
+                logger.debug(f"{task_data.name} - Metrics collected\n  {metrics_str}")
+            else:
+                logger.info(f"{task_data.name} - Metrics collected\n  {metrics_str}")
 
             # Trigger checks for metric values
             for metric_name, datapoint in result.metrics.items():
