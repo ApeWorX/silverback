@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Advanced Topics - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Local Development" href="../commands/run.html" /><link rel="prev" title="Silverback Platform" href="managing.html" />
+      <link rel="canonical" href="silverback/userguides/advanced.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="silverback/userguides/advanced.html"/>
+  <meta property="og:title" content="Advanced Topics"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="silverback" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="silverback" height="28" loading="lazy" />
+      <strong>silverback</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deploying.html">Deploying Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing.html">Silverback Platform</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Topics</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/cluster.html">silverback.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/main.html">silverback.main</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/recorder.html">silverback.recorder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/settings.html">silverback.settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/state.html">silverback.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/types.html">silverback.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#handling-reorgs">Handling Reorgs</a><ul>
+<li><a class="reference internal" href="#block-reorgs">Block Reorgs</a></li>
+<li><a class="reference internal" href="#event-log-reorgs">Event Log Reorgs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#worker-events">Worker Events</a></li>
+<li><a class="reference internal" href="#distributed-execution">Distributed Execution</a></li>
+<li><a class="reference internal" href="#running-containers-with-local-keyfiles">Running Containers with Local Keyfiles</a></li>
+<li><a class="reference internal" href="#cluster-access">Cluster Access</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">silverback</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Advanced Topics</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="silverback/_sources/userguides/advanced.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="silverback/_sources/userguides/advanced.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="silverback/_sources/userguides/advanced.md.txt" target="_blank" rel="nofollow"><iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span></a><a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20silverback/_sources/userguides/advanced.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a><a role="menuitem" href="https://claude.ai/new?q=Read%20silverback/_sources/userguides/advanced.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a></div>
+    </div>
+  </div>
+</div><article class="yue" role="main">
+          <section id="advanced-topics">
+<h1>Advanced Topics<a class="headerlink" href="#advanced-topics" title="Link to this heading"></a></h1>
+<p>There are a number of “advanced topics” that you might want to understand before using Silverback,
+especially for production use. The following topics are shared not in any particular order.</p>
+<section id="handling-reorgs">
+<h2>Handling Reorgs<a class="headerlink" href="#handling-reorgs" title="Link to this heading"></a></h2>
+<p>For some chains, there is a risk of a “reorg”, or block reorganization, that may impact Silverback’s
+handler functions as function calls could be triggered repeatedly with the same arguments provided.
+Block reorganizations are an inherent risk to your bot’s design, and should be handled accordingly.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Reorg handling in subscription methods is not a completely specified in the Ethereum RPC specification
+(see <a class="reference external" href="https://github.com/ethereum/execution-apis/issues/496">execution specs</a>),
+and may be handled in different fashions based on the chain’s consensus technique and client parameterization.</p>
+</div>
+<section id="block-reorgs">
+<h3>Block Reorgs<a class="headerlink" href="#block-reorgs" title="Link to this heading"></a></h3>
+<p>When a chain experiences a reorg, typically what will occur is that block subscriptions will “walk
+backwards” to find the last valid block emitted to subscribers from the canonical chain, and then
+re-emit new blocks starting from the last block shared in common (but with different content).
+In order to properly handle reorgs, you should make sure that important uses of block data are
+<em>indexed by number</em>, and overwrite the recorded data at those indexes with the newer data.</p>
+<p>As a concrete example, we have an application that tracks a parameter <code class="docutils literal notranslate"><span class="pre">last_hash</span></code> in <code class="docutils literal notranslate"><span class="pre">bot.state</span></code>.
+We don’t really have a problem yet because while we do get the “rolled back” blocks as a part of
+the new canonical chain, we are only interested in what the value of the last block is:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">update_last_hash</span><span class="p">(</span><span class="n">blk</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">last_hash</span> <span class="o">=</span> <span class="n">blk</span><span class="o">.</span><span class="n">hash</span>
+</span></pre></div>
+</div>
+<p>Here is a call sequence of how this function might get called in a reorg scenario:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">update_last_hash</span><span class="p">(</span><span class="n">blk1</span><span class="p">)</span> <span class="c1"># .hash: abc</span>
+</span><span data-line="2"><span class="n">update_last_hash</span><span class="p">(</span><span class="n">blk2</span><span class="p">)</span> <span class="c1"># .hash: def</span>
+</span><span data-line="3"><span class="n">update_last_hash</span><span class="p">(</span><span class="n">blk3</span><span class="p">)</span> <span class="c1"># .hash: ghi</span>
+</span><span data-line="4"><span class="c1"># Reorg happens! `blk2` (.hash: def) and onwards has changed</span>
+</span><span data-line="5"><span class="n">update_last_hash</span><span class="p">(</span><span class="n">blk2</span><span class="p">)</span> <span class="c1"># .hash: jkl, replaced .hash: def</span>
+</span><span data-line="6"><span class="n">update_last_hash</span><span class="p">(</span><span class="n">blk3</span><span class="p">)</span> <span class="c1"># .hash: mno, replaced .hash: ghi</span>
+</span></pre></div>
+</div>
+<p>Our handling is safe because we just want whatever the last valid block’s hash was.
+<em>However</em>, we have to be careful how we use this identifier,
+because that value now needs to be considered tainted for downstream use.
+Let’s say for example we are dumping this data into a database for the purpose of tracking blocks,
+and we decide to use the block’s hash as our primary key to track them:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">update_db</span><span class="p">(</span><span class="n">blk</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;blocks&quot;</span><span class="p">][</span><span class="n">blk</span><span class="o">.</span><span class="n">hash</span><span class="p">]</span> <span class="o">=</span> <span class="n">blk</span>
+</span></pre></div>
+</div>
+<p>The records in our database still won’t have conflicts (as the primary key is content-addressing the whole block),
+<em>but</em> we likely have a problem now because there are <strong>2 different blocks</strong> having the same value for field <code class="docutils literal notranslate"><span class="pre">.number</span></code>!
+This is likely to cause issues downstream when using our database and trying to fetch a sequence of blocks ordered by number.
+So instead, we actually want to use the <code class="docutils literal notranslate"><span class="pre">.number</span></code> field as the primary key so that when we update the record at that key,
+we are actually <em>replacing</em> the old block with the new one (and we will always have a single, canonical history):</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">update_db</span><span class="p">(</span><span class="n">blk</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;blocks&quot;</span><span class="p">][</span><span class="n">blk</span><span class="o">.</span><span class="n">number</span><span class="p">]</span> <span class="o">=</span> <span class="n">blk</span>
+</span></pre></div>
+</div>
+<p>A very simple change that now handles rollbacks occuring!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please see <a class="reference external" href="https://geth.ethereum.org/docs/interacting-with-geth/rpc/pubsub#newheads">the Geth documentation</a>
+for more information on how block reorgs work.</p>
+</div>
+</section>
+<section id="event-log-reorgs">
+<h3>Event Log Reorgs<a class="headerlink" href="#event-log-reorgs" title="Link to this heading"></a></h3>
+<p>There is a similar issue when using contract event log subscriptions,
+but the issue can be resolved in a more straightforward way.
+As of <a class="reference external" href="https://github.com/ApeWorX/ape/pull/2727">Ape v0.8.43</a>,
+our event log model now includes the <code class="docutils literal notranslate"><span class="pre">.removed</span></code> field,
+which is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if the log is no longer included in the canonical chain.
+It will then “re-issue” the same log if the transaction it originated from replays on the new set of blocks.</p>
+<p>Let’s use the same database analogy again.
+This time, we are storing account balances for ERC20 token transfers in our database (indexed by account).
+Our naive implementation of this might look like:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">ERC20</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">track_balances</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;balances&quot;</span><span class="p">][</span><span class="n">log</span><span class="o">.</span><span class="n">receiver</span><span class="p">]</span> <span class="o">+=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span><span data-line="4">    <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;balances&quot;</span><span class="p">][</span><span class="n">log</span><span class="o">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span></pre></div>
+</div>
+<p>However when a re-org occurs, we are actually going to get the same log a second time but with the <code class="docutils literal notranslate"><span class="pre">.removed</span></code> field set,
+indicating the operation has been “reversed”.
+Without handling this we will “double count” the event and have the wrong answer
+(the balances mismatches the on-chain <code class="docutils literal notranslate"><span class="pre">.balanceOf</span></code> call).
+We can easily handle this with just a little bit of logic added to “reverse” the operation in our off-chain index:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">ERC20</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">track_balances</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">removed</span><span class="p">:</span>  <span class="c1"># NOTE: Undo balance update</span>
+</span><span data-line="4">        <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;balances&quot;</span><span class="p">][</span><span class="n">log</span><span class="o">.</span><span class="n">receiver</span><span class="p">]</span> <span class="o">-=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span><span data-line="5">        <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;balances&quot;</span><span class="p">][</span><span class="n">log</span><span class="o">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">+=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span><span data-line="6">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="7">        <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;balances&quot;</span><span class="p">][</span><span class="n">log</span><span class="o">.</span><span class="n">receiver</span><span class="p">]</span> <span class="o">+=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span><span data-line="8">        <span class="n">bot</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="p">[</span><span class="s2">&quot;balances&quot;</span><span class="p">][</span><span class="n">log</span><span class="o">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span></pre></div>
+</div>
+<p>Now we are fully handling the logical implications of an event log reorg!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please see <a class="reference external" href="https://geth.ethereum.org/docs/interacting-with-geth/rpc/pubsub#logs">the Geth documentation</a>
+for more information about how event log reorgs work</p>
+</div>
+</section>
+</section>
+<section id="worker-events">
+<h2>Worker Events<a class="headerlink" href="#worker-events" title="Link to this heading"></a></h2>
+<p>If you have heavier resources you want to load during startup,
+or want to initialize things per-worker like database connections,
+you can add a <em>worker startup function</em> like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_startup</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="3">    <span class="c1"># Connect to DB, set initial state, etc</span>
+</span><span data-line="4">    <span class="o">...</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
+</span><span data-line="7"><span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="8">    <span class="c1"># cleanup resources, close connections cleanly, etc</span>
+</span><span data-line="9">    <span class="o">...</span>
+</span></pre></div>
+</div>
+<p>This function takes a parameter <code class="docutils literal notranslate"><span class="pre">state</span></code> that you can use for storing the results
+of your startup computation or resources that you have provisioned.
+<strong>This is different from <code class="docutils literal notranslate"><span class="pre">bot.state</span></code></strong>, and will make it accessible via <code class="docutils literal notranslate"><span class="pre">taskiq.Context</span></code> dependency injection in other tasks.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This is not a Silverback native feature, but rather a feature available from the TaskIQ library that Silverback uses.</p>
+<p>See the <a class="reference external" href="https://taskiq-python.github.io/guide/state-and-deps.html">Taskiq Documentation</a> to learn more about it.</p>
+</div>
+<p>This feature is useful for ensuring that your workers (specifically when using <a class="reference external" href="#distributed-execution">Distributed Execution</a>)
+have the resources necessary to properly handle any updates you want to make in your handler functions,
+such as connecting to the Telegram API, an SQL or NoSQL database connection, or something else.</p>
+<p>Giving each worker it’s own connection to a database or API could <strong>dramatically speed up</strong> the use of contested resources:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_startup</span><span class="p">()</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">connect_db</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">state</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="k">await</span> <span class="n">Connection</span><span class="p">(</span><span class="s2">&quot;posgres://localhost&quot;</span><span class="p">)</span><span class="o">.</span><span class="fm">__aenter__</span><span class="p">()</span>
+</span><span data-line="4">
+</span><span data-line="5">
+</span><span data-line="6"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">Token</span><span class="o">.</span><span class="n">Transfer</span><span class="p">)</span>
+</span><span data-line="7"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">store_token</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Context</span><span class="p">,</span> <span class="n">TaskiqDepends</span><span class="p">()]):</span>
+</span><span data-line="8">    <span class="n">token</span> <span class="o">=</span> <span class="k">await</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">log</span><span class="o">.</span><span class="n">contract_address</span><span class="p">)</span>
+</span><span data-line="9">    <span class="n">token</span><span class="o">.</span><span class="n">balances</span><span class="p">[</span><span class="n">log</span><span class="o">.</span><span class="n">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span><span data-line="10">    <span class="n">token</span><span class="o">.</span><span class="n">balances</span><span class="p">[</span><span class="n">log</span><span class="o">.</span><span class="n">receiver</span><span class="p">]</span> <span class="o">+=</span> <span class="n">log</span><span class="o">.</span><span class="n">amount</span>
+</span><span data-line="11">    <span class="k">await</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span data-line="12">    <span class="k">await</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</span><span data-line="13">
+</span><span data-line="14">
+</span><span data-line="15"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_worker_shutdown</span><span class="p">()</span>
+</span><span data-line="16"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_on_worker_shutdown</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+</span><span data-line="17">    <span class="k">await</span> <span class="n">state</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">()</span>
+</span><span data-line="18">
+</span></pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The worker startup/shutdown functions will run on <strong>every worker process</strong> (N times for N workers).</p>
+</div>
+</section>
+<section id="distributed-execution">
+<h2>Distributed Execution<a class="headerlink" href="#distributed-execution" title="Link to this heading"></a></h2>
+<p>Using only the <code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">run</span> <span class="pre">...</span></code> command in the default configuration executes everything in one process,
+and the job queue is ke-pt completely in-memory with a shared state.
+This is very useful for local testing purposes, but in some high-volume environments,
+you may want to deploy your Silverback bot in a “distributed configuration”,
+using multiple processes to handle the messages in parallel in order to acheive a higher throughput rate.</p>
+<p>Operating in this mode, there are two components: the client and the workers.
+The client handles triggering Silverback events (listening for blocks and contract event logs)
+and then creates jobs for the workers to process in an asynchronous manner using a “broker”.</p>
+<p>For this to work, you must configure a <a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#broker">TaskIQ broker</a>
+capable of distributed processing, such as ZeroMQ or Redis.
+Additonally, it is highly suggested you should also configure a
+<a class="reference external" href="https://taskiq-python.github.io/guide/architecture-overview.html#result-backend">TaskIQ result backend</a>
+in order to process and store the results of executing tasks,
+otherwise you will not collect Metrics or be able to execute any Metric Callbacks.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Without configuring a result backend,
+Silverback may not work as expected since all your tasks will now suddenly return <code class="docutils literal notranslate"><span class="pre">None</span></code> instead of the actual result.</p>
+</div>
+<p>For instance, with <a class="reference external" href="https://github.com/taskiq-python/taskiq-redis"><code class="docutils literal notranslate"><span class="pre">taskiq_redis</span></code></a> you could do something like this to configure silverback:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>taskiq-redis
+</span><span data-line="2"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:ListQueueBroker&quot;</span>
+</span><span data-line="3"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_BROKER_KWARGS</span><span class="o">=</span><span class="s1">&#39;{&quot;queue_name&quot;: &quot;taskiq&quot;, &quot;url&quot;: &quot;redis://127.0.0.1:6379&quot;}&#39;</span>
+</span><span data-line="4"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_CLASS</span><span class="o">=</span><span class="s2">&quot;taskiq_redis:RedisAsyncResultBackend&quot;</span>
+</span><span data-line="5"><span class="nb">export</span><span class="w"> </span><span class="nv">SILVERBACK_RESULT_BACKEND_URI</span><span class="o">=</span><span class="s2">&quot;redis://127.0.0.1:6379&quot;</span>
+</span></pre></div>
+</div>
+<p>Then you should start the worker process with 2 worker subprocesses:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>worker<span class="w"> </span>-w<span class="w"> </span><span class="m">2</span><span class="w"> </span>--network<span class="w"> </span>:mainnet
+</span></pre></div>
+</div>
+<p>Finally, run the client via:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>:mainnet
+</span></pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Run the client <strong>after</strong> running the workers, otherwise there will be a delay in startup.</p>
+</div>
+<p>After the startup sequence, the client will submit tasks on triggers to the 2 worker subprocesses,
+and all task queue and results data will be go through Redis back to the client once the workers complete them.</p>
+</section>
+<section id="running-containers-with-local-keyfiles">
+<h2>Running Containers with Local Keyfiles<a class="headerlink" href="#running-containers-with-local-keyfiles" title="Link to this heading"></a></h2>
+<p>While not a recommended best practice, it is possible to “attach” your keyfiles and use them inside of a containerized bot.
+You can do this using the “volumes” feature of <a class="reference external" href="https://docs.docker.com/engine/storage/volumes/"><code class="docutils literal notranslate"><span class="pre">docker</span></code></a>
+or <a class="reference external" href="https://docs.podman.io/en/latest/markdown/podman-volume.1.html"><code class="docutils literal notranslate"><span class="pre">podman</span></code></a>.</p>
+<p>The basic idea is to add your local <code class="docutils literal notranslate"><span class="pre">~/.ape/accounts</span></code> folder into your container’s runtime environment,
+and then use the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/accounts#automation">Ape automation documentation</a>
+to set up non-interactive decryption of the relevant account using the corresponding alias you have supplied via <code class="docutils literal notranslate"><span class="pre">--account</span></code>.</p>
+<p>A full example would look like the following:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">docker<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--volume<span class="w"> </span>~/.ape/accounts:/home/harambe/.ape/accounts<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--env<span class="w"> </span>APE_ACCOUNTS_&lt;alias&gt;_PASSPHRASE<span class="o">=</span>...<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>ghcr.io/image/name<span class="w"> </span>--<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>...<span class="w"> </span>--account<span class="w"> </span>&lt;alias&gt;
+</span></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is not a recommended best practice, and relies on understanding the volume feature of your runtime tool.</p>
+<p>By sharing your filesystem with the docker container, you could allow a container to <strong>read your keyfiles</strong>
+shared from your local environemnt and allow decrypting them.</p>
+<p>Running a container image that <strong>is not your own</strong> could have drastic impacts on any of these connected wallets,
+including <strong>total loss of funds</strong>.
+Use this technique only if you trust the source of the container image.</p>
+</div>
+</section>
+<section id="cluster-access">
+<h2>Cluster Access<a class="headerlink" href="#cluster-access" title="Link to this heading"></a></h2>
+<p>Sometimes, there are scenarios where you want to create a bot that has the capability to control other bots.
+This might make sense if you have one type of bot that monitors a particular contract instance to interact with it,
+and then another type of bot that monitors the Factory contract which can produce more instances.
+Another example is if you want a bot that can monitor the performance of other bots in your cluster,
+and then be able to stop any one of them if it discovers any issues while monitoring it.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nd">@bot</span><span class="o">.</span><span class="n">on_</span><span class="p">(</span><span class="n">factory</span><span class="o">.</span><span class="n">NewPool</span><span class="p">)</span>
+</span><span data-line="2"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">new_arb_bot</span><span class="p">(</span><span class="n">log</span><span class="p">):</span>
+</span><span data-line="3">    <span class="n">vg</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">new_variable_group</span><span class="p">(</span>
+</span><span data-line="4">        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token0</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token1</span><span class="si">}</span><span class="s2">-pool&quot;</span><span class="p">,</span>
+</span><span data-line="5">        <span class="n">variables</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;POOL&quot;</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">pool_address</span><span class="p">},</span>
+</span><span data-line="6">    <span class="p">)</span>
+</span><span data-line="7">    <span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">new_bot</span><span class="p">(</span>
+</span><span data-line="8">        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token0</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">log</span><span class="o">.</span><span class="n">token1</span><span class="si">}</span><span class="s2">-arb&quot;</span><span class="p">,</span>
+</span><span data-line="9">        <span class="o">...</span><span class="p">,</span>
+</span><span data-line="10">        <span class="n">environment</span><span class="o">=</span><span class="p">[</span><span class="n">vg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+</span><span data-line="11">    <span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Creating this type of setup allows a sort of “agentic scaling” where you can quickly scale up your bot cluster’s
+on-chain “footprint” and cover more ground by having multiple other bots handling situations you encounter.
+This also can more effectively distribute the cluster load when you have large quantities of events to be handled,
+and need to dynamically scale in order to add more capacity in response to on-chain conditions.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Testing cluster access is not practical without deploying on the <a class="reference external" href="./platform.html">Silverback Platform</a>.
+The cluster implements additional authorization checks based on the <code class="docutils literal notranslate"><span class="pre">--cluster-access</span></code> flag provided
+with the <a class="reference external" href="../commands/cluster#silverback-cluster-bots-new"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">new</span></code></a>
+and <a class="reference external" href="../commands/cluster#silverback-cluster-bots-update"><code class="docutils literal notranslate"><span class="pre">silverback</span> <span class="pre">cluster</span> <span class="pre">bots</span> <span class="pre">update</span></code></a> commands.</p>
+</div>
+<p><em>Added in Silverback SDK <a class="reference external" href="https://github.com/ApeWorX/silverback/releases/tag/v0.7.35">v0.7.35</a></em>
+<em>Support added in Silverback Cluster <a class="reference external" href="https://silverback.apeworx.io/changelog#cluster-v0-7-0">v0.7.0</a></em></p>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="managing.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Silverback Platform</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../commands/run.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Local Development</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2026, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+</html>
