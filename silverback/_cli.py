@@ -186,13 +186,20 @@ def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, 
     help="Version label to use for tagging final bot images. Defaults to 'latest'.",
 )
 @click.option(
+    "--sdk",
+    "sdk_version",
+    default="stable",
+    metavar="VERSION",
+    help="Version of Silverback SDK to use as base image. Defaults to 'stable'.",
+)
+@click.option(
     "--push",
     is_flag=True,
     default=False,
     help="Push image to logged-in registry. Defaults to false.",
 )
 @click.argument("path", required=False, default=None)
-def build(use_docker, generate, tag_base, version, push, path):
+def build(use_docker, generate, tag_base, version, sdk_version, push, path):
     """
     Generate Dockerfiles and build bot container images
 
@@ -227,7 +234,7 @@ def build(use_docker, generate, tag_base, version, push, path):
                 ", or process all '*.py' bots in  'bots/' folder."
             )
 
-        generate_containerfiles(path)
+        generate_containerfiles(path, sdk_version=sdk_version)
 
     if not (Path.cwd() / IMAGES_FOLDER_NAME).exists():
         raise click.ClickException(
