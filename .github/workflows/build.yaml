@@ -125,20 +125,6 @@ jobs:
           cache-from: type=gha,scope=build-py${{ matrix.python-version }}
           platforms: ${{ github.event_name != 'pull_request' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
 
-      - name: Run container retention policy
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: snok/container-retention-policy@v3.0.1
-        with:
-          account: ApeWorX
-          token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "silverback"
-          # NOTE: Keep stable/stable-slim, latest/latest-slim, all 0.8.x series, and last in 0.7.x series
-          # TODO: Add `!*v0.8*` when released, move `!*v0.7*` to last patch version
-          image-tags: "!*stable* !*latest* !*v0.7*"
-          tag-selection: both
-          cut-off: 4w
-          dry-run: true
-
   example:
     # NOTE: We want the silverback image built above to base ours on
     needs: build
@@ -158,3 +144,25 @@ jobs:
             registry: ghcr.io
             username: ${{ github.actor }}
             password: ${{ secrets.GITHUB_TOKEN }}
+
+  prune-registry:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Run container retention policy
+        uses: snok/container-retention-policy@v3.0.1
+        with:
+          account: ApeWorX
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: "silverback"
+          # NOTE: Keep stable/stable-slim, latest/latest-slim, all 0.8.x series, and last in 0.7.x series
+          # TODO: Add `!*v0.8*` when released, move `!*v0.7*` to last patch version
+          image-tags: "!*stable* !*latest* !*v0.7*"
+          tag-selection: both
+          cut-off: 4w
+          dry-run: true
