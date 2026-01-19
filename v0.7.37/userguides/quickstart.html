@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="lime" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Overview - silverback documentation</title><link rel="shortcut icon" href="../_static/favicon.ico"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Developing Bots" href="development.html" /><link rel="prev" title="&lt;no title&gt;" href="../index.html" />
+      <link rel="canonical" href="silverback/userguides/quickstart.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="silverback/userguides/quickstart.html"/>
+  <meta property="og:title" content="Overview"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      <img class="light-logo" src="../_static/logo_grey.svg" alt="silverback" height="28" loading="lazy" />
+      <img class="dark-logo" src="../_static/logo_green.svg" alt="silverback" height="28" loading="lazy" />
+      <strong>silverback</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guides</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deploying.html">Deploying Bots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="managing.html">Silverback Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced Topics</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">CLI Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../commands/run.html">Local Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands/cluster.html">Cloud Platform</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Python Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/cluster.html">silverback.cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/exceptions.html">silverback.exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/main.html">silverback.main</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/middlewares.html">silverback.middlewares</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/recorder.html">silverback.recorder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/runner.html">silverback.runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/settings.html">silverback.settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/state.html">silverback.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/types.html">silverback.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../methoddocs/utils.html">silverback.utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#via-pip">via <code class="docutils literal notranslate"><span class="pre">pip</span></code></a></li>
+<li><a class="reference internal" href="#via-uv">via <code class="docutils literal notranslate"><span class="pre">uv</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#quick-usage">Quick Usage</a><ul>
+<li><a class="reference internal" href="#running-locally">Running Locally</a></li>
+<li><a class="reference internal" href="#running-from-a-container">Running from a Container</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#development">Development</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">silverback</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Overview</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <div class="copy-page-wrapper relative pb-4 lg:absolute lg:top-8 lg:right-6 xl:right-12">
+  <div id="copy-page-trigger">
+    <button
+      type="button"
+      class="js-copy px-3 py-1 inline-flex items-center gap-1"
+      data-url="silverback/_sources/userguides/quickstart.md.txt"
+    >
+      <i class="i-lucide" data-icon="copy"></i>
+      <span>Copy page</span>
+    </button>
+    <button class="js-menu px-2 py-1" type="button" aria-label="More actions"
+      aria-haspopup="menu" aria-expanded="false" aria-controls="copy-page-content">
+      <i class="i-lucide chevron-down"></i>
+    </button>
+  </div>
+  <div id="copy-page-content" role="menu" aria-orientation="vertical" aria-hidden="true">
+    <div role="presentation">
+      <div class="flex flex-col" role="group">
+        <button class="js-copy" type="button" role="menuitem"
+          data-url="silverback/_sources/userguides/quickstart.md.txt">
+          <span class="iconify-icon">
+            <i class="i-lucide" data-icon="copy"></i>
+          </span>
+          <span>Copy page</span>
+        </button>
+        <a role="menuitem" href="silverback/_sources/userguides/quickstart.md.txt" target="_blank" rel="nofollow"><iconify-icon icon="bi:markdown"></iconify-icon>
+            <span>View as Markdown</span></a><a role="menuitem" href="https://chatgpt.com/?hints=search&q=Read%20silverback/_sources/userguides/quickstart.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:openai"></iconify-icon>
+          <span>Open in ChatGPT</span>
+        </a><a role="menuitem" href="https://claude.ai/new?q=Read%20silverback/_sources/userguides/quickstart.md.txt%20so%20I%20can%20ask%20questions%20about%20it." target="_blank" rel="nofollow">
+          <iconify-icon icon="bi:claude"></iconify-icon>
+          <span>Open in Claude</span>
+        </a></div>
+    </div>
+  </div>
+</div><article class="yue" role="main">
+          <section id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
+<p>Silverback lets you create your own Python bots that respond in real-time to blockchain events.
+The Silverback library leverages the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart">Ape</a>
+development framework, as well as it’s ecosystem of plugins and packages, to let you to develop
+capable automated bots that trigger your own custom Python logic whenever a specific event occurs.</p>
+<p>Silverback bots are excellent for use cases that require continuous monitoring for specific conditions,
+and then require a direct response such as sending a notification or submitting a transaction.</p>
+<p>Some examples of these types of bots:</p>
+<ul class="simple">
+<li><p>Index raw events from a protocol, and derive bespoke metrics in real-time</p></li>
+<li><p>Monitor new pool creations, and deposit liquidity if conditions are favorable</p></li>
+<li><p>Measure trading activity of a pool, and use those metrics to inform your own trading algorithm</p></li>
+<li><p>Listen for large swaps by whales, in order to update a Telegram group or Discord channel</p></li>
+<li><p>Perform protocol actions such as liquidations or oracle updates</p></li>
+</ul>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.python.org/downloads">python3</a> version 3.10 or greater, python3-dev</p></li>
+</ul>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<p>Silverback relies heavily on the Ape development framework, so it’s worth it to familarize yourself
+with how to install Ape and any necessary plugins using the
+<a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart#installation">Ape installation userguide</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is suggested that you use a virtual environment of your choosing,
+and then install the Silverback package via one of the following options.</p>
+</div>
+<section id="via-pip">
+<h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Link to this heading"></a></h3>
+<p>You can install the latest release via <a class="reference external" href="https://pypi.org/project/pip"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>silverback
+</span></pre></div>
+</div>
+</section>
+<section id="via-uv">
+<h3>via <code class="docutils literal notranslate"><span class="pre">uv</span></code><a class="headerlink" href="#via-uv" title="Link to this heading"></a></h3>
+<p>You can install the latest release via <a class="reference external" href="https://docs.astral.sh/uv/getting-started/installation"><code class="docutils literal notranslate"><span class="pre">uv</span></code></a></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>silverback
+</span></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To install 2nd/3rd party Ape plugins using <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">tool</span></code>, you will need to add
+<code class="docutils literal notranslate"><span class="pre">--with</span> <span class="pre">ape-&lt;plugin</span> <span class="pre">name&gt;</span></code> to ensure the environment has them.</p>
+</div>
+</section>
+</section>
+<section id="quick-usage">
+<h2>Quick Usage<a class="headerlink" href="#quick-usage" title="Link to this heading"></a></h2>
+<p>View <a class="reference external" href="https://github.com/ApeWorX/silverback/blob/main/bots/example.py">the example</a>
+to see how to use the library to build a bot.
+The example shows off a variety of Silverback’s features and functionality,
+and you can learn more about this in the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development">development guide</a>.</p>
+<section id="running-locally">
+<h3>Running Locally<a class="headerlink" href="#running-locally" title="Link to this heading"></a></h3>
+<p>Download the example to <code class="docutils literal notranslate"><span class="pre">bots/example.py</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The example makes use of the <a class="reference external" href="https://github.com/ApeWorX/ape-tokens">Ape Tokens</a> plugin.
+Be sure to properly configure your environment for the USDC and YFI tokens on Ethereum mainnet.</p>
+</div>
+<p>To run this bot against a live network, this SDK includes a simple command you can use as follows:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">silverback<span class="w"> </span>run<span class="w"> </span>example<span class="w"> </span>--network<span class="w"> </span>:mainnet:alchemy
+</span></pre></div>
+</div>
+</section>
+<section id="running-from-a-container">
+<h3>Running from a Container<a class="headerlink" href="#running-from-a-container" title="Link to this heading"></a></h3>
+<p>Silverback makes it really easy to containerize your bots in order to run them inside of a container orchestrator.
+This makes running our example even easier, all you need is <code class="docutils literal notranslate"><span class="pre">docker</span></code> (or <code class="docutils literal notranslate"><span class="pre">podman</span></code>) installed and then you can run via:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>ghcr.io/apeworx/silverback-example:latest<span class="w"> </span>--<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>:mainnet
+</span></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The base silverback image we publish uses Python 3.11 for it’s runtime.
+Make sure all your packages are installable using this version.</p>
+</div>
+<p>For convienence, we offer the <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>,
+which is a hosted service that allows you to run many of your bots concurrently on different blockchain networks.</p>
+</section>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>This project is under active development to match the capabilities of the
+<a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.
+Things might not be in their final state and breaking changes may occur in minor revisions.
+Comments, questions, criticisms and pull requests are welcomed.</p>
+<p>See <a class="reference external" href="https://github.com/ApeWorX/silverback?tab=contributing-ov-file">Contributing</a> for more information.</p>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../index.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Home</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="development.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Developing Bots</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2026, ApeWorX LTD</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
+      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+</html>
