@@ -120,6 +120,8 @@ jobs:
             PYTHON_VERSION=${{ matrix.python-version }}
             VERSION=${{ steps.version.outputs.version }}
           push: ${{ github.event_name != 'pull_request' }}
+          # NOTE: So examples can build in next job
+          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=build-py${{ matrix.python-version }}
