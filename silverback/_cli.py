@@ -173,8 +173,9 @@ def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, 
     "--tag-base",
     default=None,
     help=(
-        "The base to use to tag the image. "
-        "The bot name (or 'bot') is appended to it, following a '-' separator. "
+        "The base to use to tag the final bot image(s). "
+        "If multiple bots are in the project, the name of the bot is appended to it, following a '-' separator. "
+        "If only one bot, then `-bot` is used. "
         "Defaults to using the name of the folder you are building from."
     ),
 )
@@ -182,7 +183,14 @@ def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, 
     "--version",
     default="latest",
     metavar="VERSION",
-    help="Version to use in tag. Defaults to 'latest'.",
+    help="Version label to use for tagging final bot images. Defaults to 'latest'.",
+)
+@click.option(
+    "--sdk",
+    "sdk_version",
+    default="stable",
+    metavar="VERSION",
+    help="Version of Silverback SDK to use as base image. Defaults to 'stable'.",
 )
 @click.option(
     "--push",
@@ -191,7 +199,7 @@ def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, 
     help="Push image to logged-in registry. Defaults to false.",
 )
 @click.argument("path", required=False, default=None)
-def build(use_docker, generate, tag_base, version, push, path):
+def build(use_docker, generate, tag_base, version, sdk_version, push, path):
     """
     Generate Dockerfiles and build bot container images
 
@@ -226,7 +234,7 @@ def build(use_docker, generate, tag_base, version, push, path):
                 ", or process all '*.py' bots in  'bots/' folder."
             )
 
-        generate_containerfiles(path)
+        generate_containerfiles(path, sdk_version=sdk_version)
 
     if not (Path.cwd() / IMAGES_FOLDER_NAME).exists():
         raise click.ClickException(
