@@ -132,8 +132,10 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     # NOTE: We want the silverback image built above to base ours on
     needs: build
+    runs-on: ubuntu-latest
     # NOTE: This speeds up testing by using an image with silverback pre-installed
-    runs-on: ghcr.io/apeworx/silverback:latest
+    container:
+      image: ghcr.io/apeworx/silverback:latest
     permissions:
       contents: read
       packages: read
@@ -152,8 +154,11 @@ jobs:
   examples-stable-sdk:
     # NOTE: We want the silverback image built above to base ours on
     needs: build
+    runs-on: ubuntu-latest
     # NOTE: This speeds up testing by using an image with silverback pre-installed
-    runs-on: ghcr.io/apeworx/silverback:latest
+    container:
+      # NOTE: Use `latest` **just for building** (will still use `stable` as base)
+      image: ghcr.io/apeworx/silverback:latest
     permissions:
       contents: read
       packages: write
