@@ -33,13 +33,13 @@ def containerfile_template(
         )
 
     if requirements_txt_fname:
-        steps.append(f"COPY {requirements_txt_fname} requirements.txt")
+        steps.append(f"COPY --chown=harambe:harambe {requirements_txt_fname} requirements.txt")
 
     if has_pyproject_toml:
-        steps.append("COPY pyproject.toml .")
+        steps.append("COPY --chown=harambe:harambe pyproject.toml .")
 
     if has_ape_config_yaml:
-        steps.append("COPY ape-config.yaml .")
+        steps.append("COPY --chown=harambe:harambe ape-config.yaml .")
 
     if requirements_txt_fname or has_pyproject_toml:
         steps.append("COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/")
@@ -52,11 +52,11 @@ def containerfile_template(
         steps.append("RUN ape plugins install -U .")
 
     if contracts_folder:
-        steps.append(f"COPY {contracts_folder} {contracts_folder}")
+        steps.append(f"COPY --chown=harambe:harambe {contracts_folder} {contracts_folder}")
         steps.append("RUN ape compile")
 
     bot_dest = "bot/" if bot_path.is_dir() else "bot.py"
-    steps.append(f"COPY {bot_path} {bot_dest}")
+    steps.append(f"COPY --chown=harambe:harambe {bot_path} {bot_dest}")
 
     return "\n".join(steps)
 
