@@ -125,18 +125,42 @@ jobs:
           cache-from: type=gha,scope=build-py${{ matrix.python-version }}
           platforms: ${{ github.event_name != 'pull_request' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
 
-  example:
+  # NOTE: Test that above built image functions as a base image (no push)
+  examples-latest-sdk:
+    if: ${{ github.event_name == 'pull_request' }}
     # NOTE: We want the silverback image built above to base ours on
     needs: build
-    runs-on: ubuntu-latest
+    # NOTE: This speeds up testing by using an image with silverback pre-installed
+    runs-on: ghcr.io/apeworx/silverback:latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build Examples (using 'latest' SDK from above)
+        run: |
+          silverback build --generate \
+            --sdk latest \
+            --tag-base ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --version pr-${{ github.event.pull_request.number }}
+
+  # Build actual image using stable as base
+  # NOTE: In PR, tests that build works with `stable` as well
+  examples-stable-sdk:
+    # NOTE: We want the silverback image built above to base ours on
+    needs: build
+    # NOTE: This speeds up testing by using an image with silverback pre-installed
+    runs-on: ghcr.io/apeworx/silverback:latest
     permissions:
       contents: read
       packages: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Build Examples
+      # TODO: Refactor official action to use `stable` as base image for job
+      - name: Build Examples (Using official Github Action)
         uses: SilverbackLtd/build-action@v1
         with:
             push: ${{ github.event_name != 'pull_request' }}
