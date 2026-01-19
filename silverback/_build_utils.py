@@ -93,10 +93,9 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
 
     if path.is_dir() and path.name == "bots":
         for bot in path.glob("*.py"):
-            bot = bot.relative_to(Path.cwd())
             (Path.cwd() / IMAGES_FOLDER_NAME / f"Dockerfile.{bot.stem}").write_text(
                 containerfile_template(
-                    bot,
+                    bot.relative_to(Path.cwd()),
                     sdk_version=sdk_version,
                     requirements_txt_fname=requirements_txt_fname,
                     has_pyproject_toml=has_pyproject_toml,
@@ -110,7 +109,7 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
     else:
         (Path.cwd() / IMAGES_FOLDER_NAME / "Dockerfile.bot").write_text(
             containerfile_template(
-                path,
+                path.relative_to(Path.cwd()),
                 sdk_version=sdk_version,
                 requirements_txt_fname=requirements_txt_fname,
                 has_pyproject_toml=has_pyproject_toml,
