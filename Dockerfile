@@ -6,7 +6,7 @@ ARG BASE_APE_IMAGE="ghcr.io/apeworx/ape:python${PYTHON_VERSION}-stable-slim"
 
 # Stage 1: Build dependencies
 # NOTE: Build with builder image to reduce image size
-FROM ${BASE_APE_IMAGE} as slim-builder
+FROM ${BASE_APE_IMAGE} AS slim-builder
 
 # NOTE: Switch back to root for building
 USER root
