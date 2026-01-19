@@ -139,15 +139,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Setup Python tool
+        uses: astral-sh/setup-uv@v7
+
+      # NOTE: Temporary until build action supports `--sdk`
       - name: Build Examples (using 'latest' SDK from above)
-        uses: SilverbackLtd/build-action@v1
-        with:
-          # TODO: add after 0.7.37 release (and update to build-action)
-          # sdk: latest
-          tag: pr-${{ github.event.pull_request.number }}
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv run silverback build \
+            --generate \
+            --sdk latest \
+            --tag-base $(echo '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]') \
+            --version pr-${{ github.event.pull_request.number }}
 
   # Build actual image using stable as base
   # NOTE: In PR, tests that build works with `stable` as well
