@@ -42,7 +42,7 @@ def containerfile_template(
         steps.append("COPY ape-config.yaml .")
 
     if requirements_txt_fname or has_pyproject_toml:
-        steps.append("RUN pip install --upgrade pip")
+        steps.append("COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/")
 
         # NOTE: Only install project via `pyproject.toml` if `requirements-bot.txt` DNE
         install_arg = "-r requirements.txt" if requirements_txt_fname else "."
