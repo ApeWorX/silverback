@@ -133,9 +133,6 @@ jobs:
     # NOTE: We want the silverback image built above to base ours on
     needs: build
     runs-on: ubuntu-latest
-    # NOTE: This speeds up testing by using an image with silverback pre-installed
-    container:
-      image: ghcr.io/apeworx/silverback:latest
     permissions:
       contents: read
       packages: read
@@ -143,11 +140,14 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Build Examples (using 'latest' SDK from above)
-        run: |
-          silverback build --generate \
-            --sdk latest \
-            --tag-base ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --version pr-${{ github.event.pull_request.number }}
+        uses: SilverbackLtd/build-action@v1
+        with:
+          # TODO: add after 0.7.37 release (and update to build-action)
+          # sdk: latest
+          tag: pr-${{ github.event.pull_request.number }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   # Build actual image using stable as base
   # NOTE: In PR, tests that build works with `stable` as well
@@ -155,10 +155,6 @@ jobs:
     # NOTE: We want the silverback image built above to base ours on
     needs: build
     runs-on: ubuntu-latest
-    # NOTE: This speeds up testing by using an image with silverback pre-installed
-    container:
-      # NOTE: Use `latest` **just for building** (will still use `stable` as base)
-      image: ghcr.io/apeworx/silverback:latest
     permissions:
       contents: read
       packages: write
@@ -166,15 +162,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # TODO: Refactor official action to use `stable` as base image for job
       - name: Build Examples (Using official Github Action)
         uses: SilverbackLtd/build-action@v1
         with:
-            push: ${{ github.event_name != 'pull_request' }}
-            tag: latest
-            registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tag: latest
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   prune-registry:
     needs: build
