@@ -165,7 +165,8 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Build Examples (Using official Github Action)
-        uses: SilverbackLtd/build-action@v1
+        # uses: SilverbackLtd/build-action@v1
+        uses: SilverbackLtd/build-action@main
         with:
           push: ${{ github.event_name != 'pull_request' }}
           tag: latest
