@@ -18,11 +18,19 @@ def containerfile_template(
 ):
     steps = [
         f"FROM ghcr.io/apeworx/silverback:{sdk_version}",
-        "USER root",
-        "WORKDIR /app",
-        "RUN chown harambe:harambe /app",
-        "USER harambe",
     ]
+
+    if sdk_version == "v0.7.36":
+        # NOTE: Some versions of the base image (using Ape v0.8.{46,47}) do not ensure this
+        #       see: https://github.com/ApeWorX/ape/pull/2753
+        # TODO: Remove in Silverback v0.8.x (no longer maintaining v0.7.36)
+        steps.extend(
+            [
+                "USER root",
+                "RUN chown harambe:harambe .",
+                "USER harambe",
+            ]
+        )
 
     if requirements_txt_fname:
         steps.append(f"COPY {requirements_txt_fname} requirements.txt")
