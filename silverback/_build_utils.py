@@ -102,9 +102,7 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
                     has_pyproject_toml=has_pyproject_toml,
                     has_ape_config_yaml=has_ape_config_yaml,
                     contracts_folder=(
-                        contracts_folder
-                        if (Path.cwd() / contracts_folder).exists()
-                        else None
+                        contracts_folder if (Path.cwd() / contracts_folder).exists() else None
                     ),
                 )
             )
@@ -118,9 +116,7 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
                 has_pyproject_toml=has_pyproject_toml,
                 has_ape_config_yaml=has_ape_config_yaml,
                 contracts_folder=(
-                    contracts_folder
-                    if (Path.cwd() / contracts_folder).exists()
-                    else None
+                    contracts_folder if (Path.cwd() / contracts_folder).exists() else None
                 ),
             )
         )
