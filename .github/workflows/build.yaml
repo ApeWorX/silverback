@@ -197,7 +197,8 @@ jobs:
         with:
           account: ApeWorX
           token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "silverback-*"
+          # NOTE: List all examples under `bots/` here
+          image-names: "silverback-example silverback-latency-test"
           image-tags: "!*latest"
           tag-selection: both
           cut-off: 4w
