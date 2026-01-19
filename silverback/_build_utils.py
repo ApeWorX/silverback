@@ -15,9 +15,8 @@ def containerfile_template(
     has_pyproject_toml: bool = False,
     has_ape_config_yaml: bool = False,
     contracts_folder: str | None = None,
-    include_bot_dir: bool = False,
 ):
-    containerfile = [
+    steps = [
         f"FROM ghcr.io/apeworx/silverback:{sdk_version}",
         "USER root",
         "WORKDIR /app",
@@ -26,39 +25,38 @@ def containerfile_template(
     ]
 
     if requirements_txt_fname:
-        containerfile.append(f"COPY {requirements_txt_fname} requirements.txt")
+        steps.append(f"COPY {requirements_txt_fname} requirements.txt")
 
     if has_pyproject_toml:
-        containerfile.append("COPY pyproject.toml .")
+        steps.append("COPY pyproject.toml .")
 
     if has_ape_config_yaml:
-        containerfile.append("COPY ape-config.yaml .")
+        steps.append("COPY ape-config.yaml .")
 
     if requirements_txt_fname or has_pyproject_toml:
-        containerfile.append("RUN pip install --upgrade pip")
+        steps.append("RUN pip install --upgrade pip")
 
-        # NOTE: Only install project via `pyproject.toml` if `requirements-bot].txt` DNE
+        # NOTE: Only install project via `pyproject.toml` if `requirements-bot.txt` DNE
         install_arg = "-r requirements.txt" if requirements_txt_fname else "."
-        containerfile.append(f"RUN pip install {install_arg}")
+        steps.append(f"RUN uv pip install {install_arg}")
 
     if has_pyproject_toml or has_ape_config_yaml:
-        containerfile.append("RUN ape plugins install -U .")
+        steps.append("RUN ape plugins install -U .")
 
     if contracts_folder:
-        containerfile.append(f"COPY {contracts_folder} /app/{contracts_folder}")
-        containerfile.append("RUN ape compile")
+        steps.append(f"COPY {contracts_folder} {contracts_folder}")
+        steps.append("RUN ape compile")
 
-    bot_src = f"{bot_path.parent}/{bot_path.name}" if include_bot_dir else bot_path.name
-    bot_dst = "/app/bot" if bot_path.is_dir() else "/app/bot.py"
-    containerfile.append(f"COPY {bot_src} {bot_dst}")
+    bot_dest = "bot/" if bot_path.is_dir() else "bot.py"
+    steps.append(f"COPY {bot_path} {bot_dest}")
 
-    return "\n".join(containerfile)
+    return "\n".join(steps)
 
 
 def generate_containerfiles(path: Path, sdk_version: str = "stable"):
     (Path.cwd() / IMAGES_FOLDER_NAME).mkdir(exist_ok=True)
 
-    contracts_folder: str | None = "contracts"
+    contracts_folder: str = "contracts"
     if has_ape_config_yaml := (ape_config_path := Path.cwd() / "ape-config.yaml").exists():
         contracts_folder = (
             yaml.safe_load(ape_config_path.read_text())
@@ -85,22 +83,21 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
         # NOTE: Doesn't exist so make it not be `requirements.txt`
         requirements_txt_fname = None
 
-    assert contracts_folder  # make mypy happy
-    if not (Path.cwd() / contracts_folder).exists():
-        contracts_folder = None
-
     if path.is_dir() and path.name == "bots":
         for bot in path.glob("*.py"):
             bot = bot.relative_to(Path.cwd())
             (Path.cwd() / IMAGES_FOLDER_NAME / f"Dockerfile.{bot.stem}").write_text(
                 containerfile_template(
                     bot,
-                    include_bot_dir=True,
                     sdk_version=sdk_version,
                     requirements_txt_fname=requirements_txt_fname,
                     has_pyproject_toml=has_pyproject_toml,
                     has_ape_config_yaml=has_ape_config_yaml,
-                    contracts_folder=contracts_folder,
+                    contracts_folder=(
+                        contracts_folder
+                        if (Path.cwd() / contracts_folder).exists()
+                        else None
+                    ),
                 )
             )
 
@@ -112,7 +109,11 @@ def generate_containerfiles(path: Path, sdk_version: str = "stable"):
                 requirements_txt_fname=requirements_txt_fname,
                 has_pyproject_toml=has_pyproject_toml,
                 has_ape_config_yaml=has_ape_config_yaml,
-                contracts_folder=contracts_folder,
+                contracts_folder=(
+                    contracts_folder
+                    if (Path.cwd() / contracts_folder).exists()
+                    else None
+                ),
             )
         )
 
