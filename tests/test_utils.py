@@ -20,6 +20,27 @@ def test_topic_encoding(topics):
     assert decode_topics_from_string(encode_topics_to_string(topics)) == topics
 
 
+EXAMPLE_BOT_PATH = Path(__file__).parent.parent / "bots" / "example.py"
+
+
+@pytest.fixture(scope="module", params=["file", "folder"])
+def bot_path(request):
+    if request.param == "file":
+        yield EXAMPLE_BOT_PATH
+
+    else:  # Make `bot/` as a module and copy example over to it
+        folder = Path(__file__).parent.parent / "bot"
+        folder.mkdir(exist_ok=True)
+        (folder / "__init__.py").write_text(EXAMPLE_BOT_PATH.read_text())
+
+        try:
+            yield folder
+
+        finally:
+            (folder / "__init__.py").unlink(missing_ok=True)
+            folder.rmdir()
+
+
 @pytest.mark.parametrize(
     "build_args",
     [
@@ -30,14 +51,12 @@ def test_topic_encoding(topics):
         dict(has_pyproject_toml=True),
         dict(has_ape_config_yaml=True),
         dict(contracts_folder="src"),
-        dict(include_bot_dir=True),
     ],
 )
-def test_containerfile_generation(build_args):
-    containerfile = containerfile_template(
-        Path(__file__).parent.parent / "bots" / "example.py", **build_args
-    )
-    assert "example.py" in containerfile
+def test_containerfile_generation(bot_path, build_args):
+    containerfile = containerfile_template(bot_path, **build_args)
+
+    assert bot_path.name in containerfile
     assert build_args.get("sdk_version", "stable") in containerfile
     if requirements_txt_fname := build_args.get("requirements_txt_fname"):
         assert requirements_txt_fname in containerfile
@@ -47,5 +66,3 @@ def test_containerfile_generation(build_args):
         assert "ape-config.yaml" in containerfile
     if contracts_folder := build_args.get("contracts_folder"):
         assert contracts_folder in containerfile
-    if build_args.get("include_bot_dir"):
-        assert "bots/" in containerfile
