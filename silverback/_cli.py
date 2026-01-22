@@ -3,6 +3,7 @@ import os
 import secrets
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
@@ -37,6 +38,7 @@ from ._click_ext import (
     token_amount_callback,
 )
 from .exceptions import ClientError
+from .types import ScalarType, is_scalar_type
 from .utils import get_chain_info
 
 if TYPE_CHECKING:
@@ -152,6 +154,81 @@ def run(cli_ctx, account, runner_class, record, recorder_class, max_exceptions, 
         max_exceptions=max_exceptions,
     )
     asyncio.run(runner.run(), debug=debug)
+
+
+def convert_param(val) -> ScalarType:
+    if is_scalar_type(val):
+        return val
+
+    elif val.lower() in ("f", "false"):
+        return False
+
+    elif val.lower() in ("t", "true"):
+        return True
+
+    try:
+        return int(val)
+
+    except Exception:
+        pass
+
+    try:
+        return float(val)
+
+    except Exception:
+        pass
+
+    # NOTE: Decimal allows the most values, so leave last
+    return Decimal(val)
+
+
+def convert_param_kwargs(ctx, param, values) -> dict[str, ScalarType]:
+    converted_params = {}
+    for kwarg in values:
+        name, value = kwarg.split("=")
+        converted_params[name] = convert_param(value)
+
+    return converted_params
+
+
+@cli.command(cls=ConnectedProviderCommand, help="Set parameters against a running silverback app")
+@network_option(
+    default=os.environ.get("SILVERBACK_NETWORK_CHOICE", "auto"),
+    callback=_network_callback,
+)
+@click.option(
+    "-p",
+    "--param",
+    "param_updates",
+    multiple=True,
+    callback=convert_param_kwargs,
+)
+@click.argument("bot", required=False, callback=bot_path_callback)
+def set_param(param_updates, bot):
+    if len(param_updates) == 0:
+        raise click.UsageError("Must change at least one param via `-p/--param`")
+
+    elif len(param_updates) > 1:
+        kicker = bot._batch_set_param
+        args = [param_updates]
+
+    else:
+        kicker = bot._set_param
+        args = list(param_updates.items())[0]
+
+    async def set_parameters():
+        await bot.broker.startup()
+        task = await kicker.kiq(*args)
+        result = await task.wait_result()
+        await bot.broker.shutdown()
+
+        if result.is_err:
+            raise click.UsageError(str(result.error))
+
+        else:
+            click.echo(result.return_value)
+
+    asyncio.run(set_parameters())
 
 
 @cli.command(section="Local Commands")
