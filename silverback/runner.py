@@ -457,19 +457,28 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
                 )
             )
 
-        contract_address = task_data.labels.get("address")
+        if contract_addresses_str := task_data.labels.get("address"):
+            contract_addresses = list(map(to_checksum_address, contract_addresses_str.split(",")))
+
+        else:
+            contract_addresses = None
+
         topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
         sub_id = await self._web3.subscription_manager.subscribe(
             LogsSubscription(
                 label=task_data.name,
-                address=to_checksum_address(contract_address) if contract_address else None,
+                address=contract_addresses,
                 topics=topics,  # type: ignore[arg-type]
                 handler=log_handler,
             )
         )
-        logger.debug(
-            f"Handling '{contract_address or ''}:{topics[0] if topics else ''}' logs via {sub_id}"
-        )
+        if contract_addresses:
+            for address in contract_addresses:
+                logger.debug(
+                    f"Handling '{address}:{topics[0] if topics else ''}' logs via {sub_id}"
+                )
+        else:
+            logger.debug(f"Handling '*:{topics[0] if topics else ''}' logs via {sub_id}")
 
     def _daemon_tasks(self) -> list[Coroutine]:
         # NOTE: Handle this as a daemon task (after startup)
@@ -503,7 +512,17 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             self._runtime_task_group.create_task(self.run_task(task_data, block))
 
     async def _event_task(self, task_data: TaskData):
-        contract_address = task_data.labels.get("address")
+        if contract_addresses_str := task_data.labels.get("address"):
+            contract_addresses = list(map(to_checksum_address, contract_addresses_str.split(",")))
+
+            if len(contract_addresses) != 1:
+                raise ValueError("Only 1 contract address supported for Polling runner.")
+
+            contract_address = contract_addresses[0]
+
+        else:
+            contract_address = None
+
         event = EventABI.from_signature(task_data.labels["event"])
         topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
         async for log in async_wrap_iter(
