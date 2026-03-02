@@ -2,7 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from silverback._build_utils import containerfile_template
+from silverback._build_utils import (
+    IMAGES_FOLDER_NAME,
+    containerfile_template,
+    generate_containerfiles,
+)
 from silverback.utils import decode_topics_from_string, encode_topics_to_string
 
 
@@ -66,3 +70,58 @@ def test_containerfile_generation(bot_path, build_args):
         assert "ape-config.yaml" in containerfile
     if contracts_folder := build_args.get("contracts_folder"):
         assert contracts_folder in containerfile
+
+
+@pytest.mark.parametrize(
+    ("config_name", "config_contents"),
+    [
+        (
+            "ape-config.yaml",
+            'plugins:\n  - name: "aws"\n    version: ">=0.8.1b1"\n',
+        ),
+        (
+            "pyproject.toml",
+            '[[tool.ape.plugins]]\nname = "aws"\nversion = ">=0.8.1b1"\n',
+        ),
+    ],
+)
+def test_generate_containerfiles_avoids_upgrade_for_pinned_plugins(
+    tmp_path, monkeypatch, config_name, config_contents
+):
+    bot_path = tmp_path / "bot.py"
+    bot_path.write_text("from silverback import SilverbackBot\n")
+    (tmp_path / config_name).write_text(config_contents)
+
+    monkeypatch.chdir(tmp_path)
+    generate_containerfiles(bot_path)
+
+    containerfile = (tmp_path / IMAGES_FOLDER_NAME / "Dockerfile.bot").read_text()
+    assert "RUN ape plugins install ." in containerfile
+    assert "RUN ape plugins install -U ." not in containerfile
+
+
+@pytest.mark.parametrize(
+    ("config_name", "config_contents"),
+    [
+        (
+            "ape-config.yaml",
+            'plugins:\n  - name: "aws"\n',
+        ),
+        (
+            "pyproject.toml",
+            '[[tool.ape.plugins]]\nname = "aws"\n',
+        ),
+    ],
+)
+def test_generate_containerfiles_keeps_upgrade_for_unpinned_plugins(
+    tmp_path, monkeypatch, config_name, config_contents
+):
+    bot_path = tmp_path / "bot.py"
+    bot_path.write_text("from silverback import SilverbackBot\n")
+    (tmp_path / config_name).write_text(config_contents)
+
+    monkeypatch.chdir(tmp_path)
+    generate_containerfiles(bot_path)
+
+    containerfile = (tmp_path / IMAGES_FOLDER_NAME / "Dockerfile.bot").read_text()
+    assert "RUN ape plugins install -U ." in containerfile
