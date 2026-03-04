@@ -207,6 +207,12 @@ so we have included the <a class="reference external" href="../commands/run.html
 Assuming the build commands succeed, you will have fully-built images that you can push into a Registry.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
+<p>If your project pins Ape plugin versions in <code class="docutils literal notranslate"><span class="pre">ape-config.yaml</span></code> or <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>,
+the generated Dockerfiles automatically avoid <code class="docutils literal notranslate"><span class="pre">ape</span> <span class="pre">plugins</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">.</span></code> and instead
+use <code class="docutils literal notranslate"><span class="pre">ape</span> <span class="pre">plugins</span> <span class="pre">install</span> <span class="pre">.</span></code> so version-pinned plugin builds continue to work.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>If you chose the <code class="docutils literal notranslate"><span class="pre">bot/</span></code> project structure and <code class="docutils literal notranslate"><span class="pre">bot</span></code> is a Python package, you will be unable to use the dockerfile generation feature.
 This method will warn you that you are generating bots for a python package, but will not stop you from attempting to do so.
 When you generate the dockerfiles, be aware that it will only copy the <code class="docutils literal notranslate"><span class="pre">bot/</span></code> folder into the Dockerfile,
