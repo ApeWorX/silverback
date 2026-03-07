@@ -1,8 +1,9 @@
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field
 
-from .types import SilverbackID, UTCTimestamp, utc_now
+from .types import ScalarType, SilverbackID, UTCTimestamp, utc_now
 
 
 class StateSnapshot(BaseModel):
@@ -17,9 +18,24 @@ class StateSnapshot(BaseModel):
     # Last nonce used by signer
     last_nonce_used: int | None = None
 
+    # User-defined parameters
+    parameters: dict[str, ScalarType] = {}
+
     # Last time the state was updated
     # NOTE: intended to use default when creating a model with this type
     last_updated: UTCTimestamp = Field(default_factory=utc_now)
+
+    def __dir__(self) -> list[str]:
+        return sorted([*super().__dir__(), *self.parameters])
+
+    def __getattr__(self, attr: str) -> Any:
+        try:
+            return super().__getattr__(attr)  # type: ignore[misc]
+        except AttributeError:
+            if val := self.parameters.get(attr):
+                return val
+
+        raise AttributeError(f"'{self.__class__.__qualname__}' object has no attribute '{attr}'")
 
 
 class Datastore:
