@@ -40,6 +40,12 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     ENABLE_METRICS: bool = False
 
+    # OpenTelemetry (TaskIQ instrumentor + Datapoint metrics). Process exporter /
+    # resource config belongs to Ape + OTEL_* env; these are Silverback-only toggles.
+    ENABLE_OTEL: bool = False
+    # Where @on_metric handlers fire from: result (legacy), otel (MetricBridge), both (dev).
+    METRIC_TRIGGER_SOURCE: str = "result"
+
     RESULT_BACKEND_CLASS: str = "taskiq.brokers.inmemory_broker:InmemoryResultBackend"
     RESULT_BACKEND_KWARGS: dict[str, Any] = dict()
 
@@ -66,7 +72,20 @@ class Settings(BaseSettings, ManagerAccessMixin):
                 PrometheusMiddleware(server_addr="0.0.0.0", server_port=9000),
             )
 
+        # OTel handler spans (TaskIQ instrumentor attached in get_broker)
+        if self._otel_enabled():
+            from silverback.otel import create_handler_middleware
+
+            if otel_mw := create_handler_middleware():
+                middlewares.append(otel_mw)
+
         return middlewares
+
+    def _otel_enabled(self) -> bool:
+        from silverback.otel import should_enable_otel
+
+        # ENABLE_OTEL=True forces on; default False defers to OTEL_* / env auto-detect
+        return should_enable_otel(True if self.ENABLE_OTEL else None)
 
     def get_result_backend(self) -> AsyncResultBackend | None:
         if not self.RESULT_BACKEND_CLASS:
@@ -88,6 +107,12 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
         if result_backend := self.get_result_backend():
             broker = broker.with_result_backend(result_backend)
+
+        if self._otel_enabled():
+            from silverback.otel import configure, instrument_broker
+
+            configure()
+            instrument_broker(broker)
 
         return broker
 

@@ -53,6 +53,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# OpenTelemetry traces + Datapoint metrics (TaskIQ instrumentor, OTLP HTTP)
+# Process exporter/resource config is expected to move to Ape config; this extra
+# only pulls the instrumentation stack.
+opentelemetry = [
+    "taskiq[opentelemetry]>=0.12.1,<0.13",
+    "opentelemetry-sdk>=1.27,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.27,<2",
+]
 # If you want to use the MCP (optional)
 mcp = [
     "fastmcp",  # MCP Server & AI Computer Use

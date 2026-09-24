@@ -124,6 +124,8 @@ class SilverbackBot(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
+        self.settings = settings
+
         provider_context = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
         self.provider = provider_context.__enter__()
