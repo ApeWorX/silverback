@@ -30,38 +30,10 @@ def _reset_otel(monkeypatch):
     import silverback.otel as otel
 
     otel.reset_for_tests()
-    monkeypatch.delenv("SILVERBACK_ENABLE_OTEL", raising=False)
     monkeypatch.delenv("OTEL_EXPORTER_OTLP_ENDPOINT", raising=False)
     monkeypatch.delenv("OTEL_SDK_DISABLED", raising=False)
     yield
     otel.reset_for_tests()
-
-
-def test_soft_import_helpers_without_crash():
-    from silverback.otel import (
-        is_otel_env_configured,
-        otel_packages_available,
-        should_enable_otel,
-    )
-
-    assert otel_packages_available() is True
-    assert is_otel_env_configured() is False
-    assert should_enable_otel(False) is False
-    assert should_enable_otel(True) is True
-
-
-def test_should_enable_from_env(monkeypatch):
-    from silverback.otel import should_enable_otel
-
-    monkeypatch.setenv("SILVERBACK_ENABLE_OTEL", "true")
-    assert should_enable_otel() is True
-
-    monkeypatch.delenv("SILVERBACK_ENABLE_OTEL")
-    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
-    assert should_enable_otel() is True
-
-    monkeypatch.setenv("OTEL_SDK_DISABLED", "true")
-    assert should_enable_otel() is False
 
 
 def test_configure_inmemory_and_record_datapoints():
@@ -207,17 +179,6 @@ def test_metric_triggers_fire_via_bridge_only():
     )
     assert coros == []
     assert fired == []
-
-
-def test_on_metric_raises_when_otel_unavailable(monkeypatch):
-    from silverback.exceptions import OpenTelemetryRequired
-    from silverback.otel import ensure_metric_bridge, reset_for_tests
-
-    reset_for_tests()
-    monkeypatch.setattr("silverback.otel.otel_packages_available", lambda: False)
-
-    with pytest.raises(OpenTelemetryRequired, match="required for metric-value triggers"):
-        ensure_metric_bridge()
 
 
 def test_ensure_metric_bridge_works_without_otlp_env():

@@ -2,13 +2,10 @@
 OpenTelemetry integration for Silverback (traces + user Datapoint metrics).
 
 OpenTelemetry packages are a **hard dependency** (required for ``@bot.on_metric``
-triggers via :class:`MetricBridge`). Soft-import fallbacks remain only so tests
-can simulate a missing install and raise :class:`~silverback.exceptions.OpenTelemetryRequired`.
-
-``SILVERBACK_ENABLE_OTEL`` / :func:`should_enable_otel` gate TaskIQ instrumentor,
-handler spans, and OTLP export — **not** whether metric triggers are allowed.
-The MetricBridge is always configured for in-process trigger notify (local
-InMemoryBroker needs no OTLP endpoint).
+triggers via :class:`MetricBridge`). The MetricBridge and TaskIQ instrumentation
+are configured through normal imports; standard ``OTEL_*`` environment variables
+control OTLP exporter configuration. The bridge works in-process without an OTLP
+endpoint.
 
 Process-wide exporter / resource configuration is expected to move to Ape
 (ape-config + OTEL_* overrides). This module bootstraps providers when none
@@ -51,65 +48,6 @@ _meter_provider: Any = None
 _tracer_provider: Any = None
 _test_span_exporter: Any = None
 _test_metric_reader: Any = None
-
-
-def _truthy(value: str | None) -> bool:
-    if value is None:
-        return False
-    return value.strip().lower() in {"1", "true", "yes", "on"}
-
-
-def otel_packages_available() -> bool:
-    try:
-        import opentelemetry  # noqa: F401
-        from opentelemetry.sdk.metrics import MeterProvider  # noqa: F401
-        from opentelemetry.sdk.trace import TracerProvider  # noqa: F401
-
-        return True
-    except ImportError:
-        return False
-
-
-def is_otel_env_configured() -> bool:
-    """True when standard OTEL_* suggests the process wants telemetry."""
-    if _truthy(os.environ.get("OTEL_SDK_DISABLED")):
-        return False
-    if os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT"):
-        return True
-    if os.environ.get("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"):
-        return True
-    if os.environ.get("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"):
-        return True
-    metrics_exporter = os.environ.get("OTEL_METRICS_EXPORTER", "").lower()
-    traces_exporter = os.environ.get("OTEL_TRACES_EXPORTER", "").lower()
-    if metrics_exporter and metrics_exporter != "none":
-        return True
-    if traces_exporter and traces_exporter != "none":
-        return True
-    return False
-
-
-def should_enable_otel(settings_enable: bool | None = None) -> bool:
-    """
-    Silverback instrumentation gate.
-
-    Enabled when SILVERBACK_ENABLE_OTEL / settings flag is on, or when OTEL_*
-    indicates an exporter is configured (so cloud images "just work").
-
-    Pass ``settings_enable=True`` to force on, ``False`` to force off, ``None``
-    to defer to env / OTEL_* auto-detection. Default Settings.ENABLE_OTEL=False
-    should call with ``None`` so OTEL_* still activates instrumentation.
-    """
-    if _truthy(os.environ.get("OTEL_SDK_DISABLED")):
-        return False
-    env_flag = os.environ.get("SILVERBACK_ENABLE_OTEL")
-    if env_flag is not None and not _truthy(env_flag):
-        return False
-    if settings_enable is True or _truthy(env_flag):
-        return True
-    if settings_enable is False:
-        return False
-    return is_otel_env_configured()
 
 
 class MetricBridge:
@@ -202,17 +140,10 @@ def ensure_metric_bridge(*, force: bool = False) -> MetricBridge:
     Ensure MetricBridge is configured for ``@on_metric`` triggers.
 
     Raises:
-        OpenTelemetryRequired: if OTel packages are missing or configure fails.
+        RuntimeError: if MetricBridge initialization did not produce a bridge.
     """
-    from silverback.exceptions import OpenTelemetryRequired
-
-    if not otel_packages_available():
-        raise OpenTelemetryRequired(
-            "opentelemetry-sdk (and related packages) are not importable."
-        )
-
     if not configure(force=force) or get_bridge() is None:
-        raise OpenTelemetryRequired("MetricBridge failed to initialize.")
+        raise RuntimeError("MetricBridge failed to initialize; check OTel configuration.")
 
     bridge = get_bridge()
     assert bridge is not None
@@ -248,11 +179,6 @@ def configure(
 
     if _configured and not force:
         return _bridge is not None
-
-    if not otel_packages_available():
-        logger.debug("OpenTelemetry packages not installed; Silverback OTel disabled")
-        _configured = True
-        return False
 
     from opentelemetry import metrics, trace
     from opentelemetry.sdk.metrics import MeterProvider
@@ -372,8 +298,6 @@ def _build_otlp_metric_reader() -> Any | None:
 
 def instrument_broker(broker: "AsyncBroker") -> bool:
     """Attach TaskIQ OpenTelemetryMiddleware via TaskiqInstrumentor."""
-    if not otel_packages_available():
-        return False
     try:
         from taskiq.instrumentation import TaskiqInstrumentor
     except ImportError:
@@ -395,11 +319,8 @@ def instrument_broker(broker: "AsyncBroker") -> bool:
     return True
 
 
-def create_handler_middleware() -> "TaskiqMiddleware | None":
+def create_handler_middleware() -> "TaskiqMiddleware":
     """Return middleware that wraps user handlers in a silverback.handler span."""
-    if not otel_packages_available():
-        return None
-
     from opentelemetry import trace
     from opentelemetry.trace import Status, StatusCode
     from taskiq import TaskiqMessage, TaskiqMiddleware, TaskiqResult

@@ -47,18 +47,6 @@ class NoSignerLoaded(SilverbackException):
         )
 
 
-class OpenTelemetryRequired(SilverbackException):
-    """Raised when `@bot.on_metric` is used but OpenTelemetry cannot be configured."""
-
-    def __init__(self, detail: str | None = None):
-        base = (
-            "OpenTelemetry is required for metric-value triggers (`@bot.on_metric`). "
-            "Install OpenTelemetry packages (they are a hard dependency of silverback) "
-            "and ensure MetricBridge can be configured."
-        )
-        super().__init__(f"{base} {detail}" if detail else base)
-
-
 # TODO: `ExceptionGroup` added in Python 3.11
 class StartupFailure(SilverbackException, click.ClickException):
     def __init__(self, *exceptions: BaseException | str | None):
