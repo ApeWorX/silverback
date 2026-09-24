@@ -170,7 +170,8 @@ def test_handler_middleware_creates_spans():
     assert handler_spans[0].attributes["silverback.task_type"] == "user:new-block"
 
 
-def test_trigger_source_otel_path_records_and_notifies():
+def test_metric_triggers_fire_via_bridge_only():
+    """Metric triggers notify via MetricBridge; no separate result-path dual fire."""
     from silverback.otel import configure, get_bridge, record_task_metrics, reset_for_tests
 
     reset_for_tests()
@@ -182,6 +183,8 @@ def test_trigger_source_otel_path_records_and_notifies():
         fired.append(datapoint.data)
 
     bridge.add_handler("tvl", check_value)
+
+    # notify=True is the bridge trigger path (runner always passes this now)
     coros = record_task_metrics(
         "report",
         {"tvl": ScalarDatapoint(data=100.0)},
@@ -192,6 +195,39 @@ def test_trigger_source_otel_path_records_and_notifies():
     for c in coros:
         asyncio.run(c)
     assert fired == [100.0]
+
+    # notify=False records instruments but does not fire handlers (no dual path)
+    fired.clear()
+    coros = record_task_metrics(
+        "report",
+        {"tvl": ScalarDatapoint(data=200.0)},
+        bot_name="bot",
+        completed=datetime.now(timezone.utc),
+        notify=False,
+    )
+    assert coros == []
+    assert fired == []
+
+
+def test_on_metric_raises_when_otel_unavailable(monkeypatch):
+    from silverback.exceptions import OpenTelemetryRequired
+    from silverback.otel import ensure_metric_bridge, reset_for_tests
+
+    reset_for_tests()
+    monkeypatch.setattr("silverback.otel.otel_packages_available", lambda: False)
+
+    with pytest.raises(OpenTelemetryRequired, match="required for metric-value triggers"):
+        ensure_metric_bridge()
+
+
+def test_ensure_metric_bridge_works_without_otlp_env():
+    """Local InMemoryBroker triggers need bridge without OTLP endpoint."""
+    from silverback.otel import ensure_metric_bridge, get_bridge, reset_for_tests
+
+    reset_for_tests()
+    bridge = ensure_metric_bridge()
+    assert bridge is get_bridge()
+    assert bridge is not None
 
 
 def test_instrument_broker_attaches_middleware():

@@ -42,20 +42,21 @@ dependencies = [
     "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup
     "httpx>=0.28,<1",  # Use for Cluster client, auth
     "jwcrypto>=1.4,<2",  # Use for auth
+    # OpenTelemetry (hard dep): MetricBridge / @on_metric triggers; k8s primary path
+    "opentelemetry-sdk>=1.27,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.27,<2",
     "packaging",  # Use same version as eth-ape
     "pycron>=3.1,<4",  # Checking/triggering cron tasks
     "pydantic_settings",  # Use same version as eth-ape
     "python-dotenv>=1.1.1,<2",  # Load --env-file values
     "quattro>=25.2,<26",  # Manage task groups and background tasks
-    "taskiq[metrics]>=0.12.1,<0.13",  # Broker subsystem
+    "taskiq[metrics,opentelemetry]>=0.12.1,<0.13",  # Broker + TaskIQ OTel instrumentor
     "tomlkit>=0.12,<1",  # For reading/writing global platform profile
     "yaspin>=3.1,<4",  # Display a nice spinner when logging in
 ]
 
 [project.optional-dependencies]
-# OpenTelemetry traces + Datapoint metrics (TaskIQ instrumentor, OTLP HTTP)
-# Process exporter/resource config is expected to move to Ape config; this extra
-# only pulls the instrumentation stack.
+# Alias kept for docs / existing install instructions; packages are already hard deps.
 opentelemetry = [
     "taskiq[opentelemetry]>=0.12.1,<0.13",
     "opentelemetry-sdk>=1.27,<2",

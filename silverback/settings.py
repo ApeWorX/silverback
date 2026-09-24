@@ -40,11 +40,11 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
     ENABLE_METRICS: bool = False
 
-    # OpenTelemetry (TaskIQ instrumentor + Datapoint metrics). Process exporter /
-    # resource config belongs to Ape + OTEL_* env; these are Silverback-only toggles.
+    # OpenTelemetry instrumentation toggle (TaskIQ instrumentor / handler spans /
+    # OTLP export). Does NOT gate `@bot.on_metric`: metric triggers always use the
+    # in-process MetricBridge (OTel packages are a hard dependency). Process
+    # exporter / resource config belongs to Ape + OTEL_* env.
     ENABLE_OTEL: bool = False
-    # Where @on_metric handlers fire from: result (legacy), otel (MetricBridge), both (dev).
-    METRIC_TRIGGER_SOURCE: str = "result"
 
     RESULT_BACKEND_CLASS: str = "taskiq.brokers.inmemory_broker:InmemoryResultBackend"
     RESULT_BACKEND_KWARGS: dict[str, Any] = dict()
@@ -108,10 +108,12 @@ class Settings(BaseSettings, ManagerAccessMixin):
         if result_backend := self.get_result_backend():
             broker = broker.with_result_backend(result_backend)
 
-        if self._otel_enabled():
-            from silverback.otel import configure, instrument_broker
+        # MetricBridge is always configured (hard OTel dep; needed for @on_metric).
+        # TaskIQ instrumentor / handler spans remain gated by ENABLE_OTEL / OTEL_*.
+        from silverback.otel import configure, instrument_broker
 
-            configure()
+        configure()
+        if self._otel_enabled():
             instrument_broker(broker)
 
         return broker

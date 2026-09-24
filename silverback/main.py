@@ -24,6 +24,7 @@ from .exceptions import (
     InvalidContainerConfigurationError,
     InvalidContainerTypeError,
     NoSignerLoaded,
+    OpenTelemetryRequired,
 )
 from .settings import Settings
 from .state import StateSnapshot
@@ -502,6 +503,9 @@ class SilverbackBot(ManagerAccessMixin):
             elif task_type is TaskType.METRIC_VALUE:
                 # NOTE: This shouldn't happen to users
                 assert metric_name, "Must supply `metric_name=`."
+                from silverback.otel import ensure_metric_bridge
+
+                ensure_metric_bridge()  # raises OpenTelemetryRequired if unavailable
                 labels["metric"] = metric_name
 
                 if value_threshold:
@@ -670,6 +674,11 @@ class SilverbackBot(ManagerAccessMixin):
         """
         Create a task that runs when the value of a specified metric has tripped a threshold.
 
+        Metric-value triggers require OpenTelemetry (hard dependency) and fire only via
+        the in-process :class:`~silverback.otel.MetricBridge` — not via a separate
+        result-loop path. ``SILVERBACK_ENABLE_OTEL`` does not gate this decorator;
+        it only controls TaskIQ instrumentor / handler spans / OTLP export.
+
         ```{notice}
         If no keyword args provided to this decorator, it will trigger on every update of metric.
         ```
@@ -690,7 +699,21 @@ class SilverbackBot(ManagerAccessMixin):
         Returns:
             Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
                 A function wrapper that will register the task handler.
+
+        Raises:
+            :class:`~silverback.exceptions.OpenTelemetryRequired`:
+                If OpenTelemetry packages are missing or MetricBridge cannot be configured.
         """
+        # Hard requirement: metric triggers need MetricBridge (OTel packages).
+        from silverback.otel import ensure_metric_bridge
+
+        try:
+            ensure_metric_bridge()
+        except OpenTelemetryRequired:
+            raise
+        except Exception as exc:  # pragma: no cover — unexpected configure failures
+            raise OpenTelemetryRequired(str(exc)) from exc
+
         value_threshold: dict[str, ScalarType] = {}
         if ge is not None:
             value_threshold["ge"] = ge

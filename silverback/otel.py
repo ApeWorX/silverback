@@ -1,13 +1,19 @@
 """
 OpenTelemetry integration for Silverback (traces + user Datapoint metrics).
 
-Soft-imports OTel / TaskIQ instrumentor so `import silverback` works without
-the optional ``silverback[opentelemetry]`` extra.
+OpenTelemetry packages are a **hard dependency** (required for ``@bot.on_metric``
+triggers via :class:`MetricBridge`). Soft-import fallbacks remain only so tests
+can simulate a missing install and raise :class:`~silverback.exceptions.OpenTelemetryRequired`.
+
+``SILVERBACK_ENABLE_OTEL`` / :func:`should_enable_otel` gate TaskIQ instrumentor,
+handler spans, and OTLP export — **not** whether metric triggers are allowed.
+The MetricBridge is always configured for in-process trigger notify (local
+InMemoryBroker needs no OTLP endpoint).
 
 Process-wide exporter / resource configuration is expected to move to Ape
-(ape-config + OTEL_* overrides). This module only bootstraps providers when
-none exist yet, and owns Silverback-specific instrumentation (TaskIQ, handler
-spans, Datapoint → metric bridge, metric-trigger notifier).
+(ape-config + OTEL_* overrides). This module bootstraps providers when none
+exist yet, and owns Silverback-specific instrumentation (TaskIQ, handler spans,
+Datapoint → metric bridge, metric-trigger notifier).
 """
 
 from __future__ import annotations
@@ -108,10 +114,11 @@ def should_enable_otel(settings_enable: bool | None = None) -> bool:
 
 class MetricBridge:
     """
-    Dual-write Datapoints to OTel instruments and optionally notify trigger handlers.
+    Dual-write Datapoints to OTel instruments and notify metric-value trigger handlers.
 
-    Runner registers threshold callbacks via ``add_handler``. Emission is the
-    single path used when ``METRIC_TRIGGER_SOURCE=otel``.
+    Runner registers threshold callbacks via ``add_handler``. Metric-value triggers
+    (``@bot.on_metric``) fire **only** through this bridge — not via the runner
+    result-loop dual path.
     """
 
     def __init__(self, meter: Any | None = None):
@@ -188,6 +195,28 @@ class MetricBridge:
 
 def get_bridge() -> MetricBridge | None:
     return _bridge
+
+
+def ensure_metric_bridge(*, force: bool = False) -> MetricBridge:
+    """
+    Ensure MetricBridge is configured for ``@on_metric`` triggers.
+
+    Raises:
+        OpenTelemetryRequired: if OTel packages are missing or configure fails.
+    """
+    from silverback.exceptions import OpenTelemetryRequired
+
+    if not otel_packages_available():
+        raise OpenTelemetryRequired(
+            "opentelemetry-sdk (and related packages) are not importable."
+        )
+
+    if not configure(force=force) or get_bridge() is None:
+        raise OpenTelemetryRequired("MetricBridge failed to initialize.")
+
+    bridge = get_bridge()
+    assert bridge is not None
+    return bridge
 
 
 def _shutdown_providers() -> None:
