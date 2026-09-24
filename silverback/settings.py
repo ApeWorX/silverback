@@ -66,6 +66,11 @@ class Settings(BaseSettings, ManagerAccessMixin):
                 PrometheusMiddleware(server_addr="0.0.0.0", server_port=9000),
             )
 
+        # OTel handler spans are always enabled; OTEL_* only controls exporters.
+        from silverback.otel import create_handler_middleware
+
+        middlewares.append(create_handler_middleware())
+
         return middlewares
 
     def get_result_backend(self) -> AsyncResultBackend | None:
@@ -88,6 +93,13 @@ class Settings(BaseSettings, ManagerAccessMixin):
 
         if result_backend := self.get_result_backend():
             broker = broker.with_result_backend(result_backend)
+
+        # OTel is a hard dependency: always configure the bridge and instrumentation.
+        # Standard OTEL_* variables control whether OTLP exporters are attached.
+        from silverback.otel import configure, instrument_broker
+
+        configure()
+        instrument_broker(broker)
 
         return broker
 

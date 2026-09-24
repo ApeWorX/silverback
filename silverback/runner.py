@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Callable, Coroutine, Type
+from typing import Any, Coroutine, Type
 
 import pycron  # type: ignore[import-untyped]
 import quattro
@@ -60,9 +60,6 @@ class BaseRunner(ABC):
         # TODO: Allow configuring datastore class
         self.datastore = Datastore()
         self.recorder = recorder
-        self.metric_handlers: dict[str, list[Callable[[Datapoint, datetime], Coroutine]]] = (
-            defaultdict(list)
-        )
 
         self.max_exceptions = max_exceptions
         self.exceptions: dict[TaskData, int] = defaultdict(lambda: 0)
@@ -114,10 +111,21 @@ class BaseRunner(ABC):
             else:
                 logger.info(f"{task_data.name} - Metrics collected\n  {metrics_str}")
 
-            # Trigger checks for metric values
-            for metric_name, datapoint in result.metrics.items():
-                for handler in self.metric_handlers[metric_name]:
-                    self._runtime_task_group.create_task(handler(datapoint, result.completed))
+            # Dual-write Datapoints → OTel instruments; metric-value triggers fire ONLY via bridge
+            from silverback.otel import record_task_metrics
+
+            bot_id = self.bot.identifier
+            for coro in record_task_metrics(
+                task_data.name,
+                dict(result.metrics.items()),
+                bot_name=bot_id.name,
+                ecosystem=bot_id.ecosystem,
+                network=bot_id.network,
+                block_number=result.block_number,
+                completed=result.completed,
+                notify=True,
+            ):
+                self._runtime_task_group.create_task(coro)
 
         if self.recorder:  # Recorder configured to record
             await self.recorder.add_result(result)
@@ -186,7 +194,10 @@ class BaseRunner(ABC):
             if isinstance(datapoint, ScalarDatapoint) and exceeds_value_threshold(datapoint.data):
                 self._runtime_task_group.create_task(self.run_task(task_data, datapoint.data))
 
-        self.metric_handlers[metric_name].append(check_value)
+        # Metric-value triggers fire only via OTel MetricBridge (no result-path dual fire)
+        from silverback.otel import ensure_metric_bridge
+
+        ensure_metric_bridge().add_handler(metric_name, check_value)
 
         # TODO: Support rate threshold checks?
 

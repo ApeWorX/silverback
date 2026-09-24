@@ -124,6 +124,8 @@ class SilverbackBot(ManagerAccessMixin):
         if not settings:
             settings = Settings()
 
+        self.settings = settings
+
         provider_context = settings.get_provider_context()
         # NOTE: This allows using connected ape methods e.g. `Contract`
         self.provider = provider_context.__enter__()
@@ -500,6 +502,9 @@ class SilverbackBot(ManagerAccessMixin):
             elif task_type is TaskType.METRIC_VALUE:
                 # NOTE: This shouldn't happen to users
                 assert metric_name, "Must supply `metric_name=`."
+                from silverback.otel import ensure_metric_bridge
+
+                ensure_metric_bridge()
                 labels["metric"] = metric_name
 
                 if value_threshold:
@@ -668,6 +673,10 @@ class SilverbackBot(ManagerAccessMixin):
         """
         Create a task that runs when the value of a specified metric has tripped a threshold.
 
+        Metric-value triggers require OpenTelemetry (a hard dependency) and fire only
+        via the in-process :class:`~silverback.otel.MetricBridge` — not via a separate
+        result-loop path. Standard ``OTEL_*`` variables control OTLP exporters.
+
         ```{notice}
         If no keyword args provided to this decorator, it will trigger on every update of metric.
         ```
@@ -688,7 +697,13 @@ class SilverbackBot(ManagerAccessMixin):
         Returns:
             Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
                 A function wrapper that will register the task handler.
+
         """
+        # Hard dependency: normal OTel imports/configuration initialize MetricBridge.
+        from silverback.otel import ensure_metric_bridge
+
+        ensure_metric_bridge()
+
         value_threshold: dict[str, ScalarType] = {}
         if ge is not None:
             value_threshold["ge"] = ge
