@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Iterator
+from typing import Any
 
 from ape.types import HexBytes
 from eth_typing import HexStr

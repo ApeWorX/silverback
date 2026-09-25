@@ -59,17 +59,17 @@ class ProfileSettings(BaseModel):
             settings_dict = dict(tomlkit.loads(PROFILE_PATH.read_text()))
 
         else:  # Write the defaults to disk for next time
-            settings_dict = dict(
-                auth={
+            settings_dict = {
+                "auth": {
                     DEFAULT_PROFILE: AuthenticationConfig().model_dump(by_alias=True),
                 },
-                profile={
+                "profile": {
                     DEFAULT_PROFILE: PlatformProfile(
                         auth=DEFAULT_PROFILE,
                         host="https://silverback.apeworx.io",
                     ).model_dump(by_alias=True)
                 },
-            )
+            }
             PROFILE_PATH.parent.mkdir(exist_ok=True)
             PROFILE_PATH.write_text(tomlkit.dumps(settings_dict))
 

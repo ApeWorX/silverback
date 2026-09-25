@@ -4,9 +4,10 @@ import signal
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Callable, Coroutine, Type
+from typing import Any
 
 import pycron  # type: ignore[import-untyped]
 import quattro
@@ -93,7 +94,7 @@ class BaseRunner(ABC):
                 return
 
         # HACK: Don't understand why this is failing to work properly in TaskIQ
-        return_type: Type | None = system_task_kicker.__annotations__.get("return")
+        return_type: type | None = system_task_kicker.__annotations__.get("return")
         return TypeAdapter(return_type).validate_python(result.return_value)
 
     async def run_task(self, task_data: TaskData, *args, raise_on_error: bool = False):
@@ -224,7 +225,7 @@ class BaseRunner(ABC):
         if Version(config.sdk_version) not in SpecifierSet(">=0.5.0"):
             raise StartupFailure("Worker SDK version too old, please rebuild")
 
-        supported_task_types = set(TaskType(task_name) for task_name in config.task_types)
+        supported_task_types = {TaskType(task_name) for task_name in config.task_types}
 
         # NOTE: Bypass snapshotting if unsupported
         self._snapshotting_supported = TaskType.SYSTEM_CREATE_SNAPSHOT in supported_task_types
@@ -264,9 +265,9 @@ class BaseRunner(ABC):
             TaskType.SYSTEM_USER_TASKDATA, TaskType.STARTUP
         ):
             exceptions_or_none = await quattro.gather(
-                *map(
-                    lambda td: self.run_task(td, startup_state, raise_on_error=True),
-                    startup_tasks_taskdata,
+                *(
+                    self.run_task(td, startup_state, raise_on_error=True)
+                    for td in startup_tasks_taskdata
                 ),
                 # NOTE: Any propagated failure in here should be handled so shutdown tasks run
                 return_exceptions=True,
@@ -457,19 +458,28 @@ class WebsocketRunner(BaseRunner, ManagerAccessMixin):
                 )
             )
 
-        contract_address = task_data.labels.get("address")
+        if contract_addresses_str := task_data.labels.get("address"):
+            contract_addresses = list(map(to_checksum_address, contract_addresses_str.split(",")))
+
+        else:
+            contract_addresses = None
+
         topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
         sub_id = await self._web3.subscription_manager.subscribe(
             LogsSubscription(
                 label=task_data.name,
-                address=to_checksum_address(contract_address) if contract_address else None,
+                address=contract_addresses,
                 topics=topics,  # type: ignore[arg-type]
                 handler=log_handler,
             )
         )
-        logger.debug(
-            f"Handling '{contract_address or ''}:{topics[0] if topics else ''}' logs via {sub_id}"
-        )
+        if contract_addresses:
+            for address in contract_addresses:
+                logger.debug(
+                    f"Handling '{address}:{topics[0] if topics else ''}' logs via {sub_id}"
+                )
+        else:
+            logger.debug(f"Handling '*:{topics[0] if topics else ''}' logs via {sub_id}")
 
     def _daemon_tasks(self) -> list[Coroutine]:
         # NOTE: Handle this as a daemon task (after startup)
@@ -503,11 +513,26 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
             self._runtime_task_group.create_task(self.run_task(task_data, block))
 
     async def _event_task(self, task_data: TaskData):
-        contract_address = task_data.labels.get("address")
+        if contract_addresses_str := task_data.labels.get("address"):
+            contract_addresses = list(map(to_checksum_address, contract_addresses_str.split(",")))
+
+        else:
+            contract_addresses = None
+
         event = EventABI.from_signature(task_data.labels["event"])
         topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
+        if contract_addresses and len(contract_addresses) > 1:
+            logger.info(f"Polling multi-address logs for {task_data.name}: {contract_addresses}")
+        elif contract_addresses:
+            logger.debug(
+                f"Polling '{contract_addresses[0]}:{topics[0] if topics else ''}' "
+                f"logs for {task_data.name}"
+            )
+        else:
+            logger.debug(f"Polling '*:{topics[0] if topics else ''}' logs for {task_data.name}")
         async for log in async_wrap_iter(
             # NOTE: No start block because we should begin polling from head
-            self.provider.poll_logs(address=contract_address, events=[event], topics=topics)
+            # NOTE: Ape >= #2757 accepts list[AddressType] | AddressType | None
+            self.provider.poll_logs(address=contract_addresses, events=[event], topics=topics)
         ):
             self._runtime_task_group.create_task(self.run_task(task_data, log))

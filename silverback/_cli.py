@@ -282,7 +282,7 @@ def login(auth: "Auth"):
 
     state = secrets.token_urlsafe()
     # NOTE: Should verify state, but doesn't (need it for auth though)
-    auth.authorize(scope=["profile"], extras_params=dict(state=state))
+    auth.authorize(scope=["profile"], extras_params={"state": state})
     userinfo = auth.current_user()
     # TODO: Refactor once migration is completed
     username = (
@@ -748,7 +748,7 @@ def create_payment_stream(
 
     assert token_amount  # mypy happy
 
-    click.echo(yaml.safe_dump(dict(configuration=configuration.settings_display_dict())))
+    click.echo(yaml.safe_dump({"configuration": configuration.settings_display_dict()}))
     click.echo(f"duration: {stream_time}")
     click.echo(f"payment: {token_amount / (10 ** token.decimals())} {token.symbol()}\n")
 
@@ -1293,7 +1293,7 @@ def list_bots(cluster: "ClusterClient"):
     """List all bots in a CLUSTER by network (Regardless of status)"""
 
     if bots := list(cluster.bots.values()):
-        groups: dict[str, dict[str, list["Bot"]]] = defaultdict(lambda: defaultdict(list))
+        groups: dict[str, dict[str, list[Bot]]] = defaultdict(lambda: defaultdict(list))
         for bot in bots:
             groups[bot.ecosystem][bot.network].append(bot)
 
@@ -1417,7 +1417,7 @@ def update_bot(
 
     if clear_environment or (environment and bot.environment != list(environment)):
         variable_groups = cluster.variable_groups
-        env: dict[str, dict[str, list[str]]] = dict(old={}, new={})
+        env: dict[str, dict[str, list[str]]] = {"old": {}, "new": {}}
 
         for vg_name in bot.environment:
             if vg := variable_groups.get(vg_name):

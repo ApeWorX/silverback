@@ -36,12 +36,12 @@ class Settings(BaseSettings, ManagerAccessMixin):
     FORK_MODE: bool = False
 
     BROKER_CLASS: str = "taskiq:InMemoryBroker"
-    BROKER_KWARGS: dict[str, Any] = dict()
+    BROKER_KWARGS: dict[str, Any] = {}
 
     ENABLE_METRICS: bool = False
 
     RESULT_BACKEND_CLASS: str = "taskiq.brokers.inmemory_broker:InmemoryResultBackend"
-    RESULT_BACKEND_KWARGS: dict[str, Any] = dict()
+    RESULT_BACKEND_KWARGS: dict[str, Any] = {}
 
     NETWORK_CHOICE: str = ""
     SIGNER_ALIAS: str = ""

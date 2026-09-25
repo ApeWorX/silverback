@@ -77,21 +77,21 @@ class ClusterConfiguration(BaseModel):
         return int(amount)
 
     def settings_display_dict(self) -> dict:
-        return dict(
-            version=self.version,
-            runner=dict(
-                bots=self.bots,
-                networks=self.networks,
-            ),
-            cluster=dict(
-                cpu=f"{self.cpu} vCPU",
-                memory=f"{self.memory} GiB",
-            ),
-            recorder=dict(
-                bandwidth=f"{self.bandwidth} KiB/sec",
-                duration=f"{self.duration} months",
-            ),
-        )
+        return {
+            "version": self.version,
+            "runner": {
+                "bots": self.bots,
+                "networks": self.networks,
+            },
+            "cluster": {
+                "cpu": f"{self.cpu} vCPU",
+                "memory": f"{self.memory} GiB",
+            },
+            "recorder": {
+                "bandwidth": f"{self.bandwidth} KiB/sec",
+                "duration": f"{self.duration} months",
+            },
+        }
 
     @staticmethod
     def _decode_byte(value: int, byte: int) -> int:
@@ -99,7 +99,7 @@ class ClusterConfiguration(BaseModel):
         return (value >> (8 * byte)) & (2**8 - 1)  # NOTE: max uint8
 
     @classmethod
-    def decode(cls, value: Any) -> "ClusterConfiguration":
+    def decode(cls, value: Any) -> ClusterConfiguration:
         """Decode the configuration from 8 byte integer value"""
         if isinstance(value, ClusterConfiguration):
             return value  # TODO: Something weird with SQLModel
@@ -108,7 +108,7 @@ class ClusterConfiguration(BaseModel):
             value = to_int(value)
 
         elif not isinstance(value, int):
-            raise ValueError(f"Cannot decode type: '{type(value)}'")
+            raise TypeError(f"Cannot decode type: '{type(value)}'")
 
         # NOTE: Do not change the order of these, these are not forwards compatible
         if (version := cls._decode_byte(value, 0)) == 1:

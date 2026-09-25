@@ -36,7 +36,7 @@ requires-python = ">=3.10,<4"
 dependencies = [
     "apepay>=0.3.5,<1",  # For payments
     "click",  # Use same version as eth-ape
-    "eth-ape>=0.8.38,<1",  # Bumps lower pin on web3py
+    "eth-ape>=0.8.52,<1",  # Bumps lower pin on web3py
     "ethpm-types>=0.6.10",  # lower pin only, `eth-ape` governs upper pin
     "eth-pydantic-types",  # Use same version as eth-ape
     "exceptiongroup; python_version < '3.11'",  # Used with TaskGroup

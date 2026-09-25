@@ -93,7 +93,8 @@ async def handle_mints(log):
 
 # You can use generic `ContractContainer.EventType`s, to get matching logs from any contract
 # NOTE: This will match based on `event_id := keccak(event.selector)`, so any matching will work
-@bot.on_(Token.Approval, spender=ROUTER)
+# NOTE: You can filter on logs from multiple addresses using `from_addresses=`
+@bot.on_(Token.Approval, from_addresses=["YFI", "WBTC", "USDT"])
 # Any handler function can be async too
 async def exec_event2(log: ContractLog):
     token = Token.at(log.contract_address)

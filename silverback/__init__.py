@@ -21,8 +21,8 @@ def __getattr__(name: str):
 
 
 __all__ = [
-    "StateSnapshot",
     "CircuitBreaker",
     "SilverbackBot",
     "SilverbackException",
+    "StateSnapshot",
 ]

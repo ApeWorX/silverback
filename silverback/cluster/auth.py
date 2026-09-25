@@ -13,7 +13,7 @@ import uuid
 import webbrowser
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Optional, TypedDict, Union
+from typing import Any, TypedDict
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 import httpx
@@ -23,7 +23,7 @@ from yaspin.spinners import Spinners
 
 from .utils import get_code_challenge, get_code_verifier, is_valid_hash
 
-HTTPXClient = Union[httpx.Client, httpx.AsyncClient]
+HTTPXClient = httpx.Client | httpx.AsyncClient
 
 
 class ACR(str, Enum):
@@ -64,7 +64,7 @@ class TokenResponse(TypedDict):
     id_token: str
     token_type: str
     expires_in: int
-    refresh_token: Optional[str]
+    refresh_token: str | None
 
 
 class AccessTokenInfo(TypedDict):
@@ -132,7 +132,7 @@ class AuthClient:
         base_url: str,
         client_id: str,
         *,
-        host: Optional[str] = None,
+        host: str | None = None,
     ) -> None:
         self.base_url = base_url
         self.client_id = client_id
@@ -157,12 +157,12 @@ class AuthClient:
         openid_configuration: dict[str, Any],
         redirect_uri: str,
         *,
-        state: Optional[str] = None,
-        scope: Optional[list[str]] = None,
-        code_challenge: Optional[str] = None,
-        code_challenge_method: Optional[str] = None,
-        lang: Optional[str] = None,
-        extras_params: Optional[Mapping[str, str]] = None,
+        state: str | None = None,
+        scope: list[str] | None = None,
+        code_challenge: str | None = None,
+        code_challenge_method: str | None = None,
+        lang: str | None = None,
+        extras_params: Mapping[str, str] | None = None,
     ) -> str:
         params = {
             "response_type": "code",
@@ -196,9 +196,9 @@ class AuthClient:
         access_token: str,
         jwks: jwk.JWKSet,
         *,
-        required_scope: Optional[list[str]] = None,
-        required_acr: Optional[ACR] = None,
-        required_permissions: Optional[list[str]] = None,
+        required_scope: list[str] | None = None,
+        required_acr: ACR | None = None,
+        required_permissions: list[str] | None = None,
     ) -> AccessTokenInfo:
         try:
             decoded_token = jwt.JWT(jwt=access_token, algs=["RS256"], key=jwks)
@@ -214,9 +214,8 @@ class AuthClient:
             except ValueError as e:
                 raise AccessTokenInvalid() from e
 
-            if required_acr is not None:
-                if acr < required_acr:
-                    raise AccessTokenACRTooLow()
+            if required_acr is not None and acr < required_acr:
+                raise AccessTokenACRTooLow()
 
             permissions: list[str] = claims.get("permissions", [])
             if required_permissions is not None:
@@ -242,20 +241,20 @@ class AuthClient:
         id_token: str,
         jwks: jwk.JWKSet,
         *,
-        code: Optional[str] = None,
-        access_token: Optional[str] = None,
+        code: str | None = None,
+        access_token: str | None = None,
     ) -> UserInfo:
         try:
             signed_id_token = jwt.JWT(jwt=id_token, algs=["RS256"], key=jwks)
             claims = json.loads(signed_id_token.claims)
 
-            if "c_hash" in claims:
-                if code is None or not is_valid_hash(code, claims["c_hash"]):
-                    raise IdTokenInvalid()
+            if "c_hash" in claims and (code is None or not is_valid_hash(code, claims["c_hash"])):
+                raise IdTokenInvalid()
 
-            if "at_hash" in claims:
-                if access_token is None or not is_valid_hash(access_token, claims["at_hash"]):
-                    raise IdTokenInvalid()
+            if "at_hash" in claims and (
+                access_token is None or not is_valid_hash(access_token, claims["at_hash"])
+            ):
+                raise IdTokenInvalid()
 
         except (jwt.JWException, TypeError) as e:
             raise IdTokenInvalid() from e
@@ -272,7 +271,7 @@ class AuthClient:
         endpoint: str,
         code: str,
         redirect_uri: str,
-        code_verifier: Optional[str] = None,
+        code_verifier: str | None = None,
     ) -> httpx.Request:
         data = {
             "client_id": self.client_id,
@@ -290,7 +289,7 @@ class AuthClient:
         *,
         endpoint: str,
         refresh_token: str,
-        scope: Optional[list[str]] = None,
+        scope: list[str] | None = None,
     ) -> httpx.Request:
         data = {
             "client_id": self.client_id,
@@ -377,12 +376,12 @@ class AuthClient:
         self,
         redirect_uri: str,
         *,
-        state: Optional[str] = None,
-        scope: Optional[list[str]] = None,
-        code_challenge: Optional[str] = None,
-        code_challenge_method: Optional[str] = None,
-        lang: Optional[str] = None,
-        extras_params: Optional[Mapping[str, str]] = None,
+        state: str | None = None,
+        scope: list[str] | None = None,
+        code_challenge: str | None = None,
+        code_challenge_method: str | None = None,
+        lang: str | None = None,
+        extras_params: Mapping[str, str] | None = None,
     ) -> str:
         openid_configuration = self._get_openid_configuration()
         return self._auth_url(
@@ -397,7 +396,7 @@ class AuthClient:
         )
 
     def auth_callback(
-        self, code: str, redirect_uri: str, *, code_verifier: Optional[str] = None
+        self, code: str, redirect_uri: str, *, code_verifier: str | None = None
     ) -> tuple[TokenResponse, UserInfo]:
         token_response = self._auth_exchange_token(code, redirect_uri, code_verifier=code_verifier)
         jwks = self._get_jwks()
@@ -410,7 +409,7 @@ class AuthClient:
         return token_response, userinfo
 
     def auth_refresh_token(
-        self, refresh_token: str, *, scope: Optional[list[str]] = None
+        self, refresh_token: str, *, scope: list[str] | None = None
     ) -> tuple[TokenResponse, UserInfo]:
         token_endpoint = self._get_endpoint_url(self._get_openid_configuration(), "token_endpoint")
         with self._get_httpx_client() as client:
@@ -437,9 +436,9 @@ class AuthClient:
         self,
         access_token: str,
         *,
-        required_scope: Optional[list[str]] = None,
-        required_acr: Optional[ACR] = None,
-        required_permissions: Optional[list[str]] = None,
+        required_scope: list[str] | None = None,
+        required_acr: ACR | None = None,
+        required_permissions: list[str] | None = None,
     ) -> AccessTokenInfo:
         jwks = self._get_jwks()
         return self._validate_access_token(
@@ -495,7 +494,7 @@ class AuthClient:
             return self._jwks
 
     def _auth_exchange_token(
-        self, code: str, redirect_uri: str, *, code_verifier: Optional[str] = None
+        self, code: str, redirect_uri: str, *, code_verifier: str | None = None
     ) -> TokenResponse:
         token_endpoint = self._get_endpoint_url(self._get_openid_configuration(), "token_endpoint")
         with self._get_httpx_client() as client:

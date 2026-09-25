@@ -162,7 +162,7 @@ def get_metrics(sessions_path: Path | str, task_name: str | None = None) -> pd.D
         # NOTE: Make sure all sessions are in sorted order
         sessions = sorted(
             session_files,
-            key=lambda file: datetime.fromisoformat(file.stem.lstrip("session-")),
+            key=lambda file: datetime.fromisoformat(file.stem.removeprefix("session-")),
         )
 
     elif sessions_path.is_file() and sessions_path.suffix == "jsonl":

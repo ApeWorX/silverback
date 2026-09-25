@@ -1,10 +1,11 @@
 import atexit
 import inspect
 from collections import defaultdict
-from datetime import datetime, timedelta
+from collections.abc import Awaitable, Callable, Sequence
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from types import MethodType
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 import pycron  # type: ignore[import-untyped]
 from ape.contracts import ContractEvent, ContractEventWrapper
@@ -172,7 +173,7 @@ class SilverbackBot(ManagerAccessMixin):
             "Loaded Silverback Bot:\n"
             f'  NETWORK="{network_choice}"\n'
             f"  FORK_MODE={self.use_fork}\n"
-            f"  SIGNER={repr(self.signer)}"
+            f"  SIGNER={self.signer!r}"
         )
 
         # NOTE: Runner must call this to configure itself for all SDK hooks
@@ -377,6 +378,7 @@ class SilverbackBot(ManagerAccessMixin):
         self,
         task_type: TaskType,
         container: BlockContainer | ContractEvent | ContractEventWrapper | None = None,
+        from_addresses: Sequence[AddressType | str] | None = None,
         filter_args: dict[str, Any] | None = None,
         cron_schedule: str | None = None,
         metric_name: str | None = None,
@@ -393,6 +395,9 @@ class SilverbackBot(ManagerAccessMixin):
         Args:
             task_type: :class:`~silverback.types.TaskType`: The type of task to create.
             container: (BlockContainer | ContractEvent): The event source to watch.
+            from_addresses: (Sequence[AddressType | str] | None):
+                The set of addresses to filter an anonymous event by.
+                Defaults to none (matches all), ignored if `container` is not anonymous event.
 
         Returns:
             Callable[[Callable], :class:`~taskiq.AsyncTaskiqDecoratedTask`]:
@@ -443,7 +448,7 @@ class SilverbackBot(ManagerAccessMixin):
         def add_taskiq_task(
             handler: Callable[..., Any | Awaitable[Any]],
         ) -> AsyncTaskiqDecoratedTask:
-            labels: dict[str, str] = dict()
+            labels: dict[str, str] = {}
 
             if task_type is TaskType.NEW_BLOCK:
                 handler = self._ensure_block(handler)
@@ -455,6 +460,11 @@ class SilverbackBot(ManagerAccessMixin):
                     contract, "address"
                 ):
                     labels["address"] = contract.address
+
+                elif from_addresses is not None:
+                    labels["address"] = ",".join(
+                        self.conversion_manager.convert(a, AddressType) for a in from_addresses
+                    )
 
                 labels["event"] = container.abi.signature
 
@@ -489,7 +499,7 @@ class SilverbackBot(ManagerAccessMixin):
             elif task_type is TaskType.CRON_JOB:
                 # NOTE: If cron schedule has never been true over a year timeframe, it's bad
                 if not cron_schedule or not pycron.has_been(
-                    cron_schedule, datetime.now() - timedelta(days=366)
+                    cron_schedule, datetime.now(timezone.utc) - timedelta(days=366)
                 ):
                     raise InvalidContainerConfigurationError(
                         f"'{cron_schedule}' is not a valid cron schedule"
@@ -602,6 +612,7 @@ class SilverbackBot(ManagerAccessMixin):
     def on_(
         self,
         container: BlockContainer | ContractEvent,
+        from_addresses: Sequence[AddressType | str] | None = None,
         filter_args: dict[str, Any] | None = None,
         **filter_kwargs: dict[str, Any],
     ) -> Callable[[Callable], AsyncTaskiqDecoratedTask]:
@@ -610,6 +621,9 @@ class SilverbackBot(ManagerAccessMixin):
 
         Args:
             container: (BlockContainer | ContractEvent): The event source to watch.
+            from_addresses: (Sequence[AddressType | str] | None):
+                The set of addresses to filter an anonymous event by.
+                Defaults to none (matches all), ignored if `container` is not anonymous event.
             filter_args: (dict[str, Any] | None):
                 Arguments to use for event log filter. Gets combined with ``filter_kwargs``.
                 Is useful for when an event argument name is a Python keyword.
@@ -634,6 +648,7 @@ class SilverbackBot(ManagerAccessMixin):
             return self.broker_task_decorator(
                 TaskType.EVENT_LOG,
                 container=container,
+                from_addresses=from_addresses,
                 filter_args=filter_kwargs,
             )
 

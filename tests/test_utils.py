@@ -48,13 +48,13 @@ def bot_path(request):
 @pytest.mark.parametrize(
     "build_args",
     [
-        dict(),
-        dict(sdk_version="latest"),
-        dict(requirements_txt_fname="requirements.txt"),
-        dict(requirements_txt_fname="requirements-bot.txt"),
-        dict(has_pyproject_toml=True),
-        dict(has_ape_config_yaml=True),
-        dict(contracts_folder="src"),
+        {},
+        {"sdk_version": "latest"},
+        {"requirements_txt_fname": "requirements.txt"},
+        {"requirements_txt_fname": "requirements-bot.txt"},
+        {"has_pyproject_toml": True},
+        {"has_ape_config_yaml": True},
+        {"contracts_folder": "src"},
     ],
 )
 def test_containerfile_generation(bot_path, build_args):

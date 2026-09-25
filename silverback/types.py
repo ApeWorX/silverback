@@ -2,12 +2,11 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum  # NOTE: `enum.StrEnum` only in Python 3.11+
-from typing import Literal
+from typing import Annotated, Literal
 
 from ape.logging import get_logger
 from pydantic import BaseModel, Field, RootModel, ValidationError, model_validator
 from pydantic.functional_serializers import PlainSerializer
-from typing_extensions import Annotated
 
 logger = get_logger(__name__)
 
@@ -98,24 +97,22 @@ class Datapoints(RootModel):
     def parse_datapoints(cls, datapoints: dict) -> dict:
         names_to_remove: dict[str, ValidationError] = {}
         # Automatically convert raw scalar types
-        for name in datapoints:
-            if isinstance(datapoints[name], dict) and "type" in datapoints[name]:
+        for name, value in datapoints.items():
+            if isinstance(value, dict) and "type" in value:
                 try:
-                    datapoints[name] = ScalarDatapoint.model_validate(datapoints[name])
+                    datapoints[name] = ScalarDatapoint.model_validate(value)
                 except ValidationError as e:
                     names_to_remove[name] = e
-            elif not isinstance(datapoints[name], Datapoint):
+            elif not isinstance(value, Datapoint):
                 try:
-                    datapoints[name] = ScalarDatapoint(data=datapoints[name])
+                    datapoints[name] = ScalarDatapoint(data=value)
                 except ValidationError as e:
                     names_to_remove[name] = e
 
         # Prune and raise a warning about unconverted datapoints
-        for name in names_to_remove:
+        for name, err in names_to_remove.items():
             data = datapoints.pop(name)
-            logger.warning(
-                f"Cannot convert datapoint '{name}' of type '{type(data)}': {names_to_remove[name]}"
-            )
+            logger.warning(f"Cannot convert datapoint '{name}' of type '{type(data)}': {err}")
 
         return datapoints
 
