@@ -1,5 +1,5 @@
 import fnmatch
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import update_wrapper
 from pathlib import Path
 from traceback import TracebackException
@@ -89,13 +89,16 @@ def timedelta_callback(
         timestamp = None
 
     if timestamp:
-        if timestamp <= (now := datetime.now()):
+        now = datetime.now(timezone.utc)
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+        if timestamp <= now:
             raise click.BadParameter("Must be a time in the future.", ctx=ctx, param=param)
         return timestamp - now
 
     elif " " in timestamp_or_str:
         units_value = {}
-        for time_units in map(lambda s: s.strip(), timestamp_or_str.split(",")):
+        for time_units in (s.strip() for s in timestamp_or_str.split(",")):
             time, units = time_units.split(" ")
             if not units.endswith("s"):
                 units += "s"
@@ -171,9 +174,9 @@ class SectionedHelpGroup(OrderedCommands):
         self.sections = kwargs.pop("sections", {})
         commands = {}
 
-        for section, command_list in self.sections.items():
+        for section_name, command_list in self.sections.items():
             for cmd in command_list:
-                cmd.section = section
+                cmd.section = section_name
                 commands[cmd.name] = cmd
 
         super().__init__(*args, commands=commands, **kwargs)
@@ -203,7 +206,7 @@ class SectionedHelpGroup(OrderedCommands):
         return new_decorator
 
     def format_commands(self, ctx, formatter):
-        for section, cmds in self.sections.items():
+        for section in self.sections:
             rows = []
             for subcommand in self.list_commands(ctx):
                 cmd = self.get_command(ctx, subcommand)
@@ -310,7 +313,7 @@ def platform_client(show_login: bool = True):
 
             ctx.obj["platform"] = PlatformClient(
                 base_url=profile.host,
-                cookies=dict(session=auth.access_token_info()["access_token"]),
+                cookies={"session": auth.access_token_info()["access_token"]},
             )
 
             if expose_value:
@@ -328,7 +331,7 @@ def cluster_client(show_login: bool = True):
         def inject_cluster(ctx, param, value: str | None):
             ctx.obj = ctx.obj or {}
             if not (profile := ctx.obj.get("profile")):
-                raise AssertionError("Shouldn't happen, fix cli")
+                raise TypeError("Shouldn't happen, fix cli")
 
             elif isinstance(profile, ClusterProfile):
                 return value  # Ignore processing this for cluster clients
@@ -384,11 +387,11 @@ def cluster_client(show_login: bool = True):
                 )
 
             elif isinstance(profile, PlatformProfile):
-                platform: "PlatformClient" = ctx.obj["platform"]
+                platform: PlatformClient = ctx.obj["platform"]
                 kwargs["cluster"] = platform.get_cluster_client(*ctx.obj["cluster_path"])
 
             else:
-                raise AssertionError("Profile not set, something wrong")
+                raise TypeError("Profile not set, something wrong")
 
             return ctx.invoke(f, *args, **kwargs)
 

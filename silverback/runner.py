@@ -4,9 +4,10 @@ import signal
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Callable, Coroutine, Type
+from typing import Any
 
 import pycron  # type: ignore[import-untyped]
 import quattro
@@ -93,7 +94,7 @@ class BaseRunner(ABC):
                 return
 
         # HACK: Don't understand why this is failing to work properly in TaskIQ
-        return_type: Type | None = system_task_kicker.__annotations__.get("return")
+        return_type: type | None = system_task_kicker.__annotations__.get("return")
         return TypeAdapter(return_type).validate_python(result.return_value)
 
     async def run_task(self, task_data: TaskData, *args, raise_on_error: bool = False):
@@ -224,7 +225,7 @@ class BaseRunner(ABC):
         if Version(config.sdk_version) not in SpecifierSet(">=0.5.0"):
             raise StartupFailure("Worker SDK version too old, please rebuild")
 
-        supported_task_types = set(TaskType(task_name) for task_name in config.task_types)
+        supported_task_types = {TaskType(task_name) for task_name in config.task_types}
 
         # NOTE: Bypass snapshotting if unsupported
         self._snapshotting_supported = TaskType.SYSTEM_CREATE_SNAPSHOT in supported_task_types
@@ -264,9 +265,9 @@ class BaseRunner(ABC):
             TaskType.SYSTEM_USER_TASKDATA, TaskType.STARTUP
         ):
             exceptions_or_none = await quattro.gather(
-                *map(
-                    lambda td: self.run_task(td, startup_state, raise_on_error=True),
-                    startup_tasks_taskdata,
+                *(
+                    self.run_task(td, startup_state, raise_on_error=True)
+                    for td in startup_tasks_taskdata
                 ),
                 # NOTE: Any propagated failure in here should be handled so shutdown tasks run
                 return_exceptions=True,
@@ -521,9 +522,7 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         event = EventABI.from_signature(task_data.labels["event"])
         topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
         if contract_addresses and len(contract_addresses) > 1:
-            logger.info(
-                f"Polling multi-address logs for {task_data.name}: {contract_addresses}"
-            )
+            logger.info(f"Polling multi-address logs for {task_data.name}: {contract_addresses}")
         elif contract_addresses:
             logger.debug(
                 f"Polling '{contract_addresses[0]}:{topics[0] if topics else ''}' "

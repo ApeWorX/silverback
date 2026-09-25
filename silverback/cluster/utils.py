@@ -17,7 +17,7 @@ def get_validation_hash(value: str) -> str:
     hasher.update(value.encode("utf-8"))
     hash = hasher.digest()
 
-    half_hash = hash[0 : int(len(hash) / 2)]  # noqa: E203
+    half_hash = hash[0 : int(len(hash) / 2)]
     # Remove the Base64 padding "==" at the end
     base64_hash = base64.urlsafe_b64encode(half_hash)[:-2]
 

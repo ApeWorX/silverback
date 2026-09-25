@@ -164,12 +164,17 @@ def build_container_images(
 ):
     if (
         not use_docker
-        and (result := subprocess.run(["podman", "--version"], capture_output=True)).returncode == 0
+        and (
+            result := subprocess.run(["podman", "--version"], capture_output=True, check=False)
+        ).returncode
+        == 0
     ):
         click.echo(f"Using {result.stdout.decode()}")
         builder_name = "podman"
 
-    elif (result := subprocess.run(["docker", "--version"], capture_output=True)).returncode == 0:
+    elif (
+        result := subprocess.run(["docker", "--version"], capture_output=True, check=False)
+    ).returncode == 0:
         click.echo(f"Using {result.stdout.decode()}")
         builder_name = "docker"
 
@@ -205,4 +210,4 @@ def build_container_images(
 
     if push:
         for tag in built_tags:
-            subprocess.run([builder_name, "push", tag])
+            subprocess.run([builder_name, "push", tag], check=True)

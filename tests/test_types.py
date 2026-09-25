@@ -20,12 +20,12 @@ from silverback.types import Datapoints
         # int over INT96 max parses as Decimal
         (
             {"a": 2**95},
-            {"a": {"type": "scalar", "data": Decimal("39614081257132168796771975168")}},
+            {"a": {"type": "scalar", "data": Decimal(39614081257132168796771975168)}},
         ),
         # Decimal parses as Decimal
         (
             {"a": Decimal("1e12")},
-            {"a": {"type": "scalar", "data": Decimal("1000000000000")}},
+            {"a": {"type": "scalar", "data": Decimal(1000000000000)}},
         ),
         # float parses as float
         (

@@ -1,6 +1,7 @@
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 
 def test_run_no_bots(cli, runner):

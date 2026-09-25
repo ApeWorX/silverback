@@ -9,7 +9,6 @@ from ethpm_types.abi import EventABI
 from silverback.main import TaskData
 from silverback.runner import PollingRunner, WebsocketRunner
 
-
 ADDR_A = to_checksum_address("0x" + "11" * 20)
 ADDR_B = to_checksum_address("0x" + "22" * 20)
 EVENT_SIG = "Transfer(address indexed from, address indexed to, uint256 value)"

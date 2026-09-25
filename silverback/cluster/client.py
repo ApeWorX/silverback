@@ -1,6 +1,8 @@
+import contextlib
+from collections.abc import Iterator
 from datetime import datetime
-from functools import cache
-from typing import ClassVar, Iterator
+from functools import cached_property
+from typing import ClassVar
 
 import httpx
 from ape import Contract
@@ -36,10 +38,8 @@ def handle_error_with_response(response: httpx.Response):
         response.read()
         message = response.text
 
-        try:
+        with contextlib.suppress(ValueError, TypeError):
             message = response.json()
-        except Exception:
-            pass
 
         if isinstance(message, dict):
             if detail := message.get("detail"):
@@ -83,7 +83,7 @@ class RegistryCredentials(RegistryCredentialsInfo):
     ) -> "RegistryCredentials":
         response = self.cluster.patch(
             f"/credentials/{self.name}",
-            json=dict(hostname=hostname, email=email, username=username, password=password),
+            json={"hostname": hostname, "email": email, "username": username, "password": password},
         )
         handle_error_with_response(response)
         return self
@@ -102,7 +102,7 @@ class VariableGroup(VariableGroupInfo):
         return int(self.id)
 
     def update(self, **variables: str | None) -> "VariableGroup":
-        response = self.cluster.patch(f"/vars/{self.id}", json=dict(variables=variables))
+        response = self.cluster.patch(f"/vars/{self.id}", json={"variables": variables})
         handle_error_with_response(response)
         return VariableGroup.model_validate(response.json())
 
@@ -133,17 +133,17 @@ class Bot(BotInfo):
         environment: list[str] | None = None,
         cluster_access: bool | None = None,
     ) -> "Bot":
-        form: dict = dict(
-            name=name,
-            image=image,
-            credential_name=credential_name,
-            ecosystem=ecosystem,
-            network=network,
-            provider=provider,
-            account=account,
-            environment=environment,
-            cluster_access=cluster_access,
-        )
+        form: dict = {
+            "name": name,
+            "image": image,
+            "credential_name": credential_name,
+            "ecosystem": ecosystem,
+            "network": network,
+            "provider": provider,
+            "account": account,
+            "environment": environment,
+            "cluster_access": cluster_access,
+        }
 
         response = self.cluster.patch(
             f"/bots/{self.id}",
@@ -204,7 +204,7 @@ class Bot(BotInfo):
         end_time: datetime | None = None,
         follow: bool = False,
     ) -> Iterator[BotLogEntry]:
-        query: dict = dict(log_level=log_level.name, follow=follow)
+        query: dict = {"log_level": log_level.name, "follow": follow}
 
         if start_time:
             query["start_time"] = start_time.isoformat()
@@ -256,8 +256,7 @@ class ClusterClient(httpx.Client):
         except httpx.ConnectError as e:
             raise ValueError(f"{e} '{request.url}'") from e
 
-    @property
-    @cache
+    @cached_property
     def openapi_schema(self) -> dict:
         response = self.get("/openapi.json")
         handle_error_with_response(response)
@@ -291,13 +290,13 @@ class ClusterClient(httpx.Client):
     ) -> RegistryCredentials:
         response = self.post(
             "/credentials",
-            json=dict(
-                name=name,
-                hostname=hostname,
-                email=email,
-                username=username,
-                password=password,
-            ),
+            json={
+                "name": name,
+                "hostname": hostname,
+                "email": email,
+                "username": username,
+                "password": password,
+            },
         )
         handle_error_with_response(response)
         return RegistryCredentials.model_validate(response.json())
@@ -331,17 +330,17 @@ class ClusterClient(httpx.Client):
         credential_name: str | None = None,
         cluster_access: bool = False,
     ) -> Bot:
-        form: dict = dict(
-            name=name,
-            image=image,
-            ecosystem=ecosystem,
-            network=network,
-            provider=provider,
-            account=account,
-            environment=environment or [],
-            credential_name=credential_name,
-            cluster_access=cluster_access,
-        )
+        form: dict = {
+            "name": name,
+            "image": image,
+            "ecosystem": ecosystem,
+            "network": network,
+            "provider": provider,
+            "account": account,
+            "environment": environment or [],
+            "credential_name": credential_name,
+            "cluster_access": cluster_access,
+        }
 
         response = self.post(
             "/bots",
@@ -358,21 +357,20 @@ class Workspace(WorkspaceInfo):
     # NOTE: DI happens in `PlatformClient.client`
     client: ClassVar[httpx.Client]
 
-    @property
-    @cache
+    @cached_property
     def owner(self) -> str:
         response = self.client.get(f"/users/{self.owner_id}")
         handle_error_with_response(response)
         return response.json().get("username")
 
     def build_display_fields(self) -> dict[str, str]:
-        return dict(
+        return {
             # `.id` is internal
-            name=self.name,
+            "name": self.name,
             # `.slug` is index
             # `.owner_id` is UUID, use for client lookup instead
-            owner=self.owner,
-        )
+            "owner": self.owner,
+        }
 
     def __hash__(self) -> int:
         return int(self.id)
@@ -386,10 +384,9 @@ class Workspace(WorkspaceInfo):
             cookies=self.client.cookies,  # NOTE: pass along platform cookies for proxy auth
         )
 
-    @property
-    @cache
+    @cached_property
     def clusters(self) -> dict[str, ClusterInfo]:
-        response = self.client.get("/clusters", params=dict(workspace=str(self.id)))
+        response = self.client.get("/clusters", params={"workspace": str(self.id)})
         handle_error_with_response(response)
         clusters = response.json()
         # TODO: Support paging
@@ -402,8 +399,8 @@ class Workspace(WorkspaceInfo):
     ) -> ClusterInfo:
         response = self.client.post(
             "/clusters/",
-            params=dict(workspace=str(self.id)),
-            data=dict(name=cluster_name, slug=cluster_slug),
+            params={"workspace": str(self.id)},
+            data={"name": cluster_name, "slug": cluster_slug},
         )
 
         handle_error_with_response(response)
@@ -417,14 +414,14 @@ class Workspace(WorkspaceInfo):
         name: str | None = None,
         slug: str | None = None,
     ) -> ClusterInfo:
-        data = dict()
+        data = {}
         if name:
             data["name"] = name
         if slug:
             data["slug"] = slug
         response = self.client.patch(
             f"/clusters/{cluster_id}",
-            params=dict(workspace=str(self.id)),
+            params={"workspace": str(self.id)},
             data=data,
         )
         handle_error_with_response(response)
@@ -437,13 +434,13 @@ class Workspace(WorkspaceInfo):
         return response.json()
 
     def migrate_cluster(self, cluster_id: str, version: str | None = None):
-        data = dict()
+        data = {}
         if version:
             data["version"] = version
 
         response = self.client.put(
             f"/clusters/{cluster_id}",
-            params=dict(workspace=str(self.id)),
+            params={"workspace": str(self.id)},
             data=data,
             # NOTE: Sometimes this command takes a little longer
             timeout=10,
@@ -453,7 +450,7 @@ class Workspace(WorkspaceInfo):
     def get_stream_info(self, cluster: ClusterInfo) -> StreamInfo | None:
         response = self.client.get(
             f"/clusters/{cluster.id}/stream",
-            params=dict(workspace=str(self.id)),
+            params={"workspace": str(self.id)},
         )
         handle_error_with_response(response)
 
@@ -467,7 +464,7 @@ class Workspace(WorkspaceInfo):
         name: str | None = None,
         slug: str | None = None,
     ) -> "Workspace":
-        data = dict()
+        data = {}
         if name:
             data["name"] = name
         if slug:
@@ -508,8 +505,7 @@ class PlatformClient(httpx.Client):
 
         return workspace.get_cluster_client(cluster_name)
 
-    @property
-    @cache
+    @cached_property
     def workspaces(self) -> dict[str, Workspace]:
         response = self.get("/workspaces")
         handle_error_with_response(response)
@@ -526,7 +522,7 @@ class PlatformClient(httpx.Client):
     ) -> Workspace:
         response = self.post(
             "/workspaces",
-            data=dict(slug=workspace_slug, name=workspace_name),
+            data={"slug": workspace_slug, "name": workspace_name},
         )
         handle_error_with_response(response)
         new_workspace = Workspace.model_validate_json(response.text)

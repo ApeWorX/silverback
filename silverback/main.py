@@ -1,11 +1,11 @@
 import atexit
-from collections.abc import Sequence
 import inspect
 from collections import defaultdict
-from datetime import datetime, timedelta
+from collections.abc import Awaitable, Callable, Sequence
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from types import MethodType
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 import pycron  # type: ignore[import-untyped]
 from ape.contracts import ContractEvent, ContractEventWrapper
@@ -173,7 +173,7 @@ class SilverbackBot(ManagerAccessMixin):
             "Loaded Silverback Bot:\n"
             f'  NETWORK="{network_choice}"\n'
             f"  FORK_MODE={self.use_fork}\n"
-            f"  SIGNER={repr(self.signer)}"
+            f"  SIGNER={self.signer!r}"
         )
 
         # NOTE: Runner must call this to configure itself for all SDK hooks
@@ -448,7 +448,7 @@ class SilverbackBot(ManagerAccessMixin):
         def add_taskiq_task(
             handler: Callable[..., Any | Awaitable[Any]],
         ) -> AsyncTaskiqDecoratedTask:
-            labels: dict[str, str] = dict()
+            labels: dict[str, str] = {}
 
             if task_type is TaskType.NEW_BLOCK:
                 handler = self._ensure_block(handler)
@@ -499,7 +499,7 @@ class SilverbackBot(ManagerAccessMixin):
             elif task_type is TaskType.CRON_JOB:
                 # NOTE: If cron schedule has never been true over a year timeframe, it's bad
                 if not cron_schedule or not pycron.has_been(
-                    cron_schedule, datetime.now() - timedelta(days=366)
+                    cron_schedule, datetime.now(timezone.utc) - timedelta(days=366)
                 ):
                     raise InvalidContainerConfigurationError(
                         f"'{cron_schedule}' is not a valid cron schedule"

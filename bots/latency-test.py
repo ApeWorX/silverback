@@ -49,8 +49,8 @@ from ape import chain
 from silverback import SilverbackBot
 
 # NOTE: By default, assume this is a normal EOA (only 21k base gas required)
-GAS_LIMIT = int(os.environ.get("GAS_LIMIT", 21_000))
-MAX_EIP1559_BLOCK_DEPTH = int(os.environ.get("MAX_EIP1559_BLOCK_DEPTH", 3))
+GAS_LIMIT = int(os.environ.get("GAS_LIMIT", "21000"))
+MAX_EIP1559_BLOCK_DEPTH = int(os.environ.get("MAX_EIP1559_BLOCK_DEPTH", "3"))
 PRIORITY_FEE = os.environ.get("PRIORITY_FEE", "0 gwei")
 
 bot = SilverbackBot()
