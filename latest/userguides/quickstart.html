@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="silverback/userguides/quickstart.html"/>
   <meta property="og:title" content="Overview"/>
     <meta name="twitter:card" content="summary"/>
@@ -172,7 +173,7 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h1>
 <p>Silverback lets you create your own Python bots that respond in real-time to blockchain events.
 The Silverback library leverages the <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart">Ape</a>
 development framework, as well as it’s ecosystem of plugins and packages, to let you to develop
@@ -188,13 +189,13 @@ and then require a direct response such as sending a notification or submitting 
 <li><p>Perform protocol actions such as liquidations or oracle updates</p></li>
 </ul>
 <section id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.python.org/downloads">python3</a> version 3.10 or greater, python3-dev</p></li>
 </ul>
 </section>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
 <p>Silverback relies heavily on the Ape development framework, so it’s worth it to familarize yourself
 with how to install Ape and any necessary plugins using the
 <a class="reference external" href="https://docs.apeworx.io/ape/stable/userguides/quickstart#installation">Ape installation userguide</a>.</p>
@@ -204,14 +205,14 @@ with how to install Ape and any necessary plugins using the
 and then install the Silverback package via one of the following options.</p>
 </div>
 <section id="via-pip">
-<h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Link to this heading"></a></h3>
+<h3>via <code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#via-pip" title="Link to this heading">#</a></h3>
 <p>You can install the latest release via <a class="reference external" href="https://pypi.org/project/pip"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>silverback
 </span></pre></div>
 </div>
 </section>
 <section id="via-uv">
-<h3>via <code class="docutils literal notranslate"><span class="pre">uv</span></code><a class="headerlink" href="#via-uv" title="Link to this heading"></a></h3>
+<h3>via <code class="docutils literal notranslate"><span class="pre">uv</span></code><a class="headerlink" href="#via-uv" title="Link to this heading">#</a></h3>
 <p>You can install the latest release via <a class="reference external" href="https://docs.astral.sh/uv/getting-started/installation"><code class="docutils literal notranslate"><span class="pre">uv</span></code></a></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>silverback
 </span></pre></div>
@@ -224,13 +225,13 @@ and then install the Silverback package via one of the following options.</p>
 </section>
 </section>
 <section id="quick-usage">
-<h2>Quick Usage<a class="headerlink" href="#quick-usage" title="Link to this heading"></a></h2>
+<h2>Quick Usage<a class="headerlink" href="#quick-usage" title="Link to this heading">#</a></h2>
 <p>View <a class="reference external" href="https://github.com/ApeWorX/silverback/blob/main/bots/example.py">the example</a>
 to see how to use the library to build a bot.
 The example shows off a variety of Silverback’s features and functionality,
 and you can learn more about this in the <a class="reference external" href="https://docs.apeworx.io/silverback/stable/userguides/development">development guide</a>.</p>
 <section id="running-locally">
-<h3>Running Locally<a class="headerlink" href="#running-locally" title="Link to this heading"></a></h3>
+<h3>Running Locally<a class="headerlink" href="#running-locally" title="Link to this heading">#</a></h3>
 <p>Download the example to <code class="docutils literal notranslate"><span class="pre">bots/example.py</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -243,7 +244,7 @@ Be sure to properly configure your environment for the USDC and YFI tokens on Et
 </div>
 </section>
 <section id="running-from-a-container">
-<h3>Running from a Container<a class="headerlink" href="#running-from-a-container" title="Link to this heading"></a></h3>
+<h3>Running from a Container<a class="headerlink" href="#running-from-a-container" title="Link to this heading">#</a></h3>
 <p>Silverback makes it really easy to containerize your bots in order to run them inside of a container orchestrator.
 This makes running our example even easier, all you need is <code class="docutils literal notranslate"><span class="pre">docker</span></code> (or <code class="docutils literal notranslate"><span class="pre">podman</span></code>) installed and then you can run via:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span data-line="1">$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>ghcr.io/apeworx/silverback-example:latest<span class="w"> </span>--<span class="w"> </span>run<span class="w"> </span>--network<span class="w"> </span>:mainnet
@@ -259,7 +260,7 @@ which is a hosted service that allows you to run many of your bots concurrently 
 </section>
 </section>
 <section id="development">
-<h2>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading">#</a></h2>
 <p>This project is under active development to match the capabilities of the
 <a class="reference external" href="https://silverback.apeworx.io">Silverback Platform</a>.
 Things might not be in their final state and breaking changes may occur in minor revisions.
@@ -314,5 +315,5 @@ Comments, questions, criticisms and pull requests are welcomed.</p>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>

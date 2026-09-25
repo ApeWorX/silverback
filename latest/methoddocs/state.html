@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="silverback/methoddocs/state.html"/>
   <meta property="og:title" content="silverback.state"/>
     <meta name="twitter:card" content="summary"/>
@@ -162,12 +163,12 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="silverback-state">
-<h1>silverback.state<a class="headerlink" href="#silverback-state" title="Link to this heading"></a></h1>
+<h1>silverback.state<a class="headerlink" href="#silverback-state" title="Link to this heading">#</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback.state</span></code> module contains modules for loading an unloading the shared memory for a
 Silverback bot, which can be loaded from a persistent store and snapshotted at regular intervals.</p>
 <dl class="py class" id="module-silverback.state">
 <dt class="sig sig-object py" id="silverback.state.Datastore">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.state.</span></span><span class="sig-name descname"><span class="pre">Datastore</span></span><a class="headerlink" href="#silverback.state.Datastore" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.state.</span></span><span class="sig-name descname"><span class="pre">Datastore</span></span><a class="headerlink" href="#silverback.state.Datastore" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Very basic implementation used to store bot state and handler result data by
 storing/retreiving state from a JSON-encoded file.</p>
@@ -195,7 +196,7 @@ if you are using multiple bots from the same directory:</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="silverback.state.StateSnapshot">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.state.</span></span><span class="sig-name descname"><span class="pre">StateSnapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_block_seen:</span> <span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_block_processed:</span> <span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_nonce_used:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_updated:</span> <span class="pre">~datetime.Annotated[~datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~pydantic.functional_serializers.PlainSerializer(func=~silverback.types.iso_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type=str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">when_used=always)]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.state.StateSnapshot" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.state.</span></span><span class="sig-name descname"><span class="pre">StateSnapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_block_seen:</span> <span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_block_processed:</span> <span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_nonce_used:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_updated:</span> <span class="pre">~datetime.Annotated[~datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~pydantic.functional_serializers.PlainSerializer(func=~silverback.types.iso_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type=str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">when_used=always)]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.state.StateSnapshot" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 </dd></dl>
 
@@ -247,5 +248,5 @@ if you are using multiple bots from the same directory:</p>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>
