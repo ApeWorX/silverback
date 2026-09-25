@@ -515,18 +515,25 @@ class PollingRunner(BaseRunner, ManagerAccessMixin):
         if contract_addresses_str := task_data.labels.get("address"):
             contract_addresses = list(map(to_checksum_address, contract_addresses_str.split(",")))
 
-            if len(contract_addresses) != 1:
-                raise ValueError("Only 1 contract address supported for Polling runner.")
-
-            contract_address = contract_addresses[0]
-
         else:
-            contract_address = None
+            contract_addresses = None
 
         event = EventABI.from_signature(task_data.labels["event"])
         topics = decode_topics_from_string(task_data.labels.get("topics", "")) or None
+        if contract_addresses and len(contract_addresses) > 1:
+            logger.info(
+                f"Polling multi-address logs for {task_data.name}: {contract_addresses}"
+            )
+        elif contract_addresses:
+            logger.debug(
+                f"Polling '{contract_addresses[0]}:{topics[0] if topics else ''}' "
+                f"logs for {task_data.name}"
+            )
+        else:
+            logger.debug(f"Polling '*:{topics[0] if topics else ''}' logs for {task_data.name}")
         async for log in async_wrap_iter(
             # NOTE: No start block because we should begin polling from head
-            self.provider.poll_logs(address=contract_address, events=[event], topics=topics)
+            # NOTE: Ape >= #2757 accepts list[AddressType] | AddressType | None
+            self.provider.poll_logs(address=contract_addresses, events=[event], topics=topics)
         ):
             self._runtime_task_group.create_task(self.run_task(task_data, log))
