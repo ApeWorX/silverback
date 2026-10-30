@@ -180,7 +180,7 @@ jobs:
 
     steps:
       - name: Run container retention policy for Silverback images
-        uses: snok/container-retention-policy@v3.0.1
+        uses: snok/container-retention-policy@v3.1.0
         with:
           account: ApeWorX
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -193,7 +193,7 @@ jobs:
           dry-run: ${{ github.event_name == 'pull_request' }}
 
       - name: Run container retention policy for Silverback examples
-        uses: snok/container-retention-policy@v3.0.1
+        uses: snok/container-retention-policy@v3.1.0
         with:
           account: ApeWorX
           token: ${{ secrets.GITHUB_TOKEN }}
