@@ -94,7 +94,10 @@ class BaseRunner(ABC):
                 return
 
         # HACK: Don't understand why this is failing to work properly in TaskIQ
-        return_type: type | None = system_task_kicker.__annotations__.get("return")
+        # NOTE: A return annotation is an arbitrary type expression (e.g. `list[TaskData]`), not
+        #       necessarily a `type` instance. Pydantic 2.14 types `TypeAdapter(type: TypeForm[T])`,
+        #       which rejects `type | None`, so leave it as `Any` (the true runtime type here).
+        return_type: Any = system_task_kicker.__annotations__.get("return")
         return TypeAdapter(return_type).validate_python(result.return_value)
 
     async def run_task(self, task_data: TaskData, *args, raise_on_error: bool = False):
