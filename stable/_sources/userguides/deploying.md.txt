@@ -50,6 +50,12 @@ It will then automatically build them for you (monitor the output for any issues
 Assuming the build commands succeed, you will have fully-built images that you can push into a Registry.
 
 ```{note}
+If your project pins Ape plugin versions in `ape-config.yaml` or `pyproject.toml`,
+the generated Dockerfiles automatically avoid `ape plugins install -U .` and instead
+use `ape plugins install .` so version-pinned plugin builds continue to work.
+```
+
+```{note}
 If you chose the `bot/` project structure and `bot` is a Python package, you will be unable to use the dockerfile generation feature.
 This method will warn you that you are generating bots for a python package, but will not stop you from attempting to do so.
 When you generate the dockerfiles, be aware that it will only copy the `bot/` folder into the Dockerfile,

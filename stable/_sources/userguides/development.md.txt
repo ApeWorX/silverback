@@ -70,8 +70,7 @@ bot = SilverbackBot()
 
 
 @bot.on_(chain.blocks)
-def handle_new_block(block):
-    ...  # Define your logic here
+def handle_new_block(block): ...  # Define your logic here
 ```
 
 Inside of `handle_new_block` you can define any logic that you need to handle each new `block` created by the network.
@@ -101,8 +100,7 @@ TOKEN = Contract("<token address>")
 
 
 @bot.on_(TOKEN.Transfer)
-def handle_token_transfer(log):
-    ...  # Define your logic here
+def handle_token_transfer(log): ...  # Define your logic here
 ```
 
 Inside of `handle_token_transfer` you can define any logic that you need to handle each new `Transfer` log emitted by `TOKEN`.
@@ -126,20 +124,19 @@ For example, if you only want to trigger on `Transfer` logs that represent a "bu
 
 ```python
 from ape.utils import ZERO_ADDRESS
+
 ...
 
 
 @bot.on_(USDC.Transfer, to=ZERO_ADDRESS)
-def handle_burn(log):
-    ...  # Define your logic here
+def handle_burn(log): ...  # Define your logic here
 ```
 
 In case an event parameter has the name of a Python keyword, we also support filtering by dict:
 
 ```python
 @bot.on_(USDC.Transfer, filter_args={"from": ZERO_ADDRESS})
-def handle_burn(log):
-    ...  # Define your logic here
+def handle_burn(log): ...  # Define your logic here
 ```
 
 ```{warning}
@@ -158,8 +155,7 @@ You can do that easily with the `@bot.cron` task decorator:
 
 ```python
 @bot.cron("0 * * * *")
-def every_hour(time):
-    ...  # Define your logic here
+def every_hour(time): ...  # Define your logic here
 ```
 
 ```{important}
@@ -202,9 +198,11 @@ along with the `block_time` handler which also generates a matching metric of th
 async def handlerA(log):
     return dict(block_time=log.timestamp)
 
+
 @bot.cron("* * * * *")
 async def handlerB(time):
     return {"block_time": int(time.timestamp())}
+
 
 @bot.on_(chain.blocks)
 async def block_time(block):
@@ -229,8 +227,7 @@ You can then define a "metric callback" that is triggered whenever a new measure
 
 ```python
 @bot.on_metric("current_price")
-async def on_current_price(current_price: float):
-    ...  # Do something with the price
+async def on_current_price(current_price: float): ...  # Do something with the price
 ```
 
 This can be particularly handy for definining conditions that trigger whenever a metric has been measured conditionally.
@@ -419,10 +416,10 @@ You can use this in your bot to enable a "test execution" mode, something like t
 @bot.on_metric("metric-name", gt=THRESHOLD)
 def execute_trade(metric):
     if bot.signer:
-        ... # Execute a transaction via `sender=bot.signer`
+        ...  # Execute a transaction via `sender=bot.signer`
 
     else:
-        ... # simulate what the transaction *would* have done
+        ...  # simulate what the transaction *would* have done
 ```
 
 ```{warning}

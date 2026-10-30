@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="silverback/methoddocs/middlewares.html"/>
   <meta property="og:title" content="silverback.middlewares"/>
     <meta name="twitter:card" content="summary"/>
@@ -95,8 +96,8 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware</span></code></a><ul>
-<li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.post_execute"><code class="docutils literal notranslate">post_execute()</span></code></a></li>
-<li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.pre_execute"><code class="docutils literal notranslate">pre_execute()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.post_execute"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.post_execute()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.middlewares.SilverbackMiddleware.pre_execute"><code class="docutils literal notranslate"><span class="pre">SilverbackMiddleware.pre_execute()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -165,16 +166,16 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="silverback-middlewares">
-<h1>silverback.middlewares<a class="headerlink" href="#silverback-middlewares" title="Link to this heading"></a></h1>
+<h1>silverback.middlewares<a class="headerlink" href="#silverback-middlewares" title="Link to this heading">#</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback.middlewares</span></code> module contains middleware intended to improve the usability of
 silverback as a whole, and add integrations for the silverback platform as well.</p>
 <dl class="py class" id="module-silverback.middlewares">
 <dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.middlewares.</span></span><span class="sig-name descname"><span class="pre">SilverbackMiddleware</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.middlewares.</span></span><span class="sig-name descname"><span class="pre">SilverbackMiddleware</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TaskiqMiddleware</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ManagerAccessMixin</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware.post_execute">
-<span class="sig-name descname"><span class="pre">post_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqResult</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.post_execute" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">post_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqResult</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.post_execute" title="Link to this definition">#</a></dt>
 <dd><p>This hook executes after task is complete.</p>
 <p>This is a worker-side hook. It’s called
 in worker process.</p>
@@ -190,7 +191,7 @@ in worker process.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.middlewares.SilverbackMiddleware.pre_execute">
-<span class="sig-name descname"><span class="pre">pre_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TaskiqMessage</span></span></span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.pre_execute" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pre_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskiqMessage</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TaskiqMessage</span></span></span><a class="headerlink" href="#silverback.middlewares.SilverbackMiddleware.pre_execute" title="Link to this definition">#</a></dt>
 <dd><p>This hook is called before executing task.</p>
 <p>This is a worker-side hook, which means it
 executes in the worker process.</p>
@@ -254,5 +255,5 @@ executes in the worker process.</p>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>

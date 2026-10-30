@@ -36,12 +36,12 @@ def update_last_hash(blk):
 Here is a call sequence of how this function might get called in a reorg scenario:
 
 ```py
-update_last_hash(blk1) # .hash: abc
-update_last_hash(blk2) # .hash: def
-update_last_hash(blk3) # .hash: ghi
+update_last_hash(blk1)  # .hash: abc
+update_last_hash(blk2)  # .hash: def
+update_last_hash(blk3)  # .hash: ghi
 # Reorg happens! `blk2` (.hash: def) and onwards has changed
-update_last_hash(blk2) # .hash: jkl, replaced .hash: def
-update_last_hash(blk3) # .hash: mno, replaced .hash: ghi
+update_last_hash(blk2)  # .hash: jkl, replaced .hash: def
+update_last_hash(blk3)  # .hash: mno, replaced .hash: ghi
 ```
 
 Our handling is safe because we just want whatever the last valid block's hash was.
@@ -131,6 +131,7 @@ def handle_on_worker_startup(state):
     # Connect to DB, set initial state, etc
     ...
 
+
 @bot.on_worker_shutdown()
 def handle_on_worker_shutdown(state):
     # cleanup resources, close connections cleanly, etc
@@ -171,7 +172,6 @@ async def store_token(log, context: Annotated[Context, TaskiqDepends()]):
 @bot.on_worker_shutdown()
 async def handle_on_worker_shutdown(state):
     await state.db.__aexit__()
-
 ```
 
 ```{important}

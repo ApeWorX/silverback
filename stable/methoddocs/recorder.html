@@ -7,7 +7,7 @@
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
-    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=2ceb65ce" />
     <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,8 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/>
+    
+  <meta property="og:type" content="website"/>
   <meta property="og:url" content="silverback/methoddocs/recorder.html"/>
   <meta property="og:title" content="silverback.recorder"/>
     <meta name="twitter:card" content="summary"/>
@@ -95,13 +96,13 @@ data-aria-dark="Switch to auto color mode">
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#silverback.recorder.BaseRecorder"><code class="docutils literal notranslate"><span class="pre">BaseRecorder</span></code></a><ul>
-<li><a class="reference internal" href="#silverback.recorder.BaseRecorder.add_result"><code class="docutils literal notranslate">add_result()</span></code></a></li>
-<li><a class="reference internal" href="#silverback.recorder.BaseRecorder.init"><code class="docutils literal notranslate">init()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.recorder.BaseRecorder.add_result"><code class="docutils literal notranslate"><span class="pre">BaseRecorder.add_result()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.recorder.BaseRecorder.init"><code class="docutils literal notranslate"><span class="pre">BaseRecorder.init()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#silverback.recorder.JSONLineRecorder"><code class="docutils literal notranslate"><span class="pre">JSONLineRecorder</span></code></a><ul>
-<li><a class="reference internal" href="#silverback.recorder.JSONLineRecorder.add_result"><code class="docutils literal notranslate">add_result()</span></code></a></li>
-<li><a class="reference internal" href="#silverback.recorder.JSONLineRecorder.init"><code class="docutils literal notranslate">init()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.recorder.JSONLineRecorder.add_result"><code class="docutils literal notranslate"><span class="pre">JSONLineRecorder.add_result()</span></code></a></li>
+<li><a class="reference internal" href="#silverback.recorder.JSONLineRecorder.init"><code class="docutils literal notranslate"><span class="pre">JSONLineRecorder.init()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#silverback.recorder.TaskResult"><code class="docutils literal notranslate"><span class="pre">TaskResult</span></code></a></li>
@@ -172,12 +173,12 @@ data-aria-dark="Switch to auto color mode">
   </div>
 </div><article class="yue" role="main">
           <section id="silverback-recorder">
-<h1>silverback.recorder<a class="headerlink" href="#silverback-recorder" title="Link to this heading"></a></h1>
+<h1>silverback.recorder<a class="headerlink" href="#silverback-recorder" title="Link to this heading">#</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">silverback.recorder</span></code> module contains classes that hook into the Runner’s recording features
 when executing a Silverback bot, which is meant to journal runtime metrics to a persistent store.</p>
 <dl class="py class" id="module-silverback.recorder">
 <dt class="sig sig-object py" id="silverback.recorder.BaseRecorder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">BaseRecorder</span></span><a class="headerlink" href="#silverback.recorder.BaseRecorder" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">BaseRecorder</span></span><a class="headerlink" href="#silverback.recorder.BaseRecorder" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Base class used for serializing task results to an external data recording process.</p>
 <p>Recorders are configured using the following environment variable:</p>
@@ -186,13 +187,13 @@ when executing a Silverback bot, which is meant to journal runtime metrics to a 
 </ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.recorder.BaseRecorder.add_result">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#silverback.recorder.TaskResult" title="silverback.recorder.TaskResult"><span class="pre">TaskResult</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.BaseRecorder.add_result" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#silverback.recorder.TaskResult" title="silverback.recorder.TaskResult"><span class="pre">TaskResult</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.BaseRecorder.add_result" title="Link to this definition">#</a></dt>
 <dd><p>Store a result for a Silverback instance’s handler</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.recorder.BaseRecorder.init">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#silverback.types.SilverbackID" title="silverback.types.SilverbackID"><span class="pre">SilverbackID</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.BaseRecorder.init" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#silverback.types.SilverbackID" title="silverback.types.SilverbackID"><span class="pre">SilverbackID</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.BaseRecorder.init" title="Link to this definition">#</a></dt>
 <dd><p>Handle any async initialization from Silverback settings (e.g. migrations).</p>
 </dd></dl>
 
@@ -200,7 +201,7 @@ when executing a Silverback bot, which is meant to journal runtime metrics to a 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="silverback.recorder.JSONLineRecorder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">JSONLineRecorder</span></span><a class="headerlink" href="#silverback.recorder.JSONLineRecorder" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">JSONLineRecorder</span></span><a class="headerlink" href="#silverback.recorder.JSONLineRecorder" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#silverback.recorder.BaseRecorder" title="silverback.recorder.BaseRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRecorder</span></code></a></p>
 <p>Very basic implementation of BaseRecorder used to handle results by appending to a file
 containing newline-separated JSON entries (<a class="reference external" href="https://jsonlines.org/">https://jsonlines.org/</a>).</p>
@@ -237,13 +238,13 @@ if you are using multiple bots from the same directory:</p>
 </ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.recorder.JSONLineRecorder.add_result">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#silverback.recorder.TaskResult" title="silverback.recorder.TaskResult"><span class="pre">TaskResult</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.JSONLineRecorder.add_result" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#silverback.recorder.TaskResult" title="silverback.recorder.TaskResult"><span class="pre">TaskResult</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.JSONLineRecorder.add_result" title="Link to this definition">#</a></dt>
 <dd><p>Store a result for a Silverback instance’s handler</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="silverback.recorder.JSONLineRecorder.init">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#silverback.types.SilverbackID" title="silverback.types.SilverbackID"><span class="pre">SilverbackID</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.JSONLineRecorder.init" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bot_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="types.html#silverback.types.SilverbackID" title="silverback.types.SilverbackID"><span class="pre">SilverbackID</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.JSONLineRecorder.init" title="Link to this definition">#</a></dt>
 <dd><p>Handle any async initialization from Silverback settings (e.g. migrations).</p>
 </dd></dl>
 
@@ -251,13 +252,13 @@ if you are using multiple bots from the same directory:</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="silverback.recorder.TaskResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">TaskResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_time:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completed:</span> <span class="pre">~datetime.Annotated[~datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~pydantic.functional_serializers.PlainSerializer(func=~silverback.types.iso_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type=str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">when_used=always)]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_number:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics:</span> <span class="pre">~silverback.types.Datapoints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.TaskResult" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">TaskResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_time:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completed:</span> <span class="pre">~datetime.Annotated[~datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~pydantic.functional_serializers.PlainSerializer(func=~silverback.types.iso_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type=str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">when_used=always)]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_number:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics:</span> <span class="pre">~silverback.types.Datapoints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#silverback.recorder.TaskResult" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="silverback.recorder.get_metrics">
-<span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">get_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sessions_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#silverback.recorder.get_metrics" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">silverback.recorder.</span></span><span class="sig-name descname"><span class="pre">get_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sessions_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#silverback.recorder.get_metrics" title="Link to this definition">#</a></dt>
 <dd><p>Useful function for fetching metrics from bot session(s) and loading them into a dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -333,5 +334,5 @@ or folder containing one or more such files.</p></li>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script data-domain="docs.apeworx.io" defer="defer" src="https://plausible.io/js/script.js"></script>
-      <script src="../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../_static/shibuya.js?v=50760d75"></script></body>
 </html>
